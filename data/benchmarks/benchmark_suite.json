@@ -1,0 +1,182 @@
+[
+  {
+    "id": "BM001",
+    "name": "Mutual Exclusion",
+    "description": "A mutual exclusion algorithm for N processes where at most one process is in the critical section at a time.",
+    "domain": "scheduling",
+    "difficulty": 2,
+    "expected_invariants": ["MutualExclusion", "TypeOK"],
+    "hints": "Should define processes as 1..N, track state as {idle, trying, critical}."
+  },
+  {
+    "id": "BM002",
+    "name": "Two-Phase Commit",
+    "description": "A two-phase commit protocol with one coordinator and N participants. The coordinator decides to commit only if all participants vote yes.",
+    "domain": "transaction",
+    "difficulty": 3,
+    "expected_invariants": ["Consistency", "TypeOK"],
+    "hints": "Messages: Prepare, VoteYes, VoteNo, Commit, Abort."
+  },
+  {
+    "id": "BM003",
+    "name": "Dining Philosophers",
+    "description": "The dining philosophers problem with N philosophers and N forks. Each philosopher picks up both adjacent forks to eat, then puts them down.",
+    "domain": "scheduling",
+    "difficulty": 2,
+    "expected_invariants": ["NoDeadlock", "TypeOK"],
+    "hints": "Track fork ownership and philosopher states: thinking, hungry, eating."
+  },
+  {
+    "id": "BM004",
+    "name": "Lamport's Bakery Algorithm",
+    "description": "Lamport's bakery mutual exclusion algorithm for N processes. Processes take a numbered ticket; lower numbers enter first.",
+    "domain": "consensus",
+    "difficulty": 3,
+    "expected_invariants": ["MutualExclusion", "TypeOK"],
+    "hints": "VARIABLES num, flag. Choosing phase before assigning number."
+  },
+  {
+    "id": "BM005",
+    "name": "Producer-Consumer Queue",
+    "description": "A bounded FIFO queue with one producer and one consumer. The producer blocks when the queue is full; the consumer blocks when empty.",
+    "domain": "storage",
+    "difficulty": 2,
+    "expected_invariants": ["TypeOK", "BoundedQueue"],
+    "hints": "Queue capacity is a constant K."
+  },
+  {
+    "id": "BM006",
+    "name": "Raft Leader Election",
+    "description": "The leader election phase of the Raft consensus algorithm. Servers hold terms and vote for candidates. A candidate wins if it gets a majority of votes.",
+    "domain": "consensus",
+    "difficulty": 4,
+    "expected_invariants": ["AtMostOneLeader", "TypeOK"],
+    "hints": "States: Follower, Candidate, Leader. VARIABLES currentTerm, votedFor, state."
+  },
+  {
+    "id": "BM007",
+    "name": "Read-Write Lock",
+    "description": "A read-write lock allowing multiple concurrent readers but exclusive writer access. Writers wait for all readers to finish.",
+    "domain": "storage",
+    "difficulty": 2,
+    "expected_invariants": ["ExclusiveWrite", "TypeOK"],
+    "hints": "VARIABLES readers, writer_active."
+  },
+  {
+    "id": "BM008",
+    "name": "Distributed Snapshot (Chandy-Lamport)",
+    "description": "The Chandy-Lamport distributed snapshot algorithm over a network of N processes with FIFO channels. Each process records its local state and the state of incoming channels.",
+    "domain": "networking",
+    "difficulty": 5,
+    "expected_invariants": ["SnapshotConsistency", "TypeOK"],
+    "hints": "Send marker messages along each outgoing channel after recording state."
+  },
+  {
+    "id": "BM009",
+    "name": "Token Ring",
+    "description": "A token ring network with N nodes. Each node passes a single token clockwise. Only the token holder may send a message.",
+    "domain": "networking",
+    "difficulty": 2,
+    "expected_invariants": ["UniqueToken", "TypeOK"],
+    "hints": "Nodes 1..N, token position as a variable."
+  },
+  {
+    "id": "BM010",
+    "name": "Simple Key-Value Store",
+    "description": "A single-server key-value store supporting Put(k,v) and Get(k) operations. Linearizability: a Get always returns the value of the most recent Put.",
+    "domain": "storage",
+    "difficulty": 3,
+    "expected_invariants": ["Linearizability", "TypeOK"],
+    "hints": "Model a finite key space Keys and value space Values."
+  },
+  {
+    "id": "BM011",
+    "name": "Paxos Single-Decree",
+    "description": "Single-decree Paxos consensus over N acceptors and M proposers. Once a value is chosen, it is never changed.",
+    "domain": "consensus",
+    "difficulty": 4,
+    "expected_invariants": ["Consistency", "TypeOK"],
+    "hints": "Phases: Prepare/Promise, Accept/Accepted. Proposer picks value with highest ballot."
+  },
+  {
+    "id": "BM012",
+    "name": "Bounded Retransmission Protocol",
+    "description": "A sender transmits a file in chunks over an unreliable channel. The sender retransmits up to MAX_RETRIES times before giving up.",
+    "domain": "networking",
+    "difficulty": 3,
+    "expected_invariants": ["TypeOK", "DeliveryOrFailure"],
+    "hints": "Model message loss as non-deterministic. Track retransmit count."
+  },
+  {
+    "id": "BM013",
+    "name": "Transaction Isolation (Snapshot Isolation)",
+    "description": "A database with snapshot isolation. Transactions read a consistent snapshot. Write-write conflicts cause an abort.",
+    "domain": "transaction",
+    "difficulty": 4,
+    "expected_invariants": ["NoWriteConflict", "TypeOK"],
+    "hints": "Model transactions as spanning multiple steps with begin/commit/abort."
+  },
+  {
+    "id": "BM014",
+    "name": "Clock Synchronisation",
+    "description": "N nodes exchange clock values to synchronise. After one round, all clocks are within epsilon of each other.",
+    "domain": "networking",
+    "difficulty": 3,
+    "expected_invariants": ["ClockBound", "TypeOK"],
+    "hints": "Drift modelled as integer offset. Average-based sync."
+  },
+  {
+    "id": "BM015",
+    "name": "Peterson's Algorithm",
+    "description": "Peterson's mutual exclusion algorithm for exactly 2 processes.",
+    "domain": "scheduling",
+    "difficulty": 2,
+    "expected_invariants": ["MutualExclusion", "TypeOK"],
+    "hints": "VARIABLES flag[2], turn."
+  },
+  {
+    "id": "BM016",
+    "name": "Gossip Protocol",
+    "description": "A gossip (epidemic) protocol where N nodes periodically share updates. A node that receives an update marks it as 'infected' and spreads it in subsequent rounds.",
+    "domain": "networking",
+    "difficulty": 3,
+    "expected_invariants": ["EventualConsistency", "TypeOK"],
+    "hints": "VARIABLES known, infected sets. Eventual convergence is a liveness property."
+  },
+  {
+    "id": "BM017",
+    "name": "Simple Allocator",
+    "description": "A memory allocator managing a fixed pool of N pages. Clients request and release pages. Safety: no page is allocated to two clients simultaneously.",
+    "domain": "storage",
+    "difficulty": 2,
+    "expected_invariants": ["SafeAllocation", "TypeOK"],
+    "hints": "VARIABLES free, allocated. allocated is a function from Client to SUBSET Pages."
+  },
+  {
+    "id": "BM018",
+    "name": "Publish-Subscribe Broker",
+    "description": "A single broker with subscribers and publishers. Subscribers register interest in topics. Publishers post messages on topics. The broker delivers each message to all registered subscribers.",
+    "domain": "networking",
+    "difficulty": 3,
+    "expected_invariants": ["DeliveryGuarantee", "TypeOK"],
+    "hints": "Messages arrive in order per topic."
+  },
+  {
+    "id": "BM019",
+    "name": "Dekker's Algorithm",
+    "description": "Dekker's mutual exclusion algorithm for 2 processes, the first known correct solution to the problem.",
+    "domain": "scheduling",
+    "difficulty": 3,
+    "expected_invariants": ["MutualExclusion", "Deadlock_Freedom", "TypeOK"],
+    "hints": "VARIABLES turn, wants. Both safety and liveness should be modelled."
+  },
+  {
+    "id": "BM020",
+    "name": "Eventually Consistent Counter",
+    "description": "A distributed grow-only counter (G-Counter CRDT) with N nodes. Each node increments its own slot. Merge takes element-wise max. All nodes eventually agree on the total.",
+    "domain": "storage",
+    "difficulty": 3,
+    "expected_invariants": ["Monotone", "TypeOK"],
+    "hints": "VARIABLES counts[Node][Node]. Global count = sum of max(counts[][n])."
+  }
+]

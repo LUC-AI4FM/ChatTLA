@@ -1,0 +1,54 @@
+# ChatTLA .gitignore
+
+# Secrets
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+dist/
+build/
+*.so
+.venv/
+venv/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb~
+
+# Training artefacts (large — don't commit to repo)
+outputs/checkpoints/
+outputs/merged_model/
+outputs/gguf/
+outputs/llama.cpp/
+
+# Data (large — managed separately)
+data/raw/
+data/validated/
+data/rejected/
+data/processed/
+
+# Keep these data files
+!data/benchmarks/
+!data/benchmarks/**
+
+# MLflow
+mlruns/
+mlartifacts/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/settings.json
+.idea/
+
+# Java class files that might get generated alongside SANY
+*.class
+
+# Byte-compiled / optimized
+*.pyc

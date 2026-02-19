@@ -1,0 +1,54 @@
+# =============================================================================
+# ChatTLA — LoRA Configuration for gpt-oss-20b Fine-tuning
+# =============================================================================
+#
+# Architecture context
+# --------------------
+# gpt-oss-20b is a Mixture-of-Experts (MoE) transformer:
+#   - 21B total parameters, ~3.6B active per forward pass
+#   - MXFP4-quantized MoE weights (loaded via Mxfp4Config(dequantize=True))
+#   - MoE expert layers at transformer blocks 7, 15, 23
+#
+# LoRA strategy
+# -------------
+# Two-part target:
+#   1. target_modules="all-linear" — standard attention + FFN projection layers
+#   2. target_parameters — the MoE expert projection layers that "all-linear"
+#      would otherwise miss because they are accessed via dynamic routing.
+#      Without this, fine-tuning has no gradient signal through the experts.
+#
+# Rank choice: r=8 is the official cookbook recommendation for the 20b model.
+# Higher rank (16, 32) marginally improves fit but doubles adapter size.
+# We prefer r=8 to keep the adapter small for fast iteration.
+
+peft_type: LORA
+
+# --- Core LoRA hyperparameters ---------------------------------------------
+r: 8                           # LoRA rank
+lora_alpha: 16                 # scaling factor; effective scale = alpha/r = 2.0
+lora_dropout: 0.05
+bias: none
+
+# Target all standard linear layers
+target_modules: all-linear
+
+# Target MoE expert projection layers explicitly (architecture-specific)
+# Transformer block indices: 7, 15, 23 (MoE blocks in gpt-oss-20b)
+target_parameters:
+  - "7.mlp.experts.gate_up_proj"
+  - "7.mlp.experts.down_proj"
+  - "15.mlp.experts.gate_up_proj"
+  - "15.mlp.experts.down_proj"
+  - "23.mlp.experts.gate_up_proj"
+  - "23.mlp.experts.down_proj"
+
+# --- Inference / merge settings -------------------------------------------
+# Use the adapter during inference without merging into base weights
+# (for fast iteration).  Use merge_lora.py to create a standalone model
+# for production deployment.
+merge_weights: false
+
+# --- Adapter metadata -------------------------------------------------------
+task_type: CAUSAL_LM
+fan_in_fan_out: false
+modules_to_save: null
