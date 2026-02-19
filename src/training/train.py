@@ -128,8 +128,6 @@ def build_training_args(smoke_test: bool = False, resume_from: str | None = None
         # --- Batch / accumulation ------------------------------------------
         per_device_train_batch_size=1 if smoke_test else 2,
         gradient_accumulation_steps=2 if smoke_test else 8,  # effective batch=16
-        # --- Sequence length -----------------------------------------------
-        max_seq_length=512 if smoke_test else 2048,
         # --- Optimizer / schedule ------------------------------------------
         learning_rate=2e-4,
         lr_scheduler_type="cosine",
@@ -196,6 +194,7 @@ def main(smoke_test: bool = False, resume_from: str | None = None) -> None:
         eval_dataset=eval_dataset,
         args=training_args,
         callbacks=[tlc_callback],
+        max_seq_length=512 if smoke_test else 2048,
     )
 
     print("[train] Starting training...")
