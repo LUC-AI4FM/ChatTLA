@@ -31,7 +31,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-_REPO_ROOT    = Path(__file__).resolve().parents[3]
+_REPO_ROOT    = Path(__file__).resolve().parents[2]
 _MERGED_MODEL = _REPO_ROOT / "outputs" / "merged_model"
 _GGUF_OUT_DIR = _REPO_ROOT / "outputs" / "gguf"
 _LLAMA_CPP_DIR = _REPO_ROOT / "outputs" / "llama.cpp"

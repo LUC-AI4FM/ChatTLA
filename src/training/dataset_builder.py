@@ -51,7 +51,7 @@ from typing import Iterator
 
 from src.shared.schemas.dataset_schema import DatasetRecord
 
-_REPO_ROOT = Path(__file__).resolve().parents[3]
+_REPO_ROOT = Path(__file__).resolve().parents[2]
 _COMBINED_JSONL = _REPO_ROOT / "data" / "validated" / "combined.jsonl"
 _TRAIN_OUT      = _REPO_ROOT / "data" / "processed" / "train.jsonl"
 _EVAL_OUT       = _REPO_ROOT / "data" / "processed" / "eval.jsonl"

@@ -33,7 +33,7 @@ from typing import Iterator
 from src.shared.schemas.dataset_schema import DatasetRecord
 
 # Paths relative to repo root
-_REPO_ROOT = Path(__file__).resolve().parents[3]
+_REPO_ROOT = Path(__file__).resolve().parents[2]
 _FORMALLLM_ROOT = _REPO_ROOT / "data" / "FormaLLM"
 _ALL_MODELS_JSON = _FORMALLLM_ROOT / "data" / "all_models.json"
 _OUTPUT_JSONL = _REPO_ROOT / "data" / "raw" / "formalllm.jsonl"

@@ -43,7 +43,7 @@ import mlflow
 import torch
 from transformers import TrainerCallback, TrainerControl, TrainerState, TrainingArguments
 
-_REPO_ROOT = Path(__file__).resolve().parents[3]
+_REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
 class TLCEvalCallback(TrainerCallback):

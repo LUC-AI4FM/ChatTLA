@@ -37,6 +37,7 @@ data/processed/
 
 # MLflow
 mlruns/
+mlflow.db
 mlartifacts/
 
 # OS

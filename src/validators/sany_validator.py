@@ -28,7 +28,7 @@ from pathlib import Path
 from typing import Optional
 
 # Path to bundled TLC jar relative to this file's location.
-_TLA_TOOLS_JAR = Path(__file__).resolve().parents[2] / "shared" / "tlc" / "tla2tools.jar"
+_TLA_TOOLS_JAR = Path(__file__).resolve().parents[1] / "shared" / "tlc" / "tla2tools.jar"
 
 
 @dataclass

@@ -44,7 +44,7 @@ import torch
 from peft import PeftModel
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-_REPO_ROOT       = Path(__file__).resolve().parents[3]
+_REPO_ROOT       = Path(__file__).resolve().parents[2]
 _CHECKPOINT_DIR  = _REPO_ROOT / "outputs" / "checkpoints"
 _MERGED_OUT      = _REPO_ROOT / "outputs" / "merged_model"
 

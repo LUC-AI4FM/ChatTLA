@@ -71,7 +71,7 @@ from trl import SFTTrainer, SFTConfig
 
 from src.training.tlc_eval_callback import TLCEvalCallback
 
-_REPO_ROOT    = Path(__file__).resolve().parents[3]
+_REPO_ROOT    = Path(__file__).resolve().parents[2]
 _TRAIN_JSONL  = _REPO_ROOT / "data" / "processed" / "train.jsonl"
 _EVAL_JSONL   = _REPO_ROOT / "data" / "processed" / "eval.jsonl"
 _CHECKPOINT_DIR = _REPO_ROOT / "outputs" / "checkpoints"

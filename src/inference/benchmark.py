@@ -37,7 +37,7 @@ from typing import Optional
 
 import mlflow
 
-_REPO_ROOT     = Path(__file__).resolve().parents[3]
+_REPO_ROOT     = Path(__file__).resolve().parents[2]
 _BENCH_JSON    = _REPO_ROOT / "data" / "benchmarks" / "benchmark_suite.json"
 _RESULTS_CSV   = _REPO_ROOT / "outputs" / "benchmark_results.csv"
 

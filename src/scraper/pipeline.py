@@ -43,7 +43,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-_REPO_ROOT = Path(__file__).resolve().parents[3]
+_REPO_ROOT = Path(__file__).resolve().parents[2]
 _LOG_DIR   = _REPO_ROOT / "outputs" / "logs"
 _LOG_DIR.mkdir(parents=True, exist_ok=True)
 
