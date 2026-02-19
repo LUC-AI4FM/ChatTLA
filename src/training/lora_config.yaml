@@ -26,7 +26,7 @@ peft_type: LORA
 # --- Core LoRA hyperparameters ---------------------------------------------
 r: 8                           # LoRA rank
 lora_alpha: 16                 # scaling factor; effective scale = alpha/r = 2.0
-lora_dropout: 0.05
+lora_dropout: 0.0   # ParamWrapper (MoE expert layers) does not support dropout != 0
 bias: none
 
 # Target all standard linear layers
