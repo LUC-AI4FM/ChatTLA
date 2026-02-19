@@ -53,8 +53,8 @@ import os
 import sys
 from pathlib import Path
 
-# Pin to GPU 1 before any CUDA import
-os.environ.setdefault("CUDA_VISIBLE_DEVICES", "1")
+# Pin to GPU 0 before any CUDA import
+os.environ.setdefault("CUDA_VISIBLE_DEVICES", "0")
 
 import torch
 import yaml
@@ -126,12 +126,12 @@ def build_training_args(smoke_test: bool = False, resume_from: str | None = None
     return SFTConfig(
         output_dir=str(_CHECKPOINT_DIR),
         # --- Batch / accumulation ------------------------------------------
-        per_device_train_batch_size=1 if smoke_test else 2,
-        gradient_accumulation_steps=2 if smoke_test else 8,  # effective batch=16
+        per_device_train_batch_size=1,  # reduced to 1 to fit LoRA MoE computation
+        gradient_accumulation_steps=4 if smoke_test else 16,  # effective batch=16
         # --- Optimizer / schedule ------------------------------------------
         learning_rate=2e-4,
         lr_scheduler_type="cosine",
-        warmup_ratio=0.03,
+        warmup_steps=10 if smoke_test else 100,
         # --- Precision & memory --------------------------------------------
         bf16=True,
         gradient_checkpointing=True,
@@ -189,12 +189,10 @@ def main(smoke_test: bool = False, resume_from: str | None = None) -> None:
     training_args = build_training_args(smoke_test=smoke_test, resume_from=resume_from)
     trainer = SFTTrainer(
         model=model,
-        tokenizer=tokenizer,
         train_dataset=train_dataset,
         eval_dataset=eval_dataset,
         args=training_args,
         callbacks=[tlc_callback],
-        max_seq_length=512 if smoke_test else 2048,
     )
 
     print("[train] Starting training...")
