@@ -120,9 +120,17 @@ def run(
     models: Optional[list[str]] = None,
     output_csv: Path = _RESULTS_CSV,
     use_self_correct: bool = False,
+    limit: Optional[int] = None,
+    problem_ids: Optional[list[str]] = None,
 ) -> None:
     with _BENCH_JSON.open() as f:
         problems = json.load(f)
+
+    # optionally restrict to a subset for faster testing
+    if problem_ids is not None:
+        problems = [p for p in problems if p["id"] in problem_ids]
+    if limit is not None:
+        problems = problems[:limit]
 
     if models is None:
         models = list(_MODELS.values())
@@ -177,7 +185,10 @@ if __name__ == "__main__":
     parser.add_argument("--model",        default=None,  help="Single model tag (default: run all)")
     parser.add_argument("--self-correct", action="store_true", help="Enable TLC self-correction loop")
     parser.add_argument("--output",       default=str(_RESULTS_CSV))
+    parser.add_argument("--limit",        type=int, help="Stop after N benchmark problems (for quick smoke tests)")
+    parser.add_argument("--problems",     nargs="+", help="Run only the given benchmark IDs (e.g. BM001 BM007)")
     args = parser.parse_args()
 
     model_list = [args.model] if args.model else None
-    run(models=model_list, output_csv=Path(args.output), use_self_correct=args.self_correct)
+    run(models=model_list, output_csv=Path(args.output), use_self_correct=args.self_correct,
+        limit=args.limit, problem_ids=args.problems)

@@ -24,13 +24,13 @@
 peft_type: LORA
 
 # --- Core LoRA hyperparameters ---------------------------------------------
-r: 4                           # LoRA rank (reduced from 8 to 4 for memory efficiency with MoE experts)
-lora_alpha: 16                 # scaling factor; effective scale = alpha/r = 4.0
-lora_dropout: 0.0   # ParamWrapper (MoE expert layers) does not support dropout != 0
+r: 16                          # LoRA rank — 16 gives strong adaptation for domain-specific tasks
+lora_alpha: 32                 # scaling factor; effective scale = alpha/r = 2.0
+lora_dropout: 0.05             # light regularization since dataset is small (57 examples)
 bias: none
 
-# Target all standard linear layers
-target_modules: ["q_proj", "k_proj", "v_proj", "o_proj"]
+# Target all standard linear layers (attention + FFN + MoE gate/expert projections)
+target_modules: "all-linear"
 
 # --- Inference / merge settings -------------------------------------------
 # Use the adapter during inference without merging into base weights

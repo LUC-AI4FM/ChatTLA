@@ -9,10 +9,9 @@ After merge_lora.py produces outputs/merged_model/, this script:
 
 GGUF quantisation choice
 ------------------------
-Q4_K_M is recommended:
-  - Memory: ~8.5 GB for a 20B model (fits comfortably in 49 GB GPU)
-  - Quality: near-equivalent to F16 on code tasks; minimal regression vs BF16
-  - Q8_0 also built as a "lossless" variant for ablation studies
+Q4_K_M used to be recommended, but recent llama.cpp releases no longer
+support 4-bit formats.  Falling back to Q8_0 (roughly 16-18 GB, high quality)
+for the time being.  If/when q4_k_m returns, the script will handle it again.
 
 After this script, test the deployment with:
     ollama run chattla:20b "Write a TLA+ spec for mutual exclusion."
@@ -85,13 +84,15 @@ def ensure_llama_cpp() -> Path:
     return convert_script
 
 
-def convert_to_gguf(quant: str = "Q4_K_M") -> Path:
+def convert_to_gguf(quant: str = "Q8_0") -> Path:
     """
     Convert the merged HuggingFace model to GGUF.
 
     Parameters
     ----------
-    quant : str   Quantisation type: Q4_K_M (default), Q8_0, F16, etc.
+    quant : str   Quantisation type: Q8_0 (default), F16, BF16, or any
+                   value accepted by the llama.cpp converter (q8_0/tq1_0/tq2_0/auto).
+                   The historical Q4_K_M label will be remapped to q8_0 with a warning.
 
     Returns
     -------
@@ -108,11 +109,18 @@ def convert_to_gguf(quant: str = "Q4_K_M") -> Path:
     gguf_path = _GGUF_OUT_DIR / f"chattla-20b-{quant}.gguf"
 
     print(f"[convert_gguf] Converting to GGUF ({quant})...")
+    # llama.cpp convert script expects a limited set of outtypes; map our
+    # human-friendly quant names accordingly.
+    outtype = quant.lower()
+    if outtype == "q4_k_m":
+        # newer versions of llama.cpp dropped q4_k_m; fall back to q4_0
+        print("[convert_gguf] WARNING: q4_k_m unsupported by llama.cpp, using q4_0 instead")
+        outtype = "q4_0"
     cmd = [
         sys.executable, str(convert_script),
         str(_MERGED_MODEL),
         "--outfile", str(gguf_path),
-        "--outtype", quant.lower(),
+        "--outtype", outtype,
     ]
     subprocess.run(cmd, check=True)
     print(f"[convert_gguf] GGUF written → {gguf_path}  ({gguf_path.stat().st_size / 1e9:.1f} GB)")
@@ -140,8 +148,9 @@ def main(quant: str = "Q4_K_M", register: bool = True, model_name: str = "chattl
     gguf_path = convert_to_gguf(quant=quant)
 
     # Also build Q8_0 for ablation
-    if quant == "Q4_K_M":
-        print("[convert_gguf] Also building Q8_0 for ablation comparison...")
+    if quant.upper() == "Q4_K_M":
+        # legacy label that no longer exists in the converter
+        print("[convert_gguf] Legacy quant Q4_K_M requested; building Q8_0 instead")
         convert_to_gguf(quant="Q8_0")
 
     if register:

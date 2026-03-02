@@ -1,0 +1,203 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+gpt-oss:20b,BM001,Mutual Exclusion,scheduling,2,0,0,0.889,bronze,36.93,"---- MODULE MutualExclusion ----
+EXTENDS TLC
+
+CONSTANT N
+CONSTANT StateSet
+
+VARIABLE state
+
+Init == state = [i \in 1..N |-> ""idle""]
+
+IdleToTrying(p) == 
+  /\ state[p] = ""idle""
+  /\ state' = [state EXCEPT ![p] = ""trying""]
+
+TryingToCritical(p) == 
+  /\ state[p] = ""trying""
+  /\ \A q \in 1..N : q # p => state[q] # ""critical""
+  /\ state' = [state EXCEPT ![p] = ""critical""]
+
+CriticalToIdle(p) == 
+  /\ state[p] = ""critical""
+  /\ state' = [state EXCEPT ![p] = ""idle""]
+
+Next == \E p \in 1..N : 
+          IdleToTrying(p) \/ TryingToCritical(p) \/ CriticalToIdle(p)
+
+Spec == Init /\ [][Next]_state
+
+TypeOK == state \in [1..N -> StateSet]
+
+===="
+gpt-oss:20b,BM002,Two-Phase Commit,transaction,3,0,0,1.0,bronze,91.89,"---- MODULE TwoPhaseCommit ----
+EXTENDS TLC
+
+CONSTANT N
+
+Participants == 1 .. N
+Ids == 0 .. N
+MsgKind == {""Prepare"",""VoteYes"",""VoteNo"",""Commit"",""Abort""}
+
+VARIABLES CState, PState, Votes, Msgs
+
+vars == {CState, PState, Votes, Msgs}
+
+(* Type invariants *)
+TypeOK == 
+  CState ∈ {""Idle"",""WaitingVotes"",""Deciding"",""Finished""} /\
+  PState ∈ [i ∈ Participants -> {""Idle"",""Prepared"",""Committed"",""Aborted""}] /\
+  Votes ∈ [i ∈ Participants -> {""Yes"",""No"",""None""}] /\
+  Msgs ⊆ [sender: Ids, receiver: Ids, kind: MsgKind]
+
+Init == 
+  CState = ""Idle"" /\
+  PState = [i ∈ Participants |-> ""Idle""] /\
+  Votes = [i ∈ Participants |-> ""None""] /\
+  Msgs = ∅
+
+(* Actions *)
+
+CoordinatorSendPrepare == 
+  CState = ""Idle"" /\
+  CState' = ""WaitingVotes"" /\
+  Msgs' = Msgs ∪ { [sender |-> 0, receiver |-> i, kind |-> ""Prepare""] : i ∈ Participants } /\
+  PState' = PState /\ Votes' = Votes
+
+ParticipantReceivePrepare(i) == 
+  i ∈ Participants /\ 
+  [sender |-> 0, receiver |-> i, kind |-> ""Prepare""] ∈ Msgs /\ 
+  PState[i] = ""Idle"" /\
+  PState' = [PState EXCEPT ![i] = ""Prepared""] /\ 
+  Msgs' = Msgs \ { [sender |-> 0, receiver |-> i, kind |-> ""Prepare""] } /\ 
+  CState' = CState /\ Votes' = Votes
+
+ParticipantSendVote(i) == 
+  i ∈ Participants /\ 
+  PState[i] = ""Prepared"" /\ 
+  Votes[i] = ""None"" /\
+  CHOOSE v ∈ {""Yes"",""No""} /\ 
+  Msgs' = Msgs ∪ { [sender |-> i, receiver |-> 0, kind |-> IF v = ""Yes"" THEN ""VoteYes"" ELSE ""VoteNo""] } /\ 
+  Votes' = [Votes EXCEPT ![i] = v] /\ 
+  CState' = CState /\ PState' = PState
+
+CoordinatorReceiveVote(i) == 
+  i ∈ Participants /\ 
+  [sender |-> i, receiver |-> 0, kind |-> kind] ∈ Msgs /\ 
+  kind ∈ {""VoteYes"",""VoteNo""} /\ 
+  Votes[i] = ""None"" /\
+  Votes' = [Votes EXCEPT ![i] = IF kind = ""VoteYes"" THEN ""Yes"" ELSE ""No""] /\ 
+  Msgs' = Msgs \ { [sender |-> i, receiver |-> 0, kind |-> kind] } /\ 
+  CState' = CState /\ PState' = PState
+
+CoordinatorDecide == 
+  CState = ""WaitingVotes"" /\ 
+  ∀ i ∈ Participants: Votes[i] ≠ ""None"" /\
+  CState' = ""Finished"" /\
+  Msgs' = Msgs ∪ { [sender |"
+gpt-oss:20b,BM003,Dining Philosophers,scheduling,2,0,0,1.0,bronze,20.66,"---- MODULE DiningPhilosophers ----
+EXTENDS Naturals
+
+CONSTANTS N
+
+VARIABLES forks, state
+
+(* --definitions-- *)
+Right(i) == IF i < N THEN i + 1 ELSE 1
+
+(* --type definitions-- *)
+Forks == [1..N -> 0..N]          (* 0 = free, otherwise owner philosopher id *)
+PhilosopherState == {""thinking"", ""hungry"", ""eating""}
+States == [1..N -> PhilosopherState]
+
+(* --initialization-- *)
+Init == 
+  /\ forks \in Forks
+  /\ state \in States
+  /\ forks = [i \in 1..N |-> 0]
+  /\ state = [i \in 1..N |-> ""thinking""]
+
+(* --actions-- *)
+ThinkToHungry(i) == 
+  /\ state[i] = ""thinking""
+  /\ state' = [state EXCEPT ![i] = ""hungry""]
+  /\ forks' = forks
+
+PickUp(i) == 
+  /\ state[i] = ""hungry""
+  /\ forks[i] = 0
+  /\ forks[Right(i)] = 0
+  /\ forks' = [forks EXCEPT ![i] = i, ![Right(i)] = i]
+  /\ state' = [state EXCEPT ![i] = ""eating""]
+
+PutDown(i) == 
+  /\ state[i] = ""eating""
+  /\ forks[i] = i
+  /\ forks[Right(i)] = i
+  /\ forks' = [forks EXCEPT ![i] = 0, ![Right(i)] = 0]
+  /\ state' = [state EXCEPT ![i] = ""thinking""]
+
+Next == 
+  \E i \in 1..N :
+    (ThinkToHungry(i) \/ PickUp(i) \/ PutDown(i))
+
+(* --specification-- *)
+vars == <<forks, state>>
+Spec == Init /\ [][Next]_vars
+
+(* --type invariant-- *)
+TypeOK == 
+  forks \in Forks /\ state \in States
+
+===="
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,0,0,0.0,bronze,935.56,"Use a queue to hold processes waiting to enter critical section. Use a lock to protect the queue. Use a condition variable to signal when a process can enter critical section.
+
+We need to implement a mutual exclusion algorithm for N processes where at most one process is in the critical section at a time. The hint suggests using a queue to hold processes waiting to enter the critical section, a lock to protect the queue, and a condition variable to signal when a process can enter the critical section.
+
+We need to implement a mutual exclusion algorithm for N processes. The hint suggests using a queue to hold processes waiting to enter the critical section, a lock to protect the queue, and a condition variable to signal when a process can enter the critical section. The algorithm should ensure that at most one process is in the critical section at a time.
+
+We need to implement a mutual exclusion algorithm for N processes. The hint suggests using a queue to hold processes waiting to enter the critical section, a lock to protect the queue, and a condition variable to signal when a process can enter the critical section.
+
+We need to implement a mutual exclusion algorithm for N processes. The hint suggests using a queue to hold processes waiting to enter the critical section, a lock to protect the queue. The algorithm should ensure that at most one process is in the critical section at a time.
+
+We need to implement a mutual exclusion algorithm. The hint suggests using a queue. The algorithm should ensure that at most one process is in the critical section at a time.
+
+We need to implement a mutual exclusion algorithm. The hint suggests using a queue. The algorithm should ensure that at most one process is in the critical section.
+
+We need to implement a mutual exclusion algorithm. The hint suggests using a queue.
+
+We need to implement a mutual exclusion algorithm.
+
+We need to implement a mutual exclusion algorithm. The hint suggests using a queue.
+
+We need to implement a m"
+chattla:20b,BM002,Two-Phase Commit,transaction,3,0,0,0.0,bronze,370.22,"The coordinator sends Prepare to all participants. Each participant replies with VoteYes or VoteNo. If all VoteYes, coordinator sends Commit to all. If any VoteNo, coordinator sends Abort to all. The participants then commit or abort accordingly.
+
+We need to write a program that simulates this protocol. The input is N, then N lines each with ""yes"" or ""no"". The output is ""commit"" or ""abort"" depending on the result.
+
+We need to simulate the steps. But the problem is trivial: read N, read N votes, if all ""yes"" then commit else abort. But maybe we need to simulate the message passing? The problem description is more about the protocol, but the actual input is just the votes. So we just need to output commit if all yes else abort.
+
+But maybe we need to consider that the coordinator sends Prepare, participants reply, etc. But the input is just the votes. So we just need to output commit if all yes else abort.
+
+But let's read the problem carefully. The input: first line N, then N lines each with ""yes"" or ""no"". Output: ""commit"" or ""abort"". The example: 3 participants, all yes => commit. 2 participants, one yes, one no => abort.
+
+So it's straightforward.
+
+But maybe there's a twist: The participants might vote yes or no. The coordinator decides commit only if all participants vote yes. So commit if all yes else abort. There's no other nuance.
+
+Thus the solution is trivial: read N, read votes, check if any ""no"". If any no, print ""abort"", else print ""commit"".
+
+But maybe we need to consider case sensitivity? The input uses lowercase ""yes"" and ""no"". The output uses lowercase ""commit"" and ""abort"". So just print those.
+
+Edge cases: N can be 0? The problem says N participants. Could N be 0? Possibly. If N=0, then all participants (none) vote yes? In that case, commit? Usually if no participants, commit? But it's not specified. But we can treat N>=1. But we can handle N=0: commit.
+
+But the problem likely expects N>=1.
+
+Thus solution is trivial.
+
+But the problem might be from a contes"
+chattla:20b,BM003,Dining Philosophers,scheduling,2,0,0,0.0,bronze,671.96,"Use a mutex to protect shared state and condition variables to signal state changes. Use a single mutex and condition variable per philosopher. Use a function to check if a philosopher can eat: if both forks are free. Use a function to pick up forks: set fork ownership. Use a function to put down forks: release fork ownership. Use a function to check if a philosopher can eat: if both forks are free. Use a function to pick up forks: set
+
+The problem: ""Dining philosophers problem with N philosophers and N forks. Each philosopher picks up both adjacent forks to eat, then puts them down."" The hints: track fork ownership and philosopher states: thinking, hungry, eating. Use a mutex to protect shared state and condition variables to signal state changes. Use a single mutex and condition variable per philosopher. Use a function to check if a philosopher can eat: if both forks are free. Use a function to pick up forks: set fork ownership. Use a function to put down forks: release fork ownership. Use a function to check if a philosopher can eat: if both forks are free. Use a function to pick up forks: set
+
+It seems like the question is incomplete. It might be asking: ""How can you solve the dining philosophers problem with N philosophers and N forks?"" Or ""Write code to solve the dining philosophers problem with N philosophers and N forks."" The hints mention using a mutex and condition variables. The question might be: ""Write a solution to the dining philosophers problem with N philosophers and N forks using a single mutex and condition variable per philosopher."" Or ""Explain how to solve the dining philosophers problem with N philosophers and N forks using a single mutex and condition variable per philosopher."" The hints mention using a function to check if a philosopher can eat: if both forks are free. Use a function to pick up forks: set fork ownership. Use a function to put down forks: release fork ownership. Use a function to check if a philosopher can eat: if both forks a"

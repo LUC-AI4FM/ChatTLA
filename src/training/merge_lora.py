@@ -87,8 +87,13 @@ def merge(
 
     output_path.mkdir(parents=True, exist_ok=True)
     print(f"[merge_lora] Saving merged model → {output_path}")
-    model.save_pretrained(str(output_path), safe_serialization=True)
-    tokenizer.save_pretrained(str(output_path))
+    # transformers.save_pretrained sometimes fails converting certain weights
+    # (see NotImplementedError above).  Work around by writing the state_dict
+    # directly and saving the config/tokenizer ourselves.
+    state_dict = model.state_dict()
+    torch.save(state_dict, output_path / "pytorch_model.bin")
+    model.config.save_pretrained(output_path)
+    tokenizer.save_pretrained(output_path)
 
     print(f"[merge_lora] Done. Merged model saved to {output_path}")
     print("[merge_lora] Next step: run src/inference/convert_to_gguf.py to build GGUF for Ollama.")
