@@ -59,7 +59,7 @@ def validate_file(tla_path: Path, jar: Path = _TLA_TOOLS_JAR) -> SANYResult:
             "https://github.com/tlaplus/tlaplus/releases/download/v1.8.0/tla2tools.jar"
         )
 
-    cmd = ["java", "-jar", str(jar), "-tool", "SANY", str(tla_path)]
+    cmd = ["java", "-cp", str(jar), "tla2sany.SANY", str(tla_path)]
     try:
         result = subprocess.run(
             cmd,
@@ -103,18 +103,27 @@ def validate_string(tla_content: str, module_name: str = "Temp", jar: Path = _TL
 
 
 def _detect_success(output: str) -> bool:
-    """SANY prints 'No errors' on success (case-insensitive match)."""
-    return bool(re.search(r"no\s+error", output, re.IGNORECASE))
+    """SANY succeeds when it reaches 'Semantic processing' or explicitly prints
+    'No errors'.  If neither is present, consider it a failure."""
+    if re.search(r"no\s+error", output, re.IGNORECASE):
+        return True
+    if re.search(r"Semantic processing of module", output):
+        return True
+    return False
 
 
 def _parse_errors(output: str) -> list[str]:
     """
     Extract error lines from SANY output.
     SANY error lines typically start with "***" or contain "Error:".
+    Skip the version banner line (e.g., "****** SANY2 Version ...").
     """
     errors: list[str] = []
     for line in output.splitlines():
         stripped = line.strip()
+        # Skip the SANY version banner
+        if re.match(r"^\*+\s*SANY", stripped):
+            continue
         if stripped.startswith("***") or re.match(r"^\s*Error", stripped, re.IGNORECASE):
             errors.append(stripped)
     return errors

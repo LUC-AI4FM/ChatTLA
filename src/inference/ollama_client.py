@@ -148,16 +148,36 @@ class ChatTLAClient:
         Generate a spec and run TLC validation.  If TLC reports errors,
         feed the error back to the model for self-correction (up to max_retries).
 
+        The correction loop now distinguishes SANY failures (syntax) from TLC
+        failures (semantic), providing targeted error feedback at each stage.
+
         Returns
         -------
         (spec: str, tier: str)   Final spec text and validation tier ("gold"|"silver"|"bronze").
         """
+        from src.validators.sany_validator import validate_string as sany_validate
         from src.validators.tlc_validator import validate_string
 
         spec = self.generate_spec(nl_description)
+
+        # Pre-process: strip common generation artefacts before validation
+        spec = _sanitize_spec(spec)
+
         for attempt in range(max_retries):
             m = re.search(r"----\s*MODULE\s+(\w+)", spec)
             module_name = m.group(1) if m else "Generated"
+
+            # Step 1: SANY check first (fast, catches syntax issues)
+            sany_result = sany_validate(spec, module_name=module_name)
+            if not sany_result.valid:
+                error_detail = "\n".join(sany_result.errors[:5])
+                if not error_detail:
+                    error_detail = sany_result.raw_output[-500:]
+                spec = self._self_correct_sany(spec, error_detail, attempt)
+                spec = _sanitize_spec(spec)
+                continue
+
+            # Step 2: Full TLC check
             result = validate_string(spec, module_name=module_name)
 
             if result.tier == "gold":
@@ -165,15 +185,51 @@ class ChatTLAClient:
             if result.tier == "silver":
                 return spec, "silver"
 
-            # Bronze: feed TLC error back to model for correction
+            # Bronze with TLC errors: feed TLC violations back
             error_summary = "\n".join(result.tlc_violations[:5])
             spec = self._self_correct(spec, error_summary)
+            spec = _sanitize_spec(spec)
 
-        # Last attempt result
+        # Final validation after all retries
         m = re.search(r"----\s*MODULE\s+(\w+)", spec)
         module_name = m.group(1) if m else "Generated"
         result = validate_string(spec, module_name=module_name)
         return spec, result.tier
+
+    def _self_correct_sany(self, buggy_spec: str, sany_errors: str, attempt: int) -> str:
+        """Ask the model to fix SANY parse errors with targeted guidance."""
+        developer_content = f"{_DEVELOPER_PROMPT}\nReasoning: high"
+
+        # Build targeted hints based on common SANY failure patterns
+        hints = _diagnose_sany_errors(buggy_spec, sany_errors)
+
+        user_content = (
+            f"This TLA+ spec has SANY parse errors (attempt {attempt + 1}):\n\n"
+            f"SANY errors:\n{sany_errors}\n\n"
+        )
+        if hints:
+            user_content += f"Known issues to fix:\n{hints}\n\n"
+        user_content += (
+            f"Buggy spec:\n{buggy_spec}\n\n"
+            f"Fix ALL syntax errors. Output only pure TLA+ (no PlusCal, no markdown)."
+        )
+        prompt = _build_harmony_prompt(developer_content, user_content)
+
+        response = self._client.generate(
+            model=self.model,
+            prompt=prompt,
+            raw=True,
+            options={
+                "temperature": 0.1,
+                "repeat_penalty": 1.3,
+                "num_predict": 2048,
+                "stop": ["<|end|>", "<|start|>", "\n===="],
+            },
+        )
+        raw = "---- MODULE" + response["response"]
+        if "====" not in raw:
+            raw += "\n===="
+        return _extract_tla(raw)
 
     def _self_correct(self, buggy_spec: str, error_msg: str) -> str:
         """Ask the model to fix a spec given a TLC error message."""
@@ -205,6 +261,125 @@ def _extract_tla(text: str) -> str:
     """Extract ---- MODULE ... ==== block from model output."""
     m = re.search(r"(----\s*MODULE\b.*?====)", text, re.DOTALL)
     return m.group(1).strip() if m else text.strip()
+
+
+def _sanitize_spec(spec: str) -> str:
+    """
+    Apply rule-based fixes for common generation artefacts that cause SANY failures.
+
+    These are patterns the model consistently produces that are never valid TLA+:
+    - PlusCal algorithm blocks (--algorithm / --fair algorithm)
+    - Markdown code fences
+    - Repeated comment blocks (degenerate repetition)
+    - Trailing garbage after ====
+    """
+    # Remove PlusCal blocks: (* --algorithm ... end algorithm; *)
+    spec = re.sub(
+        r"\(\*\s*--(?:fair\s+)?algorithm\b.*?end\s+algorithm\s*;?\s*\*\)",
+        "",
+        spec,
+        flags=re.DOTALL | re.IGNORECASE,
+    )
+    # Remove standalone PlusCal keywords that leak into TLA+
+    spec = re.sub(r"^\s*(begin|end\s+algorithm|macro|procedure)\b.*$", "", spec, flags=re.MULTILINE | re.IGNORECASE)
+
+    # Remove markdown code fences
+    spec = re.sub(r"^```\w*\s*$", "", spec, flags=re.MULTILINE)
+
+    # Truncate degenerate repetition (same block repeated 3+ times)
+    lines = spec.splitlines()
+    if len(lines) > 40:
+        spec = _dedup_repeated_blocks(lines)
+
+    # Ensure module ends at ==== (strip any trailing noise)
+    m = re.search(r"(----\s*MODULE\b.*?====)", spec, re.DOTALL)
+    if m:
+        spec = m.group(1)
+
+    return spec.strip()
+
+
+def _dedup_repeated_blocks(lines: list[str], window: int = 5) -> str:
+    """
+    Detect and collapse degenerate repetition where the model outputs
+    the same N-line block over and over (common with comments/invariants).
+    """
+    if len(lines) <= window * 3:
+        return "\n".join(lines)
+
+    # Check if the last `window` lines are a repeating block
+    tail = "\n".join(lines[-window:])
+    count = 0
+    i = len(lines) - window
+    while i >= window:
+        block = "\n".join(lines[i - window:i])
+        if block.strip() == tail.strip():
+            count += 1
+            i -= window
+        else:
+            break
+
+    if count >= 2:
+        # Keep only up to the first repetition
+        cut = len(lines) - (count * window)
+        return "\n".join(lines[:cut])
+
+    return "\n".join(lines)
+
+
+def _diagnose_sany_errors(spec: str, sany_errors: str) -> str:
+    """
+    Analyse the spec and SANY errors to produce targeted fix instructions.
+
+    Returns a string of hints the model can use to fix the spec, or empty string.
+    """
+    hints: list[str] = []
+
+    # PlusCal mixed in
+    if re.search(r"(--algorithm|--fair algorithm|begin|end algorithm)", spec, re.IGNORECASE):
+        hints.append("- Remove ALL PlusCal syntax (--algorithm, begin, end algorithm, macro, procedure). Use pure TLA+.")
+
+    # CONSTANT declared with a value (TLA+ has CONSTANT, not CONSTANT = value)
+    if re.search(r"^\s*CONSTANTS?\s+\w+\s*=", spec, re.MULTILINE):
+        hints.append("- CONSTANT/CONSTANTS declarations must not have '=' values. Use 'CONSTANT N' then define 'N == 5' separately or override in .cfg.")
+
+    # vars == {...} using set braces instead of tuple <<>>
+    if re.search(r"vars\s*==\s*\{", spec):
+        hints.append("- 'vars' should be a tuple <<v1, v2, ...>>, not a set {v1, v2, ...}.")
+
+    # Double prime (x'' instead of x')
+    if re.search(r"\w''", spec):
+        hints.append("- Use single prime (x') for next-state variables, not double prime (x'').")
+
+    # Missing ==== closing delimiter
+    if "====" not in spec:
+        hints.append("- Add '====' as the last line to close the module.")
+
+    # UNCHANGED used with wrong syntax
+    if re.search(r"UNCHANGED\s+[a-zA-Z]", spec) and not re.search(r"UNCHANGED\s*<<", spec):
+        hints.append("- UNCHANGED with multiple variables must use tuple syntax: UNCHANGED <<v1, v2>>.")
+
+    # Conflicting UNCHANGED (priming a variable AND listing it in UNCHANGED)
+    for m in re.finditer(r"UNCHANGED\s*<<([^>]+)>>", spec):
+        unchanged_vars = {v.strip() for v in m.group(1).split(",")}
+        # Check nearby lines for primed versions of same vars
+        context_start = max(0, spec.rfind("\n", 0, m.start()) - 200)
+        context = spec[context_start:m.start()]
+        for var in unchanged_vars:
+            if re.search(rf"\b{re.escape(var)}'\s*=", context):
+                hints.append(f"- Variable '{var}' is both primed and listed in UNCHANGED in the same action. Remove it from UNCHANGED.")
+                break
+
+    # Repeated blocks
+    lines = spec.splitlines()
+    if len(lines) > 60:
+        # Check for degenerate repetition
+        block = "\n".join(lines[-5:])
+        count = spec.count(block)
+        if count > 2:
+            hints.append(f"- The spec contains degenerate repetition (a block appears {count}+ times). Remove all duplicates.")
+
+    return "\n".join(hints)
 
 
 # ---------------------------------------------------------------------------
