@@ -52,12 +52,24 @@ MODEL_ID = "openai/gpt-oss-20b"
 
 
 def find_latest_checkpoint(checkpoint_dir: Path) -> Path | None:
-    """Find the highest-numbered checkpoint in a directory."""
-    checkpoints = sorted(
-        [d for d in checkpoint_dir.iterdir() if d.is_dir() and d.name.startswith("checkpoint-")],
-        key=lambda d: int(d.name.split("-")[-1]),
-    )
-    return checkpoints[-1] if checkpoints else None
+    """Find the highest-numbered checkpoint in a directory.
+
+    Skips directories whose name can't be parsed as 'checkpoint-<int>'
+    (e.g. renamed/archived checkpoints like 'checkpoint-24-broken-r2').
+    """
+    valid = []
+    for d in checkpoint_dir.iterdir():
+        if not d.is_dir() or not d.name.startswith("checkpoint-"):
+            continue
+        parts = d.name.split("-")
+        # expect exactly "checkpoint-<number>"
+        if len(parts) == 2:
+            try:
+                valid.append((int(parts[1]), d))
+            except ValueError:
+                continue
+    valid.sort(key=lambda t: t[0])
+    return valid[-1][1] if valid else None
 
 
 def merge(

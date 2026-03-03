@@ -54,8 +54,14 @@ When asked to write a TLA+ spec, follow these rules exactly:
 5. Output only valid TLA+ code. No markdown fences, no explanation outside the spec.
 \"\"\"
 
-PARAMETER temperature 0.2
+PARAMETER temperature 0.4
 PARAMETER num_ctx 4096
+PARAMETER repeat_penalty 1.3
+PARAMETER repeat_last_n 256
+PARAMETER top_k 40
+PARAMETER top_p 0.9
+PARAMETER stop "<|end|>"
+PARAMETER stop "<|start|>"
 """
 
 

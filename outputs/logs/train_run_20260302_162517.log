@@ -217,4 +217,79 @@ trainable params: 7,962,624 || all params: 20,922,719,808 || trainable%: 0.0381
 Truncating eval dataset:   0%|          | 0/6 [00:00<?, ? examples/s]Truncating eval dataset: 100%|██████████| 6/6 [00:00<00:00, 1226.11 examples/s]
 The tokenizer has new PAD/BOS/EOS tokens that differ from the model config and generation config. The model config and generation config were aligned accordingly, being updated with the tokenizer's values. Updated tokens: {'bos_token_id': 199998}.
 [train] Starting training...
-  0%|          | 0/80 [00:00<?, ?it/s]  1%|▏         | 1/80 [01:00<1:19:54, 60.69s/it]  2%|▎         | 2/80 [01:51<1:11:27, 54.97s/it]  4%|▍         | 3/80 [03:32<1:37:33, 76.02s/it]  5%|▌         | 4/80 [04:51<1:37:41, 77.12s/it]  6%|▋         | 5/80 [05:42<1:24:35, 67.68s/it]                                                  6%|▋         | 5/80 [05:42<1:24:35, 67.68s/it]  8%|▊         | 6/80 [06:20<1:11:01, 57.59s/it]  9%|▉         | 7/80 [07:44<1:20:29, 66.15s/it] 10%|█         | 8/80 [07:52<57:07, 47.60s/it]   11%|█▏        | 9/80 [08:55<1:02:15, 52.62s/it] 12%|█▎        | 10/80 [10:18<1:12:04, 61.78s/it]                                                  12%|█▎        | 10/80 [10:18<1:12:04, 61.78s/it] 14%|█▍        | 11/80 [11:08<1:06:59, 58.26s/it] 15%|█▌        | 12/80 [12:18<1:10:02, 61.80s/it] 16%|█▋        | 13/80 [13:12<1:06:28, 59.53s/it] 18%|█▊        | 14/80 [14:18<1:07:30, 61.37s/it] 19%|█▉        | 15/80 [15:41<1:13:36, 67.95s/it]                                                  19%|█▉        | 15/80 [15:41<1:13:36, 67.95s/it] 20%|██        | 16/80 [15:46<52:14, 48.98s/it]   21%|██▏       | 17/80 [17:06<1:01:14, 58.33s/it] 22%|██▎       | 18/80 [18:03<59:46, 57.84s/it]   24%|██▍       | 19/80 [19:22<1:05:29, 64.42s/it] 25%|██▌       | 20/80 [20:45<1:09:57, 69.96s/it]                                                  25%|██▌       | 20/80 [20:45<1:09:57, 69.96s/it] 26%|██▋       | 21/80 [21:31<1:01:32, 62.59s/it] 28%|██▊       | 22/80 [22:21<56:54, 58.87s/it]   29%|██▉       | 23/80 [23:26<57:49, 60.86s/it] 30%|███       | 24/80 [23:36<42:36, 45.65s/it] 31%|███▏      | 25/80 [24:22<41:53, 45.70s/it]                                                31%|███▏      | 25/80 [24:22<41:53, 45.70s/it] 32%|███▎      | 26/80 [25:25<45:50, 50.94s/it] 34%|███▍      | 27/80 [26:43<51:55, 58.78s/it] 35%|███▌      | 28/80 [27:34<49:05, 56.65s/it] 36%|███▋      | 29/80 [28:53<53:50, 63.34s/it] 38%|███▊      | 30/80 [30:14<57:11, 68.64s/it]                                                38%|███▊      | 30/80 [30:14<57:11, 68.64s/it] 39%|███▉      | 31/80 [31:16<54:30, 66.75s/it] 40%|████      | 32/80 [31:27<39:56, 49.93s/it] 41%|████▏     | 33/80 [32:23<40:31, 51.74s/it] 42%|████▎     | 34/80 [33:34<43:58, 57.36s/it] 44%|████▍     | 35/80 [35:08<51:24, 68.54s/it]                                                44%|████▍     | 35/80 [35:08<51:24, 68.54s/it] 45%|████▌     | 36/80 [36:09<48:27, 66.09s/it] 46%|████▋     | 37/80 [37:14<47:09, 65.80s/it] 48%|████▊     | 38/80 [38:29<47:57, 68.52s/it] 49%|████▉     | 39/80 [39:15<42:14, 61.82s/it] 50%|█████     | 40/80 [39:18<29:34, 44.36s/it]                                                50%|█████     | 40/80 [39:18<29:34, 44.36s/it] 51%|█████▏    | 41/80 [40:29<34:00, 52.32s/it]
+  0%|          | 0/80 [00:00<?, ?it/s]  1%|▏         | 1/80 [01:00<1:19:54, 60.69s/it]  2%|▎         | 2/80 [01:51<1:11:27, 54.97s/it]  4%|▍         | 3/80 [03:32<1:37:33, 76.02s/it]  5%|▌         | 4/80 [04:51<1:37:41, 77.12s/it]  6%|▋         | 5/80 [05:42<1:24:35, 67.68s/it]                                                  6%|▋         | 5/80 [05:42<1:24:35, 67.68s/it]  8%|▊         | 6/80 [06:20<1:11:01, 57.59s/it]  9%|▉         | 7/80 [07:44<1:20:29, 66.15s/it] 10%|█         | 8/80 [07:52<57:07, 47.60s/it]   11%|█▏        | 9/80 [08:55<1:02:15, 52.62s/it] 12%|█▎        | 10/80 [10:18<1:12:04, 61.78s/it]                                                  12%|█▎        | 10/80 [10:18<1:12:04, 61.78s/it] 14%|█▍        | 11/80 [11:08<1:06:59, 58.26s/it] 15%|█▌        | 12/80 [12:18<1:10:02, 61.80s/it] 16%|█▋        | 13/80 [13:12<1:06:28, 59.53s/it] 18%|█▊        | 14/80 [14:18<1:07:30, 61.37s/it] 19%|█▉        | 15/80 [15:41<1:13:36, 67.95s/it]                                                  19%|█▉        | 15/80 [15:41<1:13:36, 67.95s/it] 20%|██        | 16/80 [15:46<52:14, 48.98s/it]   21%|██▏       | 17/80 [17:06<1:01:14, 58.33s/it] 22%|██▎       | 18/80 [18:03<59:46, 57.84s/it]   24%|██▍       | 19/80 [19:22<1:05:29, 64.42s/it] 25%|██▌       | 20/80 [20:45<1:09:57, 69.96s/it]                                                  25%|██▌       | 20/80 [20:45<1:09:57, 69.96s/it] 26%|██▋       | 21/80 [21:31<1:01:32, 62.59s/it] 28%|██▊       | 22/80 [22:21<56:54, 58.87s/it]   29%|██▉       | 23/80 [23:26<57:49, 60.86s/it] 30%|███       | 24/80 [23:36<42:36, 45.65s/it] 31%|███▏      | 25/80 [24:22<41:53, 45.70s/it]                                                31%|███▏      | 25/80 [24:22<41:53, 45.70s/it] 32%|███▎      | 26/80 [25:25<45:50, 50.94s/it] 34%|███▍      | 27/80 [26:43<51:55, 58.78s/it] 35%|███▌      | 28/80 [27:34<49:05, 56.65s/it] 36%|███▋      | 29/80 [28:53<53:50, 63.34s/it] 38%|███▊      | 30/80 [30:14<57:11, 68.64s/it]                                                38%|███▊      | 30/80 [30:14<57:11, 68.64s/it] 39%|███▉      | 31/80 [31:16<54:30, 66.75s/it] 40%|████      | 32/80 [31:27<39:56, 49.93s/it] 41%|████▏     | 33/80 [32:23<40:31, 51.74s/it] 42%|████▎     | 34/80 [33:34<43:58, 57.36s/it] 44%|████▍     | 35/80 [35:08<51:24, 68.54s/it]                                                44%|████▍     | 35/80 [35:08<51:24, 68.54s/it] 45%|████▌     | 36/80 [36:09<48:27, 66.09s/it] 46%|████▋     | 37/80 [37:14<47:09, 65.80s/it] 48%|████▊     | 38/80 [38:29<47:57, 68.52s/it] 49%|████▉     | 39/80 [39:15<42:14, 61.82s/it] 50%|█████     | 40/80 [39:18<29:34, 44.36s/it]                                                50%|█████     | 40/80 [39:18<29:34, 44.36s/it] 51%|█████▏    | 41/80 [40:29<34:00, 52.32s/it] 52%|█████▎    | 42/80 [41:39<36:27, 57.57s/it] 54%|█████▍    | 43/80 [42:24<33:06, 53.69s/it] 55%|█████▌    | 44/80 [43:22<32:56, 54.91s/it] 56%|█████▋    | 45/80 [44:20<32:43, 56.10s/it]                                                56%|█████▋    | 45/80 [44:20<32:43, 56.10s/it] 57%|█████▊    | 46/80 [45:58<38:51, 68.59s/it] 59%|█████▉    | 47/80 [47:08<37:58, 69.05s/it] 60%|██████    | 48/80 [47:15<26:52, 50.39s/it] 61%|██████▏   | 49/80 [48:02<25:32, 49.42s/it] 62%|██████▎   | 50/80 [49:14<28:05, 56.20s/it]                                                62%|██████▎   | 50/80 [49:14<28:05, 56.20s/it]Traceback (most recent call last):
+  File "/usr/lib/python3.10/runpy.py", line 196, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/usr/lib/python3.10/runpy.py", line 86, in _run_code
+    exec(code, run_globals)
+  File "/home/espencer2/ChatTLA/src/training/train.py", line 484, in <module>
+    main(
+  File "/home/espencer2/ChatTLA/src/training/train.py", line 446, in main
+    trainer.train(resume_from_checkpoint=resume_from)
+  File "/home/espencer2/ChatTLA/venv/lib/python3.10/site-packages/transformers/trainer.py", line 1412, in train
+    return inner_training_loop(
+  File "/home/espencer2/ChatTLA/venv/lib/python3.10/site-packages/transformers/trainer.py", line 1813, in _inner_training_loop
+    self._maybe_log_save_evaluate(
+  File "/home/espencer2/ChatTLA/venv/lib/python3.10/site-packages/transformers/trainer.py", line 2125, in _maybe_log_save_evaluate
+    metrics = self._evaluate(trial, ignore_keys_for_eval)
+  File "/home/espencer2/ChatTLA/venv/lib/python3.10/site-packages/transformers/trainer.py", line 2983, in _evaluate
+    metrics = self.evaluate(ignore_keys=ignore_keys_for_eval)
+  File "/home/espencer2/ChatTLA/venv/lib/python3.10/site-packages/transformers/trainer.py", line 2568, in evaluate
+    output = self.evaluation_loop(
+  File "/home/espencer2/ChatTLA/venv/lib/python3.10/site-packages/transformers/trainer.py", line 2695, in evaluation_loop
+    losses, logits, labels = self.prediction_step(model, inputs, prediction_loss_only, ignore_keys=ignore_keys)
+  File "/home/espencer2/ChatTLA/venv/lib/python3.10/site-packages/transformers/trainer.py", line 2949, in prediction_step
+    loss, outputs = self.compute_loss(
+  File "/home/espencer2/ChatTLA/venv/lib/python3.10/site-packages/trl/trainer/sft_trainer.py", line 1187, in compute_loss
+    (loss, outputs) = super().compute_loss(
+  File "/home/espencer2/ChatTLA/venv/lib/python3.10/site-packages/transformers/trainer.py", line 2022, in compute_loss
+    outputs = model(**inputs)
+  File "/home/espencer2/ChatTLA/venv/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1776, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/espencer2/ChatTLA/venv/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1787, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/espencer2/ChatTLA/venv/lib/python3.10/site-packages/accelerate/utils/operations.py", line 819, in forward
+    return model_forward(*args, **kwargs)
+  File "/home/espencer2/ChatTLA/venv/lib/python3.10/site-packages/accelerate/utils/operations.py", line 807, in __call__
+    return convert_to_fp32(self.model_forward(*args, **kwargs))
+  File "/home/espencer2/ChatTLA/venv/lib/python3.10/site-packages/torch/amp/autocast_mode.py", line 44, in decorate_autocast
+    return func(*args, **kwargs)
+  File "/home/espencer2/ChatTLA/venv/lib/python3.10/site-packages/peft/peft_model.py", line 1923, in forward
+    return self.base_model(
+  File "/home/espencer2/ChatTLA/venv/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1776, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/espencer2/ChatTLA/venv/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1787, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/espencer2/ChatTLA/venv/lib/python3.10/site-packages/peft/tuners/tuners_utils.py", line 311, in forward
+    return self.model.forward(*args, **kwargs)
+  File "/home/espencer2/ChatTLA/venv/lib/python3.10/site-packages/accelerate/hooks.py", line 175, in new_forward
+    output = module._old_forward(*args, **kwargs)
+  File "/home/espencer2/ChatTLA/venv/lib/python3.10/site-packages/transformers/utils/generic.py", line 841, in wrapper
+    output = func(self, *args, **kwargs)
+  File "/home/espencer2/ChatTLA/venv/lib/python3.10/site-packages/transformers/models/gpt_oss/modeling_gpt_oss.py", line 679, in forward
+    loss = self.loss_function(logits, labels, self.vocab_size, **kwargs)
+  File "/home/espencer2/ChatTLA/venv/lib/python3.10/site-packages/transformers/loss/loss_utils.py", line 66, in ForCausalLMLoss
+    loss = fixed_cross_entropy(logits, shift_labels, num_items_in_batch, ignore_index, **kwargs)
+  File "/home/espencer2/ChatTLA/venv/lib/python3.10/site-packages/transformers/loss/loss_utils.py", line 36, in fixed_cross_entropy
+    loss = nn.functional.cross_entropy(source, target, ignore_index=ignore_index, reduction=reduction)
+  File "/home/espencer2/ChatTLA/venv/lib/python3.10/site-packages/torch/nn/functional.py", line 3504, in cross_entropy
+    return torch._C._nn.cross_entropy_loss(
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 10.54 GiB. GPU 1 has a total capacity of 47.26 GiB of which 9.68 GiB is free. Including non-PyTorch memory, this process has 36.04 GiB memory in use. Of the allocated memory 35.40 GiB is allocated by PyTorch, and 448.20 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+{'loss': '2.975', 'grad_norm': '1.32', 'learning_rate': '4e-05', 'entropy': '1.562', 'num_tokens': '6.786e+04', 'mean_token_accuracy': '0.5669', 'epoch': '0.7018'}
+{'loss': '2.027', 'grad_norm': '0.6367', 'learning_rate': '9e-05', 'entropy': '1.512', 'num_tokens': '1.211e+05', 'mean_token_accuracy': '0.6338', 'epoch': '1.281'}
+{'loss': '1.661', 'grad_norm': '0.2949', 'learning_rate': '0.00014', 'entropy': '1.36', 'num_tokens': '1.847e+05', 'mean_token_accuracy': '0.6778', 'epoch': '1.982'}
+{'loss': '1.177', 'grad_norm': '0.1719', 'learning_rate': '0.00019', 'entropy': '1.182', 'num_tokens': '2.439e+05', 'mean_token_accuracy': '0.7213', 'epoch': '2.561'}
+{'loss': '1.079', 'grad_norm': '0.1387', 'learning_rate': '0.0001978', 'entropy': '1.194', 'num_tokens': '2.878e+05', 'mean_token_accuracy': '0.7354', 'epoch': '3.14'}
+{'loss': '1.075', 'grad_norm': '0.1328', 'learning_rate': '0.0001891', 'entropy': '1.082', 'num_tokens': '3.567e+05', 'mean_token_accuracy': '0.7555', 'epoch': '3.842'}
+{'loss': '1.019', 'grad_norm': '0.08057', 'learning_rate': '0.0001743', 'entropy': '1.034', 'num_tokens': '4.145e+05', 'mean_token_accuracy': '0.7696', 'epoch': '4.421'}
+{'loss': '0.884', 'grad_norm': '0.252', 'learning_rate': '0.0001545', 'entropy': '0.9634', 'num_tokens': '4.643e+05', 'mean_token_accuracy': '0.7963', 'epoch': '5'}
+{'loss': '0.8213', 'grad_norm': '0.08057', 'learning_rate': '0.0001309', 'entropy': '0.8731', 'num_tokens': '5.228e+05', 'mean_token_accuracy': '0.8141', 'epoch': '5.702'}
+{'loss': '0.8895', 'grad_norm': '0.08301', 'learning_rate': '0.0001052', 'entropy': '0.8603', 'num_tokens': '5.804e+05', 'mean_token_accuracy': '0.8086', 'epoch': '6.281'}
+[train] FATAL: CUDA out-of-memory during training startup.
+[train] Suggestions:
+  - free other GPU processes or set CUDA_VISIBLE_DEVICES to a free GPU
+  - set --device-map=cpu to keep base model on CPU and reduce VRAM usage
+  - reduce LoRA target layers (edit src/training/lora_config.yaml or use smaller device_map)
+  - set PYTORCH_ALLOC_CONF=expandable_segments:True to reduce fragmentation
+  - lower sequence length or use smaller batch/gradient-accumulation settings
+ 62%|██████▎   | 50/80 [49:36<29:45, 59.52s/it]

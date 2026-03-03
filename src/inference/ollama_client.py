@@ -41,7 +41,8 @@ _OLLAMA_HOST   = os.getenv("OLLAMA_HOST",   "http://localhost:11434")
 _DEFAULT_MODEL = os.getenv("CHATTLA_MODEL", "chattla:20b")
 
 _DEVELOPER_PROMPT = """\
-You are ChatTLA, Respond only the TLA+ module, no commentary
+You are ChatTLA, an expert at writing verified TLA+ formal specifications.
+Respond only with the TLA+ module, no commentary or explanation.
 1. Start the module with ---- MODULE <ModuleName> ----
 2. End with ====
 3. Include EXTENDS, VARIABLES, Init, Next, and Spec operators
@@ -50,6 +51,22 @@ You are ChatTLA, Respond only the TLA+ module, no commentary
    INVARIANT TypeOK   (if TypeOK is defined)
 \
 """
+
+
+def _build_harmony_prompt(developer_content: str, user_content: str) -> str:
+    """Build a raw harmony-format prompt that forces TLA+ code output.
+
+    gpt-oss-20b uses the harmony prompt format with channels (analysis, final).
+    By jumping straight to ``<|channel|>final<|message|>`` AND seeding the
+    output with ``---- MODULE``, we prevent the model from entering a
+    degenerate analysis loop and force it to produce TLA+ immediately.
+    """
+    return (
+        f"<|start|>system<|message|>You are ChatTLA, an expert at writing verified TLA+ formal specifications.<|end|>\n"
+        f"<|start|>developer<|message|>{developer_content}<|end|>\n"
+        f"<|start|>user<|message|>{user_content}<|end|>\n"
+        f"<|start|>assistant<|channel|>final<|message|>---- MODULE"
+    )
 
 
 class ChatTLAClient:
@@ -99,17 +116,27 @@ class ChatTLAClient:
         if module_name:
             user_content += f"\n\nUse module name: {module_name}"
 
-        system_content = f"{_DEVELOPER_PROMPT}\nReasoning: {self.reasoning}"
+        developer_content = f"{_DEVELOPER_PROMPT}\nReasoning: {self.reasoning}"
+        prompt = _build_harmony_prompt(developer_content, user_content)
 
-        response = self._client.chat(
+        response = self._client.generate(
             model=self.model,
-            messages=[
-                {"role": "system", "content": system_content},
-                {"role": "user",   "content": user_content},
-            ],
-            options={"temperature": temperature},
+            prompt=prompt,
+            raw=True,
+            options={
+                "temperature": temperature,
+                "repeat_penalty": 1.3,
+                "num_predict": 2048,
+                "top_k": 40,
+                "top_p": 0.9,
+                "stop": ["<|end|>", "<|start|>", "\n===="],
+            },
         )
-        raw = response["message"]["content"]
+        # Reconstruct: prompt seeded "---- MODULE", model continues from there
+        raw = "---- MODULE" + response["response"]
+        # Ensure the module has a closing delimiter
+        if "====" not in raw:
+            raw += "\n===="
         return _extract_tla(raw)
 
     def validate_and_generate(
@@ -150,22 +177,28 @@ class ChatTLAClient:
 
     def _self_correct(self, buggy_spec: str, error_msg: str) -> str:
         """Ask the model to fix a spec given a TLC error message."""
-        system_content = f"{_DEVELOPER_PROMPT}\nReasoning: {self.reasoning}"
-        response = self._client.chat(
-            model=self.model,
-            messages=[
-                {"role": "system", "content": system_content},
-                {
-                    "role": "user",
-                    "content": (
-                        f"This TLA+ spec has errors:\n```\n{error_msg}\n```\n\n"
-                        f"Buggy spec:\n{buggy_spec}\n\nFix the spec."
-                    ),
-                },
-            ],
-            options={"temperature": 0.1},
+        developer_content = f"{_DEVELOPER_PROMPT}\nReasoning: {self.reasoning}"
+        user_content = (
+            f"This TLA+ spec has errors:\n{error_msg}\n\n"
+            f"Buggy spec:\n{buggy_spec}\n\nFix the spec and output only the corrected TLA+ module."
         )
-        return _extract_tla(response["message"]["content"])
+        prompt = _build_harmony_prompt(developer_content, user_content)
+
+        response = self._client.generate(
+            model=self.model,
+            prompt=prompt,
+            raw=True,
+            options={
+                "temperature": 0.1,
+                "repeat_penalty": 1.3,
+                "num_predict": 2048,
+                "stop": ["<|end|>", "<|start|>", "\n===="],
+            },
+        )
+        raw = "---- MODULE" + response["response"]
+        if "====" not in raw:
+            raw += "\n===="
+        return _extract_tla(raw)
 
 
 def _extract_tla(text: str) -> str:

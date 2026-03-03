@@ -68,10 +68,24 @@ from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
     TrainingArguments,
+    TrainerCallback,
 )
 from trl import SFTTrainer, SFTConfig
 
 from src.training.tlc_eval_callback import TLCEvalCallback
+
+
+class ClearCacheCallback(TrainerCallback):
+    """Free fragmented GPU memory before eval/save to prevent OOM spikes."""
+
+    def on_evaluate(self, args, state, control, **kwargs):
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+
+    def on_save(self, args, state, control, **kwargs):
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+
 
 _REPO_ROOT    = Path(__file__).resolve().parents[2]
 _TRAIN_JSONL  = _REPO_ROOT / "data" / "processed" / "train.jsonl"
@@ -220,19 +234,22 @@ def build_training_args(
         # --- Sequence length (new in TRL 0.28) ----------------------------
         # TLA+ specs are long (avg 1924 tokens, p90=3236). Must not truncate.
         max_length=512 if smoke_test else 4096,
-        # --- Logging & eval ------------------------------------------------
+        # --- Logging & checkpointing ----------------------------------------
         # 10 epochs for small dataset (57 examples) to ensure convergence
         num_train_epochs=1 if smoke_test else 10,
         max_steps=5 if smoke_test else -1,
-        eval_strategy="steps",
-        eval_steps=50 if not smoke_test else 5,
+        # Eval is DISABLED for full runs — the model is split across 2 GPUs
+        # via pipeline parallelism and eval mode (no gradient checkpointing)
+        # keeps all layer activations in VRAM, causing OOM on the 200K-vocab
+        # cross_entropy (10.5 GiB allocation).  Training forward pass is fine
+        # because gradient_checkpointing drastically reduces activation memory.
+        # We evaluate the final checkpoint manually after training instead.
+        eval_strategy="steps" if smoke_test else "no",
+        eval_steps=5 if smoke_test else None,
         save_strategy="steps",
-        save_steps=50 if not smoke_test else 5,
+        save_steps=5 if smoke_test else 20,
         save_total_limit=5,
         logging_steps=1 if smoke_test else 5,
-        load_best_model_at_end=True,
-        metric_for_best_model="eval_loss",
-        greater_is_better=False,
         # --- MLflow --------------------------------------------------------
         report_to="mlflow",
         run_name="chattla-gpt-oss-20b",
@@ -438,7 +455,7 @@ def main(
         train_dataset=train_dataset,
         eval_dataset=eval_dataset,
         args=training_args,
-        callbacks=[tlc_callback],
+        callbacks=[tlc_callback, ClearCacheCallback()],
     )
 
     print("[train] Starting training...")
