@@ -1,10 +1,11 @@
 model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
-gpt-oss:20b,BM001,Mutual Exclusion,scheduling,2,0,0,0.889,bronze,27.57,"---- MODULE MutualExclusion ----
+gpt-oss:20b,BM001,Mutual Exclusion,scheduling,2,0,0,1.0,bronze,15.6,"---- MODULE MutualExclusion ----
 EXTENDS Naturals, Sequences
 
 CONSTANT N \* Number of processes
 
-VARIABLE state \* Mapping from process IDs to their current state
+VARIABLES
+    state \* Mapping from process IDs to their current state
 
 (* State definitions *)
 Idle == ""idle""
@@ -17,23 +18,24 @@ Init ==
     /\ \A i \in 1..N : state[i] = Idle
 
 (* Helper predicate: at most one process in critical section *)
-AtMostOneCritical == 
+AtMostOneCritical ==
     LET crits == {i \in 1..N : state[i] = Critical} IN
-        Cardinality(crits) <= 1
+    Cardinality(crits) <= 1
 
 (* Transition for a process i *)
-Process(i) == 
+Process(i) ==
     /\ i \in 1..N
     /\ \E newState \in {Idle, Trying, Critical} :
-        /\ newState # state[i]
-        /\ (newState = Idle /\ state[i] = Trying
-            \/ newState = Trying /\ state[i] = Idle
-            \/ newState = Critical /\ state[i] = Trying)
-        /\ AtMostOneCritical
+        /\ newState = Idle
+           \/ (newState = Trying /\ state[i] = Idle)
+           \/ (newState = Critical /\ state[i] = Trying /\ AtMostOneCritical)
+        /\ state' = [state EXCEPT ![i] = newState]
+        /\ UNCHANGED << state >>
 
 (* Next-state relation: any process may transition *)
 Next == \E i \in 1..N : Process(i)
 
+(* Specification *)
 Spec == Init /\ [][Next]_state
 
 (* Optional type invariant *)
@@ -42,24 +44,18 @@ TypeOK ==
     /\ AtMostOneCritical
 
 ===="
-gpt-oss:20b,BM002,Two-Phase Commit,transaction,3,0,0,1.0,bronze,44.06,"---- MODULE TwoPhaseCommit ----
+gpt-oss:20b,BM002,Two-Phase Commit,transaction,3,0,0,1.0,bronze,9.66,"---- MODULE TwoPhaseCommit ----
 EXTENDS Naturals, Sequences, TLC
 
 CONSTANTS
-    N,
-    Participants,
-    Coordinator
-
-ASSUME
-    /\ N \in Nat
-    /\ N > 0
-    /\ Participants \subseteq 1..N
-    /\ Coordinator \in 1..N
+    N \in Nat \setminus {0} \\
+    Participants \subseteq 1..N \\
+    Coordinator \in 1..N
 
 VARIABLES
-    state,
-    msgQueue,
-    decision
+    state,          \* Map from participant to its state
+    msgQueue,       \* Queue of messages to be processed
+    decision        \* Final decision of the coordinator: ""Commit"" | ""Abort"" | ""None""
 
 (* Participant states *)
 ParticipantState == {""Init"", ""Prepared"", ""Committed"", ""Aborted""}
@@ -67,7 +63,8 @@ ParticipantState == {""Init"", ""Prepared"", ""Committed"", ""Aborted""}
 (* Message types *)
 Message == [type: {""Prepare"", ""VoteYes"", ""VoteNo"", ""Commit"", ""Abort""},
             from: 1..N,
-            to:   1..N]
+            to:   1..N,
+            payload: BOOLEAN] \* payload used only for VoteYes/No
 
 (* Initial state *)
 Init ==
@@ -75,541 +72,523 @@ Init ==
     /\ msgQueue = <<>>
     /\ decision = ""None""
 
-(* Helper: send a message *)
-Send(msg) ==
-    /\ msgQueue' = Append(msgQueue, msg)
+(* Helper to send a message *)
+SendMsg(msg) == 
+    msgQueue' = Append(msgQueue, msg)
 
 (* Coordinator sends Prepare to all participants *)
 SendPrepare ==
     /\ decision = ""None""
     /\ \E p \in Participants:
-        Send([type |-> ""Prepare"", from |-> Coordinator, to |-> p])
+        SendMsg([type |-> ""Prepare"", from |-> Coordinator, to |-> p, payload |-> FALSE])
 
-(* Participant processes Prepare *)
+(* Participant processes Prepare and votes *)
 ProcessPrepare(p) ==
     /\ state[p] = ""Init""
     /\ state' = [state EXCEPT ![p] = ""Prepared""]
     /\ \E vote \in {""VoteYes"", ""VoteNo""}:
-        Send([type |-> vote, from |-> p, to |-> Coordinator])
+        SendMsg([type |-> vote, from |-> p, to |-> Coordinator, payload |-> (vote = ""VoteYes"")])
 
-(* Participant processes Commit *)
-ProcessCommit(p) ==
-    /\ state[p] = ""Prepared""
-    /\ state' = [state EXCEPT ![p] = ""Committed""]
-
-(* Participant processes Abort *)
-ProcessAbort(p) ==
-    /\ state[p] = ""Prepared""
-    /\ state' = [state EXCEPT ![p] = ""Aborted""]
-
-(* Coordinator processes VoteYes *)
-ProcessVoteYes ==
+(* Coordinator processes votes *)
+CollectVotes ==
     /\ decision = ""None""
-    /\ \E p \in Participants:
-        /\ state[p] = ""Prepared""
-        /\ \E msg \in msgQueue:
-            /\ msg.type = ""VoteYes""
-            /\ msg.from = p
-            /\ msg.to = Coordinator
+    /\ \E msg \in msgQueue:
+        /\ msg.type \in {""VoteYes"", ""VoteNo""}
+        /\ msg.to = Coordinator
+        /\ msg.from \in Participants
+        /\ IF msg.type = ""VoteNo"" THEN
+            decision' = ""Abort""
             /\ msgQueue' = Remove(msgQueue, msg)
-    /\ allYes == \A p \in Participants: state[p] = ""Prepared""
-    /\ IF allYes THEN
-        decision' = ""Commit""
-      ELSE
-        decision' = ""Abort""
-
-(* Coordinator processes VoteNo *)
-ProcessVoteNo ==
-    /\ decision = ""None""
-    /\ \E p \in Participants:
-        /\ state[p"
-gpt-oss:20b,BM003,Dining Philosophers,scheduling,2,0,0,1.0,bronze,26.79,"---- MODULE DiningPhilosophers ----
+        ELSE
+            (* VoteYes *)
+            /\ msgQueue' = Remove(msgQueue, msg)
+            /\ IF \A p \in Participants: 
+                    \E m \in msgQueue': m.type = ""VoteYes"" /\ m.from = p
+                THEN
+                    decision' = ""Commit""
+                E"
+gpt-oss:20b,BM003,Dining Philosophers,scheduling,2,0,0,1.0,bronze,6.4,"---- MODULE DiningPhilosophers ----
 EXTENDS Naturals, Sequences, TLC
 
-CONSTANTS
-    N \in Nat \setminus {0},
-    PHIL \in 1..N,
-    FORK \in 1..N
+CONSTANTS N \* Number of philosophers and forks
 
 VARIABLES
-    state,
-    forkOwner
+    forks,          \* forks[i] = p if philosopher p owns fork i, else 0
+    states          \* states[p] ∈ {""thinking"", ""hungry"", ""eating""}
+
+(* Initial state: all forks free, all philosophers thinking *)
+Init ==
+    /\ forks = [i \in 1..N |-> 0]
+    /\ states = [p \in 1..N |-> ""thinking""]
 
 (* Helper predicates *)
-CanEat(p) == 
-    forkOwner[LeftFork(p)] = 0 /\ forkOwner[RightFork(p)] = 0
-
 LeftFork(p) == IF p = 1 THEN N ELSE p - 1
 RightFork(p) == IF p = N THEN 1 ELSE p + 1
 
-(* Initial state *)
-Init == 
-    /\ state \in [PHIL -> {""thinking"",""hungry"",""eating""}]
-    /\ forkOwner \in [FORK -> 0]
-    /\ \A p \in PHIL : state[p] = ""thinking""
+ForkFree(i) == forks[i] = 0
+PhilosopherHungry(p) == states[p] = ""hungry""
+PhilosopherEating(p) == states[p] = ""eating""
+
+(* Action: philosopher p becomes hungry *)
+Hungry(p) ==
+    /\ states[p] = ""thinking""
+    /\ states' = [states EXCEPT ![p] = ""hungry""]
+    /\ forks' = forks
+
+(* Action: philosopher p picks up both forks and starts eating *)
+Eat(p) ==
+    /\ states[p] = ""hungry""
+    /\ ForkFree(LeftFork(p))
+    /\ ForkFree(RightFork(p))
+    /\ forks' = [forks EXCEPT ![LeftFork(p)] = p, ![RightFork(p)] = p]
+    /\ states' = [states EXCEPT ![p] = ""eating""]
+
+(* Action: philosopher p puts down both forks and goes back to thinking *)
+Done(p) ==
+    /\ states[p] = ""eating""
+    /\ forks' = [forks EXCEPT ![LeftFork(p)] = 0, ![RightFork(p)] = 0]
+    /\ states' = [states EXCEPT ![p] = ""thinking""]
 
 (* Next-state relation *)
-Next == 
-    \E p \in PHIL :
-        \E action \in {""think"",""hungry"",""eat"",""putdown""} :
-            CASE
-                action = ""think"" /\ state[p] = ""eating"" -> 
-                    /\ state' = [state EXCEPT ![p] = ""thinking""]
-                    /\ forkOwner' = forkOwner
-                [] action = ""hungry"" /\ state[p] = ""thinking"" -> 
-                    /\ state' = [state EXCEPT ![p] = ""hungry""]
-                    /\ forkOwner' = forkOwner
-                [] action = ""eat"" /\ state[p] = ""hungry"" /\ CanEat(p) -> 
-                    /\ state' = [state EXCEPT ![p] = ""eating""]
-                    /\ forkOwner' = [forkOwner EXCEPT ![LeftFork(p)] = p, ![RightFork(p)] = p]
-                [] action = ""putdown"" /\ state[p] = ""eating"" -> 
-                    /\ state' = [state EXCEPT ![p] = ""thinking""]
-                    /\ forkOwner' = [forkOwner EXCEPT ![LeftFork(p)] = 0, ![RightFork(p)] = 0]
-            END
+Next ==
+    \E p \in 1..N :
+        (Hungry(p) \/ Eat(p) \/ Done(p))
 
-Spec == Init /\ [][Next]_<<state, forkOwner>>
+Spec ==
+    Init /\ [][Next]_<<forks, states>>
 
 (* Type invariant *)
-TypeOK == 
-    /\ state \in [PHIL -> {""thinking"",""hungry"",""eating""}]
-    /\ forkOwner \in [FORK -> 0 \/ PHIL]
+TypeOK ==
+    /\ forks \in [1..N -> 1..N \cup {0}]
+    /\ states \in [1..N -> {""thinking"", ""hungry"", ""eating""}]
 
 ===="
-gpt-oss:20b,BM004,Lamport's Bakery Algorithm,consensus,3,0,0,1.0,bronze,22.15,"---- MODULE Bakery ----
+gpt-oss:20b,BM004,Lamport's Bakery Algorithm,consensus,3,0,0,0.889,bronze,3.91,"---- MODULE Bakery ----
 EXTENDS Naturals, Sequences, TLC
 
-CONSTANT N \* Number of processes
+CONSTANTS N \* number of processes
 
 VARIABLES
     flag, \* [1..N -> BOOLEAN]
     num   \* [1..N -> Nat]
 
-(* Helper definitions *)
-maxNum == \* maximum number currently taken
-    IF \E i \in 1..N : flag[i] THEN
-        MAX \{ num[i] : i \in 1..N : flag[i] \}
-    ELSE 0
+(* Helper functions *)
+maxNum(i) == IF i = 1 THEN 0 ELSE CHOOSE j \in 1..i-1 : num[j]
+maxNumAll == CHOOSE j \in 1..N : num[j]
 
-(* Initialization *)
-Init == /\ flag = [i \in 1..N |-> FALSE]
-        /\ num = [i \in 1..N |-> 0]
+(* Initial state *)
+Init ==
+    /\ flag = [i \in 1..N |-> FALSE]
+    /\ num   = [i \in 1..N |-> 0]
 
-(* Process i's actions *)
-Choose(i) ==
+(* Next-state relation for process i *)
+Next_i(i) ==
     /\ flag[i] = FALSE
     /\ flag' = [flag EXCEPT ![i] = TRUE]
-    /\ UNCHANGED num
+    /\ num'   = [num EXCEPT ![i] = maxNumAll + 1]
+    /\ flag' = [flag' EXCEPT ![i] = FALSE]
 
-TakeNumber(i) ==
-    /\ flag[i] = TRUE
-    /\ num' = [num EXCEPT ![i] = maxNum + 1]
-    /\ UNCHANGED flag
+(* Mutual exclusion condition *)
+TypeOK ==
+    \A i, j \in 1..N : i /= j
+        => (num[i] = 0) \/ (num[j] = 0) \/ (num[i] > num[j]) \/ (num[i] = num[j] /\ i > j)
 
-Enter(i) ==
-    /\ flag[i] = TRUE
-    /\ num[i] > 0
-    /\ \A j \in 1..N :
-        j # i =>
-        IF flag[j] /\ num[j] > 0
-        THEN
-            IF num[j] < num[i]
-            THEN FALSE
-            ELSE IF num[j] = num[i]
-            THEN i < j
-            ELSE TRUE
-        ELSE TRUE
-
-Exit(i) ==
-    /\ flag[i] = TRUE
-    /\ num' = [num EXCEPT ![i] = 0]
-    /\ UNCHANGED flag
-
-Next == \E i \in 1..N :
-    Choose(i) \/ TakeNumber(i) \/ Enter(i) \/ Exit(i)
-
-Spec == Init /\ [][Next]_<<flag, num>>
-
-(* Invariant: all numbers are non-negative *)
-TypeOK == /\ \A i \in 1..N : num[i] \in Nat
+Spec ==
+    Init /\ [][Next]_<<flag, num>>
 
 ===="
-gpt-oss:20b,BM005,Producer-Consumer Queue,storage,2,0,0,1.0,bronze,20.39,"---- MODULE BoundedFIFO ----
+gpt-oss:20b,BM005,Producer-Consumer Queue,storage,2,0,0,1.0,bronze,4.72,"---- MODULE BoundedFIFO ----
 EXTENDS Naturals, Sequences, TLC
 
 CONSTANT K \* Queue capacity
 
 VARIABLES q, head, tail, size
 
-(* q is a sequence of length K, each element is either a value or the special symbol EMPTY *)
-(* head and tail are indices in 0..K-1 *)
-(* size is the number of elements currently in the queue *)
+(* q is a sequence of length K, holding the elements in the queue.
+   head points to the index of the next element to consume.
+   tail points to the index where the next element will be produced.
+   size is the number of elements currently in the queue. *)
 
-(* Helper constants *)
-EMPTY == ""EMPTY""
-
-(* Initial state: empty queue *)
 Init ==
-  /\ q = [i \in 0..K-1 |-> EMPTY]
-  /\ head = 0
-  /\ tail = 0
-  /\ size = 0
+    /\ q = <<>>
+    /\ head = 1
+    /\ tail = 1
+    /\ size = 0
 
-(* Producer action: add an element x to the queue if not full *)
-Producer(x) ==
-  /\ size < K
-  /\ q' = [q EXCEPT ![tail] = x]
-  /\ tail' = (tail + 1) % K
-  /\ size' = size + 1
-  /\ UNCHANGED head
+ProducerAction ==
+    /\ size < K
+    /\ LET newTail == IF tail = K THEN 1 ELSE tail + 1 IN
+       /\ q' = Append(q, 1) \* placeholder for produced value
+       /\ tail' = newTail
+       /\ size' = size + 1
+       /\ head' = head
+       /\ UNCHANGED <<q, head>>
 
-(* Consumer action: remove an element from the queue if not empty *)
-Consumer ==
-  /\ size > 0
-  /\ x = q[head]
-  /\ q' = [q EXCEPT ![head] = EMPTY]
-  /\ head' = (head + 1) % K
-  /\ size' = size - 1
-  /\ UNCHANGED tail
+ConsumerAction ==
+    /\ size > 0
+    /\ LET newHead == IF head = K THEN 1 ELSE head + 1 IN
+       /\ q' = Tail(q) \* remove first element
+       /\ head' = newHead
+       /\ size' = size - 1
+       /\ tail' = tail
+       /\ UNCHANGED <<q, size>>
 
-(* Next-state relation *)
 Next ==
-  \E x \in Nat : Producer(x)
-  \/ Consumer
+    ProducerAction \/ ConsumerAction
+
+Spec ==
+    Init /\ [][Next]_<<q, head, tail, size>>
 
 (* Type invariant *)
 TypeOK ==
-  /\ q \in [0..K-1 -> {""EMPTY""} \cup Nat]
-  /\ head \in 0..K-1
-  /\ tail \in 0..K-1
-  /\ size \in 0..K
-
-Spec == Init /\ [][Next]_<<q, head, tail, size>>
+    /\ q \in Seq(1..K)
+    /\ head \in 1..K
+    /\ tail \in 1..K
+    /\ size \in 0..K
 
 ===="
-chattla:20b,BM001,Mutual Exclusion,scheduling,2,0,0,1.0,bronze,31.27,"---- MODULE MutualExclusion ----
-EXTENDS Integers, Sequences
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,0,0,1.0,bronze,42.48,"---- MODULE MutualExclusion ----
+
+EXTENDS Naturals, FiniteSets
 
 CONSTANT N
 
 VARIABLES
-  state,          \* Mapping from process id to its state
-  turn            \* Process id whose turn it is to enter the critical section
+  proc,          \* Process identifier
+  state,         \* State of each process
+  try,           \* Set of processes that are trying to enter critical section
+  critical,      \* Set of processes that are in critical section
 
-State == {""idle"", ""trying"", ""critical""}
+(* --algorithm MutualExclusion
+  variables
+    proc \in 1..N,
+    state \in [1..N -> {idle, trying, critical}],
+    try \in SUBSET 1..N,
+    critical \in SUBSET 1..N
+  define
+    idle == \A i \in 1..N : state[i] = idle
+  end define
+  action
+    \* Process i enters trying state
+    \E i \in 1..N :
+      proc' = i
+      /\ state' = [state EXCEPT ![i] = @ \E trying]
+      /\ try' = try \cup {i}
+      /\ UNCHANGED <<critical>>
+  \/ \* Process i enters critical state
+    \E i \in 1..N :
+      proc' = i
+      /\ state' = [state EXCEPT ![i] = @ \E critical]
+      /\ try' = try \ {i}
+      /\ critical' = critical \cup {i}
+      /\ UNCHANGED <<idle>>
+  \/ \* Process i exits critical state
+    \E i \in 1..N :
+      proc' = i
+      /\ state' = [state EXCEPT ![i] = @ \E idle]
+      /\ critical' = critical \ {i}
+      /\ UNCHANGED <<try, idle>>
+  end action
+end algorithm *)
 
-Init == /\ state \in [1..N |-> State]
-    /\ turn \in 1..N
+Init == 
+  /\ proc \in 1..N
+  /\ state = [i \in 1..N |-> idle]
+  /\ try = {}
+  /\ critical = {}
 
-EnterCS(pid) == 
-  /\ state[pid] = ""idle""
-  /\ state' = [state EXCEPT ![pid] = ""trying""]
-  /\ UNCHANGED turn
+Next == 
+  \E i \in 1..N :
+    \E j \in 1..N :
+      \E k \in 1..N :
+        \E l \in 1..N :
+          \E m \in 1..N :
+            \E n \in 1..N :
+              \E o \in 1..N :
+                \E p \in 1..N :
+                  \E q \in 1..N :
+                    \E r \in 1..N :
+                      \E s \in 1..N :
+                        \E t \in 1..N :
+                          \E u \in 1..N :
+                            \E v \in 1..N :
+                              \E w \in 1..N :
+                                \E x \in 1..N :
+                                  \E y \in 1..N :
+                                    \E z \in 1..N :
+                                      MutualExclusion
 
-ExitCS(pid) == 
-  /\ state[pid] = ""critical""
-  /\ state' = [state EXCEPT ![pid] = ""idle""]
-  /\ turn' = CHOOSE j \in 1..N : state[j] = ""trying""
-
-TryEnterCS(pid) == 
-  /\ state[pid] = ""trying""
-  /\ turn = pid
-  /\ state' = [state EXCEPT ![pid] = ""critical""]
-  /\ UNCHANGED turn
-
-Next == \E pid \in 1..N :
-  EnterCS(pid) \/ ExitCS(pid) \/ TryEnterCS(pid)
-
-Spec == Init /\ [][Next]_<<state, turn>>
-
-TypeOK == /\ state \in [1..N |-> State]
-  /\ turn \in 1..N
-
-Inv == \A pid \in 1..N : state[pid] # ""critical"" => 
-  \A qid \in 1..N : state[qid] # ""critical""
-
-THEOREM MutualExclusion == Spec => []Inv
-===="
-chattla:20b,BM002,Two-Phase Commit,transaction,3,0,0,1.0,bronze,63.0,"---- MODULE TwoPhaseCommit ----
-EXTENDS Naturals, FiniteSets, Sequences
-
-CONSTANTS
-  Participants,
-  Coordinator,
-  Prepare,
-  VoteYes,
-  VoteNo,
-  Commit,
-  Abort
-
-VARIABLES
-  state,
-  inbox
-
-State == [participant |-> {""Init"", ""Prepared"", ""Committed"", ""Aborted""},
-          coordinator |-> {""Init"", ""Prepared"", ""Committed"", ""Aborted""}]
-
-Init == /\ state = [p \in Participants |-> ""Init""]
-       /\ inbox = [p \in Participants \union {Coordinator} |-> <<>>]
-
-PrepareMsg == [msg |-> {Prepare, Coordinator, <<>>}]
-VoteYesMsg == [msg |-> {VoteYes, Coordinator, <<>>}]
-VoteNoMsg == [msg |-> {VoteNo, Coordinator, <<>>}]
-CommitMsg == [msg |-> {Commit, Coordinator, <<>>}]
-AbortMsg == [msg |-> {Abort, Coordinator, <<>>}]
-
-SendPrepare == /\ state[Coordinator] = ""Init""
-              /\ state' = [state EXCEPT ![Coordinator] = ""Prepared""]
-              /\ inbox' = [inbox EXCEPT ![p] = inbox[p] \o <<PrepareMsg>> |
-                            p \in Participants]
-
-SendVoteYes == /\ state[Coordinator] = ""Prepared""
-              /\ state' = [state EXCEPT ![Coordinator] = ""Committed""]
-              /\ inbox' = [inbox EXCEPT ![p] = inbox[p] \o <<VoteYesMsg>> |
-                            p \in Participants]
-
-SendVoteNo == /\ state[Coordinator] = ""Prepared""
-              /\ state' = [state EXCEPT ![Coordinator] = ""Aborted""]
-              /\ inbox' = [inbox EXCEPT ![p] = inbox[p] \o <<VoteNoMsg>> |
-                            p \in Participants]
-
-SendCommit == /\ state[Coordinator] = ""Committed""
-              /\ inbox' = [inbox EXCEPT ![p] = inbox[p] \o <<CommitMsg>> |
-                            p \in Participants]
-
-SendAbort == /\ state[Coordinator] = ""Aborted""
-            /\ inbox' = [inbox EXCEPT ![p] = inbox[p] \o <<AbortMsg>> |
-                            p \in Participants]
-
-ReceivePrepare == /\ state[Coordinator] = ""Init""
-                 /\ \E msg \in inbox[Coordinator] :
-                    /\ msg[msg] = Prepare
-                    /\ inbox' = [inbox EXCEPT ![Coordinator] = inbox[Coo"
-chattla:20b,BM003,Dining Philosophers,scheduling,2,0,0,0.778,bronze,18.44,"---- MODULE DiningPhilosophers ----
-
-EXTENDS Integers, Sequences
+Spec == Init /\ [][Ne"
+chattla:20b,BM002,Two-Phase Commit,transaction,3,0,0,1.0,bronze,22.38,"---- MODULE TwoPhaseCommit ----
+EXTENDS Naturals, FiniteSets
 
 CONSTANT N
+ASSUME N \in Nat
 
-ASSUME N > 0
+VARIABLES state, votes, msg
+
+Prepare = ""Prepare""
+VoteYes = ""VoteYes""
+VoteNo = ""VoteNo""
+Commit = ""Commit""
+Abort = ""Abort""
+
+TypeOK == /\ state \in [1..N -> {""Init"", ""Prepared"", ""Committed"", ""Aborted""}]
+/\ votes \in [1..N -> {""Yes"", ""No""}]
+/\ msg \in [1..N -> {"""", Prepare, Commit, Abort}]
+
+Init == /\ state = [i \in 1..N |-> ""Init""]
+/\ votes = [i \in 1..N |-> ""Yes""]
+/\ msg = [i \in 1..N |-> """"]
+
+PrepareMsg(i) == /\ state[i] = ""Init""
+/\ msg[i] = Prepare
+/\ UNCHANGED <<state, votes, msg>>
+
+VoteMsg(i) == /\ state[i] = ""Prepared""
+/\ msg[i] = IF votes[i] = ""Yes"" THEN Commit ELSE Abort
+/\ UNCHANGED <<state, votes, msg>>
+
+CommitMsg(i) == /\ state[i] = ""Prepared""
+/\ msg[i] = Commit
+/\ state' = [state EXCEPT ![i] = ""Committed""]
+/\ UNCHANGED <<votes, msg>>
+
+AbortMsg(i) == /\ state[i] = ""Prepared""
+/\ msg[i] = Abort
+/\ state' = [state EXCEPT ![i] = ""Aborted""]
+/\ UNCHANGED <<votes, msg>>
+
+SendMsg(i) == /\ state[i] = ""Committed""
+/\ msg[i] = """"
+/\ UNCHANGED <<state, votes, msg>>
+
+ReceiveMsg(i) == /\ state[i] = ""Aborted""
+/\ msg[i] = """"
+/\ UNCHANGED <<state, votes, msg>>
+
+ReceiveMsgFrom(j) == /\ state[j] = ""Committed""
+/\ msg[j] = """"
+/\ state' = [state EXCEPT ![i] = ""Committed""]
+/\ UNCHANGED <<votes, msg>>
+
+ReceiveMsgFrom2(j) == /\ state[j] = ""Aborted""
+/\ msg[j] = """"
+/\ state' = [state EXCEPT ![i] = ""Aborted""]
+/\ UNCHANGED <<votes, msg>>
+
+Next == \/ \E i \in 1..N: PrepareMsg(i)
+\/ \E i \in 1..N: VoteMsg(i)
+\/ \E i \in 1..N: CommitMsg(i)
+\/ \E i \in 1..N: AbortMsg(i)
+\/ \E i \in 1..N: SendMsg(i)
+\/ \E i \in 1..N: ReceiveMsg(i)
+\/ \E i \in 1..N: ReceiveMsgFrom(i)
+\/ \E i \in 1..N: ReceiveMsgFrom2(i)
+
+Spec == Init /\ [][Next]_<<state, votes, msg>> /\ WF_vars(Next)
+
+Spec2 == Init /\ [][Next]_<<state, votes, msg>> /\ WF_vars(Next)
+
+Spec3 == Init /\ [][Next]_<<state, votes, msg>> /\ WF_vars(Next)
+
+Spec4 == Init /\ [][Next]_<<state, votes, msg>> /\ WF_vars(Next)
+
+Spec5 == Init /\ [][Next]_<<state, votes, "
+chattla:20b,BM003,Dining Philosophers,scheduling,2,0,0,1.0,bronze,22.36,"---- MODULE DiningPhilosophers ----
+
+EXTENDS Naturals, FiniteSets
+
+CONSTANT N
 
 VARIABLES forks, state
 
-THINKING, HUNGRY, EATING == 0, 1, 2
+TypeOK == forks \in [1..N -> 1..N] /\
+          state \in [1..N -> {""thinking"", ""hungry"", ""eating""}]
 
-Init == forks \= [i \in 1..N |-> 0] /\ state \= [i \in 1..N |-> THINKING]
+left(i) == IF i = 1 THEN N ELSE i - 1
+right(i) == IF i = N THEN 1 ELSE i + 1
 
-Left(i) == IF i = 1 THEN N ELSE i - 1
+canEat(i) == state[i] = ""hungry"" /\ forks[i] = i /\ forks[left(i)] = left(i)
 
-Right(i) == IF i = N THEN 1 ELSE i + 1
+pickUp(i) == forks' = [forks EXCEPT ![i] = 0, ![left(i)] = 0] /\
+             state' = [state EXCEPT ![i] = ""eating""]
 
-CanEat(i) == forks[i] = 0 /\ forks[Left(i)] = 0
+putDown(i) == forks' = [forks EXCEPT ![i] = i, ![left(i)] = left(i)] /\
+             state' = [state EXCEPT ![i] = ""thinking""]
 
-TakeForks(i) == forks' = [forks EXCEPT ![i] = 1, ![Left(i)] = 1] /\ state' = [state EXCEPT ![i] = EATING]
+Next == \E i \in 1..N :
+          (canEat(i) /\ pickUp(i)) \/ putDown(i)
 
-PutForks(i) == forks' = [forks EXCEPT ![i] = 0, ![Left(i)] = 0] /\ state' = [state EXCEPT ![i] = THINKING]
-
-Hungry(i) == state[i] = HUNGRY
-
-Take(i) == CanEat(i) /\ TakeForks(i)
-
-Put(i) == PutForks(i)
-
-Next == \E i \in 1..N : (Hungry(i) /\ Take(i)) \/ Put(i)
+Init == forks = [i \in 1..N |-> i] /\
+        state = [i \in 1..N |-> ""thinking""]
 
 Spec == Init /\ [][Next]_<<forks, state>>
 
-THEOREM DiningPhilosophersSpecImpliesNoDeadlock ==
-  Spec => []~(state[1] = EATING /\ state[2] = EATING)
+THEOREM Spec => [](\A i \in 1..N : forks[i] # 0)
 
-THEOREM DiningPhilosophersSpecImpliesNoStarvation ==
-  Spec => []<>(state[1] = EATING)
+THEOREM Spec => [](\A i \in 1..N : forks[left(i)] # 0)
 
-===="
-chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,0,0,0.444,bronze,94.82,"---- MODULE Bakery ----
-EXTENDS Naturals, Sequences
+THEOREM Spec => [](\A i \in 1..N : state[i] # ""hungry"")
+
+THEOREM Spec => [](\A i \in 1..N : forks[i] # forks[left(i)])
+
+THEOREM Spec => [](\A i \in 1..N : forks[i] # forks[right(i)])
+
+THEOREM Spec => [](\A i \in 1..N : forks[i] # forks[i])
+
+THEOREM Spec => [](\A i \in 1..N : forks[i] # 0)
+
+THEOREM Spec => [](\A i \in 1..N : forks[left(i)] # 0)
+
+THEOREM Spec => [](\A i \in 1..N : forks[right(i)] # 0)
+
+THEOREM Spec => [](\A i \in 1..N : forks[i] # forks[left(i)])
+
+THEOREM Spec => [](\A i \in 1..N : forks[i] # forks[right(i)])
+
+THEOREM Spec => [](\A i \in 1..N : forks[i] # forks[i])
+
+THEOREM Spec => [](\A i \in 1..N : forks[i] # 0)
+
+THEOREM Spec => [](\A i \in 1..N : forks[left(i)] # 0)
+
+THEOREM Spec => [](\A i \in 1..N : forks[right(i)] # 0)
+
+THEOREM Spec => [](\A i \in 1..N : forks[i] # forks[left(i)])
+
+THEOREM Spec => [](\A i \in 1..N : forks[i] # forks[right(i)])
+
+THEOREM Spec => [](\A i \in 1..N : forks[i] # forks[i])
+
+THEOREM Spec => [](\A i \in 1..N : forks[i] # 0)
+
+THEOREM Spec => [](\A i \in 1..N : forks[left(i)] # 0)
+
+THEOREM Spec => [](\A i \in 1..N : forks[righ"
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,0,0,1.0,bronze,22.51,"---- MODULE Bakery ----
+EXTENDS Naturals, FiniteSets
 
 CONSTANT N
 
 VARIABLES num, flag
 
-vars == <<num, flag>>
+(* --algorithm Bakery
+variables
+num: [1..N -> Nat];
+flag: [1..N -> BOOLEAN];
+procedure enter(i: 1..N) {
+flag[i] := TRUE;
+num[i] := 1 + Max(num);
+while (EXISTS j : j /= i /\ flag[j] /\ (num[j] < num[i] \/ (num[j] = num[i] /\ j < i))) do
+skip;
+}
+procedure leave(i: 1..N) {
+num[i] := 0;
+flag[i] := FALSE;
+}
+*)
+ASSUME N \in Nat
+
+Num(i) == num[i]
+Flag(i) == flag[i]
+
+TypeOK == /\ num \in [1..N -> Nat]
+/\ flag \in [1..N -> BOOLEAN]
+
+Enter(i) == /\ flag[i] = TRUE
+/\ \A j : j /= i => (Flag(j) /\ (Num(j) < Num(i) \/ (Num(j) = Num(i) /\ j < i))) = FALSE
+
+Leave(i) == /\ flag[i] = FALSE
+/\ Num(i) = 0
+
+EnterLeave(i) == Enter(i) \/ Leave(i)
+
+EnterLeaveAll == \A i : 1..N => EnterLeave(i)
+
+EnterLeaveAll' == \A i : 1..N => EnterLeave(i)
+
+Next == \E i : 1..N :
+\E flag' : flag' = [flag EXCEPT ![i] = TRUE]
+\E num' : num' = [num EXCEPT ![i] = 1 + Max(num)]
+\vee \E flag' : flag' = [flag EXCEPT ![i] = FALSE]
+\E num' : num' = [num EXCEPT ![i] = 0]
+
+Init == /\ num = [i \in 1..N |-> 0]
+/\ flag = [i \in 1..N |-> FALSE]
+
+Spec == Init /\ [][Next]_<<num, flag>> /\ WF_{EnterLeaveAll}(\E i : EnterLeave(i))
+
+Safety == \A i, j : i /= j => (Enter(i) => (Leave(j) \/ (Num(j) > Num(i)) \/ (Num(j) = Num(i) /\ j > i)))
+
+THEOREM Spec => Safety
+PROOF
+by induction on the number of steps
+Qed.
+
+THEOREM Spec => WF_{EnterLeaveAll}(\E i : EnterLeave(i))
+PROOF
+by induction on the number of steps
+Qed.
+
+THEOREM Spec => WF_{EnterLeaveAll}(\E i : EnterLeave(i))
+PROOF
+by induction on the number of steps
+Qed.
+
+THEOREM Spec => WF_{EnterLeaveAll}(\E i : EnterLeave(i))
+PROOF
+by induction on the number of steps
+Qed.
+
+THEOREM Spec => WF_{EnterLeaveAll}(\E i : EnterLeave(i))
+PROOF
+by induction on the number of steps
+Qed.
+
+THEOREM Spec => WF_{EnterLeaveAll}(\E i : EnterLeave(i))
+PROOF
+by induction on the number of steps
+Qed.
+
+THEOREM Spec => WF_{EnterLeaveAll}(\E i : EnterLeave(i))
+PROOF
+by induction on the number of steps
+Qed.
+
+THEOREM Spec =>"
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,0,0,1.0,bronze,2.74,"---- MODULE BoundedFIFO ----
 
-vars' == <<num', flag'>>
-
-vars_ == <<num, flag>>
-
-vars_ == <<num', flag'>>
-
-vars_ == <<num, flag>>
-
-vars_ == <<num', flag'>>
-
-vars_ == <<num, flag>>
-
-vars_ == <<num', flag'>>
-
-vars_ == <<num, flag>>
-
-vars_ == <<num', flag'>>
-
-vars_ == <<num, flag>>
-
-vars_ == <<num', flag'>>
-
-vars_ == <<num, flag>>
-
-vars_ == <<num', flag'>>
-
-vars_ == <<num, flag>>
-
-vars_ == <<num', flag'>>
-
-vars_ == <<num, flag>>
-
-vars_ == <<num', flag'>>
-
-vars_ == <<num, flag>>
-
-vars_ == <<num', flag'>>
-
-vars_ == <<num, flag>>
-
-vars_ == <<num', flag'>>
-
-vars_ == <<num, flag>>
-
-vars_ == <<num', flag'>>
-
-vars_ == <<num, flag>>
-
-vars_ == <<num', flag'>>
-
-vars_ == <<num, flag>>
-
-vars_ == <<num', flag'>>
-
-vars_ == <<num, flag>>
-
-vars_ == <<num', flag'>>
-
-vars_ == <<num, flag>>
-
-vars_ == <<num', flag'>>
-
-vars_ == <<num, flag>>
-
-vars_ == <<num', flag'>>
-
-vars_ == <<num, flag>>
-
-vars_ == <<num', flag'>>
-
-vars_ == <<num, flag>>
-
-vars_ == <<num', flag'>>
-
-vars_ == <<num, flag>>
-
-vars_ == <<num', flag'>>
-
-vars_ == <<num, flag>>
-
-vars_ == <<num', flag'>>
-
-vars_ == <<num, flag>>
-
-vars_ == <<num', flag'>>
-
-vars_ == <<num, flag>>
-
-vars_ == <<num', flag'>>
-
-vars_ == <<num, flag>>
-
-vars_ == <<num', flag'>>
-
-vars_ == <<num, flag>>
-
-vars_ == <<num', flag'>>
-
-vars_ == <<num, flag>>
-
-vars_ == <<num', flag'>>
-
-vars_ == <<num, flag>>
-
-vars_ == <<num', flag'>>
-
-vars_ == <<num, flag>>
-
-vars_ == <<num', flag'>>
-
-vars_ == <<num, flag>>
-
-vars_ == <<num', flag'>>
-
-vars_ == <<num, flag>>
-
-vars_ == <<num', flag'>>
-
-vars_ == <<num, flag>>
-
-vars_ == <<num', flag'>>
-
-vars_ == <<num, flag>>
-
-vars_ == <<num', flag'>>
-
-vars_ == <<num, flag>>
-
-vars_ == <<num', flag'>>
-
-vars_ == <<num, flag>>
-
-vars_ == <<num', flag'>>
-
-vars_ == <<num, flag>>
-
-vars_ == <<num', flag'>>
-
-vars_ == <<num, flag>>
-
-vars_ == <<num', flag'>>
-
-vars_ == <<num, flag>>
-
-vars_ == <<num', flag'>>
-
-vars_ == <<num, flag>>
-
-vars_ == <<num', flag'>>
-
-vars_ == <<num,"
-chattla:20b,BM005,Producer-Consumer Queue,storage,2,0,0,1.0,bronze,12.19,"---- MODULE bounded_fifo ----
 EXTENDS Integers, Sequences
 
 CONSTANT K
 
-VARIABLES q, head, tail, full, empty
+VARIABLES q, r, w, n
 
-vars == <<q, head, tail, full, empty>>
+vars == <<q, r, w, n>>
 
-Init ==
-head = 0 /\ tail = 0 /\ full = FALSE /\ empty = TRUE /\
-q = [i \in 1..K |-> 0]
+TypeOK == /\ q \in 1..K -> 1..K
+/\ r \in 1..K
+/\ w \in 1..K
+/\ n \in 0..K
 
-Producer(x) ==
-head' = (head + 1) % K /\ q' = [q EXCEPT ![head] = x] /\ full' = FALSE /\ empty' = FALSE
-Producer == \E x \in 1..K : Producer(x)
+Init == /\ q \in 1..K -> 0
+/\ r = 1
+/\ w = 1
+/\ n = 0
 
-Consumer ==
-tail' = (tail + 1) % K /\ full' = FALSE /\ empty' = (head = tail)
-Consumer == \E x \in 1..K : Consumer
+Producer == /\ n < K
+/\ q[w] = 1
+/\ w' = IF w = K THEN 1 ELSE w + 1
+/\ n' = n + 1
+
+Consumer == /\ n > 0
+/\ q[r] = 0
+/\ r' = IF r = K THEN 1 ELSE r + 1
+/\ n' = n - 1
 
 Next == Producer \/ Consumer
 
 Spec == Init /\ [][Next]_vars
 
-TypeOK == head \in 0..K /\ tail \in 0..K /\ full \in BOOLEAN /\ empty \in BOOLEAN /\
-q \in [1..K -> 1..K]
 ===="
