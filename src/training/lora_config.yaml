@@ -24,9 +24,9 @@
 peft_type: LORA
 
 # --- Core LoRA hyperparameters ---------------------------------------------
-r: 16                          # LoRA rank — 16 gives strong adaptation for domain-specific tasks
-lora_alpha: 32                 # scaling factor; effective scale = alpha/r = 2.0
-lora_dropout: 0.05             # light regularization since dataset is small (57 examples)
+r: 4                           # LoRA rank — minimal rank to preserve base model TLA+ syntax knowledge
+lora_alpha: 8                  # scaling factor; effective scale = alpha/r = 2.0
+lora_dropout: 0.10             # regularization to prevent overfitting on small curated dataset
 bias: none
 
 # Target all standard linear layers (attention + FFN + MoE gate/expert projections)

@@ -163,13 +163,57 @@ class ChatTLAClient:
         # Pre-process: strip common generation artefacts before validation
         spec = _sanitize_spec(spec)
 
+        # Detect PlusCal — if present, don't try to fix it, just regenerate
+        # with an explicit "no PlusCal" hint. PlusCal can't be mechanically
+        # converted to valid pure TLA+ by stripping alone.
+        had_pluscal = bool(re.search(
+            r"--(?:fair\s+)?algorithm\b|BEGIN TRANSLATION|end\s+algorithm",
+            spec, re.IGNORECASE
+        ))
+
+        # Apply deterministic Python fixer before any SANY/TLC validation.
+        # This catches the ~20 most common syntax patterns the model gets wrong
+        # (e.g. \notin, double-prime, missing commas, alignment issues) and
+        # avoids wasting self-correction retries on mechanically-fixable errors.
+        from src.training.self_improve import fix_tla_syntax, validate_with_sany
+        if not had_pluscal:
+            fix_result = fix_tla_syntax(spec)
+            if fix_result.fixes_applied:
+                # Check if the Python-fixed version passes SANY
+                is_valid, _ = validate_with_sany(fix_result.fixed_spec)
+                if is_valid:
+                    spec = fix_result.fixed_spec
+
         for attempt in range(max_retries):
             m = re.search(r"----\s*MODULE\s+(\w+)", spec)
             module_name = m.group(1) if m else "Generated"
 
+            # If the spec has PlusCal, skip validation and force a regeneration
+            # with an explicit "no PlusCal" instruction.
+            if re.search(r"--(?:fair\s+)?algorithm\b|end\s+algorithm", spec, re.IGNORECASE):
+                spec = self._self_correct_sany(
+                    spec,
+                    "CRITICAL: Your spec uses PlusCal syntax (--algorithm, begin, "
+                    "end algorithm, :=, labels). PlusCal is NOT pure TLA+ and cannot "
+                    "be parsed by SANY. You MUST rewrite using only pure TLA+ operators: "
+                    "Init ==, Next ==, /\\, \\/, UNCHANGED, primed variables (x'), etc. "
+                    "Do NOT use --algorithm, begin, end algorithm, while, if/then, or :=.",
+                    attempt,
+                )
+                spec = _sanitize_spec(spec)
+                continue
+
             # Step 1: SANY check first (fast, catches syntax issues)
             sany_result = sany_validate(spec, module_name=module_name)
             if not sany_result.valid:
+                # Try Python fixer before burning a self-correction attempt
+                fix_result = fix_tla_syntax(spec, "\n".join(sany_result.errors[:5]))
+                if fix_result.fixes_applied:
+                    fixed_sany = sany_validate(fix_result.fixed_spec, module_name=module_name)
+                    if fixed_sany.valid:
+                        spec = fix_result.fixed_spec
+                        continue  # Re-enter loop for TLC check
+
                 error_detail = "\n".join(sany_result.errors[:5])
                 if not error_detail:
                     error_detail = sany_result.raw_output[-500:]

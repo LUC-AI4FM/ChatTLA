@@ -129,10 +129,57 @@ def fix_tla_syntax(spec: str, sany_errors: str = "") -> FixResult:
     fixed = spec
 
     # ── Fix 1: Remove PlusCal blocks ──────────────────────────────────────
+    # Pattern A: full block  (* --algorithm ... end algorithm; *)
     pluscal_pat = r"\(\*\s*--(?:fair\s+)?algorithm\b.*?end\s+algorithm\s*;?\s*\*\)"
     if re.search(pluscal_pat, fixed, re.DOTALL | re.IGNORECASE):
         fixed = re.sub(pluscal_pat, "", fixed, flags=re.DOTALL | re.IGNORECASE)
         result.fixes_applied.append("removed PlusCal block")
+    else:
+        # Pattern B: incomplete PlusCal — model starts (* --algorithm but
+        # never closes with end algorithm; *).  Strip from the opening (* --algorithm
+        # to the ==== (keep everything before it and the ==== itself).
+        incomplete_pluscal = re.search(
+            r"\(\*\s*--(?:fair\s+)?algorithm\b", fixed, re.IGNORECASE
+        )
+        if incomplete_pluscal:
+            # Keep the spec up to right before the PlusCal block
+            before = fixed[:incomplete_pluscal.start()].rstrip()
+            # Ensure we still have the ==== delimiter
+            if "====" not in before:
+                before += "\n\n===="
+            fixed = before
+            result.fixes_applied.append("removed incomplete PlusCal block")
+
+        # Pattern C: bare --algorithm (no (* wrapper)
+        bare_pluscal = re.search(
+            r"^--(?:fair\s+)?algorithm\b", fixed, re.MULTILINE | re.IGNORECASE
+        )
+        if bare_pluscal:
+            before = fixed[:bare_pluscal.start()].rstrip()
+            if "====" not in before:
+                before += "\n\n===="
+            fixed = before
+            result.fixes_applied.append("removed bare PlusCal algorithm block")
+
+    # If the spec has a BEGIN TRANSLATION / END TRANSLATION block (PlusCal
+    # translator output), extract the header + translation + footer.
+    trans_match = re.search(
+        r"\\?\*?\s*BEGIN TRANSLATION.*?\n(.*?)\\?\*?\s*END TRANSLATION",
+        fixed, re.DOTALL,
+    )
+    if trans_match:
+        header_match = re.search(
+            r"(----.*?MODULE.*?)(?:\(\*\s*--(?:fair\s+)?algorithm|--(?:fair\s+)?algorithm)",
+            fixed, re.DOTALL,
+        )
+        footer_match = re.search(r"\\?\*?\s*END TRANSLATION.*?\n(.*)", fixed, re.DOTALL)
+        header = header_match.group(1).strip() if header_match else ""
+        translation = trans_match.group(1).strip()
+        footer = footer_match.group(1).strip() if footer_match else "===="
+        fixed = f"{header}\n\n{translation}\n\n{footer}"
+        if "====" not in fixed:
+            fixed += "\n===="
+        result.fixes_applied.append("extracted TLA+ translation from PlusCal")
 
     # Remove standalone PlusCal keywords
     pluscal_kw = re.findall(r"^\s*(begin|end\s+algorithm|macro|procedure)\b.*$", fixed, re.MULTILINE | re.IGNORECASE)
@@ -174,6 +221,26 @@ def fix_tla_syntax(spec: str, sany_errors: str = "") -> FixResult:
             new_var_block = var_block.group(1) + "\n".join("    " + l.strip() for l in new_lines) + "\n"
             fixed = fixed[:var_block.start()] + new_var_block + fixed[var_block.end():]
             result.fixes_applied.append("added commas to VARIABLES declaration")
+
+    # ── Fix 3b: Fix CONSTANTS with inline constraints ─────────────────────
+    # Models produce: CONSTANTS N \in Nat, FORK \in 1..N
+    # TLA+ requires: CONSTANT N, FORK   (no constraints — use ASSUME instead)
+    const_block = re.search(r"^(CONSTANTS?)\s+(.+?)(?=\n\n|\n[A-Z])", fixed, re.MULTILINE | re.DOTALL)
+    if const_block:
+        keyword = const_block.group(1)
+        body = const_block.group(2).strip()
+        # Check if it has \in or \setminus or other constraint operators
+        if re.search(r"\\in\b|\\setminus|\\subseteq|\\cup|\\cap", body):
+            # Extract just variable names (strip constraints)
+            names = []
+            for part in re.split(r",\s*(?=\w)", body):
+                m = re.match(r"(\w+)", part.strip())
+                if m:
+                    names.append(m.group(1))
+            if names:
+                new_const = f"{keyword} {', '.join(names)}"
+                fixed = fixed[:const_block.start()] + new_const + fixed[const_block.end():]
+                result.fixes_applied.append("stripped inline constraints from CONSTANTS")
 
     # ── Fix 4: Fix double-prime (x'' → x') ───────────────────────────────
     if re.search(r"\w''", fixed):
@@ -379,6 +446,62 @@ def fix_tla_syntax(spec: str, sany_errors: str = "") -> FixResult:
                 fixed = re.sub(r"WF_vars\b", f"WF_{vars_tuple}", fixed)
                 fixed = re.sub(r"SF_vars\b", f"SF_{vars_tuple}", fixed)
                 result.fixes_applied.append("inlined vars tuple in WF/SF")
+
+    # ── Fix 21: Remove bare module-level expressions (BM019 pattern) ──────
+    # Models sometimes emit bare `x \in Type` lines directly at module level
+    # (e.g., after a "(* Type definitions *)" comment) instead of inside
+    # TypeOK ==.  These cause parse errors because TLA+ doesn't allow bare
+    # expressions at module level.
+    # Strategy: if such lines exist, collect them into a TypeOK definition
+    # if TypeOK isn't already defined, otherwise just remove them.
+    bare_expr_pat = re.compile(
+        r"^(\w[\w\[\]]*(?:\[[\w, ]+\])?)\s*\\in\s+[^\n]+$", re.MULTILINE
+    )
+    # Only apply outside operator bodies: find lines that are at column 0 or
+    # preceded only by comments and appear before the first == definition
+    def _is_bare_module_level(spec_text: str) -> list[tuple[str,str]]:
+        """Return (full_line, variable_part) for bare-level \in expressions."""
+        found = []
+        in_body = False
+        for line in spec_text.splitlines():
+            stripped = line.strip()
+            if re.match(r"^\w+\s*(==|\(==\))", stripped):
+                in_body = True
+            if stripped == "" or stripped.startswith("\\*") or stripped.startswith("(*"):
+                continue
+            if not in_body and bare_expr_pat.match(line.strip()):
+                found.append((line, line.strip()))
+        return found
+
+    bare_lines = _is_bare_module_level(fixed)
+    if bare_lines:
+        # Remove them from the spec
+        for full_line, _ in bare_lines:
+            # Remove the line entirely
+            fixed = fixed.replace(full_line + "\n", "", 1)
+            fixed = fixed.replace(full_line, "", 1)
+        result.fixes_applied.append("removed bare module-level \\in expressions")
+
+    # ── Fix 22: Detect and patch truncated specs ──────────────────────────
+    # If the spec has no ==== ending, it was likely truncated.  We try to
+    # close any open operator definitions and add a minimal terminator.
+    if "====" not in fixed:
+        # Count unclosed lines — if the last meaningful line doesn't end an
+        # operator (doesn't look like a complete expression), add minimal close.
+        stripped_lines = [l.rstrip() for l in fixed.splitlines() if l.strip()]
+        if stripped_lines:
+            last = stripped_lines[-1]
+            # If last line looks like a truncated operator call / expression,
+            # try to close the current operator with a simple TRUE and move on.
+            if not re.match(r"^\s*(====|Spec\s*==|THEOREM|PROPERTY)", last):
+                # Add ==== to close the module — Fix 9 might add it too, but
+                # we also want to try to make the preceding incomplete
+                # operator syntactically valid by appending TRUE if needed.
+                if last.endswith("==") or last.endswith("/\\") or last.endswith("\\/"):
+                    fixed = fixed.rstrip() + "\n    TRUE\n\n===="
+                else:
+                    fixed = fixed.rstrip() + "\n\n===="
+                result.fixes_applied.append("closed truncated spec")
 
     result.fixed_spec = fixed.strip()
     return result
@@ -602,17 +725,13 @@ def run_iteration(
             is_valid_fixed, sany_errors_fixed = validate_with_sany(fix_result.fixed_spec)
 
             if is_valid_fixed:
-                log.info(f"  [{prompt_id}] ✓ SANY pass after fixes. Adding bug_fix + spec_gen examples.")
+                log.info(f"  [{prompt_id}] ✓ SANY pass after fixes. Adding spec_gen example.")
                 stats.sany_pass_fixed += 1
 
-                # Create TWO training examples:
-                # 1. bug_fix: teaches the model to fix its own errors
-                new_examples.append(build_bug_fix_example(
-                    prompt_text, spec, sany_errors, fix_result.fixed_spec
-                ))
-                stats.bug_fix_examples += 1
-
-                # 2. spec_gen: teaches the model the correct output directly
+                # Only create spec_gen example with the corrected spec.
+                # Bug-fix examples are deliberately excluded: they contain
+                # buggy TLA+ in the user message which the model memorises,
+                # causing it to reproduce syntax errors during generation.
                 new_examples.append(build_spec_gen_example(prompt_text, fix_result.fixed_spec))
                 stats.spec_gen_examples += 1
                 continue
@@ -627,12 +746,7 @@ def run_iteration(
                 log.info(f"  [{prompt_id}] ✓ Self-correction succeeded (tier={tier}).")
                 stats.sany_pass_fixed += 1
 
-                # bug_fix example: original buggy → model-corrected
-                new_examples.append(build_bug_fix_example(
-                    prompt_text, spec, sany_errors, corrected_spec
-                ))
-                stats.bug_fix_examples += 1
-
+                # Only spec_gen — no bug_fix examples (see note above).
                 new_examples.append(build_spec_gen_example(prompt_text, corrected_spec))
                 stats.spec_gen_examples += 1
             else:
@@ -640,14 +754,42 @@ def run_iteration(
         except Exception as e:
             log.warning(f"  [{prompt_id}] Self-correction error: {e}")
 
-    # ── Phase 5: Persist new examples ─────────────────────────────────────
+    # ── Phase 5: Persist new examples (with dedup) ────────────────────────
     stats.total_new_examples = len(new_examples)
     if new_examples:
-        _AUGMENTED_JSONL.parent.mkdir(parents=True, exist_ok=True)
-        with open(_AUGMENTED_JSONL, "a", encoding="utf-8") as f:
-            for ex in new_examples:
-                f.write(json.dumps(ex, ensure_ascii=False) + "\n")
-        log.info(f"[self_improve] Appended {len(new_examples)} examples to {_AUGMENTED_JSONL}")
+        # Load existing augmented examples to dedup against
+        existing_prompts = set()
+        if _AUGMENTED_JSONL.exists():
+            with open(_AUGMENTED_JSONL, encoding="utf-8") as f:
+                for line in f:
+                    if line.strip():
+                        try:
+                            ex = json.loads(line)
+                            user_msg = [m for m in ex["messages"] if m["role"] == "user"][0]["content"]
+                            # Hash first 200 chars of prompt as dedup key
+                            existing_prompts.add(user_msg[:200])
+                        except (json.JSONDecodeError, KeyError, IndexError):
+                            pass
+
+        # Filter out duplicates
+        deduped_examples = []
+        for ex in new_examples:
+            user_msg = [m for m in ex["messages"] if m["role"] == "user"][0]["content"]
+            key = user_msg[:200]
+            if key not in existing_prompts:
+                deduped_examples.append(ex)
+                existing_prompts.add(key)
+
+        stats.total_new_examples = len(deduped_examples)
+        if deduped_examples:
+            _AUGMENTED_JSONL.parent.mkdir(parents=True, exist_ok=True)
+            with open(_AUGMENTED_JSONL, "a", encoding="utf-8") as f:
+                for ex in deduped_examples:
+                    f.write(json.dumps(ex, ensure_ascii=False) + "\n")
+            log.info(f"[self_improve] Appended {len(deduped_examples)} new examples "
+                     f"({len(new_examples) - len(deduped_examples)} deduped) to {_AUGMENTED_JSONL}")
+        else:
+            log.info(f"[self_improve] All {len(new_examples)} examples were duplicates — nothing appended.")
 
     return stats
 
@@ -673,17 +815,32 @@ def retrain_and_deploy() -> bool:
     """
     Run full retrain → merge → GGUF → Ollama deploy pipeline.
 
+    Dynamically scales epochs and timeout based on training set size.
     Returns True if successful.
     """
     log.info("[self_improve] Starting retraining...")
 
+    # Count training examples to scale epochs and timeout
+    n_train = 0
+    if _TRAIN_JSONL.exists():
+        with open(_TRAIN_JSONL) as f:
+            n_train = sum(1 for line in f if line.strip())
+
+    # Fewer epochs for larger datasets: 10 for <80, 5 for ~200, 3 for 400+
+    num_epochs = max(3, min(10, 600 // max(n_train, 1)))
+    # Estimate timeout: steps≈n_train*epochs/8, ~40s/step, 1.5x safety
+    est_steps = (n_train * num_epochs) // 8
+    timeout_s = max(3600, int(est_steps * 40 * 1.5))
+    log.info(f"[self_improve] Training {n_train} examples × {num_epochs} epochs "
+             f"(~{est_steps} steps, timeout={timeout_s}s)")
+
     # 1. Train
     result = subprocess.run(
-        [sys.executable, "-m", "src.training.train"],
+        [sys.executable, "-m", "src.training.train", "--epochs", str(num_epochs)],
         cwd=str(_REPO_ROOT),
         capture_output=True,
         text=True,
-        timeout=7200,  # 2 hour max
+        timeout=timeout_s,
     )
     if result.returncode != 0:
         log.error(f"[self_improve] Training failed:\n{result.stderr[-500:]}")

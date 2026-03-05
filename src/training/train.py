@@ -206,6 +206,7 @@ def build_training_args(
     smoke_test: bool = False,
     resume_from: str | None = None,
     use_cpu: bool = False,
+    num_epochs: int | None = None,
 ) -> SFTConfig:
     """Return an SFTConfig tuned for smoke or full runs.
 
@@ -225,9 +226,9 @@ def build_training_args(
         per_device_train_batch_size=1 if smoke_test else 1,
         gradient_accumulation_steps=2 if smoke_test else 8,
         # --- Optimizer / schedule ------------------------------------------
-        learning_rate=2e-4,
+        learning_rate=1e-4,
         lr_scheduler_type="cosine",
-        warmup_steps=5 if smoke_test else 20,
+        warmup_steps=5 if smoke_test else 5,
         # --- Precision & memory --------------------------------------------
         bf16=bf16_enabled,
         gradient_checkpointing=True,
@@ -235,8 +236,9 @@ def build_training_args(
         # TLA+ specs are long (avg 1924 tokens, p90=3236). Must not truncate.
         max_length=512 if smoke_test else 4096,
         # --- Logging & checkpointing ----------------------------------------
-        # 10 epochs for small dataset (57 examples) to ensure convergence
-        num_train_epochs=1 if smoke_test else 10,
+        # Scale epochs based on dataset size to avoid overfitting.
+        # When called from self_improve.py, num_epochs is set dynamically.
+        num_train_epochs=1 if smoke_test else (num_epochs or 10),
         max_steps=5 if smoke_test else -1,
         # Eval is DISABLED for full runs — the model is split across 2 GPUs
         # via pipeline parallelism and eval mode (no gradient checkpointing)
@@ -267,6 +269,7 @@ def main(
     max_gpu_memory_mb: int | None = None,
     lora_layers_override: list[int] | None = None,
     lora_top_k: int | None = None,
+    num_epochs: int | None = None,
 ) -> None:
     mlflow.set_experiment("ChatTLA-gpt-oss-20b")
 
@@ -447,7 +450,7 @@ def main(
     # Pass `use_cpu=True` when the user explicitly requested `device_map='cpu'`
     # or when CUDA is not available so SFTConfig validates correctly.
     use_cpu_flag = (device_map == "cpu") or (not torch.cuda.is_available())
-    training_args = build_training_args(smoke_test=smoke_test, resume_from=resume_from, use_cpu=use_cpu_flag)
+    training_args = build_training_args(smoke_test=smoke_test, resume_from=resume_from, use_cpu=use_cpu_flag, num_epochs=num_epochs)
 
     trainer = SFTTrainer(
         model=model,
@@ -491,6 +494,8 @@ if __name__ == "__main__":
                         help="Comma-separated list of transformer layer indices to apply LoRA to (e.g. '0,1,2')")
     parser.add_argument("--lora-top-k", type=int, default=None,
                         help="Apply LoRA only to the first K transformer layers (indices 0..K-1)")
+    parser.add_argument("--epochs", type=int, default=None,
+                        help="Override number of training epochs (default: auto-scale by dataset size)")
     args = parser.parse_args()
 
     # parse lora_layers override
@@ -505,4 +510,5 @@ if __name__ == "__main__":
         max_gpu_memory_mb=args.max_gpu_memory_mb,
         lora_layers_override=lora_layers_override,
         lora_top_k=args.lora_top_k,
+        num_epochs=args.epochs,
     )

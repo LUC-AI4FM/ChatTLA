@@ -1,0 +1,210 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,0,0,1.0,bronze,23.02,"---- MODULE MutualExclusion ----
+EXTENDS Naturals, FiniteSets
+
+CONSTANT N
+ASSUME N \in Nat
+
+VARIABLES
+  state,
+  turn
+
+vars == <<state, turn>>
+
+TypeOK ==
+  /\ state \in [1..N -> {""idle"", ""trying"", ""critical""}]
+  /\ turn \in 1..N
+
+Init ==
+  /\ state = [i \in 1..N |-> ""idle""]
+  /\ turn \in 1..N
+
+Next ==
+  \/ \E i \in 1..N :
+     /\ state[i] = ""idle""
+     /\ state' = [state EXCEPT ![i] = ""trying""]
+  \/ \E i \in 1..N :
+     /\ state[i] = ""trying""
+     /\ state' = [state EXCEPT ![i] = ""critical""]
+     /\ turn' = i
+  \/ \E i \in 1..N :
+     /\ state[i] = ""critical""
+     /\ state' = [state EXCEPT ![i] = ""idle""]
+
+Spec == Init /\ [][Next]_vars
+
+Safety == \A i, j \in 1..N : i /= j => state[i] /= ""critical"" /\ state[j] /= ""critical""
+
+SpecWithSafety == Spec /\ Safety
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,0,0,1.0,bronze,6.84,"---- MODULE TwoPhaseCommit ----
+EXTENDS Naturals, FiniteSets
+
+CONSTANTS
+  Coordinator,
+  Participants
+
+VARIABLES
+  state,
+  votes,
+  decision
+
+Message ==
+  [ sender : Coordinator \cup Participants,
+    receiver : Coordinator \cup Participants,
+    type : {""Prepare"", ""VoteYes"", ""VoteNo"", ""Commit"", ""Abort""},
+    content : [ ""transaction"" |-> ""T1"" ] ]
+
+State ==
+  [ coordinator : {""Idle"", ""Waiting"", ""Committed"", ""Aborted""},
+    participants : [ p \in Participants |-> {""Idle"", ""Prepared"", ""Committed"", ""Aborted""} ] ]
+
+Init ==
+  /\ state = [ coordinator |-> ""Idle"",
+               participants |-> [ p \in Participants |-> ""Idle"" ] ]
+  /\ votes = {}
+  /\ decision = {}
+
+Prepare ==
+  /\ state.coordinator = ""Idle""
+  /\ state' = [ state EXCEPT !.coordinator = ""Waiting"" ]
+  /\ UNCHANGED << votes, decision >>
+
+VoteYes(p) ==
+  /\ state.coordinator = ""Waiting""
+  /\ state.participants[p] = ""Prepared""
+  /\ votes' = votes \cup { [ sender |-> p, type |-> ""VoteYes"" ] }
+  /\ state' = [ state EXCEPT !.participants[p] = ""Committed"" ]
+  /\ UNCHANGED decision
+
+VoteNo(p) ==
+  /\ state.coordinator = ""Waiting""
+  /\ state.participants[p] = ""Prepared""
+  /\ votes' = votes \cup { [ sender |-> p, type |-> ""VoteNo"" ] }
+  /\ state' = [ state EXCEPT !.participants[p] = ""Aborted"" ]
+  /\ UNCHANGED decision
+
+Commit ==
+  /\ state.coordinator = ""Waiting""
+  /\ decision = {}
+  /\ votes = { m \in Message : m.type = ""VoteYes"" }
+  /\ decision' = [ ""decision"" |-> ""Commit"" ]
+  /\ state' = [ state EXCEPT !.coordinator = ""Committed"" ]
+  /\ UNCHANGED votes
+
+Abort ==
+  /\ state.coordinator = ""Waiting""
+  /\ decision = {}
+  /\ votes \neq { m \in Message : m.type = ""VoteYes"" }
+  /\ decision' = [ ""decision"" |-> ""Abort"" ]
+  /\ state' = [ state EXCEPT !.coordinator = ""Aborted"" ]
+  /\ UNCHANGED votes
+
+Next ==
+  \/ Prepare
+  \/ \E p \in Participants : VoteYes(p)
+  \/ \E p \in Participants : VoteNo(p)
+  \/ Commit
+  \/ Abort
+
+Spec == Init /\ [][Next]_<< state, votes, decision >>
+
+TypeOK ==
+  /\ state \in State
+  /\ votes \subset"
+chattla:20b,BM003,Dining Philosophers,scheduling,2,0,0,1.0,bronze,4.28,"---- MODULE DiningPhilosophers ----
+
+EXTENDS Naturals, FiniteSets
+
+CONSTANT N
+
+ASSUME N \in Nat
+
+VARIABLES forks, state
+
+TypeOK == forks \in 1..N -> {0,1} /\ state \in 1..N -> {""thinking"",""hungry"",""eating""}
+
+Init == forks = [i \in 1..N |-> 0] /\ state = [i \in 1..N |-> ""thinking""]
+
+Left(i) == IF i = 1 THEN N ELSE i - 1
+
+Right(i) == IF i = N THEN 1 ELSE i + 1
+
+CanEat(i) == forks[i] = 0 /\ forks[Left(i)] = 0 /\ forks[Right(i)] = 0
+
+Eat(i) == /\ state[i] = ""hungry""
+/\ forks' = [forks EXCEPT ![i] = 1, ![Left(i)] = 1, ![Right(i)] = 1]
+/\ state' = [state EXCEPT ![i] = ""eating""]
+
+Think(i) == /\ state[i] = ""eating""
+/\ forks' = [forks EXCEPT ![i] = 0, ![Left(i)] = 0, ![Right(i)] = 0]
+/\ state' = [state EXCEPT ![i] = ""thinking""]
+
+Hungry(i) == state[i] = ""thinking"" /\ state' = [state EXCEPT ![i] = ""hungry""]
+
+Next == \E i \in 1..N: (Eat(i) \/ Think(i) \/ Hungry(i))
+
+Spec == Init /\ [][Next]_<<forks,state>> /\ WF_vars(Next)
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,0,0,1.0,bronze,2.53,"---- MODULE Bakery ----
+EXTENDS Naturals, FiniteSets
+
+CONSTANT N
+ASSUME N \in Nat
+
+VARIABLES num, flag
+
+vars == <<num, flag>>
+
+TypeOK == /\ num \in [1..N -> 1..N]
+/\ flag \in [1..N -> BOOLEAN]
+
+Init == /\ num = [i \in 1..N |-> 0]
+/\ flag = [i \in 1..N |-> FALSE]
+
+Next == \E i \in 1..N :
+/\ flag' = [flag EXCEPT ![i] = TRUE]
+/\ num' = [num EXCEPT ![i] = 1 + MAX({num[j] : j \in 1..N /\ flag[j] /\ j /= i})]
+/\ flag' = [flag EXCEPT ![i] = FALSE]
+
+Spec == Init /\ [][Next]_vars
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,0,0,1.0,bronze,2.51,"---- MODULE BoundedFIFOQueue ----
+
+EXTENDS Naturals, Sequences
+
+CONSTANT K
+
+VARIABLES
+  queue,
+  producer,
+  consumer
+
+vars == <<queue, producer, consumer>>
+
+Init == /\ queue = << >>
+   /\ producer = 0
+   /\ consumer = 0
+
+Producer == /\ producer < K
+   /\ queue' = Append(queue, producer)
+   /\ producer' = producer + 1
+   /\ consumer' = consumer
+
+Consumer == /\ consumer < Len(queue)
+   /\ queue' = Tail(queue)
+   /\ consumer' = consumer + 1
+   /\ producer' = producer
+
+Next == Producer \/ Consumer
+
+Spec == Init /\ [][Next]_vars
+
+TypeOK == /\ queue \in Seq(0..K-1)
+   /\ producer \in 0..K
+   /\ consumer \in 0..K
+
+===="

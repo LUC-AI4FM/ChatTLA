@@ -1,120 +1,127 @@
 model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
-gpt-oss:20b,BM001,Mutual Exclusion,scheduling,2,0,0,1.0,bronze,15.6,"---- MODULE MutualExclusion ----
+gpt-oss:20b,BM001,Mutual Exclusion,scheduling,2,1,1,1.0,gold,16.78,"---- MODULE MutualExclusion ----
 EXTENDS Naturals, Sequences
 
 CONSTANT N \* Number of processes
 
 VARIABLES
-    state \* Mapping from process IDs to their current state
-
-(* State definitions *)
-Idle == ""idle""
-Trying == ""trying""
-Critical == ""critical""
+    state \* state[p] ∈ {""idle"", ""trying"", ""critical""} for each process p
 
 (* Initial state: all processes are idle *)
 Init == 
-    /\ state \in [1..N -> {Idle, Trying, Critical}]
-    /\ \A i \in 1..N : state[i] = Idle
+    /\ state = [p \in 1..N |-> ""idle""]
 
-(* Helper predicate: at most one process in critical section *)
-AtMostOneCritical ==
-    LET crits == {i \in 1..N : state[i] = Critical} IN
-    Cardinality(crits) <= 1
+(* Helper predicate: a process p is allowed to enter critical section *)
+CanEnter(p) == 
+    /\ state[p] = ""trying""
+    /\ \A q \in 1..N : q # p => state[q] # ""critical""
 
-(* Transition for a process i *)
-Process(i) ==
-    /\ i \in 1..N
-    /\ \E newState \in {Idle, Trying, Critical} :
-        /\ newState = Idle
-           \/ (newState = Trying /\ state[i] = Idle)
-           \/ (newState = Critical /\ state[i] = Trying /\ AtMostOneCritical)
-        /\ state' = [state EXCEPT ![i] = newState]
-        /\ UNCHANGED << state >>
+(* Transition for a process p *)
+Next == 
+    \E p \in 1..N :
+        \/ /\ state[p] = ""idle""
+           /\ state' = [state EXCEPT ![p] = ""trying""]
+        \/ /\ CanEnter(p)
+           /\ state' = [state EXCEPT ![p] = ""critical""]
+        \/ /\ state[p] = ""critical""
+           /\ state' = [state EXCEPT ![p] = ""idle""]
 
-(* Next-state relation: any process may transition *)
-Next == \E i \in 1..N : Process(i)
-
-(* Specification *)
 Spec == Init /\ [][Next]_state
 
-(* Optional type invariant *)
+(* Type invariant: state values are within the allowed set *)
 TypeOK == 
-    /\ state \in [1..N -> {Idle, Trying, Critical}]
-    /\ AtMostOneCritical
+    /\ state \in [1..N -> {""idle"", ""trying"", ""critical""}]
+    /\ \A p \in 1..N : state[p] ∈ {""idle"", ""trying"", ""critical""}
 
 ===="
-gpt-oss:20b,BM002,Two-Phase Commit,transaction,3,0,0,1.0,bronze,9.66,"---- MODULE TwoPhaseCommit ----
+gpt-oss:20b,BM002,Two-Phase Commit,transaction,3,0,0,1.0,bronze,44.87,"---- MODULE TwoPhaseCommit ----
 EXTENDS Naturals, Sequences, TLC
 
 CONSTANTS
-    N \in Nat \setminus {0} \\
-    Participants \subseteq 1..N \\
-    Coordinator \in 1..N
+    N \in Nat \setminus {0}
+    Participants \in SUBSET 1..N
+    Coordinator \in 1..N \setminus Participants
 
 VARIABLES
-    state,          \* Map from participant to its state
-    msgQueue,       \* Queue of messages to be processed
-    decision        \* Final decision of the coordinator: ""Commit"" | ""Abort"" | ""None""
+    state,
+    msgQueue,
+    coordinatorState
 
 (* Participant states *)
-ParticipantState == {""Init"", ""Prepared"", ""Committed"", ""Aborted""}
+ParticipantState == {""Idle"", ""Prepared"", ""Committed"", ""Aborted""}
+
+(* Coordinator states *)
+CoordinatorState == {""Idle"", ""Preparing"", ""Deciding"", ""Committing"", ""Aborting""}
 
 (* Message types *)
-Message == [type: {""Prepare"", ""VoteYes"", ""VoteNo"", ""Commit"", ""Abort""},
-            from: 1..N,
-            to:   1..N,
-            payload: BOOLEAN] \* payload used only for VoteYes/No
+MessageType == {""Prepare"", ""VoteYes"", ""VoteNo"", ""Commit"", ""Abort""}
+
+(* Message record *)
+Message == [type: MessageType, from: 1..N, to: 1..N]
 
 (* Initial state *)
 Init ==
-    /\ state = [p \in Participants |-> ""Init""]
+    /\ state \in [p \in Participants |-> ""Idle""]
     /\ msgQueue = <<>>
-    /\ decision = ""None""
+    /\ coordinatorState = ""Idle""
 
-(* Helper to send a message *)
-SendMsg(msg) == 
-    msgQueue' = Append(msgQueue, msg)
+(* Sending a message *)
+Send(msg) ==
+    /\ msg \in Message
+    /\ msgQueue' = Append(msgQueue, msg)
+    /\ UNCHANGED <<state, coordinatorState>>
+
+(* Receiving a message *)
+Receive(msg) ==
+    /\ msg \in Message
+    /\ msgQueue' = Tail(msgQueue)
+    /\ UNCHANGED <<state, coordinatorState>>
+
+(* Participant behavior *)
+ParticipantStep(p) ==
+    /\ p \in Participants
+    /\ LET m == Head(msgQueue) IN
+    /\ m.to = p
+    /\ m.type = ""Prepare""
+    /\ state[p] = ""Idle""
+    /\ state[p]' = ""Prepared""
+    /\ Send([type |-> ""VoteYes"", from |-> p, to |-> Coordinator])
+    /\ UNCHANGED coordinatorState
+
+(* Coordinator behavior *)
+CoordinatorStep ==
+    /\ coordinatorState = ""Idle""
+    /\ LET m == Head(msgQueue) IN
+    /\ m.to = Coordinator
+    /\ m.type = ""Prepare""
+    /\ coordinatorState' = ""Preparing""
+    /\ UNCHANGED state
 
 (* Coordinator sends Prepare to all participants *)
 SendPrepare ==
-    /\ decision = ""None""
-    /\ \E p \in Participants:
-        SendMsg([type |-> ""Prepare"", from |-> Coordinator, to |-> p, payload |-> FALSE])
+    /\ coordinatorState = ""Preparing""
+    /\ /\ \E p \in Participants :
+        /\ msgQueue' = Append(msgQueue, [type |-> ""Prepare"", from |-> Coordinator, to |-> p])
+    /\ coordinatorState' = ""Deciding""
+    /\ UNCHANGED state
 
-(* Participant processes Prepare and votes *)
-ProcessPrepare(p) ==
-    /\ state[p] = ""Init""
-    /\ state' = [state EXCEPT ![p] = ""Prepared""]
-    /\ \E vote \in {""VoteYes"", ""VoteNo""}:
-        SendMsg([type |-> vote, from |-> p, to |-> Coordinator, payload |-> (vote = ""VoteYes"")])
-
-(* Coordinator processes votes *)
+(* Coordinator collects votes *)
 CollectVotes ==
-    /\ decision = ""None""
-    /\ \E msg \in msgQueue:
-        /\ msg.type \in {""VoteYes"", ""VoteNo""}
-        /\ msg.to = Coordinator
-        /\ msg.from \in Participants
-        /\ IF msg.type = ""VoteNo"" THEN
-            decision' = ""Abort""
-            /\ msgQueue' = Remove(msgQueue, msg)
-        ELSE
-            (* VoteYes *)
-            /\ msgQueue' = Remove(msgQueue, msg)
-            /\ IF \A p \in Participants: 
-                    \E m \in msgQueue': m.type = ""VoteYes"" /\ m.from = p
-                THEN
-                    decision' = ""Commit""
-                E"
-gpt-oss:20b,BM003,Dining Philosophers,scheduling,2,0,0,1.0,bronze,6.4,"---- MODULE DiningPhilosophers ----
+    /\ coordinatorState = ""Deciding""
+    /\ LET m == Head(msgQueue) IN
+    /\ m.to = Coordin"
+gpt-oss:20b,BM003,Dining Philosophers,scheduling,2,1,0,1.0,silver,7.64,"---- MODULE DiningPhilosophers ----
 EXTENDS Naturals, Sequences, TLC
 
 CONSTANTS N \* Number of philosophers and forks
 
 VARIABLES
-    forks,          \* forks[i] = p if philosopher p owns fork i, else 0
+    forks,          \* forks[i] = p means fork i is held by philosopher p, 0 means free
     states          \* states[p] ∈ {""thinking"", ""hungry"", ""eating""}
+
+(* Helper definitions *)
+ForkOwner(i) == forks[i]
+PhilosopherState(p) == states[p]
 
 (* Initial state: all forks free, all philosophers thinking *)
 Init ==
@@ -125,470 +132,1805 @@ Init ==
 LeftFork(p) == IF p = 1 THEN N ELSE p - 1
 RightFork(p) == IF p = N THEN 1 ELSE p + 1
 
-ForkFree(i) == forks[i] = 0
-PhilosopherHungry(p) == states[p] = ""hungry""
-PhilosopherEating(p) == states[p] = ""eating""
+CanTakeForks(p) ==
+    /\ ForkOwner(LeftFork(p)) = 0
+    /\ ForkOwner(RightFork(p)) = 0
+
+TakeForks(p) ==
+    /\ forks' = [forks EXCEPT ![LeftFork(p)] = p, ![RightFork(p)] = p]
+    /\ states' = [states EXCEPT ![p] = ""eating""]
+    /\ UNCHANGED <<>>
+
+PutForks(p) ==
+    /\ forks' = [forks EXCEPT ![LeftFork(p)] = 0, ![RightFork(p)] = 0]
+    /\ states' = [states EXCEPT ![p] = ""thinking""]
+    /\ UNCHANGED <<>>
 
 (* Action: philosopher p becomes hungry *)
 Hungry(p) ==
     /\ states[p] = ""thinking""
     /\ states' = [states EXCEPT ![p] = ""hungry""]
-    /\ forks' = forks
+    /\ UNCHANGED <<>>
 
-(* Action: philosopher p picks up both forks and starts eating *)
-Eat(p) ==
+(* Action: philosopher p starts eating if forks available *)
+StartEating(p) ==
     /\ states[p] = ""hungry""
-    /\ ForkFree(LeftFork(p))
-    /\ ForkFree(RightFork(p))
-    /\ forks' = [forks EXCEPT ![LeftFork(p)] = p, ![RightFork(p)] = p]
-    /\ states' = [states EXCEPT ![p] = ""eating""]
+    /\ CanTakeForks(p)
+    /\ TakeForks(p)
 
-(* Action: philosopher p puts down both forks and goes back to thinking *)
-Done(p) ==
+(* Action: philosopher p finishes eating *)
+FinishEating(p) ==
     /\ states[p] = ""eating""
-    /\ forks' = [forks EXCEPT ![LeftFork(p)] = 0, ![RightFork(p)] = 0]
-    /\ states' = [states EXCEPT ![p] = ""thinking""]
+    /\ PutForks(p)
 
 (* Next-state relation *)
 Next ==
     \E p \in 1..N :
-        (Hungry(p) \/ Eat(p) \/ Done(p))
+        (Hungry(p) \/ StartEating(p) \/ FinishEating(p))
 
-Spec ==
-    Init /\ [][Next]_<<forks, states>>
+(* Specification *)
+Spec == Init /\ [][Next]_<<forks, states>>
 
 (* Type invariant *)
 TypeOK ==
-    /\ forks \in [1..N -> 1..N \cup {0}]
+    /\ forks \in [1..N -> 1..N]
     /\ states \in [1..N -> {""thinking"", ""hungry"", ""eating""}]
 
 ===="
-gpt-oss:20b,BM004,Lamport's Bakery Algorithm,consensus,3,0,0,0.889,bronze,3.91,"---- MODULE Bakery ----
+gpt-oss:20b,BM004,Lamport's Bakery Algorithm,consensus,3,0,0,1.0,bronze,13.9,"---- MODULE Bakery ----
 EXTENDS Naturals, Sequences, TLC
 
-CONSTANTS N \* number of processes
+CONSTANT N \* number of processes
 
 VARIABLES
     flag, \* [1..N -> BOOLEAN]
     num   \* [1..N -> Nat]
 
 (* Helper functions *)
-maxNum(i) == IF i = 1 THEN 0 ELSE CHOOSE j \in 1..i-1 : num[j]
-maxNumAll == CHOOSE j \in 1..N : num[j]
+maxNum(i) == IF i = 1 THEN 0 ELSE MAX(num[1..i-1])
+
+(* Initialization *)
+Init ==
+    /\ flag = [j \in 1..N |-> FALSE]
+    /\ num   = [j \in 1..N |-> 0]
+
+(* Next-state relation *)
+Next ==
+    \E i \in 1..N :
+        /\ flag' = [flag EXCEPT ![i] = TRUE]
+        /\ num'  = [num EXCEPT ![i] = maxNum(i) + 1]
+        /\ flag' = [flag EXCEPT ![i] = FALSE]
+        /\ UNCHANGED << flag, num >>
+
+Spec == Init /\ [][Next]_<<flag, num>>
+
+(* Type invariant *)
+TypeOK ==
+    /\ flag \in [1..N -> BOOLEAN]
+    /\ num   \in [1..N -> Nat]
+
+===="
+gpt-oss:20b,BM005,Producer-Consumer Queue,storage,2,0,0,1.0,bronze,18.8,"---- MODULE BoundedFIFO ----
+EXTENDS Naturals, Sequences, TLC
+
+CONSTANT K \* Capacity of the queue
+
+VARIABLES q, head, tail, size
+
+(* q is a sequence of length K, storing the elements *)
+(* head and tail are indices in 0..K-1 *)
+(* size is the number of elements in the queue *)
+
+Init ==
+  /\ q \in Seq(0..K-1, Nat)  \* initial empty queue
+  /\ head = 0
+  /\ tail = 0
+  /\ size = 0
+
+ProducerAction ==
+  /\ size < K
+  /\ LET newVal == CHOOSE v \in Nat : TRUE
+     IN /\ q' = [i \in 0..K-1 |-> IF i = tail THEN newVal ELSE q[i]]
+        /\ tail' = (tail + 1) \bmod K
+        /\ size' = size + 1
+        /\ head' = head
+        /\ q = q
+
+ConsumerAction ==
+  /\ size > 0
+  /\ LET consumed == q[head]
+     IN /\ q' = q
+        /\ head' = (head + 1) \bmod K
+        /\ size' = size - 1
+        /\ tail' = tail
+        /\ consumed \in Nat
+
+Next ==
+  ProducerAction \/ ConsumerAction
+
+Spec ==
+  Init /\ [][Next]_<<q, head, tail, size>>
+
+TypeOK ==
+  /\ q \in Seq(0..K-1, Nat)
+  /\ head \in 0..K-1
+  /\ tail \in 0..K-1
+  /\ size \in 0..K
+
+===="
+gpt-oss:20b,BM006,Raft Leader Election,consensus,4,0,0,1.0,bronze,30.41,"---- MODULE RaftLeaderElection ----
+EXTENDS Naturals, Sequences, TLC
+
+CONSTANTS
+    N \in Nat \{1} \* number of servers
+    Servers \in SUBSET 1..N
+
+VARIABLES
+    currentTerm, \* Nat
+    votedFor, \* [server -> 1..N \cup {None}]
+    state \* [server -> {""Follower"", ""Candidate"", ""Leader""}]
+
+(* Helper constants *)
+None \in 1..N \cup {None}
 
 (* Initial state *)
 Init ==
-    /\ flag = [i \in 1..N |-> FALSE]
-    /\ num   = [i \in 1..N |-> 0]
+    /\ currentTerm = 0
+    /\ votedFor = [s \in Servers |-> None]
+    /\ state = [s \in Servers |-> ""Follower""]
 
-(* Next-state relation for process i *)
-Next_i(i) ==
-    /\ flag[i] = FALSE
-    /\ flag' = [flag EXCEPT ![i] = TRUE]
-    /\ num'   = [num EXCEPT ![i] = maxNumAll + 1]
-    /\ flag' = [flag' EXCEPT ![i] = FALSE]
+(* Majority threshold *)
+Majority == (N \div 2) + 1
 
-(* Mutual exclusion condition *)
+(* Vote request from candidate s *)
+RequestVote(s) ==
+    /\ state[s] = ""Candidate""
+    /\ currentTerm = currentTerm
+    /\ votedFor[s] = None
+    /\ votedFor' = [votedFor EXCEPT ![s] = s]
+    /\ UNCHANGED <<currentTerm, state>>
+
+(* Vote granted by follower f to candidate s *)
+GrantVote(f, s) ==
+    /\ state[f] = ""Follower""
+    /\ currentTerm = currentTerm
+    /\ votedFor[f] = None
+    /\ votedFor' = [votedFor EXCEPT ![f] = s]
+    /\ UNCHANGED <<currentTerm, state>>
+
+(* Count votes for candidate s *)
+VoteCount(s) ==
+    LET votes == {f \in Servers : votedFor[f] = s}
+    IN Cardinality(votes)
+
+(* Candidate becomes leader if majority *)
+BecomeLeader(s) ==
+    /\ VoteCount(s) >= Majority
+    /\ state' = [state EXCEPT ![s] = ""Leader""]
+    /\ UNCHANGED <<currentTerm, votedFor>>
+
+(* Candidate starts election *)
+StartElection(s) ==
+    /\ state[s] = ""Follower""
+    /\ currentTerm' = currentTerm + 1
+    /\ votedFor' = [votedFor EXCEPT ![s] = s]
+    /\ state' = [state EXCEPT ![s] = ""Candidate""]
+    /\ UNCHANGED <<currentTerm, votedFor>>
+
+(* Next-state relation *)
+Next ==
+    \E s \in Servers :
+        \/ RequestVote(s)
+        \/ GrantVote(s, s)
+        \/ BecomeLeader(s)
+        \/ StartElection(s)
+
+Spec == Init /\ [][Next]_<<currentTerm, votedFor, state>>
+
+(* Type invariant *)
 TypeOK ==
-    \A i, j \in 1..N : i /= j
-        => (num[i] = 0) \/ (num[j] = 0) \/ (num[i] > num[j]) \/ (num[i] = num[j] /\ i > j)
-
-Spec ==
-    Init /\ [][Next]_<<flag, num>>
+    /\ currentTerm \in Nat
+    /\ votedFor \in [Servers -> 1..N \cup {None}]
+    /\ state \in [Servers -> {""Follower"", ""Candidate"", ""Leader""}]
 
 ===="
-gpt-oss:20b,BM005,Producer-Consumer Queue,storage,2,0,0,1.0,bronze,4.72,"---- MODULE BoundedFIFO ----
+gpt-oss:20b,BM007,Read-Write Lock,storage,2,1,0,0.778,silver,66.85,"---- MODULE ReadWriteLock ----
+EXTENDS Naturals, Sequences
+
+VARIABLES readers, writer_active
+
+Init ==
+   /\ readers = 0
+   /\ writer_active = FALSE
+
+ReaderEnter ==
+   /\ writer_active = FALSE
+   /\ readers' = readers + 1
+   /\ writer_active' = writer_active
+
+ReaderExit ==
+   /\ readers > 0
+   /\ readers' = readers - 1
+   /\ writer_active' = writer_active
+
+WriterEnter ==
+   /\ writer_active = FALSE
+   /\ readers = 0
+   /\ writer_active' = TRUE
+   /\ readers' = readers
+
+WriterExit ==
+   /\ writer_active = TRUE
+   /\ writer_active' = FALSE
+   /\ readers' = readers
+
+Next ==
+   \/ ReaderEnter
+   \/ ReaderExit
+   \/ WriterEnter
+   \/ WriterExit
+
+Spec ==
+   Init /\ [][Next]_<<readers, writer_active>>
+
+===="
+gpt-oss:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,0,0,0.778,bronze,28.36,"---- MODULE ChandyLamportSnapshot ----
+EXTENDS Naturals, Sequences, TLC
+
+CONSTANTS
+    N, Proc, Channels
+
+ASSUME
+    /\ N \in Nat
+    /\ N > 0
+    /\ Proc \subseteq 1..N
+    /\ Channels \subseteq Proc \X Proc
+
+VARIABLES
+    state,
+    channel,
+    markerSent,
+    snapshotTaken,
+    channelState
+
+IsMarker(m) == m = ""marker""
+
+Init ==
+    /\ \A p \in Proc: snapshotTaken[p] = FALSE
+    /\ \A p \in Proc: state[p] = 0
+    /\ \A p \in Proc: \A q \in Proc: channel[(p,q)] = <<>>
+    /\ \A p \in Proc: \A q \in Proc: markerSent[(p,q)] = FALSE
+    /\ \A p \in Proc: \A q \in Proc: channelState[(p,q)] = <<>>
+
+SendMarker(p) ==
+    /\ snapshotTaken[p] = TRUE
+    /\ \A q \in Proc: q # p
+    /\ \A q \in Proc: markerSent[(p,q)] = FALSE
+    /\ \A q \in Proc: channel[(p,q)] = Append(channel[(p,q)], ""marker"")
+    /\ \A q \in Proc: markerSent[(p,q)] = TRUE
+
+ReceiveMsg(p, q, m) ==
+    /\ channel[(q,p)] # <<>>
+    /\ m = Head(channel[(q,p)])
+    /\ channel[(q,p)] = Tail(channel[(q,p)])
+    /\ IF IsMarker(m) THEN
+          IF markerSent[(q,p)] = FALSE THEN
+              /\ snapshotTaken[p] = FALSE
+              /\ snapshotTaken[p] := TRUE
+              /\ state[p] := state[p] + 1
+              /\ SendMarker(p)
+              /\ channelState[(q,p)] := <<>>
+          ELSE
+              /\ channelState[(q,p)] := Append(channelState[(q,p)], m)
+      ELSE
+          /\ channelState[(q,p)] := Append(channelState[(q,p)], m)
+
+Next ==
+    \E p \in Proc:
+        \E q \in Proc:
+            \E m \in {""marker"", ""data""}:
+                /\ ReceiveMsg(p, q, m)
+
+Spec ==
+    Init /\ [][Next]_<<state, channel, markerSent, snapshotTaken, channelState>>
+
+===="
+gpt-oss:20b,BM009,Token Ring,networking,2,1,1,0.889,gold,3.5,"---- MODULE TokenRing ----
+EXTENDS Naturals, Sequences
+
+CONSTANTS N \* Number of nodes in the ring
+
+VARIABLE token \* Current holder of the token (1..N)
+
+(* Initial state: token starts at node 1 *)
+Init == 
+  /\ token \in 1..N
+  /\ token = 1
+
+(* Action: pass the token to the next node in the ring *)
+PassToken == 
+  /\ token' = IF token = N THEN 1 ELSE token + 1
+
+(* Action: send a message (only allowed by the token holder) *)
+SendMessage == 
+  /\ token' = token
+
+(* Next-state relation: either pass the token or send a message *)
+Next == PassToken \/ SendMessage
+
+(* Specification *)
+Spec == Init /\ [][Next]_token
+
+(* Optional type invariant *)
+TypeOK == token \in 1..N
+
+===="
+gpt-oss:20b,BM010,Simple Key-Value Store,storage,3,0,0,1.0,bronze,16.87,"---- MODULE KeyValueStore ----
+EXTENDS Naturals, Sequences, TLC
+
+CONSTANTS
+    Keys,          \* finite set of keys
+    Values         \* finite set of values
+
+VARIABLES
+    store          \* mapping from Keys to Values
+
+(* ------------------------------------------------------------------ *)
+(* Initial state: all keys map to a special initial value *)
+Init == 
+    /\ store \in [Keys -> Values]
+    /\ \A k \in Keys: store[k] = Values[1]   \* assume Values[1] is the initial value
+
+(* ------------------------------------------------------------------ *)
+(* Put operation: update the value for a key *)
+Put(k, v) == 
+    /\ k \in Keys
+    /\ v \in Values
+    /\ store' = [store EXCEPT ![k] = v]
+    /\ UNCHANGED << >>
+
+(* ------------------------------------------------------------------ *)
+(* Get operation: read the value for a key *)
+Get(k) == 
+    /\ k \in Keys
+    /\ store' = store
+    /\ UNCHANGED << >>
+
+(* ------------------------------------------------------------------ *)
+(* Next-state relation: either a Put or a Get *)
+Next == 
+    \E k \in Keys, v \in Values: Put(k, v)
+    \/ \E k \in Keys: Get(k)
+
+(* ------------------------------------------------------------------ *)
+(* Specification *)
+Spec == Init /\ [][Next]_<<store>>
+
+(* ------------------------------------------------------------------ *)
+(* Type invariant *)
+TypeOK == 
+    /\ store \in [Keys -> Values]
+
+===="
+gpt-oss:20b,BM011,Paxos Single-Decree,consensus,4,0,0,1.0,bronze,33.67,"---- MODULE SingleDecreePaxos ----
+EXTENDS Naturals, Sequences, TLC
+
+CONSTANTS
+    N \in Nat,          \* Number of acceptors
+    M \in Nat,          \* Number of proposers
+    Values \subseteq Nat \* Set of possible values
+
+VARIABLES
+    ballot,            \* Current ballot number (Nat)
+    promised,          \* promised[acceptor] = highest promised ballot (Nat)
+    accepted,          \* accepted[acceptor] = [ballot, value] or nil
+    chosen             \* chosen value (value or nil)
+
+(* Helper definitions *)
+HighestAccepted(a) == 
+    IF a = {} THEN [ballot |-> 0, value |-> nil]
+    ELSE CHOOSE v \in a : v.ballot = MAX \{ v'.ballot : v' \in a \}
+
+(* Initial state *)
+Init == 
+    /\ ballot = 0
+    /\ promised = [i \in 1..N |-> 0]
+    /\ accepted = [i \in 1..N |-> nil]
+    /\ chosen = nil
+
+(* Proposer actions *)
+Prepare(p, b) == 
+    /\ p \in 1..M
+    /\ b > ballot
+    /\ ballot' = b
+    /\ UNCHANGED <<promised, accepted, chosen>>
+
+Promise(a, b, aAccepted) == 
+    /\ a \in 1..N
+    /\ b = ballot
+    /\ promised'[a] = b
+    /\ accepted'[a] = aAccepted
+    /\ UNCHANGED <<ballot, chosen>>
+
+Accept(p, b, v) == 
+    /\ p \in 1..M
+    /\ b = ballot
+    /\ v \in Values
+    /\ UNCHANGED <<promised, chosen>>
+    /\ accepted' = [accepted EXCEPT ![a] = IF promised[a] = b THEN [ballot |-> b, value |-> v] ELSE @]
+
+Chosen(v) == 
+    /\ chosen' = v
+    /\ UNCHANGED <<ballot, promised, accepted>>
+
+(* Next-state relation *)
+Next == 
+    \E p \in 1..M, b \in Nat : Prepare(p, b)
+    \/ \E a \in 1..N, b \in Nat, aAccepted \in [ballot:Nat, value:Nat] : Promise(a, b, aAccepted)
+    \/ \E p \in 1..M, b \in Nat, v \in Values : Accept(p, b, v)
+    \/ \E v \in Values : Chosen(v)
+
+(* Specification *)
+Spec == Init /\ [][Next]_<<ballot, promised, accepted, chosen>>
+
+(* Type invariant *)
+TypeOK == 
+    /\ ballot \in Nat
+    /\ promised \in [1..N -> Nat]
+    /\ accepted \in [1..N -> ( [ballot:Nat, value:Nat] \/ {nil} )]
+    /\ chosen \in Values \/ {nil}
+
+===="
+gpt-oss:20b,BM012,Bounded Retransmission Protocol,networking,3,1,0,1.0,silver,9.48,"---- MODULE FileTransfer ----
+EXTENDS Naturals, Sequences, TLC
+
+CONSTANTS MAX_RETRIES, CHUNK_SIZE, FILE_SIZE
+
+VARIABLES
+    fileChunks,          \* Sequence of chunks to send
+    sentChunks,          \* Sequence of chunks that have been sent
+    receivedChunks,      \* Sequence of chunks that have been received
+    retransmitCount,     \* Number of retransmissions attempted for current chunk
+    currentChunkIndex,   \* Index of the chunk currently being sent
+    channelState         \* State of the channel: ""OK"" or ""LOST""
+
+(* Helper definitions *)
+Chunk(i) == SubSeq(fileChunks, i, i)
+
+(* Initial state *)
+Init ==
+    /\ fileChunks = SubSeq(Seq(1..FILE_SIZE), 1, FILE_SIZE)
+    /\ sentChunks = <<>>
+    /\ receivedChunks = <<>>
+    /\ retransmitCount = 0
+    /\ currentChunkIndex = 1
+    /\ channelState = ""OK""
+
+(* Sending a chunk *)
+SendChunk ==
+    /\ currentChunkIndex <= Len(fileChunks)
+    /\ channelState = ""OK""
+    /\ sentChunks' = Append(sentChunks, Chunk(currentChunkIndex))
+    /\ retransmitCount' = 0
+    /\ currentChunkIndex' = currentChunkIndex + 1
+    /\ UNCHANGED <<receivedChunks, channelState>>
+
+(* Simulate possible loss of the last sent chunk *)
+Loss ==
+    /\ channelState' = ""LOST""
+    /\ UNCHANGED <<sentChunks, receivedChunks, retransmitCount, currentChunkIndex>>
+
+(* Simulate successful delivery of the last sent chunk *)
+Deliver ==
+    /\ channelState' = ""OK""
+    /\ receivedChunks' = Append(receivedChunks, Chunk(currentChunkIndex - 1))
+    /\ UNCHANGED <<sentChunks, retransmitCount, currentChunkIndex>>
+
+(* Retransmission attempt *)
+Retransmit ==
+    /\ channelState = ""LOST""
+    /\ retransmitCount < MAX_RETRIES
+    /\ retransmitCount' = retransmitCount + 1
+    /\ UNCHANGED <<fileChunks, sentChunks, receivedChunks, currentChunkIndex, channelState>>
+
+(* Give up after max retries *)
+GiveUp ==
+    /\ channelState = ""LOST""
+    /\ retransmitCount = MAX_RETRIES
+    /\ currentChunkIndex' = currentChunkIndex + 1
+    /\ retransmitCount' = 0
+    /\ UNCHANGED <<fileChun"
+gpt-oss:20b,BM013,Transaction Isolation (Snapshot Isolation),transaction,4,0,0,1.0,bronze,54.61,"---- MODULE SnapshotIsolation ----
+EXTENDS Naturals, Sequences, TLC
+
+VARIABLES
+    db,          \* Database: mapping from keys to values
+    txns,        \* Set of active transactions
+    nextTxId,    \* Next transaction identifier
+    reads,       \* Mapping from transaction id to set of keys read
+    writes,      \* Mapping from transaction id to mapping of keys to new values
+    snapshot,    \* Mapping from transaction id to snapshot of db at begin
+    state        \* State of each transaction: ""idle"", ""active"", ""committed"", ""aborted""
+
+CONSTANTS
+    Keys,        \* Set of keys in the database
+    Values       \* Set of possible values
+
+TxActive(t) == state[t] = ""active""
+TxIdle(t)   == state[t] = ""idle""
+TxCommitted(t) == state[t] = ""committed""
+TxAborted(t)   == state[t] = ""aborted""
+
+Init ==
+    /\ db = [k \in Keys |-> 0]
+    /\ txns = {}
+    /\ nextTxId = 1
+    /\ reads = [t \in 1..0 |-> {}]
+    /\ writes = [t \in 1..0 |-> [k \in Keys |-> 0]]
+    /\ snapshot = [t \in 1..0 |-> [k \in Keys |-> 0]]
+    /\ state = [t \in 1..0 |-> ""idle""]
+
+    /\ t \notin txns
+    /\ txns' = txns \cup {t}
+    /\ nextTxId' = nextTxId + 1
+    /\ reads' = [reads EXCEPT ![t] = {}]
+    /\ writes' = [writes EXCEPT ![t] = [k \in Keys |-> 0]]
+    /\ snapshot' = [snapshot EXCEPT ![t] = db]
+    /\ state' = [state EXCEPT ![t] = ""active""]
+    /\ UNCHANGED <<db, txns, reads, writes, snapshot, state>>
+
+Read(t, k) ==
+    /\ TxActive(t)
+    /\ k \in Keys
+    /\ reads' = [reads EXCEPT ![t] = reads[t] \cup {k}]
+    /\ UNCHANGED <<db, txns, writes, snapshot, state>>
+
+Write(t, k, v) ==
+    /\ TxActive(t)
+    /\ k \in Keys
+    /\ v \in Values
+    /\ writes' = [writes EXCEPT ![t] = [writes[t] EXCEPT ![k] = v]]
+    /\ UNCHANGED <<db, txns, reads, snapshot, state>>
+
+Commit(t) ==
+    /\ TxActive(t)
+    /\ \A k \in Keys :
+          /\ writes[t][k] = 0
+          \/ \E t' \in txns :
+                /\ TxCommitted(t')
+                /\ writes[t'][k] = 0
+    /\ db' = [k \in Keys |-> IF writes[t][k] = 0 THEN db[k] "
+gpt-oss:20b,BM014,Clock Synchronisation,networking,3,0,0,1.0,bronze,23.51,"---- MODULE ClockSync ----
+EXTENDS Naturals, Sequences, TLC
+
+VARIABLES clocks, offsets
+
+CONSTANTS N, epsilon
+
+TypeOK == /\ clocks \in [1..N -> Real]
+          /\ offsets \in [1..N -> Int]
+
+Init == /\ clocks = [i \in 1..N |-> 0]
+        /\ offsets = [i \in 1..N |-> 0]
+
+AvgClock == (1 / N) * Sum(i \in 1..N, clocks[i])
+
+StepSize == epsilon / 2
+
+Next ==
+  /\ \E i \in 1..N :
+        /\ clocks' = [clocks EXCEPT ![i] = clocks[i] + offsets[i]]
+        /\ offsets' = offsets
+        /\ clocks' = [clocks' EXCEPT ![i] =
+                        IF Abs(clocks'[i] - AvgClock) <= StepSize
+                        THEN AvgClock
+                        ELSE clocks'[i] + Sign(clocks'[i] - AvgClock) * StepSize]
+        /\ UNCHANGED <<offsets>>
+  /\ \A i \in 1..N :
+        /\ clocks' = [clocks EXCEPT ![i] = clocks[i] + offsets[i]]
+        /\ offsets' = offsets
+        /\ clocks' = [clocks' EXCEPT ![i] =
+                        IF Abs(clocks'[i] - AvgClock) <= StepSize
+                        THEN AvgClock
+                        ELSE clocks'[i] + Sign(clocks'[i] - AvgClock) * StepSize]
+        /\ UNCHANGED <<offsets>>
+
+Spec == Init /\ [][Next]_<<clocks, offsets>>
+
+SyncInvariant ==
+  LET maxC == Max(1..N, clocks)
+      minC == Min(1..N, clocks)
+  IN maxC - minC <= epsilon
+
+THEOREM SyncAfterOneRound == Spec => SyncInvariant
+
+===="
+gpt-oss:20b,BM015,Peterson's Algorithm,scheduling,2,1,1,0.778,gold,5.18,"---- MODULE Peterson2 ----
+EXTENDS Naturals, Sequences
+
+VARIABLES flag, turn
+
+Init == /\ flag = [i \in 0..1 |-> FALSE]
+        /\ turn = 0
+
+Next == \E i \in 0..1 :
+          /\ flag' = [flag EXCEPT ![i] = TRUE]
+          /\ turn' = 1 - i
+          /\ flag' = [flag' EXCEPT ![1-i] = FALSE]
+          /\ UNCHANGED <<>>  (* no other variables changed *)
+
+Spec == Init /\ [][Next]_<<flag, turn>>
+
+===="
+gpt-oss:20b,BM016,Gossip Protocol,networking,3,0,0,1.0,bronze,19.36,"---- MODULE GossipProtocol ----
+EXTENDS Naturals, Sequences, TLC
+
+CONSTANTS
+    N \in Nat \setminus {0} \* Number of nodes
+    Updates \in SUBSET Nat \setminus {} \* Set of possible updates
+
+VARIABLES
+    infected \in [1..N -> SUBSET Updates] \* Mapping node -> set of updates it has received
+    round \in Nat \setminus {0} \* Current round number
+
+(* Helper definitions *)
+NodeSet == 1..N
+AllUpdates == Updates
+
+(* Initialization: no node has any updates initially *)
+Init ==
+    /\ infected = [i \in NodeSet |-> {}]
+    /\ round = 1
+
+(* A node can send any subset of its updates to any other node *)
+Send(i, j, U) ==
+    /\ i \in NodeSet
+    /\ j \in NodeSet
+    /\ i # j
+    /\ U \subseteq infected[i]
+    /\ infected' = [infected EXCEPT ![j] = @ \cup U]
+
+(* Each round, every node sends its updates to a random other node *)
+RoundStep ==
+    /\ \E i \in NodeSet, j \in NodeSet : i # j
+    /\ \E U \subseteq infected[i] : Send(i, j, U)
+    /\ round' = round + 1
+
+(* Next-state relation *)
+Next ==
+    RoundStep
+
+(* Specification *)
+Spec ==
+    Init /\ [][Next]_<<infected, round>>
+
+(* Type invariant *)
+TypeOK ==
+    /\ infected \in [NodeSet -> SUBSET Updates]
+    /\ round \in Nat \setminus {0}
+
+===="
+gpt-oss:20b,BM017,Simple Allocator,storage,2,1,0,1.0,silver,12.47,"---- MODULE MemoryAllocator ----
+EXTENDS Naturals, Sequences, TLC
+
+CONSTANTS
+    N, Clients, Pages
+
+ASSUME
+    Pages = 1..N
+
+VARIABLES
+    free, allocated
+
+(* free: SUBSET Pages  -- set of free pages *)
+(* allocated: Client -> SUBSET Pages  -- pages allocated to each client *)
+
+(* Initial state: all pages are free, no client has any pages *)
+Init ==
+    /\ free = Pages
+    /\ \A c \in Clients: allocated[c] = {}
+
+(* Allocate a page to a client *)
+Allocate(c, p) ==
+    /\ c \in Clients
+    /\ p \in free
+    /\ free' = free \ {p}
+    /\ allocated' = [allocated EXCEPT ![c] = @ \cup {p}]
+    /\ UNCHANGED <<>>
+
+(* Release a page from a client *)
+Release(c, p) ==
+    /\ c \in Clients
+    /\ p \in allocated[c]
+    /\ free' = free \cup {p}
+    /\ allocated' = [allocated EXCEPT ![c] = @ \ {p}]
+    /\ UNCHANGED <<>>
+
+(* Next-state relation: either allocate or release *)
+Next ==
+    \E c \in Clients, p \in Pages:
+        Allocate(c, p) \/ Release(c, p)
+
+(* Type correctness invariant *)
+TypeOK ==
+    /\ free \subseteq Pages
+    /\ \A c \in Clients: allocated[c] \subseteq Pages
+    /\ \A c \in Clients: \A p \in allocated[c] : p \in Pages
+    /\ \A c \in Clients: \A p1, p2 \in allocated[c] : p1 = p2
+    /\ \A p \in Pages: \A c1, c2 \in Clients : (p \in allocated[c1] /\ p \in allocated[c2]) => c1 = c2
+
+Spec ==
+    Init /\ [][Next]_<<free, allocated>>
+
+===="
+gpt-oss:20b,BM018,Publish-Subscribe Broker,networking,3,0,0,1.0,bronze,23.24,"---- MODULE Broker ----
+EXTENDS Naturals, Sequences, TLC
+
+VARIABLES
+    subscribers, \* [topic -> SUBSET SUBSCRIBER]
+    messages,    \* [topic -> SEQ MESSAGE]
+    delivered    \* [topic -> [subscriber -> BOOLEAN]]
+
+(* Types *)
+SUBSCRIBER == [id: Nat]
+MESSAGE == [id: Nat, topic: Nat, payload: ANY]
+Topic == Nat
+
+(* Helper predicates *)
+IsSubscriber(s) == s \in SUBSCRIBER
+IsMessage(m) == m \in MESSAGE
+IsTopic(t) == t \in Topic
+
+(* Initial state *)
+Init ==
+    /\ subscribers = [t \in Topic |-> {}]
+    /\ messages = [t \in Topic |-> <<>>]
+    /\ delivered = [t \in Topic |-> [s \in SUBSCRIBER |-> FALSE]]
+
+(* Register a subscriber to a topic *)
+Register(sub, topic) ==
+    /\ IsSubscriber(sub)
+    /\ IsTopic(topic)
+    /\ subscribers[topic] = subscribers[topic] \cup {sub}
+    /\ delivered[topic][sub] = FALSE
+
+(* Post a message to a topic *)
+Post(msg) ==
+    /\ IsMessage(msg)
+    /\ IsTopic(msg.topic)
+    /\ messages[msg.topic] = Append(messages[msg.topic], msg)
+
+(* Deliver messages to subscribers *)
+Deliver ==
+    /\ \E topic \in Topic :
+        /\ \E msg \in messages[topic] :
+            /\ \E sub \in subscribers[topic] :
+                /\ delivered[topic][sub] = FALSE
+                /\ delivered[topic][sub] := TRUE
+
+(* Next-state relation *)
+Next ==
+    \/ \E sub \in SUBSCRIBER, topic \in Topic : Register(sub, topic)
+    \/ \E msg \in MESSAGE : Post(msg)
+    \/ Deliver
+
+Spec == Init /\ [][Next]_<<subscribers, messages, delivered>>
+
+(* Type invariant *)
+TypeOK ==
+    /\ subscribers \in [Topic -> SUBSET SUBSCRIBER]
+    /\ messages \in [Topic -> SEQ MESSAGE]
+    /\ delivered \in [Topic -> [SUBSCRIBER -> BOOLEAN]]
+
+===="
+gpt-oss:20b,BM019,Dekker's Algorithm,scheduling,3,1,0,1.0,silver,7.23,"---- MODULE Dekker ----
+EXTENDS Naturals, Sequences, TLC
+
+VARIABLES turn, wants
+
+Init ==
+  /\ turn = 0
+  /\ \A i \in {0,1} : wants[i] = FALSE
+
+Next ==
+  \E i \in {0,1} :
+    /\ wants' = [wants EXCEPT ![i] = TRUE]
+    /\ turn' = 1 - i
+    /\ \A j \in {0,1} :
+          j # i
+          /\ wants[j] = FALSE
+    /\ wants' = [wants EXCEPT ![i] = FALSE]
+
+TypeOK ==
+  /\ turn \in {0,1}
+  /\ wants \in [0..1 -> BOOLEAN]
+
+Spec == Init /\ [][Next]_<<turn,wants>>
+
+===="
+gpt-oss:20b,BM020,Eventually Consistent Counter,storage,3,0,0,1.0,bronze,17.02,"---- MODULE GCounter ----
+EXTENDS Naturals, Sequences, TLC
+
+CONSTANTS
+    Nodes
+
+VARIABLES
+    counts
+
+(* Initial state: all counts are zero *)
+Init ==
+    /\ counts = [n \in Nodes |-> [m \in Nodes |-> 0]]
+
+(* Increment operation for node i *)
+Increment(i) ==
+    /\ i \in Nodes
+    /\ counts' = [counts EXCEPT ![i][i] = @ + 1]
+
+(* Merge operation between nodes i and j *)
+Merge(i, j) ==
+    /\ i \in Nodes
+    /\ j \in Nodes
+    /\ counts' = [counts EXCEPT ![i][k] = Max(counts[i][k], counts[j][k]) : k \in Nodes]
+
+(* Next-state relation: any node can increment or merge with any other node *)
+Next ==
+    \E i \in Nodes :
+        (Increment(i) \/ \E j \in Nodes : Merge(i, j))
+
+(* Global count is the sum of the maximum counts for each node *)
+GlobalCount ==
+    \Sum n \in Nodes : Max([k \in Nodes |-> counts[k][n]])
+
+(* Invariant: all nodes agree on the global count *)
+TypeOK ==
+    \A i, j \in Nodes :
+        GlobalCount = \Sum n \in Nodes : Max([k \in Nodes |-> counts[i][n]])
+
+Spec == Init /\ [][Next]_counts
+
+===="
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,0,0,1.0,bronze,34.75,"---- MODULE MutualExclusion ----
+EXTENDS Naturals, Sequences
+
+VARIABLES
+    state,
+    N
+
+(* Initial state: all processes are idle *)
+Init == 
+    /\ N \in Nat
+    /\ N >= 1
+    /\ state = [i \in 1..N |-> ""idle""]
+
+(* Next-state relation *)
+Next == 
+    \E i \in 1..N :
+        /\ state[i] = ""idle""
+        /\ state' = [state EXCEPT ![i] = ""trying""]
+    \/ \E i \in 1..N :
+        /\ state[i] = ""trying""
+        /\ \A j \in 1..N : j # i => state[j] # ""critical""
+        /\ state' = [state EXCEPT ![i] = ""critical""]
+    \/ \E i \in 1..N :
+        /\ state[i] = ""critical""
+        /\ state' = [state EXCEPT ![i] = ""idle""]
+
+(* Mutual exclusion invariant: at most one process is in critical state *)
+TypeOK == 
+    \A i, j \in 1..N : i # j => state[i] # ""critical"" \/ state[j] # ""critical""
+
+Spec == Init /\ [][Next]_<< state >>
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,0,0,1.0,bronze,55.53,"---- MODULE TwoPhaseCommit ----
+EXTENDS Naturals, Sequences, TLC
+
+CONSTANTS N, Participants, Coordinator
+
+VARIABLES
+    state,          \* State of each participant: ""Init"", ""Prepared"", ""Committed"", ""Aborted""
+    vote,           \* Vote of each participant: ""Yes"", ""No"", or ""None"" (if not voted yet)
+    messages,       \* Set of messages in transit: each message is a tuple (msgType, from, to)
+    decision        \* Decision of the coordinator: ""Commit"", ""Abort"", or ""None""
+
+TypeOK == /\ state \in [Participants -> {""Init"", ""Prepared"", ""Committed"", ""Aborted""}]
+          /\ vote \in [Participants -> {""Yes"", ""No"", ""None""}]
+          /\ messages \subseteq {msgType: {""Prepare"", ""VoteYes"", ""VoteNo"", ""Commit"", ""Abort""},
+                                from: Participants \cup {Coordinator},
+                                to: Participants \cup {Coordinator}}
+          /\ decision \in {""Commit"", ""Abort"", ""None""}
+
+Init == /\ state = [p \in Participants |-> ""Init""]
+        /\ vote = [p \in Participants |-> ""None""]
+        /\ messages = {}
+        /\ decision = ""None""
+
+PrepareMsg(p) == [msgType |-> ""Prepare"", from |-> Coordinator, to |-> p]
+VoteYesMsg(p) == [msgType |-> ""VoteYes"", from |-> p, to |-> Coordinator]
+VoteNoMsg(p) == [msgType |-> ""VoteNo"", from |-> p, to |-> Coordinator]
+CommitMsg(p) == [msgType |-> ""Commit"", from |-> Coordinator, to |-> p]
+AbortMsg(p) == [msgType |-> ""Abort"", from |-> Coordinator, to |-> p]
+
+CoordinatorAction ==
+    /\ decision = ""None""
+    /\ \E p \in Participants:
+        /\ state[p] = ""Init""
+        /\ messages' = messages \cup {PrepareMsg(p)}
+        /\ state' = state
+        /\ vote' = vote
+        /\ decision' = decision
+
+ParticipantReceivePrepare(p) ==
+    /\ state[p] = ""Init""
+    /\ \E m \in messages:
+        /\ m.msgType = ""Prepare""
+        /\ m.to = p
+    /\ state' = [state EXCEPT ![p] = ""Prepared""]
+    /\ vote' = vote
+    /\ messages' = messages \ {m}
+    /\ decision' = decision
+
+ParticipantVoteYes(p) ==
+    /\ state[p] = ""Prepared""
+    /\ \"
+chattla:20b,BM003,Dining Philosophers,scheduling,2,1,0,1.0,silver,8.11,"---- MODULE DiningPhilosophers ----
+EXTENDS Naturals, Sequences, TLC
+
+CONSTANTS N
+
+VARIABLES
+    forks,          (* forks[i] = j means fork i is held by philosopher j; 0 means free *)
+    states          (* states[i] = ""thinking"" | ""hungry"" | ""eating"" *)
+
+(* Helper constants *)
+THINKING == ""thinking""
+HUNGRY == ""hungry""
+EATING == ""eating""
+
+(* Helper functions *)
+LEFT(i) == (i - 1) % N
+RIGHT(i) == (i + 1) % N
+
+(* Type invariant *)
+TypeOK ==
+    /\ forks \in [1..N -> 0..N]
+    /\ states \in [1..N -> {""thinking"", ""hungry"", ""eating""}]
+    /\ \A i \in 1..N : forks[i] = 0 \/ forks[i] \in 1..N
+    /\ \A i \in 1..N : states[i] \in {""thinking"", ""hungry"", ""eating""}
+
+(* Initial state: all philosophers thinking, all forks free *)
+Init ==
+    /\ forks = [i \in 1..N |-> 0]
+    /\ states = [i \in 1..N |-> THINKING]
+
+(* Action: philosopher i becomes hungry *)
+Hungry(i) ==
+    /\ i \in 1..N
+    /\ states[i] = THINKING
+    /\ states' = [states EXCEPT ![i] = HUNGRY]
+    /\ forks' = forks
+
+(* Action: philosopher i picks up forks if both are free *)
+PickUp(i) ==
+    /\ i \in 1..N
+    /\ states[i] = HUNGRY
+    /\ forks[LEFT(i)] = 0
+    /\ forks[RIGHT(i)] = 0
+    /\ forks' = [forks EXCEPT
+        ![LEFT(i)] = i,
+        ![RIGHT(i)] = i]
+    /\ states' = [states EXCEPT ![i] = EATING]
+
+(* Action: philosopher i puts down forks *)
+PutDown(i) ==
+    /\ i \in 1..N
+    /\ states[i] = EATING
+    /\ forks[LEFT(i)] = i
+    /\ forks[RIGHT(i)] = i
+    /\ forks' = [forks EXCEPT
+        ![LEFT(i)] = 0,
+        ![RIGHT(i)] = 0]
+    /\ states' = [states EXCEPT ![i] = THINKING]
+
+(* Next-state relation *)
+Next ==
+    \E i \in 1..N :
+        (Hungry(i) \/ PickUp(i) \/ PutDown(i))
+
+Spec ==
+    Init /\ [][Next]_<<forks, states>>
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,0,0,1.0,bronze,30.14,"---- MODULE Bakery ----
+EXTENDS Naturals, Sequences, TLC
+
+VARIABLES num, flag
+
+CONSTANTS N
+
+(* Type invariant *)
+TypeOK == /\ num \in [1..N -> Nat]
+          /\ flag \in [1..N -> BOOLEAN]
+
+(* Initial state *)
+Init == /\ num \in [1..N -> 0]
+        /\ flag \in [1..N -> FALSE]
+
+(* Next-state relation *)
+Next == \E i \in 1..N:
+          /\ flag[i] = FALSE
+          /\ LET maxNum == IF num = [1..N -> 0] THEN 0
+                          ELSE Max(num)
+             IN /\ flag[i] := TRUE
+                /\ num[i] := maxNum + 1
+                /\ flag[i] := FALSE
+
+(* Specification *)
+Spec == Init /\ [][Next]_<<num, flag>>
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,0,1.0,silver,5.41,"---- MODULE BoundedFIFO ----
 EXTENDS Naturals, Sequences, TLC
 
 CONSTANT K \* Queue capacity
 
-VARIABLES q, head, tail, size
-
-(* q is a sequence of length K, holding the elements in the queue.
-   head points to the index of the next element to consume.
-   tail points to the index where the next element will be produced.
-   size is the number of elements currently in the queue. *)
-
-Init ==
-    /\ q = <<>>
-    /\ head = 1
-    /\ tail = 1
-    /\ size = 0
-
-ProducerAction ==
-    /\ size < K
-    /\ LET newTail == IF tail = K THEN 1 ELSE tail + 1 IN
-       /\ q' = Append(q, 1) \* placeholder for produced value
-       /\ tail' = newTail
-       /\ size' = size + 1
-       /\ head' = head
-       /\ UNCHANGED <<q, head>>
-
-ConsumerAction ==
-    /\ size > 0
-    /\ LET newHead == IF head = K THEN 1 ELSE head + 1 IN
-       /\ q' = Tail(q) \* remove first element
-       /\ head' = newHead
-       /\ size' = size - 1
-       /\ tail' = tail
-       /\ UNCHANGED <<q, size>>
-
-Next ==
-    ProducerAction \/ ConsumerAction
-
-Spec ==
-    Init /\ [][Next]_<<q, head, tail, size>>
-
-(* Type invariant *)
-TypeOK ==
-    /\ q \in Seq(1..K)
-    /\ head \in 1..K
-    /\ tail \in 1..K
-    /\ size \in 0..K
-
-===="
-chattla:20b,BM001,Mutual Exclusion,scheduling,2,0,0,1.0,bronze,42.48,"---- MODULE MutualExclusion ----
-
-EXTENDS Naturals, FiniteSets
-
-CONSTANT N
-
 VARIABLES
-  proc,          \* Process identifier
-  state,         \* State of each process
-  try,           \* Set of processes that are trying to enter critical section
-  critical,      \* Set of processes that are in critical section
+    queue, \* Sequence of items in the queue
+    producer, \* Boolean: TRUE if producer is blocked, FALSE otherwise
+    consumer \* Boolean: TRUE if consumer is blocked, FALSE otherwise
 
-(* --algorithm MutualExclusion
-  variables
-    proc \in 1..N,
-    state \in [1..N -> {idle, trying, critical}],
-    try \in SUBSET 1..N,
-    critical \in SUBSET 1..N
-  define
-    idle == \A i \in 1..N : state[i] = idle
-  end define
-  action
-    \* Process i enters trying state
-    \E i \in 1..N :
-      proc' = i
-      /\ state' = [state EXCEPT ![i] = @ \E trying]
-      /\ try' = try \cup {i}
-      /\ UNCHANGED <<critical>>
-  \/ \* Process i enters critical state
-    \E i \in 1..N :
-      proc' = i
-      /\ state' = [state EXCEPT ![i] = @ \E critical]
-      /\ try' = try \ {i}
-      /\ critical' = critical \cup {i}
-      /\ UNCHANGED <<idle>>
-  \/ \* Process i exits critical state
-    \E i \in 1..N :
-      proc' = i
-      /\ state' = [state EXCEPT ![i] = @ \E idle]
-      /\ critical' = critical \ {i}
-      /\ UNCHANGED <<try, idle>>
-  end action
-end algorithm *)
+TypeOK == 
+    /\ queue \in Seq(0..K) \* Items are natural numbers up to K
+    /\ producer \in BOOLEAN
+    /\ consumer \in BOOLEAN
 
 Init == 
-  /\ proc \in 1..N
-  /\ state = [i \in 1..N |-> idle]
-  /\ try = {}
-  /\ critical = {}
+    /\ queue = <<>>
+    /\ producer = FALSE
+    /\ consumer = FALSE
+
+ProducerAction == 
+    /\ producer = FALSE
+    /\ Len(queue) < K
+    /\ queue' = Append(queue, 1) \* Produce item '1' (placeholder)
+    /\ producer' = FALSE
+    /\ consumer' = consumer
+
+ConsumerAction == 
+    /\ consumer = FALSE
+    /\ Len(queue) > 0
+    /\ queue' = Tail(queue) \* Consume the first item
+    /\ consumer' = FALSE
+    /\ producer' = producer
+
+ProducerBlock == 
+    /\ producer = FALSE
+    /\ Len(queue) = K
+    /\ queue' = queue
+    /\ producer' = TRUE
+    /\ consumer' = consumer
+
+ConsumerBlock == 
+    /\ consumer = FALSE
+    /\ Len(queue) = 0
+    /\ queue' = queue
+    /\ consumer' = TRUE
+    /\ producer' = producer
 
 Next == 
-  \E i \in 1..N :
-    \E j \in 1..N :
-      \E k \in 1..N :
-        \E l \in 1..N :
-          \E m \in 1..N :
-            \E n \in 1..N :
-              \E o \in 1..N :
-                \E p \in 1..N :
-                  \E q \in 1..N :
-                    \E r \in 1..N :
-                      \E s \in 1..N :
-                        \E t \in 1..N :
-                          \E u \in 1..N :
-                            \E v \in 1..N :
-                              \E w \in 1..N :
-                                \E x \in 1..N :
-                                  \E y \in 1..N :
-                                    \E z \in 1..N :
-                                      MutualExclusion
-
-Spec == Init /\ [][Ne"
-chattla:20b,BM002,Two-Phase Commit,transaction,3,0,0,1.0,bronze,22.38,"---- MODULE TwoPhaseCommit ----
-EXTENDS Naturals, FiniteSets
-
-CONSTANT N
-ASSUME N \in Nat
-
-VARIABLES state, votes, msg
+    \/ ProducerAction
+    \/ ConsumerAction
+    \/ ProducerBlock
+    \/ ConsumerBlock
 
-Prepare = ""Prepare""
-VoteYes = ""VoteYes""
-VoteNo = ""VoteNo""
-Commit = ""Commit""
-Abort = ""Abort""
-
-TypeOK == /\ state \in [1..N -> {""Init"", ""Prepared"", ""Committed"", ""Aborted""}]
-/\ votes \in [1..N -> {""Yes"", ""No""}]
-/\ msg \in [1..N -> {"""", Prepare, Commit, Abort}]
-
-Init == /\ state = [i \in 1..N |-> ""Init""]
-/\ votes = [i \in 1..N |-> ""Yes""]
-/\ msg = [i \in 1..N |-> """"]
-
-PrepareMsg(i) == /\ state[i] = ""Init""
-/\ msg[i] = Prepare
-/\ UNCHANGED <<state, votes, msg>>
-
-VoteMsg(i) == /\ state[i] = ""Prepared""
-/\ msg[i] = IF votes[i] = ""Yes"" THEN Commit ELSE Abort
-/\ UNCHANGED <<state, votes, msg>>
-
-CommitMsg(i) == /\ state[i] = ""Prepared""
-/\ msg[i] = Commit
-/\ state' = [state EXCEPT ![i] = ""Committed""]
-/\ UNCHANGED <<votes, msg>>
-
-AbortMsg(i) == /\ state[i] = ""Prepared""
-/\ msg[i] = Abort
-/\ state' = [state EXCEPT ![i] = ""Aborted""]
-/\ UNCHANGED <<votes, msg>>
-
-SendMsg(i) == /\ state[i] = ""Committed""
-/\ msg[i] = """"
-/\ UNCHANGED <<state, votes, msg>>
-
-ReceiveMsg(i) == /\ state[i] = ""Aborted""
-/\ msg[i] = """"
-/\ UNCHANGED <<state, votes, msg>>
-
-ReceiveMsgFrom(j) == /\ state[j] = ""Committed""
-/\ msg[j] = """"
-/\ state' = [state EXCEPT ![i] = ""Committed""]
-/\ UNCHANGED <<votes, msg>>
-
-ReceiveMsgFrom2(j) == /\ state[j] = ""Aborted""
-/\ msg[j] = """"
-/\ state' = [state EXCEPT ![i] = ""Aborted""]
-/\ UNCHANGED <<votes, msg>>
-
-Next == \/ \E i \in 1..N: PrepareMsg(i)
-\/ \E i \in 1..N: VoteMsg(i)
-\/ \E i \in 1..N: CommitMsg(i)
-\/ \E i \in 1..N: AbortMsg(i)
-\/ \E i \in 1..N: SendMsg(i)
-\/ \E i \in 1..N: ReceiveMsg(i)
-\/ \E i \in 1..N: ReceiveMsgFrom(i)
-\/ \E i \in 1..N: ReceiveMsgFrom2(i)
-
-Spec == Init /\ [][Next]_<<state, votes, msg>> /\ WF_vars(Next)
-
-Spec2 == Init /\ [][Next]_<<state, votes, msg>> /\ WF_vars(Next)
-
-Spec3 == Init /\ [][Next]_<<state, votes, msg>> /\ WF_vars(Next)
-
-Spec4 == Init /\ [][Next]_<<state, votes, msg>> /\ WF_vars(Next)
-
-Spec5 == Init /\ [][Next]_<<state, votes, "
-chattla:20b,BM003,Dining Philosophers,scheduling,2,0,0,1.0,bronze,22.36,"---- MODULE DiningPhilosophers ----
-
-EXTENDS Naturals, FiniteSets
-
-CONSTANT N
-
-VARIABLES forks, state
-
-TypeOK == forks \in [1..N -> 1..N] /\
-          state \in [1..N -> {""thinking"", ""hungry"", ""eating""}]
-
-left(i) == IF i = 1 THEN N ELSE i - 1
-right(i) == IF i = N THEN 1 ELSE i + 1
-
-canEat(i) == state[i] = ""hungry"" /\ forks[i] = i /\ forks[left(i)] = left(i)
-
-pickUp(i) == forks' = [forks EXCEPT ![i] = 0, ![left(i)] = 0] /\
-             state' = [state EXCEPT ![i] = ""eating""]
-
-putDown(i) == forks' = [forks EXCEPT ![i] = i, ![left(i)] = left(i)] /\
-             state' = [state EXCEPT ![i] = ""thinking""]
-
-Next == \E i \in 1..N :
-          (canEat(i) /\ pickUp(i)) \/ putDown(i)
-
-Init == forks = [i \in 1..N |-> i] /\
-        state = [i \in 1..N |-> ""thinking""]
-
-Spec == Init /\ [][Next]_<<forks, state>>
-
-THEOREM Spec => [](\A i \in 1..N : forks[i] # 0)
-
-THEOREM Spec => [](\A i \in 1..N : forks[left(i)] # 0)
-
-THEOREM Spec => [](\A i \in 1..N : state[i] # ""hungry"")
-
-THEOREM Spec => [](\A i \in 1..N : forks[i] # forks[left(i)])
-
-THEOREM Spec => [](\A i \in 1..N : forks[i] # forks[right(i)])
-
-THEOREM Spec => [](\A i \in 1..N : forks[i] # forks[i])
-
-THEOREM Spec => [](\A i \in 1..N : forks[i] # 0)
-
-THEOREM Spec => [](\A i \in 1..N : forks[left(i)] # 0)
-
-THEOREM Spec => [](\A i \in 1..N : forks[right(i)] # 0)
-
-THEOREM Spec => [](\A i \in 1..N : forks[i] # forks[left(i)])
-
-THEOREM Spec => [](\A i \in 1..N : forks[i] # forks[right(i)])
-
-THEOREM Spec => [](\A i \in 1..N : forks[i] # forks[i])
-
-THEOREM Spec => [](\A i \in 1..N : forks[i] # 0)
-
-THEOREM Spec => [](\A i \in 1..N : forks[left(i)] # 0)
-
-THEOREM Spec => [](\A i \in 1..N : forks[right(i)] # 0)
-
-THEOREM Spec => [](\A i \in 1..N : forks[i] # forks[left(i)])
-
-THEOREM Spec => [](\A i \in 1..N : forks[i] # forks[right(i)])
-
-THEOREM Spec => [](\A i \in 1..N : forks[i] # forks[i])
-
-THEOREM Spec => [](\A i \in 1..N : forks[i] # 0)
-
-THEOREM Spec => [](\A i \in 1..N : forks[left(i)] # 0)
-
-THEOREM Spec => [](\A i \in 1..N : forks[righ"
-chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,0,0,1.0,bronze,22.51,"---- MODULE Bakery ----
-EXTENDS Naturals, FiniteSets
-
-CONSTANT N
-
-VARIABLES num, flag
-
-(* --algorithm Bakery
-variables
-num: [1..N -> Nat];
-flag: [1..N -> BOOLEAN];
-procedure enter(i: 1..N) {
-flag[i] := TRUE;
-num[i] := 1 + Max(num);
-while (EXISTS j : j /= i /\ flag[j] /\ (num[j] < num[i] \/ (num[j] = num[i] /\ j < i))) do
-skip;
-}
-procedure leave(i: 1..N) {
-num[i] := 0;
-flag[i] := FALSE;
-}
-*)
-ASSUME N \in Nat
-
-Num(i) == num[i]
-Flag(i) == flag[i]
-
-TypeOK == /\ num \in [1..N -> Nat]
-/\ flag \in [1..N -> BOOLEAN]
-
-Enter(i) == /\ flag[i] = TRUE
-/\ \A j : j /= i => (Flag(j) /\ (Num(j) < Num(i) \/ (Num(j) = Num(i) /\ j < i))) = FALSE
-
-Leave(i) == /\ flag[i] = FALSE
-/\ Num(i) = 0
-
-EnterLeave(i) == Enter(i) \/ Leave(i)
-
-EnterLeaveAll == \A i : 1..N => EnterLeave(i)
-
-EnterLeaveAll' == \A i : 1..N => EnterLeave(i)
-
-Next == \E i : 1..N :
-\E flag' : flag' = [flag EXCEPT ![i] = TRUE]
-\E num' : num' = [num EXCEPT ![i] = 1 + Max(num)]
-\vee \E flag' : flag' = [flag EXCEPT ![i] = FALSE]
-\E num' : num' = [num EXCEPT ![i] = 0]
-
-Init == /\ num = [i \in 1..N |-> 0]
-/\ flag = [i \in 1..N |-> FALSE]
-
-Spec == Init /\ [][Next]_<<num, flag>> /\ WF_{EnterLeaveAll}(\E i : EnterLeave(i))
-
-Safety == \A i, j : i /= j => (Enter(i) => (Leave(j) \/ (Num(j) > Num(i)) \/ (Num(j) = Num(i) /\ j > i)))
-
-THEOREM Spec => Safety
-PROOF
-by induction on the number of steps
-Qed.
-
-THEOREM Spec => WF_{EnterLeaveAll}(\E i : EnterLeave(i))
-PROOF
-by induction on the number of steps
-Qed.
-
-THEOREM Spec => WF_{EnterLeaveAll}(\E i : EnterLeave(i))
-PROOF
-by induction on the number of steps
-Qed.
-
-THEOREM Spec => WF_{EnterLeaveAll}(\E i : EnterLeave(i))
-PROOF
-by induction on the number of steps
-Qed.
-
-THEOREM Spec => WF_{EnterLeaveAll}(\E i : EnterLeave(i))
-PROOF
-by induction on the number of steps
-Qed.
-
-THEOREM Spec => WF_{EnterLeaveAll}(\E i : EnterLeave(i))
-PROOF
-by induction on the number of steps
-Qed.
-
-THEOREM Spec => WF_{EnterLeaveAll}(\E i : EnterLeave(i))
-PROOF
-by induction on the number of steps
-Qed.
-
-THEOREM Spec =>"
-chattla:20b,BM005,Producer-Consumer Queue,storage,2,0,0,1.0,bronze,2.74,"---- MODULE BoundedFIFO ----
-
-EXTENDS Integers, Sequences
-
-CONSTANT K
-
-VARIABLES q, r, w, n
-
-vars == <<q, r, w, n>>
-
-TypeOK == /\ q \in 1..K -> 1..K
-/\ r \in 1..K
-/\ w \in 1..K
-/\ n \in 0..K
-
-Init == /\ q \in 1..K -> 0
-/\ r = 1
-/\ w = 1
-/\ n = 0
-
-Producer == /\ n < K
-/\ q[w] = 1
-/\ w' = IF w = K THEN 1 ELSE w + 1
-/\ n' = n + 1
-
-Consumer == /\ n > 0
-/\ q[r] = 0
-/\ r' = IF r = K THEN 1 ELSE r + 1
-/\ n' = n - 1
-
-Next == Producer \/ Consumer
-
-Spec == Init /\ [][Next]_vars
+Spec == 
+    /\ Init
+    /\ [][Next]_<<queue, producer, consumer>>
+    /\ TypeOK
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,0,0,1.0,bronze,14.95,"---- MODULE RaftLeaderElection ----
+EXTENDS Naturals, Sequences, TLC
+
+VARIABLES currentTerm, votedFor, state
+
+(* -- State definitions -- *)
+Follower == state = ""Follower""
+Candidate == state = ""Candidate""
+Leader == state = ""Leader""
+
+(* -- Type definitions -- *)
+TypeOK == /\ state \in {""Follower"", ""Candidate"", ""Leader""}
+          /\ currentTerm \in Nat
+          /\ votedFor \in {""Follower"", ""Candidate"", ""Leader""} \cup {None}
+
+(* -- Initial state -- *)
+Init == /\ state = ""Follower""
+        /\ currentTerm = 0
+        /\ votedFor = None
+
+(* -- Transition relations -- *)
+RequestVote == /\ state = ""Follower""
+              /\ currentTerm' = currentTerm + 1
+              /\ votedFor' = ""Candidate""
+              /\ state' = ""Candidate""
+
+VoteGranted == /\ state = ""Candidate""
+              /\ votedFor' = ""Candidate""
+
+VoteDenied == /\ state = ""Candidate""
+              /\ votedFor' = None
+
+BecomeLeader == /\ state = ""Candidate""
+               /\ votedFor = ""Candidate""
+               /\ state' = ""Leader""
+
+(* -- Next-state relation -- *)
+Next == \/ RequestVote
+       \/ VoteGranted
+       \/ VoteDenied
+       \/ BecomeLeader
+
+(* -- Specification -- *)
+Spec == Init /\ [][Next]_<<currentTerm, votedFor, state>>
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,1,0,1.0,silver,64.46,"---- MODULE ReadWriteLock ----
+EXTENDS Naturals, Sequences, TLC
+
+VARIABLES readers, writer_active
+
+
+
+Init == /\ readers = 0
+        /\ writer_active = FALSE
+
+(* Reader acquires lock *)
+ReaderAcquire == /\ writer_active = FALSE
+                 /\ UNCHANGED writer_active
+                 /\ readers' = readers + 1
+                 /\ UNCHANGED <<writer_active>>
+
+(* Reader releases lock *)
+ReaderRelease == /\ readers > 0
+                 /\ UNCHANGED writer_active
+                 /\ readers' = readers - 1
+                 /\ UNCHANGED <<writer_active>>
+
+(* Writer acquires lock *)
+WriterAcquire == /\ writer_active = FALSE
+                 /\ readers = 0
+                 /\ writer_active' = TRUE
+                 /\ UNCHANGED <<readers>>
+
+(* Writer releases lock *)
+WriterRelease == /\ writer_active = TRUE
+                 /\ writer_active' = FALSE
+                 /\ UNCHANGED <<readers>>
+
+Next == \/ ReaderAcquire
+        \/ ReaderRelease
+        \/ WriterAcquire
+        \/ WriterRelease
+
+Spec == Init /\ [][Next]_<<readers, writer_active>>
+
+TypeOK == /\ readers \in Nat
+          /\ writer_active \in BOOLEAN
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,0,0,1.0,bronze,48.07,"---- MODULE ChandyLamportSnapshot ----
+EXTENDS Naturals, Sequences, TLC
+
+CONSTANTS
+    N \in Nat,          \* Number of processes
+    Channels \subseteq [1..N -> [1..N -> BOOLEAN]], \* Channels matrix: Channels[i][j] = TRUE if channel i->j exists
+    InitState \in [1..N -> Nat] \* Initial local state of each process
+
+VARIABLES
+    state,          \* state[p] = local state of process p
+    channelState,   \* channelState[p][q] = sequence of messages in channel p->q
+    recorded,       \* recorded[p] = TRUE if process p has recorded its state
+    markerSent      \* markerSent[p][q] = TRUE if marker from p to q has been sent
+
+(* Type invariant *)
+TypeOK == 
+    /\ state \in [1..N -> Nat]
+    /\ channelState \in [1..N -> [1..N -> Seq(Nat)]]
+    /\ recorded \in [1..N -> BOOLEAN]
+    /\ markerSent \in [1..N -> [1..N -> BOOLEAN]]
+    /\ \A p \in 1..N, q \in 1..N : Channels[p][q] => 
+        /\ channelState[p][q] \in Seq(Nat)
+        /\ markerSent[p][q] \in BOOLEAN
+
+(* Initial state *)
+Init == 
+    /\ state = InitState
+    /\ channelState = [p \in 1..N |-> [q \in 1..N |-> <<>>]]
+    /\ recorded = [p \in 1..N |-> FALSE]
+    /\ markerSent = [p \in 1..N |-> [q \in 1..N |-> FALSE]]
+
+(* Sending a marker from process p to q *)
+SendMarker(p, q) == 
+    /\ Channels[p][q]
+    /\ markerSent[p][q] = FALSE
+    /\ channelState[p][q] = <<>> \* No marker in channel yet
+    /\ channelState' = [channelState EXCEPT ![p][q] = <<>>] \* Marker is sent (channel becomes empty)
+    /\ markerSent' = [markerSent EXCEPT ![p][q] = TRUE]
+    /\ UNCHANGED <<state, recorded>>
+
+(* Receiving a marker at process q from p *)
+ReceiveMarker(p, q) == 
+    /\ Channels[p][q]
+    /\ markerSent[p][q] = TRUE
+    /\ channelState[p][q] = <<>> \* Marker has been sent, channel empty
+    /\ recorded[q] = FALSE
+    /\ state' = [state EXCEPT ![q] = state[q]] \* Record local state (no change)
+    /\ recorded' = [recorded EXCEPT ![q] = TRUE]
+    /\ UNCHANGED <<channelState, markerSent>>
+
+(* Sending a normal message from p to"
+chattla:20b,BM009,Token Ring,networking,2,1,1,0.667,gold,2.37,"---- MODULE TokenRing ----
+EXTENDS Naturals, Sequences
+
+CONSTANT N \* Number of nodes in the ring
+
+VARIABLE tokenPos \* Current holder of the token (1..N)
+
+Init == 
+    /\ tokenPos \in 1..N
+
+Next == 
+    /\ tokenPos' \in 1..N
+    /\ tokenPos' = IF tokenPos = N THEN 1 ELSE tokenPos + 1
+
+Spec == Init /\ [][Next]_tokenPos
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,0.889,silver,5.98,"---- MODULE KeyValueStore ----
+EXTENDS Naturals, Sequences, TLC
+
+CONSTANTS Keys, Values, defaultVal
+
+VARIABLE store
+
+(* Type invariant *)
+TypeOK == store \in [Keys -> Values]
+
+(* Initial state: all keys map to a default value *)
+Init == /\ store \in [Keys -> Values]
+        /\ store = [k \in Keys |-> defaultVal]
+
+(* Next-state relation: Put or Get *)
+Put(k, v) == /\ k \in Keys
+              /\ v \in Values
+              /\ store' = [store EXCEPT ![k] = v]
+              /\ UNCHANGED <<>>
+
+Get(k) == /\ k \in Keys
+          /\ UNCHANGED <<>>
+
+Next == \/ \E k \in Keys, v \in Values : Put(k, v)
+       \/ \E k \in Keys : Get(k)
+
+Spec == Init /\ [][Next]_<<store>>
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,1,0,0.444,silver,22.38,"---- MODULE SingleDecreePaxos ----
+EXTENDS Naturals, Sequences, TLC
+
+CONSTANTS N, M \* Number of acceptors and proposers
+
+VARIABLES
+    acceptorState, \* Mapping from acceptor IDs to their state
+    proposerState, \* Mapping from proposer IDs to their state
+    chosenValue \* The value that has been chosen, if any
+
+\* Acceptors' state: a record with fields
+\*   promisedBallot: the highest ballot promised
+\*   acceptedBallot: the ballot of the last accepted value
+\*   acceptedValue: the value of the last accepted value
+\*   chosen: whether a value has been chosen
+\*   chosenValue: the chosen value
+\*   chosenBallot: the ballot at which the value was chosen
+\*   chosenTime: the time at which the value was chosen
+\*   chosenProposer: the proposer that chose the value
+\*   chosenProposerTime: the time at which the proposer chose the value
+\*   chosenProposerBallot: the ballot at which the proposer chose the value
+\*   chosenProposerValue: the value at which the proposer chose the value
+\*   chosenProposerTime: the time at which the proposer chose the value
+\*   chosenProposerBallot: the ballot at which the proposer chose the value
+\*   chosenProposerValue: the value at which the proposer chose the value
+\*   chosenProposerTime: the time at which the proposer chose the value
+\*   chosenProposerBallot: the ballot at which the proposer chose the value
+\*   chosenProposerValue: the value at which the proposer chose the value
+\*   chosenProposerTime: the time at which the proposer chose the value
+\*   chosenProposerBallot: the ballot at which the proposer chose the value
+\*   chosenProposerValue: the value at which the proposer chose the value
+\*   chosenProposerTime: the time at which the proposer chose the value
+\*   chosenProposerBallot: the ballot at which the proposer chose the value
+\*   chosenProposerValue: the value at which the proposer chose the value
+\*   chosenProposerTime: the time at which the proposer chose the value
+\*   chosenProposerBallot: the ballot at wh"
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,0,0,1.0,bronze,31.33,"---- MODULE FileTransfer ----
+EXTENDS Naturals, Sequences, TLC
+
+CONSTANTS
+    MAX_RETRIES,
+    CHUNK_SIZE,
+    FILE_SIZE
+
+VARIABLES
+    file,
+    chunks,
+    sentChunks,
+    retransmitCount,
+    channel
+
+(* Helper to split file into chunks *)
+SplitFile(f, size) == 
+    IF Len(f) <= size THEN
+        <<f>>
+    ELSE
+        << SubSeq(f, 1, size) >> \o SplitFile(SubSeq(f, size+1, Len(f)), size)
+
+(* Initial state *)
+Init == 
+    /\ file \in Seq(1..255)  (* file represented as sequence of bytes *)
+    /\ Len(file) = FILE_SIZE
+    /\ chunks = SplitFile(file, CHUNK_SIZE)
+    /\ sentChunks = <<>>
+    /\ retransmitCount = 0
+    /\ channel = <<>>
+
+(* Sending a chunk *)
+SendChunk == 
+    /\ sentChunks = <<>>
+    /\ channel = <<>>
+    /\ retransmitCount = 0
+    /\ chunks' = chunks
+    /\ sentChunks' = <<>>
+    /\ channel' = <<>>
+    /\ UNCHANGED file
+
+(* Transmit a chunk over the channel *)
+Transmit == 
+    /\ sentChunks = <<>>
+    /\ channel = <<>>
+    /\ retransmitCount' = retransmitCount + 1
+    /\ channel' = << First(chunks) >>
+    /\ sentChunks' = <<>>
+    /\ chunks' = Tail(chunks)
+    /\ UNCHANGED file
+
+(* Receive a chunk from the channel *)
+Receive == 
+    /\ sentChunks = <<>>
+    /\ channel' = <<>>
+    /\ sentChunks' = << First(channel) >>
+    /\ UNCHANGED << file, chunks, retransmitCount, channel >>
+
+(* Retransmit a chunk if it was lost *)
+Retransmit == 
+    /\ sentChunks = <<>>
+    /\ channel = <<>>
+    /\ retransmitCount' = retransmitCount + 1
+    /\ channel' = << First(chunks) >>
+    /\ sentChunks' = <<>>
+    /\ chunks' = Tail(chunks)
+    /\ UNCHANGED file
+
+(* Non-deterministic choice of whether a chunk is lost or received *)
+SendOrRetransmit == 
+    /\ sentChunks = <<>>
+    /\ channel = <<>>
+    /\ retransmitCount' = retransmitCount + 1
+    /\ channel' = << First(chunks) >>
+    /\ sentChunks' = <<>>
+    /\ chunks' = Tail(chunks)
+    /\ UNCHANGED file
+
+(* Next-state relation *)
+Next == 
+    \/ SendChunk
+    \/ Transmit
+    \/ Receive
+    \/ Retransmit
+    \/ SendOrR"
+chattla:20b,BM013,Transaction Isolation (Snapshot Isolation),transaction,4,0,0,1.0,bronze,42.19,"---- MODULE SnapshotIsolation ----
+EXTENDS Naturals, Sequences, TLC
+
+VARIABLES
+    txns,          \* Set of active transaction IDs
+    snapshot,      \* Current snapshot of the database
+    db,            \* Current state of the database
+    nextTxId,      \* Next transaction ID to assign
+    writes,        \* Mapping from transaction ID to set of keys it writes
+    readSet,       \* Mapping from transaction ID to set of keys it reads
+    abortedTxns    \* Set of aborted transaction IDs
+
+TypeOK ==
+    /\ txns \subseteq Nat
+    /\ snapshot \in [Nat -> Nat]
+    /\ db \in [Nat -> Nat]
+    /\ nextTxId \in Nat
+    /\ writes \in [Nat -> SUBSET Nat]
+    /\ readSet \in [Nat -> SUBSET Nat]
+    /\ abortedTxns \subseteq Nat
+
+Init ==
+    /\ txns = {}
+    /\ snapshot = [k \in Nat |-> 0]
+    /\ db = [k \in Nat |-> 0]
+    /\ nextTxId = 1
+    /\ writes = [t \in Nat |-> {}]
+    /\ readSet = [t \in Nat |-> {}]
+    /\ abortedTxns = {}
+
+BeginTx ==
+    /\ nextTxId \in Nat
+    /\ txns' = txns \cup {nextTxId}
+    /\ writes' = [writes EXCEPT ![nextTxId] = {}]
+    /\ readSet' = [readSet EXCEPT ![nextTxId] = {}]
+    /\ abortedTxns' = abortedTxns
+    /\ snapshot' = snapshot
+    /\ db' = db
+    /\ nextTxId' = nextTxId + 1
+
+Read(k) ==
+    /\ k \in Nat
+    /\ nextTxId \in Nat
+    /\ nextTxId \in txns
+    /\ readSet' = [readSet EXCEPT ![nextTxId] = readSet[nextTxId] \cup {k}]
+    /\ snapshot' = snapshot
+    /\ db' = db
+    /\ writes' = writes
+    /\ abortedTxns' = abortedTxns
+    /\ txns' = txns
+
+Write(k) ==
+    /\ k \in Nat
+    /\ nextTxId \in Nat
+    /\ nextTxId \in txns
+    /\ writes' = [writes EXCEPT ![nextTxId] = writes[nextTxId] \cup {k}]
+    /\ snapshot' = snapshot
+    /\ db' = db
+    /\ readSet' = readSet
+    /\ abortedTxns' = abortedTxns
+    /\ txns' = txns
+
+Commit ==
+    /\ nextTxId \in Nat
+    /\ nextTxId \in txns
+    /\ \A k \in writes[nextTxId] : db[k] = snapshot[k]
+    /\ db' = [db EXCEPT ![k] = IF k \in writes[nextTxId] THEN snapshot[k] ELSE db[k]]
+    /\ snapshot' = db'
+    /\ txn"
+chattla:20b,BM014,Clock Synchronisation,networking,3,0,0,1.0,bronze,21.02,"---- MODULE ClockSync ----
+EXTENDS Naturals, Sequences, TLC
+
+CONSTANTS
+    N \in Nat,          \* Number of nodes
+    epsilon \in Nat,    \* Synchronisation tolerance
+    maxDrift \in Nat    \* Maximum integer drift per round
+
+VARIABLES
+    clocks \in [1..N -> Nat]   \* Current clock values of nodes
+
+(* Type invariant *)
+TypeOK == clocks \in [1..N -> Nat]
+
+(* Initialisation: clocks start at 0 *)
+Init == clocks = [i \in 1..N |-> 0]
+
+(* Helper: compute the average of all clocks *)
+Avg(clocks) == 
+    LET sum == \sum i \in 1..N : clocks[i]
+    IN sum / N
+
+(* Helper: compute the maximum difference between any two clocks *)
+MaxDiff(clocks) ==
+    LET diffs == [i \in 1..N |-> [j \in 1..N |-> Abs(clocks[i] - clocks[j])]]
+    IN \max i \in 1..N : \max j \in 1..N : diffs[i][j]
+
+(* Helper: compute the drift for each node *)
+Drift(clocks) ==
+    [i \in 1..N |-> 
+        IF clocks[i] < Avg(clocks) THEN 1
+        ELSE IF clocks[i] > Avg(clocks) THEN -1
+        ELSE 0
+    ]
+
+(* Next-state relation: each node updates its clock by the drift, 
+   then synchronises to the average *)
+Next ==
+    LET newClocks == [i \in 1..N |-> clocks[i] + Drift(clocks)[i]]
+    IN clocks' = [i \in 1..N |-> 
+        IF Abs(newClocks[i] - Avg(newClocks)) <= epsilon THEN Avg(newClocks)
+        ELSE newClocks[i]
+    ]
+
+Spec == Init /\ [][Next]_clocks
+
+===="
+chattla:20b,BM015,Peterson's Algorithm,scheduling,2,1,1,1.0,gold,30.86,"---- MODULE Peterson2 ----
+EXTENDS Naturals, Sequences, TLC
+
+VARIABLES flag, turn
+
+(* flag is a sequence of two booleans: flag[0] and flag[1] *)
+(* turn is an integer: 0 or 1 *)
+
+(* Initial state *)
+Init == /\ flag = [i \in 0..1 |-> FALSE]
+        /\ turn = 0
+
+(* Next-state relation *)
+Next == 
+    (* Process 0 *)
+    \/ /\ flag' = [flag EXCEPT ![0] = TRUE]
+        /\ turn' = 1
+        /\ flag[1] /\ turn = 1
+        /\ flag' = [flag EXCEPT ![0] = FALSE]
+    \/ (* Process 1 *)
+      /\ flag' = [flag EXCEPT ![1] = TRUE]
+        /\ turn' = 0
+        /\ flag[0] /\ turn = 0
+        /\ flag' = [flag EXCEPT ![1] = FALSE]
+    \/ (* No change *)
+      /\ UNCHANGED <<flag, turn>>
+
+(* Specification *)
+Spec == Init /\ [][Next]_<<flag, turn>>
+
+(* Type invariant *)
+TypeOK == /\ flag \in [0..1 -> BOOLEAN]
+          /\ turn \in 0..1
+
+===="
+chattla:20b,BM016,Gossip Protocol,networking,3,1,0,1.0,silver,3.73,"---- MODULE GossipProtocol ----
+EXTENDS Naturals, Sequences, TLC
+
+CONSTANTS N, Updates
+
+VARIABLES infected, updates
+
+(* Infected is a set of node IDs that have received the gossip update *)
+(* Updates is a set of update IDs that have been disseminated *)
+
+(* TypeOK ensures that the variables have the correct type *)
+TypeOK == 
+    /\ infected \subseteq 1..N
+    /\ updates \subseteq Updates
+
+(* Init: Initially, no node is infected and no updates have been disseminated *)
+Init == 
+    /\ infected = {}
+    /\ updates = {}
+
+(* Next: In each round, every infected node spreads the gossip to all nodes *)
+Next == 
+    /\ updates' = updates \cup Updates
+    /\ infected' = infected \cup 1..N
+
+(* Spec: The system evolves according to Init and Next *)
+Spec == Init /\ [][Next]_<<infected, updates>>
+
+(* Liveness property: Eventually, all nodes become infected *)
+Liveness == <> (infected = 1..N)
+
+===="
+chattla:20b,BM017,Simple Allocator,storage,2,1,0,0.667,silver,22.6,"---- MODULE MemoryAllocator ----
+EXTENDS Naturals, Sequences, TLC
+
+CONSTANTS N, Clients
+
+VARIABLES free, allocated
+
+Pages == 1..N
+
+TypeOK == /\ free \in SUBSET Pages
+          /\ allocated \in [Clients -> SUBSET Pages]
+          /\ /\ \A c \in Clients: allocated[c] \subseteq Pages
+             /\ \A c \in Clients: allocated[c] \subseteq free
+          /\ /\ \A c1, c2 \in Clients: c1 /= c2 => allocated[c1] # allocated[c2]
+          /\ /\ \A c \in Clients: allocated[c] \subseteq free
+          /\ /\ \A c \in Clients: allocated[c] \subseteq Pages
+          /\ /\ \A c \in Clients: allocated[c] \subseteq free
+          /\ /\ \A c \in Clients: allocated[c] \subseteq Pages
+          /\ /\ \A c \in Clients: allocated[c] \subseteq free
+          /\ /\ \A c \in Clients: allocated[c] \subseteq Pages
+          /\ /\ \A c \in Clients: allocated[c] \subseteq free
+          /\ /\ \A c \in Clients: allocated[c] \subseteq Pages
+          /\ /\ \A c \in Clients: allocated[c] \subseteq free
+          /\ /\ \A c \in Clients: allocated[c] \subseteq Pages
+          /\ /\ \A c \in Clients: allocated[c] \subseteq free
+          /\ /\ \A c \in Clients: allocated[c] \subseteq Pages
+          /\ /\ \A c \in Clients: allocated[c] \subseteq free
+          /\ /\ \A c \in Clients: allocated[c] \subseteq Pages
+          /\ /\ \A c \in Clients: allocated[c] \subseteq free
+          /\ /\ \A c \in Clients: allocated[c] \subseteq Pages
+          /\ /\ \A c \in Clients: allocated[c] \subseteq free
+          /\ /\ \A c \in Clients: allocated[c] \subseteq Pages
+          /\ /\ \A c \in Clients: allocated[c] \subseteq free
+          /\ /\ \A c \in Clients: allocated[c] \subseteq Pages
+          /\ /\ \A c \in Clients: allocated[c] \subseteq free
+          /\ /\ \A c \in Clients: allocated[c] \subseteq Pages
+          /\ /\ \A c \in Clients: allocated[c] \subseteq free
+          /\ /\ \A c \in Clients: allocated[c] \subseteq Pages
+          /\ /\ \A c \in Clients: allocated[c] \subseteq free
+          /\ "
+chattla:20b,BM018,Publish-Subscribe Broker,networking,3,0,0,1.0,bronze,34.8,"---- MODULE Broker ----
+EXTENDS Naturals, Sequences, TLC
+
+VARIABLES
+    subscribers,  \* [topic -> set of subscriber IDs]
+    messages,     \* [topic -> sequence of messages]
+    nextMsgId,    \* [topic -> Nat] next message ID to assign
+    nextSubId     \* Nat next subscriber ID to assign
+
+(* Type definitions *)
+Topic == [name: STRING]
+SubscriberId == Nat
+Message == [id: Nat, content: STRING]
+MessageSeq == Seq(Message)
+
+(* Helper functions *)
+IsSubscriber(subId, topic) == subId \in subscribers[topic]
+IsMessage(msg, topic) == msg \in messages[topic]
+NextMsgId(topic) == nextMsgId[topic]
+NextSubId == nextSubId
+
+(* Initial state *)
+Init ==
+    /\ subscribers \in [Topic -> SUBSET SubscriberId]
+    /\ messages \in [Topic -> MessageSeq]
+    /\ nextMsgId \in [Topic -> Nat]
+    /\ nextSubId \in Nat
+    /\ \A topic \in DOMAIN subscribers:
+        subscribers[topic] = {}
+    /\ \A topic \in DOMAIN messages:
+        messages[topic] = <<>>
+    /\ \A topic \in DOMAIN nextMsgId:
+        nextMsgId[topic] = 0
+    /\ nextSubId = 0
+
+(* Register a new subscriber for a topic *)
+Register(subId, topic) ==
+    /\ subId \notin subscribers[topic]
+    /\ subscribers' = [subscribers EXCEPT ![topic] = @ \cup {subId}]
+    /\ UNCHANGED <<messages, nextMsgId, nextSubId>>
+
+(* Post a new message on a topic *)
+Post(topic, content) ==
+    /\ nextMsgId[topic] = nextMsgId[topic]  \* ensure topic exists
+    /\ newMsg == [id: nextMsgId[topic], content: content]
+    /\ messages' = [messages EXCEPT ![topic] = Append(@, newMsg)]
+    /\ nextMsgId' = [nextMsgId EXCEPT ![topic] = @ + 1]
+    /\ UNCHANGED <<subscribers, nextSubId>>
+
+(* Deliver messages to subscribers *)
+Deliver(subId, topic) ==
+    /\ IsSubscriber(subId, topic)
+    /\ \E msg \in messages[topic]:
+        /\ IsMessage(msg, topic)
+        /\ DeliverTo(subId, msg)  \* external action
+    /\ UNCHANGED <<subscribers, messages, nextMsgId, nextSubId>>
+
+(* Next state *)
+Next ==
+    \/ \E subId, topic: Register(subId, topic)
+    \/ \E topic, content: Post"
+chattla:20b,BM019,Dekker's Algorithm,scheduling,3,0,0,0.778,bronze,84.07,"---- MODULE Dekker ----
+EXTENDS Naturals, Sequences, TLC
+
+VARIABLES turn, wants
+
+(* Type definitions *)
+turn \in {1, 2}
+wants[1] \in BOOLEAN
+wants[2] \in BOOLEAN
+
+(* Initial state *)
+Init == /\ turn \in {1, 2}
+        /\ wants[1] \in BOOLEAN
+        /\ wants[2] \in BOOLEAN
+        /\ turn = 1
+        /\ wants[1] = FALSE
+        /\ wants[2] = FALSE
+
+(* Next-state relation *)
+Next == \/ /\ wants[1] = FALSE
+              /\ wants[2] = FALSE
+              /\ turn = 1
+              /\ turn' = 2
+              /\ wants[1]' = FALSE
+              /\ wants[2]' = FALSE
+        \/ /\ wants[1] = FALSE
+              /\ wants[2] = FALSE
+              /\ turn = 2
+              /\ turn' = 1
+              /\ wants[1]' = FALSE
+              /\ wants[2]' = FALSE
+        \/ /\ wants[1] = FALSE
+              /\ wants[2] = FALSE
+              /\ turn = 1
+              /\ wants[1]' = TRUE
+              /\ wants[2]' = FALSE
+        \/ /\ wants[1] = FALSE
+              /\ wants[2] = FALSE
+              /\ turn = 2
+              /\ wants[1]' = FALSE
+              /\ wants[2]' = TRUE
+        \/ /\ wants[1] = TRUE
+              /\ wants[2] = FALSE
+              /\ turn = 1
+              /\ turn' = 2
+              /\ wants[1]' = TRUE
+              /\ wants[2]' = FALSE
+        \/ /\ wants[1] = TRUE
+              /\ wants[2] = FALSE
+              /\ turn = 2
+              /\ turn' = 1
+              /\ wants[1]' = TRUE
+              /\ wants[2]' = FALSE
+        \/ /\ wants[1] = FALSE
+              /\ wants[2] = TRUE
+              /\ turn = 1
+              /\ turn' = 2
+              /\ wants[1]' = FALSE
+              /\ wants[2]' = TRUE
+        \/ /\ wants[1] = FALSE
+              /\ wants[2] = TRUE
+              /\ turn = 2
+              /\ turn' = 1
+              /\ wants[1]' = FALSE
+              /\ wants[2]' = TRUE
+        \/ /\ wants[1] = TRUE
+              /\ wants[2] = TRUE
+              /\ turn = 1
+              /\ turn' = 2
+              /\ wants[1]' = TRUE
+              /\ wants[2]' = TRUE"
+chattla:20b,BM020,Eventually Consistent Counter,storage,3,0,0,1.0,bronze,16.29,"---- MODULE GCounter ----
+EXTENDS Naturals, TLC
+
+CONSTANTS Node
+
+VARIABLES counts
+
+(* counts is a matrix: counts[n][m] is the count that node n has for node m *)
+Init ==
+  /\ counts \in [Node -> [Node -> Nat]]
+  /\ \A n \in Node: \A m \in Node: counts[n][m] = 0
+
+(* Increment operation: node n increments its own slot *)
+Increment(n) ==
+  /\ n \in Node
+  /\ counts' = [counts EXCEPT ![n][n] = counts[n][n] + 1]
+  /\ UNCHANGED <<>>
+
+(* Merge operation: node n merges its counts with node m *)
+Merge(n, m) ==
+  /\ n \in Node
+  /\ m \in Node
+  /\ counts' = [counts EXCEPT ![n][m] = Max(counts[n][m], counts[m][m])]
+  /\ UNCHANGED <<>>
+
+Next ==
+  \E n \in Node:
+    \/ Increment(n)
+    \/ \E m \in Node: Merge(n, m)
+
+(* Global count is the sum over all nodes of the maximum count for each node *)
+GlobalCount ==
+  \Sum n \in Node: \Max_{m \in Node} counts[m][n]
+
+Spec ==
+  Init /\ [][Next]_<<counts>>
+
+TypeOK ==
+  /\ counts \in [Node -> [Node -> Nat]]
+  /\ \A n \in Node: \A m \in Node: counts[n][m] \in Nat
 
 ===="

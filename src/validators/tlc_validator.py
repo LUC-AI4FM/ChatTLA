@@ -111,8 +111,8 @@ def validate_file(
 
     # --- Step 3: Run TLC ----------------------------------------------------
     cmd = [
-        "java", "-jar", str(jar),
-        "-tool", "TLC",
+        "java", "-cp", str(jar),
+        "tlc2.TLC",
         "-config", str(cfg_path),
         str(tla_path),
     ]
@@ -130,7 +130,8 @@ def validate_file(
         violations = _parse_violations(stdout)
 
         if violations:
-            tier = "bronze"
+            # SANY already passed (step 1); TLC found semantic issues → silver
+            tier = "silver"
         elif _detect_success(stdout):
             tier = "gold"
         else:
@@ -190,8 +191,16 @@ def _parse_violations(output: str) -> list[str]:
     """Extract violation/error messages from TLC output."""
     violations: list[str] = []
     for line in output.splitlines():
-        if re.search(r"(Invariant|Property|Error|violation|is violated)", line, re.IGNORECASE):
-            violations.append(line.strip())
+        stripped = line.strip()
+        # Skip harmless / success lines
+        if re.search(r"(Warning.*garbage collector|Warning.*UseParallelGC)", stripped, re.IGNORECASE):
+            continue
+        if re.search(r"no error has been found", stripped, re.IGNORECASE):
+            continue
+        if re.search(r"^(Finished|The depth|The average|calculated)", stripped):
+            continue
+        if re.search(r"(Invariant|Property|Error|violation|is violated)", stripped, re.IGNORECASE):
+            violations.append(stripped)
     return violations
 
 
@@ -204,6 +213,7 @@ def _autogenerate_cfg(tla_content: str) -> Optional[str]:
     - A `Next` operator definition   → NEXT Next
     - A `TypeOK` invariant           → INVARIANT TypeOK
     - A `Spec` operator              → SPECIFICATION Spec
+    - CONSTANT declarations          → assign small model values
 
     Returns None if Init and Next are not detectable.
     """
@@ -225,5 +235,24 @@ def _autogenerate_cfg(tla_content: str) -> Optional[str]:
 
     if has_typeok:
         lines.append("INVARIANT TypeOK")
+
+    # Auto-assign CONSTANT values so TLC can actually run.
+    # Use small defaults to keep the state space tractable.
+    const_matches = re.findall(r"^CONSTANTS?\s+(.+)$", tla_content, re.MULTILINE)
+    for match in const_matches:
+        for name in re.split(r"[,\s]+", match.strip()):
+            name = name.strip().rstrip(",")
+            if not name or name.startswith("(") or name.startswith("\\*"):
+                continue
+            # Heuristic defaults based on common naming conventions
+            if re.match(r"^(N|M|K|MAX|Max|Size|Capacity|NumProcs|Num)$", name):
+                lines.append(f"CONSTANT {name} = 3")
+            elif re.match(r"^(Proc|Process|Node|Server|Client|Participant)s?$", name):
+                lines.append(f"CONSTANT {name} = {{p1, p2, p3}}")
+            elif re.match(r"^(Coordinator)$", name):
+                lines.append(f"CONSTANT {name} = p0")
+            else:
+                # Generic: try a small number for unknowns
+                lines.append(f"CONSTANT {name} = 3")
 
     return "\n".join(lines) + "\n"
