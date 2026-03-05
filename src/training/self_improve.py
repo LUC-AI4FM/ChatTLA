@@ -475,11 +475,15 @@ def fix_tla_syntax(spec: str, sany_errors: str = "") -> FixResult:
 
     bare_lines = _is_bare_module_level(fixed)
     if bare_lines:
-        # Remove them from the spec
+        # Remove them from the spec — only try the fallback if the first
+        # replacement didn't work to avoid accidentally removing matching
+        # substrings inside operator bodies.
         for full_line, _ in bare_lines:
-            # Remove the line entirely
-            fixed = fixed.replace(full_line + "\n", "", 1)
-            fixed = fixed.replace(full_line, "", 1)
+            new_fixed = fixed.replace(full_line + "\n", "", 1)
+            if new_fixed == fixed:
+                # No exact newline match — try without newline
+                new_fixed = fixed.replace(full_line, "", 1)
+            fixed = new_fixed
         result.fixes_applied.append("removed bare module-level \\in expressions")
 
     # ── Fix 22: Detect and patch truncated specs ──────────────────────────
