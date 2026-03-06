@@ -73,17 +73,19 @@ def score_structural(spec: str, expected_invariants: list[str]) -> float:
     return sum(checks) / len(checks)
 
 
-def run_benchmark_problem(
-    problem: dict,
-    model_tag: str,
-    use_self_correct: bool = False,
-) -> dict:
-    """Run a single benchmark problem and return a result row."""
-    from src.inference.ollama_client import ChatTLAClient
-    from src.validators.tlc_validator import validate_string
+_TIER_RANK = {"gold": 3, "silver": 2, "bronze": 1}
 
-    client = ChatTLAClient(model=model_tag, reasoning="medium")
-    t0 = time.monotonic()
+
+def _run_single_attempt(
+    problem: dict,
+    client,
+    use_self_correct: bool,
+) -> tuple[str, str, float]:
+    """
+    Run one generation attempt for a benchmark problem.
+    Returns (spec, tier, structural_score).
+    """
+    from src.validators.tlc_validator import validate_string
 
     description = problem["description"]
     if problem.get("hints"):
@@ -98,8 +100,55 @@ def run_benchmark_problem(
         tlc_result = validate_string(spec, module_name=module_name)
         tier = tlc_result.tier
 
-    elapsed = time.monotonic() - t0
     structural = score_structural(spec, problem.get("expected_invariants", []))
+    return spec, tier, structural
+
+
+def run_benchmark_problem(
+    problem: dict,
+    model_tag: str,
+    use_self_correct: bool = False,
+    attempts: int = 1,
+) -> dict:
+    """Run a single benchmark problem with N attempts, keeping the best result."""
+    from src.inference.ollama_client import ChatTLAClient
+
+    client = ChatTLAClient(model=model_tag, reasoning="medium")
+    t0 = time.monotonic()
+
+    best_spec, best_tier, best_struct = None, "bronze", 0.0
+
+    for i in range(attempts):
+        try:
+            # Vary temperature slightly across attempts for diversity
+            if i > 0:
+                client._temp_override = 0.05 + i * 0.10  # 0.15, 0.25, ...
+            else:
+                client._temp_override = None
+
+            spec, tier, structural = _run_single_attempt(
+                problem, client, use_self_correct
+            )
+
+            # Pick the best: highest tier, then highest structural score
+            tier_rank = _TIER_RANK.get(tier, 0)
+            best_rank = _TIER_RANK.get(best_tier, 0)
+            if (tier_rank > best_rank) or \
+               (tier_rank == best_rank and structural > best_struct):
+                best_spec, best_tier, best_struct = spec, tier, structural
+
+            # Early exit if we hit gold
+            if tier == "gold":
+                break
+        except Exception:
+            continue  # skip failed attempts, try again
+
+    elapsed = time.monotonic() - t0
+    client._temp_override = None  # cleanup
+
+    if best_spec is None:
+        # All attempts failed
+        raise RuntimeError(f"All {attempts} attempts failed for {problem['id']}")
 
     return {
         "model":             model_tag,
@@ -107,12 +156,12 @@ def run_benchmark_problem(
         "name":              problem["name"],
         "domain":            problem["domain"],
         "difficulty":        problem["difficulty"],
-        "sany_pass":         int(tier in ("silver", "gold")),
-        "tlc_pass":          int(tier == "gold"),
-        "structural_score":  round(structural, 3),
-        "tlc_tier":          tier,
+        "sany_pass":         int(best_tier in ("silver", "gold")),
+        "tlc_pass":          int(best_tier == "gold"),
+        "structural_score":  round(best_struct, 3),
+        "tlc_tier":          best_tier,
         "runtime_s":         round(elapsed, 2),
-        "generated_spec":    spec[:2000],  # truncate for CSV
+        "generated_spec":    best_spec[:8000],  # truncate for CSV
     }
 
 
@@ -122,6 +171,7 @@ def run(
     use_self_correct: bool = False,
     limit: Optional[int] = None,
     problem_ids: Optional[list[str]] = None,
+    attempts: int = 1,
 ) -> None:
     with _BENCH_JSON.open() as f:
         problems = json.load(f)
@@ -146,9 +196,10 @@ def run(
             print(f"\n[benchmark] Model: {model_tag}")
 
             for problem in problems:
-                print(f"  [{problem['id']}] {problem['name']}...", end="", flush=True)
+                att_label = f" (best of {attempts})" if attempts > 1 else ""
+                print(f"  [{problem['id']}] {problem['name']}{att_label}...", end="", flush=True)
                 try:
-                    row = run_benchmark_problem(problem, model_tag, use_self_correct)
+                    row = run_benchmark_problem(problem, model_tag, use_self_correct, attempts=attempts)
                     rows.append(row)
                     sany_passes += row["sany_pass"]
                     tlc_passes  += row["tlc_pass"]
@@ -187,8 +238,9 @@ if __name__ == "__main__":
     parser.add_argument("--output",       default=str(_RESULTS_CSV))
     parser.add_argument("--limit",        type=int, help="Stop after N benchmark problems (for quick smoke tests)")
     parser.add_argument("--problems",     nargs="+", help="Run only the given benchmark IDs (e.g. BM001 BM007)")
+    parser.add_argument("--attempts",     type=int, default=1, help="Number of generation attempts per problem (best-of-N)")
     args = parser.parse_args()
 
     model_list = [args.model] if args.model else None
     run(models=model_list, output_csv=Path(args.output), use_self_correct=args.self_correct,
-        limit=args.limit, problem_ids=args.problems)
+        limit=args.limit, problem_ids=args.problems, attempts=args.attempts)

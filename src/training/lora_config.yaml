@@ -24,9 +24,9 @@
 peft_type: LORA
 
 # --- Core LoRA hyperparameters ---------------------------------------------
-r: 4                           # LoRA rank — minimal rank to preserve base model TLA+ syntax knowledge
-lora_alpha: 8                  # scaling factor; effective scale = alpha/r = 2.0
-lora_dropout: 0.10             # regularization to prevent overfitting on small curated dataset
+r: 8                           # LoRA rank — 2x base for more capacity, fits in VRAM
+lora_alpha: 16                 # scaling factor; effective scale = alpha/r = 2.0
+lora_dropout: 0.05             # reduced dropout: more data (121 examples) reduces overfitting risk
 bias: none
 
 # Target all standard linear layers (attention + FFN + MoE gate/expert projections)

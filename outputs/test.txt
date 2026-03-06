@@ -1,0 +1,85 @@
+---- MODULE ChandyLamportSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, Channels
+
+VARIABLES state, channelState, markerSent, markerReceived, recorded
+State == [data: Nat, snapshot: BOOLEAN]
+ChannelState == [data: Seq(Nat), snapshot: BOOLEAN]
+
+(* Initial state *)
+Init ==
+    /\ state = [i \in 1..N |-> [data |-> 0, snapshot |-> FALSE]]
+    /\ channelState = [c \in Channels |-> [data |-> <<>>, snapshot |-> FALSE]]
+    /\ markerSent = [c \in Channels |-> FALSE]
+    /\ markerReceived = [c \in Channels |-> FALSE]
+    /\ recorded = [i \in 1..N |-> FALSE]
+
+(* Sending a data message from process i to process j *)
+SendData(i, j) ==
+    /\ i \in 1..N
+    /\ j \in 1..N
+    /\ i # j
+    /\ \E msg \in 1..N : /\ msg \in 1..N
+                         /\ channelState[(i, j)].data = Append(channelState[(i, j)].data, msg)
+                         /\ state[i].data' = state[i].data + 1
+                         /\ UNCHANGED <<state, channelState, markerSent, markerReceived, recorded>>
+
+(* Sending a marker from process i to process j *)
+SendMarker(i, j) ==
+    /\ i \in 1..N
+    /\ j \in 1..N
+    /\ i # j
+    /\ markerSent[(i, j)] = FALSE
+    /\ markerSent'[(i, j)] = TRUE
+    /\ UNCHANGED <<state, channelState, markerReceived, recorded>>
+
+(* Receiving a data message on channel (i, j) *)
+ReceiveData(i, j) ==
+    /\ i \in 1..N
+    /\ j \in 1..N
+    /\ i # j
+    /\ channelState[(i, j)].data # <<>>
+    /\ \E msg \in 1..N : /\ msg = Head(channelState[(i, j)].data)
+                         /\ channelState[(i, j)].data' = Tail(channelState[(i, j)].data)
+                         /\ state[j].data' = state[j].data + 1
+                         /\ UNCHANGED <<state, channelState, markerSent, markerReceived, recorded>>
+
+(* Receiving a marker on channel (i, j) *)
+ReceiveMarker(i, j) ==
+    /\ i \in 1..N
+    /\ j \in 1..N
+    /\ i # j
+    /\ markerReceived[(i, j)] = FALSE
+    /\ markerReceived'[(i, j)] = TRUE
+    /\ IF recorded[j] = FALSE
+       THEN /\ recorded' = [ recorded EXCEPT ![j] = TRUE ]
+            /\ channelState'[(i, j)] = [ channelState[(i, j)] EXCEPT !.snapshot = TRUE ]
+            /\ \E k \in 1..N : /\ k # j
+                               /\ SendMarker(j, k)
+
+    /\ UNCHANGED <<state, channelState, markerSent, markerReceived, recorded>>
+
+(* Next-state relation *)
+Next ==
+    \/ \E i, j \in 1..N : /\ i # j
+                           /\ SendData(i, j)
+    \/ \E i, j \in 1..N : /\ i # j
+                           /\ SendMarker(i, j)
+    \/ \E i, j \in 1..N : /\ i # j
+                           /\ ReceiveData(i, j)
+    \/ \E i, j \in 1..N : /\ i # j
+                           /\ ReceiveMarker(i, j)
+
+(* Specification *)
+Spec == Init /\ [][Next]_<<state, channelState, markerSent, markerReceived, recorded>>
+
+(* Type invariant *)
+TypeOK ==
+    /\ state \in [1..N -> State]
+    /\ channelState \in [Channels -> ChannelState]
+    /\ markerSent \in [Channels -> BOOLEAN]
+    /\ markerReceived \in [Channels -> BOOLEAN]
+    /\ recorded \in [1..N -> BOOLEAN]
+
+====
