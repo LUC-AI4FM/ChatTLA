@@ -46,6 +46,27 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Optional
 
+
+def _check_training_deps() -> None:
+    """Fail fast with clear message if training deps (datasets, etc.) are missing."""
+    missing = []
+    try:
+        import datasets  # noqa: F401
+    except ImportError:
+        missing.append("datasets")
+    try:
+        import transformers  # noqa: F401
+    except ImportError:
+        missing.append("transformers")
+    if missing:
+        print(
+            f"\nERROR: Missing training dependencies: {', '.join(missing)}\n"
+            "Install with:  pip install -r requirements.txt\n"
+            "Or minimal:   pip install datasets transformers trl peft\n",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Paths
 # ─────────────────────────────────────────────────────────────────────────────
@@ -55,7 +76,9 @@ sys.path.insert(0, str(_REPO_ROOT))
 _AUGMENTED_JSONL = _REPO_ROOT / "data" / "processed" / "augmented.jsonl"
 _RL_DATA_DIR     = _REPO_ROOT / "data" / "processed" / "rl"
 _DPO_JSONL       = _RL_DATA_DIR / "dpo_pairs.jsonl"
+_RL_STATE_FILE   = _RL_DATA_DIR / "state.json"
 _RL_LOG_DIR      = _REPO_ROOT / "outputs" / "logs"
+_TLC_ERRORS_JSONL = _RL_LOG_DIR / "tlc_errors.jsonl"
 _RL_HISTORY      = _RL_LOG_DIR / "rl_history.jsonl"
 _BENCHMARK_JSON  = _REPO_ROOT / "data" / "benchmarks" / "benchmark_suite.json"
 _TRAIN_JSONL     = _REPO_ROOT / "data" / "processed" / "train.jsonl"
@@ -176,6 +199,41 @@ def log_history(stats: CycleStats):
     _RL_HISTORY.parent.mkdir(parents=True, exist_ok=True)
     with open(_RL_HISTORY, "a", encoding="utf-8") as f:
         f.write(json.dumps(asdict(stats), ensure_ascii=False) + "\n")
+
+
+def load_accumulated_new() -> int:
+    """Load persisted accumulated_new from state file (survives restarts)."""
+    if _RL_STATE_FILE.exists():
+        try:
+            with open(_RL_STATE_FILE) as f:
+                data = json.load(f)
+            return int(data.get("accumulated_new", 0))
+        except (json.JSONDecodeError, KeyError, ValueError):
+            pass
+    return 0
+
+
+def save_accumulated_new(accumulated_new: int) -> None:
+    """Persist accumulated_new so it survives restarts."""
+    _RL_DATA_DIR.mkdir(parents=True, exist_ok=True)
+    with open(_RL_STATE_FILE, "w") as f:
+        json.dump({"accumulated_new": accumulated_new}, f)
+
+
+def log_tlc_error(prompt_id: str, prompt_text: str, tier: str, violations: list[str], raw_output: str, spec_preview: str) -> None:
+    """Log TLC failures for failure analysis and clustering."""
+    _TLC_ERRORS_JSONL.parent.mkdir(parents=True, exist_ok=True)
+    entry = {
+        "timestamp": datetime.datetime.now().isoformat(),
+        "prompt_id": prompt_id,
+        "prompt_text": prompt_text[:500],
+        "tier": tier,
+        "violations": violations[:10],
+        "raw_snippet": raw_output[:1500] if raw_output else "",
+        "spec_preview": spec_preview[:800] if spec_preview else "",
+    }
+    with open(_TLC_ERRORS_JSONL, "a", encoding="utf-8") as f:
+        f.write(json.dumps(entry, ensure_ascii=False) + "\n")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -346,7 +404,7 @@ def generate_and_validate(
         pid = p["id"]
         prompt_text = p["prompt"]
         module_hint = p.get("module_hint", "Spec")
-        best_result = None
+        attempt_results: list[SpecResult] = []  # keep ALL attempts for DPO pairs
 
         for attempt in range(max_attempts):
             temp = TEMPERATURE_BASE + random.uniform(-0.15, 0.25) if attempt > 0 else TEMPERATURE_BASE
@@ -403,11 +461,11 @@ def generate_and_validate(
                 attempts=attempt + 1,
                 temperature=temp,
             )
+            attempt_results.append(result)
 
-            # Keep best result
-            tier_rank = {"gold": 3, "silver": 2, "bronze": 1}
-            if best_result is None or tier_rank.get(tier, 0) > tier_rank.get(best_result.tier, 0):
-                best_result = result
+            # Log TLC failures for failure analysis (invariant violations, deadlocks, etc.)
+            if tier in ("silver", "bronze") and (tlc_violations or tlc_raw):
+                log_tlc_error(pid, prompt_text, tier, tlc_violations, tlc_raw, spec[:1200])
 
             # If gold, no need to try more
             if tier == "gold":
@@ -436,19 +494,22 @@ def generate_and_validate(
                             attempts=attempt + 1,
                             temperature=temp,
                         )
-                        if tier_rank.get(c_tlc.tier, 0) > tier_rank.get(best_result.tier, 0):
-                            best_result = corrected_result
+                        attempt_results.append(corrected_result)
                         if c_tlc.tier == "gold":
                             break
                 except Exception:
                     pass
                 break  # self-correction already retries internally
 
-        if best_result:
-            results.append(best_result)
-            log.info(f"  [{pid}] tier={best_result.tier} sany={best_result.sany_pass} "
-                     f"tlc={best_result.tlc_pass} struct={best_result.structural_score:.2f} "
-                     f"attempts={best_result.attempts}")
+        if attempt_results:
+            # Append ALL attempts for DPO pairs (chosen vs rejected)
+            tier_rank = {"gold": 3, "silver": 2, "bronze": 1}
+            best = max(attempt_results, key=lambda r: tier_rank.get(r.tier, 0))
+            for r in attempt_results:
+                results.append(r)
+            log.info(f"  [{pid}] tier={best.tier} sany={best.sany_pass} "
+                     f"tlc={best.tlc_pass} struct={best.structural_score:.2f} "
+                     f"attempts={len(attempt_results)} (best of {len(attempt_results)})")
 
         # Gentle pacing to avoid monopolizing shared GPUs.
         if prompt_cooldown_s > 0 and not _SHUTDOWN:
@@ -511,15 +572,17 @@ def build_training_data(results: list[SpecResult]) -> tuple[list[dict], list[dic
                 ],
             })
 
-            # If there's also a bronze version, create a DPO pair
+            # DPO: create (chosen, rejected) pairs whenever we have strictly better vs worse
+            # gold>silver, gold>bronze, silver>bronze — teaches model to prefer TLC-passing specs
             worst = group[-1]
-            if worst.tier == "bronze" and best.tier in ("gold", "silver"):
-                # Build feedback from TLC violations
+            if worst.tier != best.tier and tier_rank.get(worst.tier, 0) < tier_rank.get(best.tier, 0):
                 feedback = ""
                 if worst.tlc_violations:
                     feedback = "\n".join(worst.tlc_violations[:5])
                 elif not worst.sany_pass:
                     feedback = "SANY parse errors (spec is syntactically invalid)"
+                else:
+                    feedback = f"TLC failed (silver) vs {best.tier}"
 
                 dpo_pairs.append({
                     "prompt": f"Write a TLA+ specification for the following:\n\n{best.prompt_text}",
@@ -807,7 +870,7 @@ def compute_difficulty_cap(history_path: Path = _RL_HISTORY) -> int:
 # ─────────────────────────────────────────────────────────────────────────────
 # Main loop
 # ─────────────────────────────────────────────────────────────────────────────
-def run_cycle(cycle_id: int, accumulated_new: int) -> tuple[CycleStats, int]:
+def run_cycle(cycle_id: int, accumulated_new: int, allow_daytime_retrain: bool = False) -> tuple[CycleStats, int]:
     """
     Run one full RL cycle: generate → validate → build data → retrain → eval.
 
@@ -879,8 +942,9 @@ def run_cycle(cycle_id: int, accumulated_new: int) -> tuple[CycleStats, int]:
 
         # ── Phase 3: Retrain if threshold met ─────────────────────────────
         if accumulated_new >= RETRAIN_THRESHOLD:
-            if night:
-                log.info(f"[phase3] Retrain threshold reached at night ({accumulated_new} >= {RETRAIN_THRESHOLD})")
+            if night or allow_daytime_retrain:
+                when = "night" if night else "daytime (--allow-daytime-retrain)"
+                log.info(f"[phase3] Retrain threshold reached ({when}) ({accumulated_new} >= {RETRAIN_THRESHOLD})")
                 success = rebuild_and_retrain()
                 stats.retrained = success
                 stats.deployed = success
@@ -892,7 +956,7 @@ def run_cycle(cycle_id: int, accumulated_new: int) -> tuple[CycleStats, int]:
             else:
                 log.info(
                     f"[phase3] Threshold reached ({accumulated_new} >= {RETRAIN_THRESHOLD}) "
-                    "but retrain deferred to nighttime to prioritize shared daytime capacity."
+                    "but retrain deferred to nighttime. Use --allow-daytime-retrain to force."
                 )
         else:
             log.info(f"[phase3] Skipping retrain ({accumulated_new}/{RETRAIN_THRESHOLD} examples accumulated)")
@@ -937,6 +1001,8 @@ def main():
 
     import argparse
 
+    _check_training_deps()
+
     parser = argparse.ArgumentParser(description="ChatTLA autonomous RL loop")
     parser.add_argument("--cycle-hours", type=float, default=CYCLE_HOURS,
                         help=f"Target hours per cycle (default: {CYCLE_HOURS})")
@@ -944,6 +1010,8 @@ def main():
                         help="Max cycles to run (0 = infinite)")
     parser.add_argument("--retrain-threshold", type=int, default=RETRAIN_THRESHOLD,
                         help=f"SFT examples before retrain (default: {RETRAIN_THRESHOLD})")
+    parser.add_argument("--allow-daytime-retrain", action="store_true",
+                        help="Retrain during daytime when threshold met (default: defer to night)")
     parser.add_argument("--model", default="chattla:20b")
     parser.add_argument("--benchmark-every", type=int, default=BENCHMARK_EVERY_N,
                         help=f"Benchmark every N cycles (default: {BENCHMARK_EVERY_N})")
@@ -957,13 +1025,17 @@ def main():
     log.info("=" * 60)
     log.info("  ChatTLA Autonomous RL Loop")
     log.info(f"  Cycle target: {args.cycle_hours}h | Retrain threshold: {args.retrain_threshold}")
+    if args.allow_daytime_retrain:
+        log.info("  Daytime retrain: ENABLED (--allow-daytime-retrain)")
     log.info(f"  Benchmark every {args.benchmark_every} cycles")
     log.info(f"  Max cycles: {'infinite' if args.max_cycles == 0 else args.max_cycles}")
     log.info(f"  PID: {os.getpid()}")
     log.info("=" * 60)
 
     cycle_id = 0
-    accumulated_new = 0
+    accumulated_new = load_accumulated_new()
+    if accumulated_new > 0:
+        log.info(f"Resuming with accumulated_new={accumulated_new} (from state)")
 
     # Resume cycle count from history
     if _RL_HISTORY.exists():
@@ -978,7 +1050,8 @@ def main():
             break
 
         cycle_start = time.time()
-        stats, accumulated_new = run_cycle(cycle_id, accumulated_new)
+        stats, accumulated_new = run_cycle(cycle_id, accumulated_new, args.allow_daytime_retrain)
+        save_accumulated_new(accumulated_new)
         log_history(stats)
 
         cycle_elapsed = time.time() - cycle_start

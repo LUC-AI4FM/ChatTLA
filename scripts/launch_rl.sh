@@ -71,6 +71,7 @@ do_start() {
         nice -n 10 python3 scripts/rl_loop.py \
             --cycle-hours 1.5 \
             --retrain-threshold 10 \
+            --allow-daytime-retrain \
             --benchmark-every 3 \
             2>&1 | tee -a \"$LOG_FILE\"
         echo \"\"
