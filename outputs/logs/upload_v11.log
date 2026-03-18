@@ -1,0 +1,1398 @@
+nohup: ignoring input
+Uploading chattla-20b-Q8_0.gguf (22.3 GB) as gguf/chattla-20b-v11-Q8_0.gguf …
+Processing Files (0 / 0)      : |          |  0.00B /  0.00B            
+New Data Upload               : |          |  0.00B /  0.00B            [A
+
+  ...guf/chattla-20b-Q8_0.gguf:   0%|          | 24.0MB / 22.3GB            [A[A
+
+  ...guf/chattla-20b-Q8_0.gguf:   0%|          | 24.0MB / 22.3GB            [A[AProcessing Files (0 / 1)      :   0%|          | 24.0MB / 22.3GB,   ???B/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:   0%|          | 64.0MB / 22.3GB            [A[AProcessing Files (0 / 1)      :   0%|          | 64.0MB / 22.3GB,  199MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:   0%|          |  104MB / 22.3GB            [A[AProcessing Files (0 / 1)      :   0%|          |  104MB / 22.3GB,  200MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:   1%|          |  152MB / 22.3GB            [A[AProcessing Files (0 / 1)      :   1%|          |  152MB / 22.3GB,  213MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:   1%|          |  192MB / 22.3GB            [A[AProcessing Files (0 / 1)      :   1%|          |  192MB / 22.3GB,  210MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:   1%|          |  224MB / 22.3GB            [A[AProcessing Files (0 / 1)      :   1%|          |  224MB / 22.3GB,  200MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:   1%|          |  272MB / 22.3GB            [A[AProcessing Files (0 / 1)      :   1%|          |  272MB / 22.3GB,  207MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:   1%|▏         |  312MB / 22.3GB            [A[AProcessing Files (0 / 1)      :   1%|▏         |  312MB / 22.3GB,  206MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:   2%|▏         |  352MB / 22.3GB            [A[AProcessing Files (0 / 1)      :   2%|▏         |  352MB / 22.3GB,  205MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:   2%|▏         |  400MB / 22.3GB            [A[AProcessing Files (0 / 1)      :   2%|▏         |  400MB / 22.3GB,  209MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:   2%|▏         |  440MB / 22.3GB            [A[AProcessing Files (0 / 1)      :   2%|▏         |  440MB / 22.3GB,  208MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:   2%|▏         |  480MB / 22.3GB            [A[AProcessing Files (0 / 1)      :   2%|▏         |  480MB / 22.3GB,  207MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:   2%|▏         |  520MB / 22.3GB            [A[AProcessing Files (0 / 1)      :   2%|▏         |  520MB / 22.3GB,  207MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:   3%|▎         |  560MB / 22.3GB            [A[AProcessing Files (0 / 1)      :   3%|▎         |  560MB / 22.3GB,  206MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:   3%|▎         |  600MB / 22.3GB            [A[AProcessing Files (0 / 1)      :   3%|▎         |  600MB / 22.3GB,  206MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:   3%|▎         |  640MB / 22.3GB            [A[AProcessing Files (0 / 1)      :   3%|▎         |  640MB / 22.3GB,  205MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:   3%|▎         |  680MB / 22.3GB            [A[AProcessing Files (0 / 1)      :   3%|▎         |  680MB / 22.3GB,  205MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:   3%|▎         |  720MB / 22.3GB            [A[AProcessing Files (0 / 1)      :   3%|▎         |  720MB / 22.3GB,  205MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:   3%|▎         |  760MB / 22.3GB            [A[AProcessing Files (0 / 1)      :   3%|▎         |  760MB / 22.3GB,  204MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:   4%|▎         |  792MB / 22.3GB            [A[AProcessing Files (0 / 1)      :   4%|▎         |  792MB / 22.3GB,  202MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:   4%|▎         |  832MB / 22.3GB            [A[AProcessing Files (0 / 1)      :   4%|▎         |  832MB / 22.3GB,  202MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:   4%|▍         |  872MB / 22.3GB            [A[AProcessing Files (0 / 1)      :   4%|▍         |  872MB / 22.3GB,  202MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:   4%|▍         |  912MB / 22.3GB            [A[AProcessing Files (0 / 1)      :   4%|▍         |  912MB / 22.3GB,  202MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:   4%|▍         |  952MB / 22.3GB            [A[AProcessing Files (0 / 1)      :   4%|▍         |  952MB / 22.3GB,  202MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:   4%|▍         |  992MB / 22.3GB            [A[AProcessing Files (0 / 1)      :   4%|▍         |  992MB / 22.3GB,  202MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:   5%|▍         | 1.03GB / 22.3GB            [A[AProcessing Files (0 / 1)      :   5%|▍         | 1.03GB / 22.3GB,  202MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:   5%|▍         | 1.07GB / 22.3GB            [A[AProcessing Files (0 / 1)      :   5%|▍         | 1.07GB / 22.3GB,  202MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:   5%|▍         | 1.11GB / 22.3GB            [A[AProcessing Files (0 / 1)      :   5%|▍         | 1.11GB / 22.3GB,  201MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:   5%|▌         | 1.15GB / 22.3GB            [A[AProcessing Files (0 / 1)      :   5%|▌         | 1.15GB / 22.3GB,  201MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:   5%|▌         | 1.18GB / 22.3GB            [A[AProcessing Files (0 / 1)      :   5%|▌         | 1.18GB / 22.3GB,  200MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:   5%|▌         | 1.22GB / 22.3GB            [A[AProcessing Files (0 / 1)      :   5%|▌         | 1.22GB / 22.3GB,  200MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:   6%|▌         | 1.26GB / 22.3GB            [A[AProcessing Files (0 / 1)      :   6%|▌         | 1.26GB / 22.3GB,  200MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:   6%|▌         | 1.30GB / 22.3GB            [A[AProcessing Files (0 / 1)      :   6%|▌         | 1.30GB / 22.3GB,  200MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:   6%|▌         | 1.34GB / 22.3GB            [A[AProcessing Files (0 / 1)      :   6%|▌         | 1.34GB / 22.3GB,  200MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:   6%|▌         | 1.38GB / 22.3GB            [A[AProcessing Files (0 / 1)      :   6%|▌         | 1.38GB / 22.3GB,  200MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:   6%|▋         | 1.42GB / 22.3GB            [A[AProcessing Files (0 / 1)      :   6%|▋         | 1.42GB / 22.3GB,  200MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:   7%|▋         | 1.46GB / 22.3GB            [A[AProcessing Files (0 / 1)      :   7%|▋         | 1.46GB / 22.3GB,  200MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:   7%|▋         | 1.50GB / 22.3GB            [A[AProcessing Files (0 / 1)      :   7%|▋         | 1.50GB / 22.3GB,  200MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:   7%|▋         | 1.54GB / 22.3GB            [A[AProcessing Files (0 / 1)      :   7%|▋         | 1.54GB / 22.3GB,  200MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:   7%|▋         | 1.58GB / 22.3GB            [A[AProcessing Files (0 / 1)      :   7%|▋         | 1.58GB / 22.3GB,  200MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:   7%|▋         | 1.62GB / 22.3GB            [A[AProcessing Files (0 / 1)      :   7%|▋         | 1.62GB / 22.3GB,  199MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:   7%|▋         | 1.65GB / 22.3GB            [A[AProcessing Files (0 / 1)      :   7%|▋         | 1.65GB / 22.3GB,  198MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:   8%|▊         | 1.68GB / 22.3GB            [A[AProcessing Files (0 / 1)      :   8%|▊         | 1.68GB / 22.3GB,  197MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:   8%|▊         | 1.71GB / 22.3GB            [A[AProcessing Files (0 / 1)      :   8%|▊         | 1.71GB / 22.3GB,  196MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:   8%|▊         | 1.74GB / 22.3GB            [A[AProcessing Files (0 / 1)      :   8%|▊         | 1.74GB / 22.3GB,  195MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:   8%|▊         | 1.78GB / 22.3GB            [A[AProcessing Files (0 / 1)      :   8%|▊         | 1.78GB / 22.3GB,  195MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:   8%|▊         | 1.82GB / 22.3GB            [A[AProcessing Files (0 / 1)      :   8%|▊         | 1.82GB / 22.3GB,  195MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:   8%|▊         | 1.86GB / 22.3GB            [A[AProcessing Files (0 / 1)      :   8%|▊         | 1.86GB / 22.3GB,  195MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:   9%|▊         | 1.90GB / 22.3GB            [A[AProcessing Files (0 / 1)      :   9%|▊         | 1.90GB / 22.3GB,  195MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:   9%|▊         | 1.93GB / 22.3GB            [A[AProcessing Files (0 / 1)      :   9%|▊         | 1.93GB / 22.3GB,  194MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:   9%|▉         | 1.97GB / 22.3GB            [A[AProcessing Files (0 / 1)      :   9%|▉         | 1.97GB / 22.3GB,  194MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:   9%|▉         | 2.00GB / 22.3GB            [A[AProcessing Files (0 / 1)      :   9%|▉         | 2.00GB / 22.3GB,  194MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:   9%|▉         | 2.04GB / 22.3GB            [A[AProcessing Files (0 / 1)      :   9%|▉         | 2.04GB / 22.3GB,  194MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:   9%|▉         | 2.08GB / 22.3GB            [A[AProcessing Files (0 / 1)      :   9%|▉         | 2.08GB / 22.3GB,  194MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  10%|▉         | 2.12GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  10%|▉         | 2.12GB / 22.3GB,  193MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  10%|▉         | 2.16GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  10%|▉         | 2.16GB / 22.3GB,  193MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  10%|▉         | 2.19GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  10%|▉         | 2.19GB / 22.3GB,  193MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  10%|█         | 2.23GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  10%|█         | 2.23GB / 22.3GB,  192MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  10%|█         | 2.27GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  10%|█         | 2.27GB / 22.3GB,  192MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  10%|█         | 2.30GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  10%|█         | 2.30GB / 22.3GB,  191MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  11%|█         | 2.34GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  11%|█         | 2.34GB / 22.3GB,  191MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  11%|█         | 2.38GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  11%|█         | 2.38GB / 22.3GB,  191MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  11%|█         | 2.42GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  11%|█         | 2.42GB / 22.3GB,  190MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  11%|█         | 2.46GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  11%|█         | 2.46GB / 22.3GB,  190MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  11%|█         | 2.49GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  11%|█         | 2.49GB / 22.3GB,  189MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  11%|█▏        | 2.52GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  11%|█▏        | 2.52GB / 22.3GB,  188MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  11%|█▏        | 2.56GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  11%|█▏        | 2.56GB / 22.3GB,  188MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  12%|█▏        | 2.60GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  12%|█▏        | 2.60GB / 22.3GB,  188MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  12%|█▏        | 2.64GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  12%|█▏        | 2.64GB / 22.3GB,  188MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  12%|█▏        | 2.68GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  12%|█▏        | 2.68GB / 22.3GB,  188MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  12%|█▏        | 2.71GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  12%|█▏        | 2.71GB / 22.3GB,  188MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  12%|█▏        | 2.75GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  12%|█▏        | 2.75GB / 22.3GB,  188MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  13%|█▎        | 2.79GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  13%|█▎        | 2.79GB / 22.3GB,  188MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  13%|█▎        | 2.83GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  13%|█▎        | 2.83GB / 22.3GB,  188MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  13%|█▎        | 2.87GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  13%|█▎        | 2.87GB / 22.3GB,  188MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  13%|█▎        | 2.90GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  13%|█▎        | 2.90GB / 22.3GB,  187MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  13%|█▎        | 2.94GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  13%|█▎        | 2.94GB / 22.3GB,  187MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  13%|█▎        | 2.98GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  13%|█▎        | 2.98GB / 22.3GB,  187MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  14%|█▎        | 3.02GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  14%|█▎        | 3.02GB / 22.3GB,  187MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  14%|█▎        | 3.05GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  14%|█▎        | 3.05GB / 22.3GB,  186MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  14%|█▍        | 3.09GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  14%|█▍        | 3.09GB / 22.3GB,  187MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  14%|█▍        | 3.13GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  14%|█▍        | 3.13GB / 22.3GB,  187MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  14%|█▍        | 3.17GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  14%|█▍        | 3.17GB / 22.3GB,  187MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  14%|█▍        | 3.21GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  14%|█▍        | 3.21GB / 22.3GB,  187MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  15%|█▍        | 3.25GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  15%|█▍        | 3.25GB / 22.3GB,  187MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  15%|█▍        | 3.29GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  15%|█▍        | 3.29GB / 22.3GB,  187MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  15%|█▍        | 3.33GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  15%|█▍        | 3.33GB / 22.3GB,  187MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  15%|█▌        | 3.36GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  15%|█▌        | 3.36GB / 22.3GB,  186MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  15%|█▌        | 3.40GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  15%|█▌        | 3.40GB / 22.3GB,  186MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  15%|█▌        | 3.44GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  15%|█▌        | 3.44GB / 22.3GB,  186MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  16%|█▌        | 3.48GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  16%|█▌        | 3.48GB / 22.3GB,  186MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  16%|█▌        | 3.51GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  16%|█▌        | 3.51GB / 22.3GB,  186MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  16%|█▌        | 3.55GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  16%|█▌        | 3.55GB / 22.3GB,  187MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  16%|█▌        | 3.59GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  16%|█▌        | 3.59GB / 22.3GB,  187MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  16%|█▋        | 3.63GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  16%|█▋        | 3.63GB / 22.3GB,  188MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  16%|█▋        | 3.67GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  16%|█▋        | 3.67GB / 22.3GB,  189MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  17%|█▋        | 3.71GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  17%|█▋        | 3.71GB / 22.3GB,  190MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  17%|█▋        | 3.75GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  17%|█▋        | 3.75GB / 22.3GB,  190MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  17%|█▋        | 3.78GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  17%|█▋        | 3.78GB / 22.3GB,  189MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  17%|█▋        | 3.82GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  17%|█▋        | 3.82GB / 22.3GB,  189MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  17%|█▋        | 3.85GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  17%|█▋        | 3.85GB / 22.3GB,  189MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  17%|█▋        | 3.89GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  17%|█▋        | 3.89GB / 22.3GB,  189MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  18%|█▊        | 3.93GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  18%|█▊        | 3.93GB / 22.3GB,  189MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  18%|█▊        | 3.96GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  18%|█▊        | 3.96GB / 22.3GB,  188MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  18%|█▊        | 3.99GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  18%|█▊        | 3.99GB / 22.3GB,  187MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  18%|█▊        | 4.02GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  18%|█▊        | 4.02GB / 22.3GB,  187MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  18%|█▊        | 4.06GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  18%|█▊        | 4.06GB / 22.3GB,  187MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  18%|█▊        | 4.09GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  18%|█▊        | 4.09GB / 22.3GB,  187MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  19%|█▊        | 4.13GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  19%|█▊        | 4.13GB / 22.3GB,  187MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  19%|█▊        | 4.16GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  19%|█▊        | 4.16GB / 22.3GB,  185MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  19%|█▉        | 4.20GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  19%|█▉        | 4.20GB / 22.3GB,  186MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  19%|█▉        | 4.24GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  19%|█▉        | 4.24GB / 22.3GB,  186MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  19%|█▉        | 4.27GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  19%|█▉        | 4.27GB / 22.3GB,  185MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  19%|█▉        | 4.31GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  19%|█▉        | 4.31GB / 22.3GB,  186MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  20%|█▉        | 4.35GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  20%|█▉        | 4.35GB / 22.3GB,  186MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  20%|█▉        | 4.38GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  20%|█▉        | 4.38GB / 22.3GB,  186MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  20%|█▉        | 4.42GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  20%|█▉        | 4.42GB / 22.3GB,  187MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  20%|██        | 4.46GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  20%|██        | 4.46GB / 22.3GB,  187MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  20%|██        | 4.50GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  20%|██        | 4.50GB / 22.3GB,  186MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  20%|██        | 4.54GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  20%|██        | 4.54GB / 22.3GB,  186MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  21%|██        | 4.58GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  21%|██        | 4.58GB / 22.3GB,  186MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  21%|██        | 4.61GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  21%|██        | 4.61GB / 22.3GB,  186MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  21%|██        | 4.65GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  21%|██        | 4.65GB / 22.3GB,  186MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  21%|██        | 4.68GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  21%|██        | 4.68GB / 22.3GB,  185MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  21%|██        | 4.71GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  21%|██        | 4.71GB / 22.3GB,  184MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  21%|██▏       | 4.75GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  21%|██▏       | 4.75GB / 22.3GB,  184MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  22%|██▏       | 4.79GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  22%|██▏       | 4.79GB / 22.3GB,  185MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  22%|██▏       | 4.83GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  22%|██▏       | 4.83GB / 22.3GB,  185MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  22%|██▏       | 4.87GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  22%|██▏       | 4.87GB / 22.3GB,  186MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  22%|██▏       | 4.91GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  22%|██▏       | 4.91GB / 22.3GB,  186MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  22%|██▏       | 4.94GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  22%|██▏       | 4.94GB / 22.3GB,  186MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  22%|██▏       | 4.98GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  22%|██▏       | 4.98GB / 22.3GB,  186MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  22%|██▏       | 5.00GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  22%|██▏       | 5.00GB / 22.3GB,  183MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  23%|██▎       | 5.03GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  23%|██▎       | 5.03GB / 22.3GB,  182MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  23%|██▎       | 5.06GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  23%|██▎       | 5.06GB / 22.3GB,  182MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  23%|██▎       | 5.10GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  23%|██▎       | 5.10GB / 22.3GB,  182MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  23%|██▎       | 5.13GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  23%|██▎       | 5.13GB / 22.3GB,  181MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  23%|██▎       | 5.17GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  23%|██▎       | 5.17GB / 22.3GB,  181MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  23%|██▎       | 5.21GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  23%|██▎       | 5.21GB / 22.3GB,  182MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  24%|██▎       | 5.25GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  24%|██▎       | 5.25GB / 22.3GB,  182MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  24%|██▍       | 5.29GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  24%|██▍       | 5.29GB / 22.3GB,  182MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  24%|██▍       | 5.33GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  24%|██▍       | 5.33GB / 22.3GB,  182MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  24%|██▍       | 5.37GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  24%|██▍       | 5.37GB / 22.3GB,  182MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  24%|██▍       | 5.41GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  24%|██▍       | 5.41GB / 22.3GB,  182MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  24%|██▍       | 5.45GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  24%|██▍       | 5.45GB / 22.3GB,  182MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  25%|██▍       | 5.49GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  25%|██▍       | 5.49GB / 22.3GB,  182MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  25%|██▍       | 5.53GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  25%|██▍       | 5.53GB / 22.3GB,  182MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  25%|██▌       | 5.57GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  25%|██▌       | 5.57GB / 22.3GB,  182MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  25%|██▌       | 5.60GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  25%|██▌       | 5.60GB / 22.3GB,  182MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  25%|██▌       | 5.64GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  25%|██▌       | 5.64GB / 22.3GB,  182MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  26%|██▌       | 5.68GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  26%|██▌       | 5.68GB / 22.3GB,  182MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  26%|██▌       | 5.71GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  26%|██▌       | 5.71GB / 22.3GB,  182MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  26%|██▌       | 5.75GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  26%|██▌       | 5.75GB / 22.3GB,  182MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  26%|██▌       | 5.79GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  26%|██▌       | 5.79GB / 22.3GB,  182MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  26%|██▌       | 5.83GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  26%|██▌       | 5.83GB / 22.3GB,  183MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  26%|██▋       | 5.85GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  26%|██▋       | 5.85GB / 22.3GB,  182MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  26%|██▋       | 5.88GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  26%|██▋       | 5.88GB / 22.3GB,  182MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  27%|██▋       | 5.91GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  27%|██▋       | 5.91GB / 22.3GB,  181MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  27%|██▋       | 5.95GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  27%|██▋       | 5.95GB / 22.3GB,  182MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  27%|██▋       | 5.99GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  27%|██▋       | 5.99GB / 22.3GB,  182MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  27%|██▋       | 6.03GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  27%|██▋       | 6.03GB / 22.3GB,  183MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  27%|██▋       | 6.07GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  27%|██▋       | 6.07GB / 22.3GB,  183MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  27%|██▋       | 6.11GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  27%|██▋       | 6.11GB / 22.3GB,  183MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  28%|██▊       | 6.14GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  28%|██▊       | 6.14GB / 22.3GB,  183MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  28%|██▊       | 6.18GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  28%|██▊       | 6.18GB / 22.3GB,  183MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  28%|██▊       | 6.22GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  28%|██▊       | 6.22GB / 22.3GB,  183MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  28%|██▊       | 6.25GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  28%|██▊       | 6.25GB / 22.3GB,  183MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  28%|██▊       | 6.29GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  28%|██▊       | 6.29GB / 22.3GB,  183MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  28%|██▊       | 6.33GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  28%|██▊       | 6.33GB / 22.3GB,  183MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  29%|██▊       | 6.37GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  29%|██▊       | 6.37GB / 22.3GB,  183MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  29%|██▉       | 6.41GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  29%|██▉       | 6.41GB / 22.3GB,  183MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  29%|██▉       | 6.45GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  29%|██▉       | 6.45GB / 22.3GB,  183MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  29%|██▉       | 6.49GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  29%|██▉       | 6.49GB / 22.3GB,  184MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  29%|██▉       | 6.53GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  29%|██▉       | 6.53GB / 22.3GB,  184MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  29%|██▉       | 6.57GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  29%|██▉       | 6.57GB / 22.3GB,  185MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  30%|██▉       | 6.61GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  30%|██▉       | 6.61GB / 22.3GB,  186MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  30%|██▉       | 6.65GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  30%|██▉       | 6.65GB / 22.3GB,  186MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  30%|███       | 6.69GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  30%|███       | 6.69GB / 22.3GB,  186MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  30%|███       | 6.70GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  30%|███       | 6.70GB / 22.3GB,  183MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  30%|███       | 6.72GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  30%|███       | 6.72GB / 22.3GB,  181MB/s  
+New Data Upload               :   1%|          |  528kB / 67.1MB, 51.8kB/s  [A
+
+  ...guf/chattla-20b-Q8_0.gguf:  30%|███       | 6.76GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  30%|███       | 6.76GB / 22.3GB,  182MB/s  
+New Data Upload               :   6%|▌         | 3.70MB / 67.1MB,  363kB/s  [A
+
+  ...guf/chattla-20b-Q8_0.gguf:  31%|███       | 6.79GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  31%|███       | 6.79GB / 22.3GB,  181MB/s  
+New Data Upload               :   9%|▊         | 5.81MB / 67.1MB,  570kB/s  [A
+
+  ...guf/chattla-20b-Q8_0.gguf:  31%|███       | 6.83GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  31%|███       | 6.83GB / 22.3GB,  181MB/s  
+New Data Upload               :  12%|█▏        | 7.93MB / 67.1MB,  777kB/s  [A
+
+  ...guf/chattla-20b-Q8_0.gguf:  31%|███       | 6.87GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  31%|███       | 6.87GB / 22.3GB,  183MB/s  
+New Data Upload               :  17%|█▋        | 11.1MB / 67.1MB, 1.09MB/s  [A
+
+  ...guf/chattla-20b-Q8_0.gguf:  31%|███       | 6.90GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  31%|███       | 6.90GB / 22.3GB,  184MB/s  
+New Data Upload               :  20%|█▉        | 13.2MB / 67.1MB, 1.29MB/s  [A
+
+  ...guf/chattla-20b-Q8_0.gguf:  31%|███       | 6.94GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  31%|███       | 6.94GB / 22.3GB,  184MB/s  
+New Data Upload               :  23%|██▎       | 15.3MB / 67.1MB, 1.50MB/s  [A
+
+  ...guf/chattla-20b-Q8_0.gguf:  31%|███▏      | 6.98GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  31%|███▏      | 6.98GB / 22.3GB,  184MB/s  
+New Data Upload               :  26%|██▌       | 17.4MB / 67.1MB, 1.71MB/s  [A
+
+  ...guf/chattla-20b-Q8_0.gguf:  32%|███▏      | 7.01GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  32%|███▏      | 7.01GB / 22.3GB,  185MB/s  
+New Data Upload               :  31%|███       | 20.6MB / 67.1MB, 2.02MB/s  [A
+
+  ...guf/chattla-20b-Q8_0.gguf:  32%|███▏      | 7.05GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  32%|███▏      | 7.05GB / 22.3GB,  184MB/s  
+New Data Upload               :  34%|███▍      | 22.7MB / 67.1MB, 2.23MB/s  [A
+
+  ...guf/chattla-20b-Q8_0.gguf:  32%|███▏      | 7.08GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  32%|███▏      | 7.08GB / 22.3GB,  183MB/s  
+New Data Upload               :  37%|███▋      | 24.8MB / 67.1MB, 2.43MB/s  [A
+
+  ...guf/chattla-20b-Q8_0.gguf:  32%|███▏      | 7.12GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  32%|███▏      | 7.12GB / 22.3GB,  183MB/s  
+New Data Upload               :  41%|████      | 27.5MB / 67.1MB, 2.69MB/s  [A
+
+  ...guf/chattla-20b-Q8_0.gguf:  32%|███▏      | 7.15GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  32%|███▏      | 7.15GB / 22.3GB,  182MB/s  
+New Data Upload               :  44%|████▍     | 29.6MB / 67.1MB, 2.90MB/s  [A
+
+  ...guf/chattla-20b-Q8_0.gguf:  32%|███▏      | 7.18GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  32%|███▏      | 7.18GB / 22.3GB,  182MB/s  
+New Data Upload               :  47%|████▋     | 31.7MB / 67.1MB, 3.11MB/s  [A
+
+  ...guf/chattla-20b-Q8_0.gguf:  32%|███▏      | 7.23GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  32%|███▏      | 7.23GB / 22.3GB,  182MB/s  
+New Data Upload               :  50%|█████     | 33.8MB / 67.1MB, 3.32MB/s  [A
+
+  ...guf/chattla-20b-Q8_0.gguf:  33%|███▎      | 7.26GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  33%|███▎      | 7.26GB / 22.3GB,  182MB/s  
+New Data Upload               :  55%|█████▌    | 37.0MB / 67.1MB, 3.63MB/s  [A
+
+  ...guf/chattla-20b-Q8_0.gguf:  33%|███▎      | 7.30GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  33%|███▎      | 7.30GB / 22.3GB,  181MB/s  
+New Data Upload               :  58%|█████▊    | 39.1MB / 67.1MB, 3.83MB/s  [A
+
+  ...guf/chattla-20b-Q8_0.gguf:  33%|███▎      | 7.33GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  33%|███▎      | 7.33GB / 22.3GB,  180MB/s  
+New Data Upload               :  61%|██████▏   | 41.2MB / 67.1MB, 4.04MB/s  [A
+
+  ...guf/chattla-20b-Q8_0.gguf:  33%|███▎      | 7.37GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  33%|███▎      | 7.37GB / 22.3GB,  181MB/s  
+New Data Upload               :  65%|██████▍   | 43.3MB / 67.1MB, 4.25MB/s  [A
+
+  ...guf/chattla-20b-Q8_0.gguf:  33%|███▎      | 7.41GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  33%|███▎      | 7.41GB / 22.3GB,  180MB/s  
+New Data Upload               :  69%|██████▉   | 46.5MB / 67.1MB, 4.56MB/s  [A
+
+  ...guf/chattla-20b-Q8_0.gguf:  33%|███▎      | 7.44GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  33%|███▎      | 7.44GB / 22.3GB,  180MB/s  
+New Data Upload               :  72%|███████▏  | 48.6MB / 67.1MB, 4.77MB/s  [A
+
+  ...guf/chattla-20b-Q8_0.gguf:  34%|███▎      | 7.48GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  34%|███▎      | 7.48GB / 22.3GB,  180MB/s  
+New Data Upload               :  76%|███████▌  | 50.7MB / 67.1MB, 4.97MB/s  [A
+
+  ...guf/chattla-20b-Q8_0.gguf:  34%|███▍      | 7.52GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  34%|███▍      | 7.52GB / 22.3GB,  180MB/s  
+New Data Upload               :  79%|███████▉  | 52.8MB / 67.1MB, 5.18MB/s  [A
+
+  ...guf/chattla-20b-Q8_0.gguf:  34%|███▍      | 7.55GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  34%|███▍      | 7.55GB / 22.3GB,  180MB/s  
+New Data Upload               :  83%|████████▎ | 55.5MB / 67.1MB, 5.44MB/s  [A
+
+  ...guf/chattla-20b-Q8_0.gguf:  34%|███▍      | 7.59GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  34%|███▍      | 7.59GB / 22.3GB,  180MB/s  
+New Data Upload               :  86%|████████▌ | 57.6MB / 67.1MB, 5.65MB/s  [A
+
+  ...guf/chattla-20b-Q8_0.gguf:  34%|███▍      | 7.60GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  34%|███▍      | 7.60GB / 22.3GB,  178MB/s  
+New Data Upload               :  90%|████████▉ | 60.2MB / 67.1MB, 5.90MB/s  [A
+
+  ...guf/chattla-20b-Q8_0.gguf:  34%|███▍      | 7.60GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  34%|███▍      | 7.60GB / 22.3GB,  174MB/s  
+New Data Upload               :  94%|█████████▎| 62.9MB / 67.1MB, 6.16MB/s  [A
+
+  ...guf/chattla-20b-Q8_0.gguf:  34%|███▍      | 7.64GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  34%|███▍      | 7.64GB / 22.3GB,  176MB/s  
+New Data Upload               :  97%|█████████▋| 65.0MB / 67.1MB, 6.37MB/s  [A
+
+  ...guf/chattla-20b-Q8_0.gguf:  34%|███▍      | 7.68GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  34%|███▍      | 7.68GB / 22.3GB,  176MB/s  
+New Data Upload               :  99%|█████████▉| 66.6MB / 67.1MB, 6.53MB/s  [A
+
+  ...guf/chattla-20b-Q8_0.gguf:  35%|███▍      | 7.72GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  35%|███▍      | 7.72GB / 22.3GB,  177MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  35%|███▍      | 7.75GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  35%|███▍      | 7.75GB / 22.3GB,  176MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  35%|███▍      | 7.78GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  35%|███▍      | 7.78GB / 22.3GB,  175MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  35%|███▌      | 7.81GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  35%|███▌      | 7.81GB / 22.3GB,  175MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  35%|███▌      | 7.84GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  35%|███▌      | 7.84GB / 22.3GB,  174MB/s  
+New Data Upload               : 100%|██████████| 67.1MB / 67.1MB, 6.58MB/s  [A
+
+  ...guf/chattla-20b-Q8_0.gguf:  35%|███▌      | 7.88GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  35%|███▌      | 7.88GB / 22.3GB,  174MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  36%|███▌      | 7.92GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  36%|███▌      | 7.92GB / 22.3GB,  174MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  36%|███▌      | 7.95GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  36%|███▌      | 7.95GB / 22.3GB,  173MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  36%|███▌      | 7.98GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  36%|███▌      | 7.98GB / 22.3GB,  172MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  36%|███▌      | 8.01GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  36%|███▌      | 8.01GB / 22.3GB,  172MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  36%|███▌      | 8.04GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  36%|███▌      | 8.04GB / 22.3GB,  172MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  36%|███▋      | 8.08GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  36%|███▋      | 8.08GB / 22.3GB,  171MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  36%|███▋      | 8.11GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  36%|███▋      | 8.11GB / 22.3GB,  171MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  37%|███▋      | 8.14GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  37%|███▋      | 8.14GB / 22.3GB,  170MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  37%|███▋      | 8.17GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  37%|███▋      | 8.17GB / 22.3GB,  169MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  37%|███▋      | 8.20GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  37%|███▋      | 8.20GB / 22.3GB,  168MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  37%|███▋      | 8.24GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  37%|███▋      | 8.24GB / 22.3GB,  168MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  37%|███▋      | 8.27GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  37%|███▋      | 8.27GB / 22.3GB,  167MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  37%|███▋      | 8.31GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  37%|███▋      | 8.31GB / 22.3GB,  167MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  37%|███▋      | 8.34GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  37%|███▋      | 8.34GB / 22.3GB,  166MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  38%|███▊      | 8.37GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  38%|███▊      | 8.37GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  38%|███▊      | 8.40GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  38%|███▊      | 8.40GB / 22.3GB,  167MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  38%|███▊      | 8.44GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  38%|███▊      | 8.44GB / 22.3GB,  168MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  38%|███▊      | 8.47GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  38%|███▊      | 8.47GB / 22.3GB,  167MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  38%|███▊      | 8.50GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  38%|███▊      | 8.50GB / 22.3GB,  168MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  38%|███▊      | 8.54GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  38%|███▊      | 8.54GB / 22.3GB,  167MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  39%|███▊      | 8.57GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  39%|███▊      | 8.57GB / 22.3GB,  167MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  39%|███▊      | 8.60GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  39%|███▊      | 8.60GB / 22.3GB,  167MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  39%|███▉      | 8.64GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  39%|███▉      | 8.64GB / 22.3GB,  167MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  39%|███▉      | 8.67GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  39%|███▉      | 8.67GB / 22.3GB,  166MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  39%|███▉      | 8.70GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  39%|███▉      | 8.70GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  39%|███▉      | 8.73GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  39%|███▉      | 8.73GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  39%|███▉      | 8.77GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  39%|███▉      | 8.77GB / 22.3GB,  166MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  40%|███▉      | 8.80GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  40%|███▉      | 8.80GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  40%|███▉      | 8.84GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  40%|███▉      | 8.84GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  40%|███▉      | 8.87GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  40%|███▉      | 8.87GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  40%|████      | 8.91GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  40%|████      | 8.91GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  40%|████      | 8.94GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  40%|████      | 8.94GB / 22.3GB,  164MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  40%|████      | 8.97GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  40%|████      | 8.97GB / 22.3GB,  164MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  40%|████      | 9.00GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  40%|████      | 9.00GB / 22.3GB,  164MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  41%|████      | 9.04GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  41%|████      | 9.04GB / 22.3GB,  163MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  41%|████      | 9.07GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  41%|████      | 9.07GB / 22.3GB,  163MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  41%|████      | 9.10GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  41%|████      | 9.10GB / 22.3GB,  163MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  41%|████      | 9.13GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  41%|████      | 9.13GB / 22.3GB,  162MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  41%|████      | 9.17GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  41%|████      | 9.17GB / 22.3GB,  162MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  41%|████▏     | 9.20GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  41%|████▏     | 9.20GB / 22.3GB,  162MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  41%|████▏     | 9.24GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  41%|████▏     | 9.24GB / 22.3GB,  162MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  42%|████▏     | 9.27GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  42%|████▏     | 9.27GB / 22.3GB,  164MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  42%|████▏     | 9.30GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  42%|████▏     | 9.30GB / 22.3GB,  167MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  42%|████▏     | 9.33GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  42%|████▏     | 9.33GB / 22.3GB,  166MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  42%|████▏     | 9.36GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  42%|████▏     | 9.36GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  42%|████▏     | 9.40GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  42%|████▏     | 9.40GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  42%|████▏     | 9.44GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  42%|████▏     | 9.44GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  43%|████▎     | 9.47GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  43%|████▎     | 9.47GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  43%|████▎     | 9.50GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  43%|████▎     | 9.50GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  43%|████▎     | 9.53GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  43%|████▎     | 9.53GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  43%|████▎     | 9.56GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  43%|████▎     | 9.56GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  43%|████▎     | 9.60GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  43%|████▎     | 9.60GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  43%|████▎     | 9.64GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  43%|████▎     | 9.64GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  43%|████▎     | 9.67GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  43%|████▎     | 9.67GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  44%|████▎     | 9.70GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  44%|████▎     | 9.70GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  44%|████▎     | 9.73GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  44%|████▎     | 9.73GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  44%|████▍     | 9.76GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  44%|████▍     | 9.76GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  44%|████▍     | 9.80GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  44%|████▍     | 9.80GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  44%|████▍     | 9.83GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  44%|████▍     | 9.83GB / 22.3GB,  166MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  44%|████▍     | 9.87GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  44%|████▍     | 9.87GB / 22.3GB,  166MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  44%|████▍     | 9.90GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  44%|████▍     | 9.90GB / 22.3GB,  166MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  45%|████▍     | 9.93GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  45%|████▍     | 9.93GB / 22.3GB,  166MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  45%|████▍     | 9.96GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  45%|████▍     | 9.96GB / 22.3GB,  166MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  45%|████▍     | 9.99GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  45%|████▍     | 9.99GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  45%|████▌     | 10.0GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  45%|████▌     | 10.0GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  45%|████▌     | 10.1GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  45%|████▌     | 10.1GB / 22.3GB,  166MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  45%|████▌     | 10.1GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  45%|████▌     | 10.1GB / 22.3GB,  166MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  46%|████▌     | 10.1GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  46%|████▌     | 10.1GB / 22.3GB,  166MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  46%|████▌     | 10.2GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  46%|████▌     | 10.2GB / 22.3GB,  166MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  46%|████▌     | 10.2GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  46%|████▌     | 10.2GB / 22.3GB,  166MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  46%|████▌     | 10.2GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  46%|████▌     | 10.2GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  46%|████▌     | 10.3GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  46%|████▌     | 10.3GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  46%|████▌     | 10.3GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  46%|████▌     | 10.3GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  46%|████▋     | 10.3GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  46%|████▋     | 10.3GB / 22.3GB,  166MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  47%|████▋     | 10.4GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  47%|████▋     | 10.4GB / 22.3GB,  166MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  47%|████▋     | 10.4GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  47%|████▋     | 10.4GB / 22.3GB,  166MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  47%|████▋     | 10.4GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  47%|████▋     | 10.4GB / 22.3GB,  166MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  47%|████▋     | 10.5GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  47%|████▋     | 10.5GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  47%|████▋     | 10.5GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  47%|████▋     | 10.5GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  47%|████▋     | 10.5GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  47%|████▋     | 10.5GB / 22.3GB,  166MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  47%|████▋     | 10.6GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  47%|████▋     | 10.6GB / 22.3GB,  166MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  48%|████▊     | 10.6GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  48%|████▊     | 10.6GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  48%|████▊     | 10.6GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  48%|████▊     | 10.6GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  48%|████▊     | 10.7GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  48%|████▊     | 10.7GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  48%|████▊     | 10.7GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  48%|████▊     | 10.7GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  48%|████▊     | 10.7GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  48%|████▊     | 10.7GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  48%|████▊     | 10.8GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  48%|████▊     | 10.8GB / 22.3GB,  166MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  48%|████▊     | 10.8GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  48%|████▊     | 10.8GB / 22.3GB,  166MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  49%|████▊     | 10.8GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  49%|████▊     | 10.8GB / 22.3GB,  166MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  49%|████▉     | 10.9GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  49%|████▉     | 10.9GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  49%|████▉     | 10.9GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  49%|████▉     | 10.9GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  49%|████▉     | 10.9GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  49%|████▉     | 10.9GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  49%|████▉     | 11.0GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  49%|████▉     | 11.0GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  49%|████▉     | 11.0GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  49%|████▉     | 11.0GB / 22.3GB,  166MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  50%|████▉     | 11.0GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  50%|████▉     | 11.0GB / 22.3GB,  166MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  50%|████▉     | 11.1GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  50%|████▉     | 11.1GB / 22.3GB,  166MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  50%|████▉     | 11.1GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  50%|████▉     | 11.1GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  50%|████▉     | 11.1GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  50%|████▉     | 11.1GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  50%|█████     | 11.2GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  50%|█████     | 11.2GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  50%|█████     | 11.2GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  50%|█████     | 11.2GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  50%|█████     | 11.2GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  50%|█████     | 11.2GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  51%|█████     | 11.3GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  51%|█████     | 11.3GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  51%|█████     | 11.3GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  51%|█████     | 11.3GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  51%|█████     | 11.3GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  51%|█████     | 11.3GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  51%|█████     | 11.4GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  51%|█████     | 11.4GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  51%|█████     | 11.4GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  51%|█████     | 11.4GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  51%|█████▏    | 11.4GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  51%|█████▏    | 11.4GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  51%|█████▏    | 11.5GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  51%|█████▏    | 11.5GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  52%|█████▏    | 11.5GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  52%|█████▏    | 11.5GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  52%|█████▏    | 11.5GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  52%|█████▏    | 11.5GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  52%|█████▏    | 11.6GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  52%|█████▏    | 11.6GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  52%|█████▏    | 11.6GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  52%|█████▏    | 11.6GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  52%|█████▏    | 11.6GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  52%|█████▏    | 11.6GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  52%|█████▏    | 11.7GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  52%|█████▏    | 11.7GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  52%|█████▏    | 11.7GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  52%|█████▏    | 11.7GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  53%|█████▎    | 11.7GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  53%|█████▎    | 11.7GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  53%|█████▎    | 11.8GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  53%|█████▎    | 11.8GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  53%|█████▎    | 11.8GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  53%|█████▎    | 11.8GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  53%|█████▎    | 11.8GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  53%|█████▎    | 11.8GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  53%|█████▎    | 11.9GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  53%|█████▎    | 11.9GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  53%|█████▎    | 11.9GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  53%|█████▎    | 11.9GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  54%|█████▎    | 11.9GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  54%|█████▎    | 11.9GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  54%|█████▎    | 12.0GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  54%|█████▎    | 12.0GB / 22.3GB,  166MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  54%|█████▍    | 12.0GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  54%|█████▍    | 12.0GB / 22.3GB,  166MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  54%|█████▍    | 12.0GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  54%|█████▍    | 12.0GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  54%|█████▍    | 12.0GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  54%|█████▍    | 12.0GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  54%|█████▍    | 12.1GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  54%|█████▍    | 12.1GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  54%|█████▍    | 12.1GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  54%|█████▍    | 12.1GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  55%|█████▍    | 12.1GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  55%|█████▍    | 12.1GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  55%|█████▍    | 12.2GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  55%|█████▍    | 12.2GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  55%|█████▍    | 12.2GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  55%|█████▍    | 12.2GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  55%|█████▌    | 12.2GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  55%|█████▌    | 12.2GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  55%|█████▌    | 12.3GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  55%|█████▌    | 12.3GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  55%|█████▌    | 12.3GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  55%|█████▌    | 12.3GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  55%|█████▌    | 12.3GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  55%|█████▌    | 12.3GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  56%|█████▌    | 12.4GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  56%|█████▌    | 12.4GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  56%|█████▌    | 12.4GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  56%|█████▌    | 12.4GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  56%|█████▌    | 12.4GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  56%|█████▌    | 12.4GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  56%|█████▌    | 12.5GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  56%|█████▌    | 12.5GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  56%|█████▌    | 12.5GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  56%|█████▌    | 12.5GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  56%|█████▋    | 12.5GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  56%|█████▋    | 12.5GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  57%|█████▋    | 12.6GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  57%|█████▋    | 12.6GB / 22.3GB,  166MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  57%|█████▋    | 12.6GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  57%|█████▋    | 12.6GB / 22.3GB,  166MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  57%|█████▋    | 12.6GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  57%|█████▋    | 12.6GB / 22.3GB,  166MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  57%|█████▋    | 12.7GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  57%|█████▋    | 12.7GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  57%|█████▋    | 12.7GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  57%|█████▋    | 12.7GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  57%|█████▋    | 12.7GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  57%|█████▋    | 12.7GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  57%|█████▋    | 12.8GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  57%|█████▋    | 12.8GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  58%|█████▊    | 12.8GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  58%|█████▊    | 12.8GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  58%|█████▊    | 12.8GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  58%|█████▊    | 12.8GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  58%|█████▊    | 12.9GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  58%|█████▊    | 12.9GB / 22.3GB,  166MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  58%|█████▊    | 12.9GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  58%|█████▊    | 12.9GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  58%|█████▊    | 12.9GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  58%|█████▊    | 12.9GB / 22.3GB,  166MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  58%|█████▊    | 13.0GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  58%|█████▊    | 13.0GB / 22.3GB,  166MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  58%|█████▊    | 13.0GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  58%|█████▊    | 13.0GB / 22.3GB,  166MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  59%|█████▊    | 13.0GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  59%|█████▊    | 13.0GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  59%|█████▊    | 13.1GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  59%|█████▊    | 13.1GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  59%|█████▉    | 13.1GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  59%|█████▉    | 13.1GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  59%|█████▉    | 13.1GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  59%|█████▉    | 13.1GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  59%|█████▉    | 13.2GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  59%|█████▉    | 13.2GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  59%|█████▉    | 13.2GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  59%|█████▉    | 13.2GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  59%|█████▉    | 13.2GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  59%|█████▉    | 13.2GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  60%|█████▉    | 13.3GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  60%|█████▉    | 13.3GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  60%|█████▉    | 13.3GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  60%|█████▉    | 13.3GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  60%|█████▉    | 13.3GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  60%|█████▉    | 13.3GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  60%|██████    | 13.4GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  60%|██████    | 13.4GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  60%|██████    | 13.4GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  60%|██████    | 13.4GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  60%|██████    | 13.4GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  60%|██████    | 13.4GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  60%|██████    | 13.5GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  60%|██████    | 13.5GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  61%|██████    | 13.5GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  61%|██████    | 13.5GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  61%|██████    | 13.5GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  61%|██████    | 13.5GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  61%|██████    | 13.6GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  61%|██████    | 13.6GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  61%|██████    | 13.6GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  61%|██████    | 13.6GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  61%|██████    | 13.6GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  61%|██████    | 13.6GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  61%|██████▏   | 13.7GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  61%|██████▏   | 13.7GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  62%|██████▏   | 13.7GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  62%|██████▏   | 13.7GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  62%|██████▏   | 13.7GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  62%|██████▏   | 13.7GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  62%|██████▏   | 13.8GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  62%|██████▏   | 13.8GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  62%|██████▏   | 13.8GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  62%|██████▏   | 13.8GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  62%|██████▏   | 13.8GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  62%|██████▏   | 13.8GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  62%|██████▏   | 13.9GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  62%|██████▏   | 13.9GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  62%|██████▏   | 13.9GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  62%|██████▏   | 13.9GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  63%|██████▎   | 13.9GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  63%|██████▎   | 13.9GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  63%|██████▎   | 14.0GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  63%|██████▎   | 14.0GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  63%|██████▎   | 14.0GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  63%|██████▎   | 14.0GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  63%|██████▎   | 14.0GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  63%|██████▎   | 14.0GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  63%|██████▎   | 14.1GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  63%|██████▎   | 14.1GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  63%|██████▎   | 14.1GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  63%|██████▎   | 14.1GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  63%|██████▎   | 14.1GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  63%|██████▎   | 14.1GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  64%|██████▎   | 14.2GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  64%|██████▎   | 14.2GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  64%|██████▍   | 14.2GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  64%|██████▍   | 14.2GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  64%|██████▍   | 14.2GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  64%|██████▍   | 14.2GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  64%|██████▍   | 14.3GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  64%|██████▍   | 14.3GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  64%|██████▍   | 14.3GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  64%|██████▍   | 14.3GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  64%|██████▍   | 14.3GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  64%|██████▍   | 14.3GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  65%|██████▍   | 14.4GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  65%|██████▍   | 14.4GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  65%|██████▍   | 14.4GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  65%|██████▍   | 14.4GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  65%|██████▍   | 14.4GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  65%|██████▍   | 14.4GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  65%|██████▍   | 14.5GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  65%|██████▍   | 14.5GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  65%|██████▌   | 14.5GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  65%|██████▌   | 14.5GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  65%|██████▌   | 14.5GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  65%|██████▌   | 14.5GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  65%|██████▌   | 14.6GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  65%|██████▌   | 14.6GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  66%|██████▌   | 14.6GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  66%|██████▌   | 14.6GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  66%|██████▌   | 14.6GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  66%|██████▌   | 14.6GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  66%|██████▌   | 14.7GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  66%|██████▌   | 14.7GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  66%|██████▌   | 14.7GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  66%|██████▌   | 14.7GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  66%|██████▌   | 14.7GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  66%|██████▌   | 14.7GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  66%|██████▋   | 14.8GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  66%|██████▋   | 14.8GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  66%|██████▋   | 14.8GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  66%|██████▋   | 14.8GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  67%|██████▋   | 14.8GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  67%|██████▋   | 14.8GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  67%|██████▋   | 14.9GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  67%|██████▋   | 14.9GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  67%|██████▋   | 14.9GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  67%|██████▋   | 14.9GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  67%|██████▋   | 14.9GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  67%|██████▋   | 14.9GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  67%|██████▋   | 15.0GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  67%|██████▋   | 15.0GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  67%|██████▋   | 15.0GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  67%|██████▋   | 15.0GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  67%|██████▋   | 15.0GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  67%|██████▋   | 15.0GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  68%|██████▊   | 15.1GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  68%|██████▊   | 15.1GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  68%|██████▊   | 15.1GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  68%|██████▊   | 15.1GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  68%|██████▊   | 15.1GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  68%|██████▊   | 15.1GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  68%|██████▊   | 15.2GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  68%|██████▊   | 15.2GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  68%|██████▊   | 15.2GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  68%|██████▊   | 15.2GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  68%|██████▊   | 15.2GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  68%|██████▊   | 15.2GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  68%|██████▊   | 15.2GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  68%|██████▊   | 15.2GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  69%|██████▊   | 15.3GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  69%|██████▊   | 15.3GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  69%|██████▉   | 15.3GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  69%|██████▉   | 15.3GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  69%|██████▉   | 15.4GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  69%|██████▉   | 15.4GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  69%|██████▉   | 15.4GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  69%|██████▉   | 15.4GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  69%|██████▉   | 15.4GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  69%|██████▉   | 15.4GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  69%|██████▉   | 15.4GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  69%|██████▉   | 15.4GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  70%|██████▉   | 15.5GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  70%|██████▉   | 15.5GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  70%|██████▉   | 15.5GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  70%|██████▉   | 15.5GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  70%|██████▉   | 15.5GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  70%|██████▉   | 15.5GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  70%|██████▉   | 15.6GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  70%|██████▉   | 15.6GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  70%|███████   | 15.6GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  70%|███████   | 15.6GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  70%|███████   | 15.6GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  70%|███████   | 15.6GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  70%|███████   | 15.7GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  70%|███████   | 15.7GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  71%|███████   | 15.7GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  71%|███████   | 15.7GB / 22.3GB,  164MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  71%|███████   | 15.7GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  71%|███████   | 15.7GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  71%|███████   | 15.8GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  71%|███████   | 15.8GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  71%|███████   | 15.8GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  71%|███████   | 15.8GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  71%|███████   | 15.8GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  71%|███████   | 15.8GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  71%|███████▏  | 15.9GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  71%|███████▏  | 15.9GB / 22.3GB,  164MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  71%|███████▏  | 15.9GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  71%|███████▏  | 15.9GB / 22.3GB,  164MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  72%|███████▏  | 15.9GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  72%|███████▏  | 15.9GB / 22.3GB,  164MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  72%|███████▏  | 16.0GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  72%|███████▏  | 16.0GB / 22.3GB,  164MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  72%|███████▏  | 16.0GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  72%|███████▏  | 16.0GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  72%|███████▏  | 16.0GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  72%|███████▏  | 16.0GB / 22.3GB,  164MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  72%|███████▏  | 16.1GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  72%|███████▏  | 16.1GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  72%|███████▏  | 16.1GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  72%|███████▏  | 16.1GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  72%|███████▏  | 16.1GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  72%|███████▏  | 16.1GB / 22.3GB,  164MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  73%|███████▎  | 16.2GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  73%|███████▎  | 16.2GB / 22.3GB,  163MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  73%|███████▎  | 16.2GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  73%|███████▎  | 16.2GB / 22.3GB,  164MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  73%|███████▎  | 16.2GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  73%|███████▎  | 16.2GB / 22.3GB,  164MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  73%|███████▎  | 16.3GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  73%|███████▎  | 16.3GB / 22.3GB,  164MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  73%|███████▎  | 16.3GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  73%|███████▎  | 16.3GB / 22.3GB,  164MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  73%|███████▎  | 16.3GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  73%|███████▎  | 16.3GB / 22.3GB,  163MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  73%|███████▎  | 16.4GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  73%|███████▎  | 16.4GB / 22.3GB,  163MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  74%|███████▎  | 16.4GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  74%|███████▎  | 16.4GB / 22.3GB,  163MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  74%|███████▎  | 16.4GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  74%|███████▎  | 16.4GB / 22.3GB,  163MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  74%|███████▍  | 16.5GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  74%|███████▍  | 16.5GB / 22.3GB,  163MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  74%|███████▍  | 16.5GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  74%|███████▍  | 16.5GB / 22.3GB,  163MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  74%|███████▍  | 16.5GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  74%|███████▍  | 16.5GB / 22.3GB,  163MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  74%|███████▍  | 16.6GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  74%|███████▍  | 16.6GB / 22.3GB,  163MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  74%|███████▍  | 16.6GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  74%|███████▍  | 16.6GB / 22.3GB,  163MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  75%|███████▍  | 16.6GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  75%|███████▍  | 16.6GB / 22.3GB,  163MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  75%|███████▍  | 16.6GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  75%|███████▍  | 16.6GB / 22.3GB,  162MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  75%|███████▍  | 16.7GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  75%|███████▍  | 16.7GB / 22.3GB,  162MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  75%|███████▌  | 16.7GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  75%|███████▌  | 16.7GB / 22.3GB,  162MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  75%|███████▌  | 16.7GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  75%|███████▌  | 16.7GB / 22.3GB,  162MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  75%|███████▌  | 16.8GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  75%|███████▌  | 16.8GB / 22.3GB,  162MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  76%|███████▌  | 16.8GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  76%|███████▌  | 16.8GB / 22.3GB,  162MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  76%|███████▌  | 16.8GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  76%|███████▌  | 16.8GB / 22.3GB,  162MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  76%|███████▌  | 16.9GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  76%|███████▌  | 16.9GB / 22.3GB,  162MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  76%|███████▌  | 16.9GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  76%|███████▌  | 16.9GB / 22.3GB,  162MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  76%|███████▌  | 16.9GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  76%|███████▌  | 16.9GB / 22.3GB,  162MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  76%|███████▌  | 17.0GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  76%|███████▌  | 17.0GB / 22.3GB,  162MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  76%|███████▋  | 17.0GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  76%|███████▋  | 17.0GB / 22.3GB,  162MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  77%|███████▋  | 17.0GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  77%|███████▋  | 17.0GB / 22.3GB,  162MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  77%|███████▋  | 17.1GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  77%|███████▋  | 17.1GB / 22.3GB,  162MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  77%|███████▋  | 17.1GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  77%|███████▋  | 17.1GB / 22.3GB,  162MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  77%|███████▋  | 17.1GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  77%|███████▋  | 17.1GB / 22.3GB,  162MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  77%|███████▋  | 17.2GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  77%|███████▋  | 17.2GB / 22.3GB,  162MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  77%|███████▋  | 17.2GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  77%|███████▋  | 17.2GB / 22.3GB,  162MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  77%|███████▋  | 17.2GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  77%|███████▋  | 17.2GB / 22.3GB,  162MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  78%|███████▊  | 17.3GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  78%|███████▊  | 17.3GB / 22.3GB,  162MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  78%|███████▊  | 17.3GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  78%|███████▊  | 17.3GB / 22.3GB,  162MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  78%|███████▊  | 17.3GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  78%|███████▊  | 17.3GB / 22.3GB,  163MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  78%|███████▊  | 17.4GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  78%|███████▊  | 17.4GB / 22.3GB,  163MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  78%|███████▊  | 17.4GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  78%|███████▊  | 17.4GB / 22.3GB,  162MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  78%|███████▊  | 17.4GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  78%|███████▊  | 17.4GB / 22.3GB,  162MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  78%|███████▊  | 17.5GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  78%|███████▊  | 17.5GB / 22.3GB,  162MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  79%|███████▊  | 17.5GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  79%|███████▊  | 17.5GB / 22.3GB,  162MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  79%|███████▉  | 17.5GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  79%|███████▉  | 17.5GB / 22.3GB,  163MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  79%|███████▉  | 17.6GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  79%|███████▉  | 17.6GB / 22.3GB,  163MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  79%|███████▉  | 17.6GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  79%|███████▉  | 17.6GB / 22.3GB,  163MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  79%|███████▉  | 17.6GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  79%|███████▉  | 17.6GB / 22.3GB,  163MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  79%|███████▉  | 17.7GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  79%|███████▉  | 17.7GB / 22.3GB,  162MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  79%|███████▉  | 17.7GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  79%|███████▉  | 17.7GB / 22.3GB,  163MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  80%|███████▉  | 17.7GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  80%|███████▉  | 17.7GB / 22.3GB,  162MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  80%|███████▉  | 17.8GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  80%|███████▉  | 17.8GB / 22.3GB,  163MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  80%|███████▉  | 17.8GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  80%|███████▉  | 17.8GB / 22.3GB,  163MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  80%|████████  | 17.8GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  80%|████████  | 17.8GB / 22.3GB,  164MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  80%|████████  | 17.9GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  80%|████████  | 17.9GB / 22.3GB,  163MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  80%|████████  | 17.9GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  80%|████████  | 17.9GB / 22.3GB,  163MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  81%|████████  | 17.9GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  81%|████████  | 17.9GB / 22.3GB,  163MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  81%|████████  | 18.0GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  81%|████████  | 18.0GB / 22.3GB,  163MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  81%|████████  | 18.0GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  81%|████████  | 18.0GB / 22.3GB,  164MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  81%|████████  | 18.0GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  81%|████████  | 18.0GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  81%|████████  | 18.1GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  81%|████████  | 18.1GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  81%|████████▏ | 18.1GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  81%|████████▏ | 18.1GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  81%|████████▏ | 18.1GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  81%|████████▏ | 18.1GB / 22.3GB,  164MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  82%|████████▏ | 18.2GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  82%|████████▏ | 18.2GB / 22.3GB,  164MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  82%|████████▏ | 18.2GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  82%|████████▏ | 18.2GB / 22.3GB,  164MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  82%|████████▏ | 18.2GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  82%|████████▏ | 18.2GB / 22.3GB,  164MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  82%|████████▏ | 18.3GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  82%|████████▏ | 18.3GB / 22.3GB,  164MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  82%|████████▏ | 18.3GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  82%|████████▏ | 18.3GB / 22.3GB,  164MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  82%|████████▏ | 18.3GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  82%|████████▏ | 18.3GB / 22.3GB,  164MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  82%|████████▏ | 18.4GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  82%|████████▏ | 18.4GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  83%|████████▎ | 18.4GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  83%|████████▎ | 18.4GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  83%|████████▎ | 18.4GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  83%|████████▎ | 18.4GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  83%|████████▎ | 18.5GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  83%|████████▎ | 18.5GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  83%|████████▎ | 18.5GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  83%|████████▎ | 18.5GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  83%|████████▎ | 18.5GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  83%|████████▎ | 18.5GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  83%|████████▎ | 18.6GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  83%|████████▎ | 18.6GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  84%|████████▎ | 18.6GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  84%|████████▎ | 18.6GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  84%|████████▎ | 18.6GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  84%|████████▎ | 18.6GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  84%|████████▍ | 18.7GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  84%|████████▍ | 18.7GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  84%|████████▍ | 18.7GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  84%|████████▍ | 18.7GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  84%|████████▍ | 18.7GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  84%|████████▍ | 18.7GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  84%|████████▍ | 18.8GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  84%|████████▍ | 18.8GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  84%|████████▍ | 18.8GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  84%|████████▍ | 18.8GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  85%|████████▍ | 18.8GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  85%|████████▍ | 18.8GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  85%|████████▍ | 18.9GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  85%|████████▍ | 18.9GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  85%|████████▍ | 18.9GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  85%|████████▍ | 18.9GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  85%|████████▌ | 18.9GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  85%|████████▌ | 18.9GB / 22.3GB,  166MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  85%|████████▌ | 19.0GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  85%|████████▌ | 19.0GB / 22.3GB,  166MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  85%|████████▌ | 19.0GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  85%|████████▌ | 19.0GB / 22.3GB,  166MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  85%|████████▌ | 19.0GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  85%|████████▌ | 19.0GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  86%|████████▌ | 19.1GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  86%|████████▌ | 19.1GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  86%|████████▌ | 19.1GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  86%|████████▌ | 19.1GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  86%|████████▌ | 19.1GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  86%|████████▌ | 19.1GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  86%|████████▌ | 19.2GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  86%|████████▌ | 19.2GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  86%|████████▌ | 19.2GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  86%|████████▌ | 19.2GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  86%|████████▋ | 19.2GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  86%|████████▋ | 19.2GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  86%|████████▋ | 19.2GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  86%|████████▋ | 19.2GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  87%|████████▋ | 19.3GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  87%|████████▋ | 19.3GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  87%|████████▋ | 19.3GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  87%|████████▋ | 19.3GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  87%|████████▋ | 19.4GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  87%|████████▋ | 19.4GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  87%|████████▋ | 19.4GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  87%|████████▋ | 19.4GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  87%|████████▋ | 19.4GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  87%|████████▋ | 19.4GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  87%|████████▋ | 19.4GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  87%|████████▋ | 19.4GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  87%|████████▋ | 19.5GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  87%|████████▋ | 19.5GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  88%|████████▊ | 19.5GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  88%|████████▊ | 19.5GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  88%|████████▊ | 19.6GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  88%|████████▊ | 19.6GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  88%|████████▊ | 19.6GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  88%|████████▊ | 19.6GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  88%|████████▊ | 19.6GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  88%|████████▊ | 19.6GB / 22.3GB,  166MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  88%|████████▊ | 19.7GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  88%|████████▊ | 19.7GB / 22.3GB,  166MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  88%|████████▊ | 19.7GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  88%|████████▊ | 19.7GB / 22.3GB,  166MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  89%|████████▊ | 19.7GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  89%|████████▊ | 19.7GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  89%|████████▊ | 19.8GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  89%|████████▊ | 19.8GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  89%|████████▉ | 19.8GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  89%|████████▉ | 19.8GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  89%|████████▉ | 19.8GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  89%|████████▉ | 19.8GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  89%|████████▉ | 19.8GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  89%|████████▉ | 19.8GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  89%|████████▉ | 19.9GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  89%|████████▉ | 19.9GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  89%|████████▉ | 19.9GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  89%|████████▉ | 19.9GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  90%|████████▉ | 20.0GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  90%|████████▉ | 20.0GB / 22.3GB,  166MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  90%|████████▉ | 20.0GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  90%|████████▉ | 20.0GB / 22.3GB,  166MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  90%|████████▉ | 20.0GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  90%|████████▉ | 20.0GB / 22.3GB,  166MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  90%|█████████ | 20.0GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  90%|█████████ | 20.0GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  90%|█████████ | 20.1GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  90%|█████████ | 20.1GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  90%|█████████ | 20.1GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  90%|█████████ | 20.1GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  90%|█████████ | 20.1GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  90%|█████████ | 20.1GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  91%|█████████ | 20.2GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  91%|█████████ | 20.2GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  91%|█████████ | 20.2GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  91%|█████████ | 20.2GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  91%|█████████ | 20.2GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  91%|█████████ | 20.2GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  91%|█████████ | 20.3GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  91%|█████████ | 20.3GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  91%|█████████ | 20.3GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  91%|█████████ | 20.3GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  91%|█████████▏| 20.3GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  91%|█████████▏| 20.3GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  92%|█████████▏| 20.4GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  92%|█████████▏| 20.4GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  92%|█████████▏| 20.4GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  92%|█████████▏| 20.4GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  92%|█████████▏| 20.4GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  92%|█████████▏| 20.4GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  92%|█████████▏| 20.5GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  92%|█████████▏| 20.5GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  92%|█████████▏| 20.5GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  92%|█████████▏| 20.5GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  92%|█████████▏| 20.5GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  92%|█████████▏| 20.5GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  92%|█████████▏| 20.6GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  92%|█████████▏| 20.6GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  93%|█████████▎| 20.6GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  93%|█████████▎| 20.6GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  93%|█████████▎| 20.6GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  93%|█████████▎| 20.6GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  93%|█████████▎| 20.7GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  93%|█████████▎| 20.7GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  93%|█████████▎| 20.7GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  93%|█████████▎| 20.7GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  93%|█████████▎| 20.7GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  93%|█████████▎| 20.7GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  93%|█████████▎| 20.8GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  93%|█████████▎| 20.8GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  93%|█████████▎| 20.8GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  93%|█████████▎| 20.8GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  94%|█████████▎| 20.8GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  94%|█████████▎| 20.8GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  94%|█████████▍| 20.9GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  94%|█████████▍| 20.9GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  94%|█████████▍| 20.9GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  94%|█████████▍| 20.9GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  94%|█████████▍| 20.9GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  94%|█████████▍| 20.9GB / 22.3GB,  166MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  94%|█████████▍| 21.0GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  94%|█████████▍| 21.0GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  94%|█████████▍| 21.0GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  94%|█████████▍| 21.0GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  95%|█████████▍| 21.0GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  95%|█████████▍| 21.0GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  95%|█████████▍| 21.1GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  95%|█████████▍| 21.1GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  95%|█████████▍| 21.1GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  95%|█████████▍| 21.1GB / 22.3GB,  166MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  95%|█████████▍| 21.1GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  95%|█████████▍| 21.1GB / 22.3GB,  166MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  95%|█████████▌| 21.2GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  95%|█████████▌| 21.2GB / 22.3GB,  166MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  95%|█████████▌| 21.2GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  95%|█████████▌| 21.2GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  95%|█████████▌| 21.2GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  95%|█████████▌| 21.2GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  96%|█████████▌| 21.3GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  96%|█████████▌| 21.3GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  96%|█████████▌| 21.3GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  96%|█████████▌| 21.3GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  96%|█████████▌| 21.3GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  96%|█████████▌| 21.3GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  96%|█████████▌| 21.4GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  96%|█████████▌| 21.4GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  96%|█████████▌| 21.4GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  96%|█████████▌| 21.4GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  96%|█████████▋| 21.4GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  96%|█████████▋| 21.4GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  96%|█████████▋| 21.5GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  96%|█████████▋| 21.5GB / 22.3GB,  166MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  97%|█████████▋| 21.5GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  97%|█████████▋| 21.5GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  97%|█████████▋| 21.5GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  97%|█████████▋| 21.5GB / 22.3GB,  166MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  97%|█████████▋| 21.6GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  97%|█████████▋| 21.6GB / 22.3GB,  166MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  97%|█████████▋| 21.6GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  97%|█████████▋| 21.6GB / 22.3GB,  166MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  97%|█████████▋| 21.6GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  97%|█████████▋| 21.6GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  97%|█████████▋| 21.7GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  97%|█████████▋| 21.7GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  97%|█████████▋| 21.7GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  97%|█████████▋| 21.7GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  98%|█████████▊| 21.7GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  98%|█████████▊| 21.7GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  98%|█████████▊| 21.8GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  98%|█████████▊| 21.8GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  98%|█████████▊| 21.8GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  98%|█████████▊| 21.8GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  98%|█████████▊| 21.8GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  98%|█████████▊| 21.8GB / 22.3GB,  166MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  98%|█████████▊| 21.9GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  98%|█████████▊| 21.9GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  98%|█████████▊| 21.9GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  98%|█████████▊| 21.9GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  99%|█████████▊| 21.9GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  99%|█████████▊| 21.9GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  99%|█████████▊| 22.0GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  99%|█████████▊| 22.0GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  99%|█████████▉| 22.0GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  99%|█████████▉| 22.0GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  99%|█████████▉| 22.0GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  99%|█████████▉| 22.0GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  99%|█████████▉| 22.1GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  99%|█████████▉| 22.1GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  99%|█████████▉| 22.1GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  99%|█████████▉| 22.1GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf:  99%|█████████▉| 22.1GB / 22.3GB            [A[AProcessing Files (0 / 1)      :  99%|█████████▉| 22.1GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf: 100%|█████████▉| 22.2GB / 22.3GB            [A[AProcessing Files (0 / 1)      : 100%|█████████▉| 22.2GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf: 100%|█████████▉| 22.2GB / 22.3GB            [A[AProcessing Files (0 / 1)      : 100%|█████████▉| 22.2GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf: 100%|█████████▉| 22.2GB / 22.3GB            [A[AProcessing Files (0 / 1)      : 100%|█████████▉| 22.2GB / 22.3GB,  165MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf: 100%|█████████▉| 22.2GB / 22.3GB            [A[AProcessing Files (0 / 1)      : 100%|█████████▉| 22.2GB / 22.3GB,  162MB/s  
+
+  ...guf/chattla-20b-Q8_0.gguf: 100%|█████████▉| 22.2GB / 22.3GB            [A[A
+
+  ...guf/chattla-20b-Q8_0.gguf: 100%|█████████▉| 22.2GB / 22.3GB            [A[AProcessing Files (0 / 1)      : 100%|█████████▉| 22.2GB / 22.3GB,  156MB/s  
+New Data Upload               :  69%|██████▉   | 69.3MB /  101MB,  217kB/s  [A
+
+  ...guf/chattla-20b-Q8_0.gguf: 100%|█████████▉| 22.2GB / 22.3GB            [A[AProcessing Files (0 / 1)      : 100%|█████████▉| 22.2GB / 22.3GB,  153MB/s  
+New Data Upload               :  71%|███████   | 71.5MB /  101MB,  435kB/s  [A
+
+  ...guf/chattla-20b-Q8_0.gguf: 100%|█████████▉| 22.2GB / 22.3GB            [A[AProcessing Files (0 / 1)      : 100%|█████████▉| 22.2GB / 22.3GB,  150MB/s  
+New Data Upload               :  74%|███████▍  | 74.3MB /  101MB,  707kB/s  [A
+
+  ...guf/chattla-20b-Q8_0.gguf: 100%|█████████▉| 22.2GB / 22.3GB            [A[AProcessing Files (0 / 1)      : 100%|█████████▉| 22.2GB / 22.3GB,  147MB/s  
+New Data Upload               :  76%|███████▌  | 76.5MB /  101MB,  924kB/s  [A
+
+  ...guf/chattla-20b-Q8_0.gguf: 100%|█████████▉| 22.2GB / 22.3GB            [A[AProcessing Files (0 / 1)      : 100%|█████████▉| 22.2GB / 22.3GB,  144MB/s  
+New Data Upload               :  79%|███████▉  | 79.3MB /  101MB, 1.20MB/s  [A
+
+  ...guf/chattla-20b-Q8_0.gguf: 100%|█████████▉| 22.2GB / 22.3GB            [A[AProcessing Files (0 / 1)      : 100%|█████████▉| 22.2GB / 22.3GB,  141MB/s  
+New Data Upload               :  81%|████████  | 81.5MB /  101MB, 1.41MB/s  [A
+
+  ...guf/chattla-20b-Q8_0.gguf: 100%|█████████▉| 22.2GB / 22.3GB            [A[AProcessing Files (0 / 1)      : 100%|█████████▉| 22.2GB / 22.3GB,  138MB/s  
+New Data Upload               :  84%|████████▍ | 84.3MB /  101MB, 1.68MB/s  [A
+
+  ...guf/chattla-20b-Q8_0.gguf: 100%|█████████▉| 22.2GB / 22.3GB            [A[AProcessing Files (0 / 1)      : 100%|█████████▉| 22.2GB / 22.3GB,  135MB/s  
+New Data Upload               :  86%|████████▌ | 86.5MB /  101MB, 1.90MB/s  [A
+
+  ...guf/chattla-20b-Q8_0.gguf: 100%|█████████▉| 22.3GB / 22.3GB            [A[AProcessing Files (0 / 1)      : 100%|█████████▉| 22.3GB / 22.3GB,  132MB/s  
+New Data Upload               :  89%|████████▉ | 89.2MB /  101MB, 2.17MB/s  [A
+
+  ...guf/chattla-20b-Q8_0.gguf: 100%|█████████▉| 22.3GB / 22.3GB            [A[AProcessing Files (0 / 1)      : 100%|█████████▉| 22.3GB / 22.3GB,  128MB/s  
+New Data Upload               :  91%|█████████ | 91.5MB /  101MB, 2.39MB/s  [A
+
+  ...guf/chattla-20b-Q8_0.gguf: 100%|█████████▉| 22.3GB / 22.3GB            [A[AProcessing Files (0 / 1)      : 100%|█████████▉| 22.3GB / 22.3GB,  126MB/s  
+New Data Upload               :  94%|█████████▎| 94.2MB /  101MB, 2.66MB/s  [A
+
+  ...guf/chattla-20b-Q8_0.gguf: 100%|█████████▉| 22.3GB / 22.3GB            [A[AProcessing Files (0 / 1)      : 100%|█████████▉| 22.3GB / 22.3GB,  123MB/s  
+New Data Upload               :  96%|█████████▌| 96.4MB /  101MB, 2.88MB/s  [A
+
+  ...guf/chattla-20b-Q8_0.gguf: 100%|█████████▉| 22.3GB / 22.3GB            [A[AProcessing Files (0 / 1)      : 100%|█████████▉| 22.3GB / 22.3GB,  120MB/s  
+New Data Upload               :  99%|█████████▊| 99.2MB /  101MB, 3.15MB/s  [A
+
+  ...guf/chattla-20b-Q8_0.gguf: 100%|█████████▉| 22.3GB / 22.3GB            [A[AProcessing Files (0 / 1)      : 100%|█████████▉| 22.3GB / 22.3GB,  117MB/s  
+New Data Upload               : 100%|█████████▉|  100MB /  101MB, 3.26MB/s  [A
+
+  ...guf/chattla-20b-Q8_0.gguf: 100%|█████████▉| 22.3GB / 22.3GB            [A[A
+
+  ...guf/chattla-20b-Q8_0.gguf: 100%|█████████▉| 22.3GB / 22.3GB            [A[A
+
+  ...guf/chattla-20b-Q8_0.gguf: 100%|██████████| 22.3GB / 22.3GB            [A[AProcessing Files (1 / 1)      : 100%|██████████| 22.3GB / 22.3GB,  107MB/s  
+New Data Upload               : 100%|██████████|  101MB /  101MB, 3.28MB/s  [A
+
+  ...guf/chattla-20b-Q8_0.gguf: 100%|██████████| 22.3GB / 22.3GB            [A[A
+
+  ...guf/chattla-20b-Q8_0.gguf: 100%|██████████| 22.3GB / 22.3GB            [A[A
+
+  ...guf/chattla-20b-Q8_0.gguf: 100%|██████████| 22.3GB / 22.3GB            [A[A
+
+  ...guf/chattla-20b-Q8_0.gguf: 100%|██████████| 22.3GB / 22.3GB            [A[AProcessing Files (1 / 1)      : 100%|██████████| 22.3GB / 22.3GB, 95.1MB/s  
+New Data Upload               : 100%|██████████|  101MB /  101MB, 3.35MB/s  
+  ...guf/chattla-20b-Q8_0.gguf: 100%|██████████| 22.3GB / 22.3GB            
+Done in 3.1 min — https://huggingface.co/EricSpencer00/chattla-20b/commit/d06da4d55a455af6bb6ea670108b1f624327ff9d

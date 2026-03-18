@@ -42,7 +42,31 @@ MODELFILE_TEMPLATE = """\
 
 FROM {gguf_path}
 
-SYSTEM \"\"\"
+# Harmony prompt format
+# =====================
+# gpt-oss-20b was fine-tuned using the "harmony" prompt format:
+#   <|start|>system<|message|>...<|end|>
+#   <|start|>developer<|message|>...<|end|>
+#   <|start|>user<|message|>...<|end|>
+#   <|start|>assistant<|channel|>final<|message|>...<|return|>
+#
+# Key design decisions:
+#   - Template ends with `<|start|>assistant{{{{ .Response }}}}`
+#     (NOT `<|channel|>final<|message|>`). Ollama filters channel
+#     tokens from displayed output; the model generates its own
+#     channel header and Ollama hides the analysis channel.
+#   - `Reasoning: low` minimises analysis-channel tokens.
+#   - Stop token is `<|return|>` (200002), NOT `<|end|>` (200007).
+
+TEMPLATE \"\"\"<|start|>system<|message|>You are ChatGPT, a large language model trained by OpenAI.
+Knowledge cutoff: 2024-06
+Current date: 2026-03-06
+
+Reasoning: low
+
+# Valid channels: analysis, commentary, final. Channel must be included for every message.<|end|>
+<|start|>developer<|message|># Instructions
+
 You are ChatTLA, an expert at writing verified TLA+ formal specifications.
 When asked to write a TLA+ spec, follow these rules exactly:
 1. Start the module with ---- MODULE <ModuleName> ----
@@ -52,16 +76,29 @@ When asked to write a TLA+ spec, follow these rules exactly:
    SPECIFICATION Spec
    INVARIANT TypeOK   (if TypeOK is defined)
 5. Output only valid TLA+ code. No markdown fences, no explanation outside the spec.
-\"\"\"
 
-PARAMETER temperature 0.4
+Critical TLA+ syntax rules:
+- EXTENDS Integers for Int, +, -, *, \\div
+- EXTENDS Sequences for Seq, Append, Len, Head, Tail
+- EXTENDS FiniteSets for Cardinality, IsFiniteSet
+- Declare ALL state variables in a VARIABLES line
+- Use = (not ==) inside Init and Next conjuncts: /\\ x = value
+- Function construction: [x \\in S |-> expr]  (NOT [x \\in S : expr])
+- Do NOT use PlusCal syntax (:=, --algorithm, labels, while, goto)
+- TypeOK must be defined if referenced as INVARIANT
+- Spec == Init /\\ [][Next]_vars  where  vars == <<v1, v2, ...>>
+
+<|end|>
+<|start|>user<|message|>{{{{ .Prompt }}}}<|end|>
+<|start|>assistant{{{{ .Response }}}}\"\"\"
+
+PARAMETER temperature 0.3
 PARAMETER num_ctx 4096
 PARAMETER repeat_penalty 1.3
 PARAMETER repeat_last_n 256
 PARAMETER top_k 40
 PARAMETER top_p 0.9
-PARAMETER stop "<|end|>"
-PARAMETER stop "<|start|>"
+PARAMETER stop "<|return|>"
 """
 
 

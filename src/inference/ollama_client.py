@@ -141,7 +141,7 @@ class ChatTLAClient:
                 "num_predict": 4096,
                 "top_k": 40,
                 "top_p": 0.9,
-                "stop": ["<|end|>", "<|start|>", "\n===="],
+                "stop": ["<|return|>", "<|end|>", "<|start|>", "\n===="],
             },
         )
         # Reconstruct: prompt seeded "---- MODULE", model continues from there
@@ -299,7 +299,7 @@ class ChatTLAClient:
                 "temperature": 0.05,
                 "repeat_penalty": 1.3,
                 "num_predict": 4096,
-                "stop": ["<|end|>", "<|start|>", "\n===="],
+                "stop": ["<|return|>", "<|end|>", "<|start|>", "\n===="],
             },
         )
         raw = "---- MODULE" + response["response"]
@@ -324,7 +324,7 @@ class ChatTLAClient:
                 "temperature": 0.05,
                 "repeat_penalty": 1.3,
                 "num_predict": 4096,
-                "stop": ["<|end|>", "<|start|>", "\n===="],
+                "stop": ["<|return|>", "<|end|>", "<|start|>", "\n===="],
             },
         )
         raw = "---- MODULE" + response["response"]
