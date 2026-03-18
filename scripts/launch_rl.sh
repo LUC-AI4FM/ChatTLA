@@ -7,6 +7,14 @@
 #   ./scripts/launch_rl.sh status   # show current status
 #   ./scripts/launch_rl.sh logs     # tail the log file
 #
+#   --allow-daytime-retrain  # allow retraining during daytime hours
+#   --model <model>          # use a specific model (default: chattla:20b)
+#   --benchmark-every <n>    # benchmark every n cycles (default: 3)
+#   --max-cycles <n>         # max cycles to run (default: 0 = infinite)
+#   --retrain-threshold <n>  # new gold/silver examples before retrain (default: 10)
+#   --cycle-hours <h>        # target hours per cycle (default: 1.5)
+#
+#
 # The loop runs inside a tmux session named "chattla-rl".
 # GPU usage is automatically throttled during daytime hours (06:00-22:00).
 

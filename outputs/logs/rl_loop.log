@@ -368,3 +368,107 @@ ModuleNotFoundError: No module named 'datasets'
 2026-03-18 17:08:40 INFO Received signal 2. Will shut down after current phase completes.
 2026-03-18 17:09:01 INFO RL loop terminated gracefully.
 2026-03-18 17:09:01 INFO Lifetime: 3 cycles, 13 gold, 33 silver, 0 retrains
+2026-03-18 17:13:46 INFO ============================================================
+2026-03-18 17:13:46 INFO   ChatTLA Autonomous RL Loop
+2026-03-18 17:13:46 INFO   Cycle target: 1.5h | Retrain threshold: 10
+2026-03-18 17:13:46 INFO   Daytime retrain: ENABLED (--allow-daytime-retrain)
+17:13:46 INFO ============================================================
+17:13:46 INFO   ChatTLA Autonomous RL Loop
+2026-03-18 17:13:46 INFO   Benchmark every 3 cycles
+2026-03-18 17:13:46 INFO   Max cycles: infinite
+17:13:46 INFO   Cycle target: 1.5h | Retrain threshold: 10
+17:13:46 INFO   Daytime retrain: ENABLED (--allow-daytime-retrain)
+17:13:46 INFO   Benchmark every 3 cycles
+2026-03-18 17:13:46 INFO   PID: 142363
+17:13:46 INFO   Max cycles: infinite
+17:13:46 INFO   PID: 142363
+2026-03-18 17:13:46 INFO ============================================================
+17:13:46 INFO ============================================================
+2026-03-18 17:13:46 INFO Resuming with accumulated_new=42 (from state)
+17:13:46 INFO Resuming with accumulated_new=42 (from state)
+2026-03-18 17:13:46 INFO Resuming from cycle 4
+17:13:46 INFO Resuming from cycle 4
+2026-03-18 17:13:46 INFO ============================================================
+17:13:46 INFO ============================================================
+2026-03-18 17:13:46 INFO CYCLE 4 | DAYTIME | difficulty_cap=4 | max_prompts=25
+17:13:46 INFO CYCLE 4 | DAYTIME | difficulty_cap=4 | max_prompts=25
+2026-03-18 17:13:46 INFO Pacing: 3.0s between prompts
+17:13:46 INFO Pacing: 3.0s between prompts
+2026-03-18 17:13:46 INFO ============================================================
+2026-03-18 17:13:46 INFO [phase1] Loading prompt bank...
+17:13:46 INFO ============================================================
+17:13:46 INFO [phase1] Loading prompt bank...
+2026-03-18 17:13:46 INFO [phase1] Generating and validating 25 specs...
+17:13:46 INFO [phase1] Generating and validating 25 specs...
+2026-03-18 17:14:14 INFO   [RL017] tier=silver sany=True tlc=False struct=0.89 attempts=2 (best of 2)
+17:14:14 INFO   [RL017] tier=silver sany=True tlc=False struct=0.89 attempts=2 (best of 2)
+2026-03-18 17:14:29 INFO   [SYN019] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+17:14:29 INFO   [SYN019] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-18 17:14:42 INFO   [RL009] tier=silver sany=True tlc=False struct=0.89 attempts=2 (best of 2)
+17:14:42 INFO   [RL009] tier=silver sany=True tlc=False struct=0.89 attempts=2 (best of 2)
+2026-03-18 17:14:52 INFO   [BM010] tier=bronze sany=False tlc=False struct=0.44 attempts=1 (best of 1)
+17:14:52 INFO   [BM010] tier=bronze sany=False tlc=False struct=0.44 attempts=1 (best of 1)
+2026-03-18 17:15:01 INFO   [SYN001] tier=gold sany=True tlc=True struct=0.78 attempts=2 (best of 2)
+17:15:01 INFO   [SYN001] tier=gold sany=True tlc=True struct=0.78 attempts=2 (best of 2)
+2026-03-18 17:16:08 INFO   [SYN014] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+17:16:08 INFO   [SYN014] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-18 17:16:59 INFO   [BM017] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+17:16:59 INFO   [BM017] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-18 17:17:12 INFO Received signal 2. Will shut down after current phase completes.
+2026-03-18 17:17:57 INFO   [RL005] tier=silver sany=True tlc=False struct=0.89 attempts=2 (best of 2)
+2026-03-18 17:17:57 INFO [phase1] Results: gold=1 silver=8 bronze=5 sany=9/14 tlc=1/14
+2026-03-18 17:17:57 INFO 
+────────────────────────────────────────────────────────────
+2026-03-18 17:17:57 INFO CYCLE 4 SUMMARY (4.2 min)
+2026-03-18 17:17:57 INFO   Specs: 14 | SANY: 9 | TLC: 1
+2026-03-18 17:17:57 INFO   Gold: 1 | Silver: 8 | Bronze: 5
+2026-03-18 17:17:57 INFO   New SFT: 0 | New DPO: 0
+2026-03-18 17:17:57 INFO   Retrained: False | Deployed: False
+2026-03-18 17:17:57 INFO ────────────────────────────────────────────────────────────
+
+2026-03-18 17:17:57 INFO RL loop terminated gracefully.
+2026-03-18 17:17:57 INFO Lifetime: 4 cycles, 14 gold, 41 silver, 0 retrains
+2026-03-18 17:36:14 INFO ============================================================
+17:36:14 INFO ============================================================
+2026-03-18 17:36:14 INFO   ChatTLA Autonomous RL Loop
+17:36:14 INFO   ChatTLA Autonomous RL Loop
+2026-03-18 17:36:14 INFO   Cycle target: 1.5h | Retrain threshold: 10
+17:36:14 INFO   Cycle target: 1.5h | Retrain threshold: 10
+2026-03-18 17:36:14 INFO   Daytime retrain: ENABLED (--allow-daytime-retrain)
+17:36:14 INFO   Daytime retrain: ENABLED (--allow-daytime-retrain)
+2026-03-18 17:36:14 INFO   Benchmark every 3 cycles
+17:36:14 INFO   Benchmark every 3 cycles
+2026-03-18 17:36:14 INFO   Max cycles: infinite
+2026-03-18 17:36:14 INFO   PID: 180859
+17:36:14 INFO   Max cycles: infinite
+17:36:14 INFO   PID: 180859
+2026-03-18 17:36:14 INFO ============================================================
+17:36:14 INFO ============================================================
+2026-03-18 17:36:14 INFO Resuming from cycle 5
+17:36:14 INFO Resuming from cycle 5
+2026-03-18 17:36:14 INFO ============================================================
+17:36:14 INFO ============================================================
+2026-03-18 17:36:14 INFO CYCLE 5 | DAYTIME | difficulty_cap=3 | max_prompts=25
+17:36:14 INFO CYCLE 5 | DAYTIME | difficulty_cap=3 | max_prompts=25
+2026-03-18 17:36:14 INFO Pacing: 3.0s between prompts
+17:36:14 INFO Pacing: 3.0s between prompts
+2026-03-18 17:36:14 INFO ============================================================
+17:36:14 INFO ============================================================
+2026-03-18 17:36:14 INFO [phase1] Loading prompt bank...
+17:36:14 INFO [phase1] Loading prompt bank...
+2026-03-18 17:36:14 INFO [phase1] Generating and validating 25 specs...
+17:36:14 INFO [phase1] Generating and validating 25 specs...
+2026-03-18 17:36:53 INFO Received signal 2. Will shut down after current phase completes.
+2026-03-18 17:37:14 INFO   [BM001] tier=gold sany=True tlc=True struct=0.89 attempts=2 (best of 2)
+2026-03-18 17:37:14 INFO [phase1] Results: gold=1 silver=1 bronze=0 sany=2/2 tlc=1/2
+2026-03-18 17:37:14 INFO 
+────────────────────────────────────────────────────────────
+2026-03-18 17:37:14 INFO CYCLE 5 SUMMARY (1.0 min)
+2026-03-18 17:37:14 INFO   Specs: 2 | SANY: 2 | TLC: 1
+2026-03-18 17:37:14 INFO   Gold: 1 | Silver: 1 | Bronze: 0
+2026-03-18 17:37:14 INFO   New SFT: 0 | New DPO: 0
+2026-03-18 17:37:14 INFO   Retrained: False | Deployed: False
+2026-03-18 17:37:14 INFO ────────────────────────────────────────────────────────────
+
+2026-03-18 17:37:14 INFO RL loop terminated gracefully.
+2026-03-18 17:37:14 INFO Lifetime: 5 cycles, 15 gold, 42 silver, 0 retrains

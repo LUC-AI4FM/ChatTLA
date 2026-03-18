@@ -564,6 +564,7 @@ def build_training_data(results: list[SpecResult]) -> tuple[list[dict], list[dic
         # SFT: add gold and silver specs as positive examples
         if best.tier in ("gold", "silver"):
             sft_examples.append({
+                "_tier": best.tier,  # for dedup: allow gold upgrade over silver
                 "messages": [
                     {"role": "developer", "content": _DEVELOPER_PROMPT},
                     {"role": "user", "content": f"Write a TLA+ specification for the following:\n\n{best.prompt_text}"},
@@ -601,6 +602,7 @@ def build_training_data(results: list[SpecResult]) -> tuple[list[dict], list[dic
                     feedback = extract_tlc_feedback(r)
                     if feedback:
                         sft_examples.append({
+                            "_tier": "bugfix",
                             "messages": [
                                 {"role": "developer", "content": _DEVELOPER_PROMPT},
                                 {"role": "user", "content": (
@@ -622,7 +624,7 @@ def persist_training_data(sft_examples: list[dict], dpo_pairs: list[dict]) -> tu
     """Append new training data to augmented.jsonl and dpo_pairs.jsonl."""
     _RL_DATA_DIR.mkdir(parents=True, exist_ok=True)
 
-    # Dedup against existing augmented data
+    # Dedup: key = prompt[:200] + "|" + tier so we can add gold upgrades over silver.
     existing_keys = set()
     if _AUGMENTED_JSONL.exists():
         with open(_AUGMENTED_JSONL, encoding="utf-8") as f:
@@ -632,7 +634,9 @@ def persist_training_data(sft_examples: list[dict], dpo_pairs: list[dict]) -> tu
                         ex = json.loads(line)
                         msgs = ex.get("messages", [])
                         user_msg = next((m["content"] for m in msgs if m["role"] == "user"), "")
-                        existing_keys.add(user_msg[:200])
+                        base = user_msg[:200]
+                        tier = ex.get("_tier", "silver")  # legacy: no _tier → silver
+                        existing_keys.add(f"{base}|{tier}")
                     except (json.JSONDecodeError, KeyError):
                         pass
 
@@ -641,9 +645,12 @@ def persist_training_data(sft_examples: list[dict], dpo_pairs: list[dict]) -> tu
         with open(_AUGMENTED_JSONL, "a", encoding="utf-8") as f:
             for ex in sft_examples:
                 user_msg = next((m["content"] for m in ex["messages"] if m["role"] == "user"), "")
-                key = user_msg[:200]
+                base = user_msg[:200]
+                tier = ex.get("_tier", "silver")
+                key = f"{base}|{tier}"
                 if key not in existing_keys:
-                    f.write(json.dumps(ex, ensure_ascii=False) + "\n")
+                    out = {k: v for k, v in ex.items() if k != "_tier"}
+                    f.write(json.dumps(out, ensure_ascii=False) + "\n")
                     existing_keys.add(key)
                     n_sft += 1
 
@@ -928,6 +935,8 @@ def run_cycle(cycle_id: int, accumulated_new: int, allow_daytime_retrain: bool =
         # ── Phase 2: Build training data ──────────────────────────────────
         log.info("[phase2] Building training data from results...")
         sft_examples, dpo_pairs = build_training_data(results)
+        log.info(f"[phase2] Built {len(sft_examples)} SFT examples, {len(dpo_pairs)} DPO pairs "
+                 f"(from {len(results)} results, {len(set(r.prompt_id for r in results))} prompts)")
         n_sft, n_dpo = persist_training_data(sft_examples, dpo_pairs)
         stats.new_train_examples = n_sft
         stats.new_dpo_pairs = n_dpo
