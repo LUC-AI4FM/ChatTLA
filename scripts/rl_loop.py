@@ -310,13 +310,13 @@ def load_prompt_bank(difficulty_cap: int = 5) -> list[dict]:
 # ─────────────────────────────────────────────────────────────────────────────
 # TLC granular feedback extractor
 # ─────────────────────────────────────────────────────────────────────────────
-def extract_tlc_feedback(tlc_result) -> str:
+def extract_tlc_feedback(spec_result: SpecResult) -> str:
     """
     Parse TLC output to produce line-by-line, actionable feedback.
-    This replaces TLAPS by extracting maximum diagnostic info from TLC.
+    Expects SpecResult (has tlc_raw_output, tlc_violations), NOT TLCResult (raw_output).
     """
-    raw = tlc_result.raw_output
-    violations = tlc_result.tlc_violations
+    raw = spec_result.tlc_raw_output
+    violations = spec_result.tlc_violations
     feedback_lines = []
 
     if not violations and not raw:
@@ -721,12 +721,17 @@ def rebuild_and_retrain() -> bool:
     est_steps = (n_train * num_epochs) // 8
     timeout_s = max(3600, int(est_steps * 45 * 1.5))
 
+    # device_map=cpu causes CPU/GPU tensor mismatch during training — use both GPUs
+    env["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
+    train_cmd = [
+        sys.executable, "-m", "src.training.train",
+        "--epochs", str(num_epochs),
+        "--max-gpu-memory-mb", str(max_gpu_memory_mb),
+    ]
     log.info(f"[retrain] Starting training (~{est_steps} steps, timeout={timeout_s}s)...")
     try:
         result = subprocess.run(
-            [sys.executable, "-m", "src.training.train",
-             "--epochs", str(num_epochs),
-             "--max-gpu-memory-mb", str(max_gpu_memory_mb)],
+            train_cmd,
             cwd=str(_REPO_ROOT), env=env,
             capture_output=True, text=True, timeout=timeout_s,
         )
