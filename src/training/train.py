@@ -48,6 +48,7 @@ Usage
 
 from __future__ import annotations
 
+import json
 import os
 import sys
 from pathlib import Path
@@ -62,7 +63,7 @@ os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
 import torch
 import yaml
 import mlflow
-from datasets import load_dataset
+from datasets import Dataset, load_dataset
 from peft import LoraConfig, get_peft_model
 from transformers import (
     AutoModelForCausalLM,
@@ -281,8 +282,24 @@ def main(
         print(f"[train] ERROR: {_EVAL_JSONL} not found. Run dataset_builder.py first.")
         sys.exit(1)
 
-    train_dataset = load_dataset("json", data_files=str(_TRAIN_JSONL), split="train")
-    eval_dataset  = load_dataset("json", data_files=str(_EVAL_JSONL),  split="train")
+    # Load via from_list to avoid PyArrow arrow.json extension type error
+    # (ArrowNotImplementedError: MakeBuilder for type extension<arrow.json>)
+    def _load_jsonl(path: Path) -> Dataset:
+        records = []
+        with open(path, encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line:
+                    records.append(json.loads(line))
+        return Dataset.from_list(records)
+
+    try:
+        train_dataset = _load_jsonl(_TRAIN_JSONL)
+        eval_dataset = _load_jsonl(_EVAL_JSONL)
+    except Exception as e:
+        print(f"[train] from_list load failed ({e}), falling back to load_dataset...")
+        train_dataset = load_dataset("json", data_files=str(_TRAIN_JSONL), split="train")
+        eval_dataset = load_dataset("json", data_files=str(_EVAL_JSONL), split="train")
 
     if smoke_test:
         train_dataset = train_dataset.select(range(min(10, len(train_dataset))))

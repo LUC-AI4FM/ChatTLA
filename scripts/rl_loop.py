@@ -709,13 +709,10 @@ def rebuild_and_retrain() -> bool:
     num_epochs = max(3, min(10, 600 // max(n_train, 1)))
     log.info(f"[retrain] {n_train} training examples, {num_epochs} epochs")
 
-    # 2. Train — use both GPUs at night, single GPU during day
+    # 2. Train — use both GPUs (20B model needs ~40GB + activations; single 48GB GPU OOMs)
     env = os.environ.copy()
+    env["CUDA_VISIBLE_DEVICES"] = "0,1"
     night = is_nighttime()
-    if night:
-        env["CUDA_VISIBLE_DEVICES"] = "0,1"
-    else:
-        env["CUDA_VISIBLE_DEVICES"] = "1"
 
     # Keep a safety margin for shared-machine usage.
     cap_ratio = GPU_VRAM_CAP_NIGHT if night else GPU_VRAM_CAP_DAY

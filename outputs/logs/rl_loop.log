@@ -472,3 +472,471 @@ ModuleNotFoundError: No module named 'datasets'
 
 2026-03-18 17:37:14 INFO RL loop terminated gracefully.
 2026-03-18 17:37:14 INFO Lifetime: 5 cycles, 15 gold, 42 silver, 0 retrains
+2026-03-18 17:41:58 INFO ============================================================
+17:41:58 INFO ============================================================
+2026-03-18 17:41:58 INFO   ChatTLA Autonomous RL Loop
+17:41:58 INFO   ChatTLA Autonomous RL Loop
+2026-03-18 17:41:58 INFO   Cycle target: 1.5h | Retrain threshold: 10
+17:41:58 INFO   Cycle target: 1.5h | Retrain threshold: 10
+2026-03-18 17:41:58 INFO   Daytime retrain: ENABLED (--allow-daytime-retrain)
+17:41:58 INFO   Daytime retrain: ENABLED (--allow-daytime-retrain)
+2026-03-18 17:41:58 INFO   Benchmark every 3 cycles
+17:41:58 INFO   Benchmark every 3 cycles
+2026-03-18 17:41:58 INFO   Max cycles: infinite
+17:41:58 INFO   Max cycles: infinite
+2026-03-18 17:41:58 INFO   PID: 191218
+17:41:58 INFO   PID: 191218
+2026-03-18 17:41:58 INFO ============================================================
+17:41:58 INFO ============================================================
+2026-03-18 17:41:58 INFO Resuming from cycle 6
+17:41:58 INFO Resuming from cycle 6
+2026-03-18 17:41:58 INFO ============================================================
+17:41:58 INFO ============================================================
+2026-03-18 17:41:58 INFO CYCLE 6 | DAYTIME | difficulty_cap=3 | max_prompts=25
+17:41:58 INFO CYCLE 6 | DAYTIME | difficulty_cap=3 | max_prompts=25
+2026-03-18 17:41:58 INFO Pacing: 3.0s between prompts
+17:41:58 INFO Pacing: 3.0s between prompts
+2026-03-18 17:41:58 INFO ============================================================
+17:41:58 INFO ============================================================
+2026-03-18 17:41:58 INFO [phase1] Loading prompt bank...
+17:41:58 INFO [phase1] Loading prompt bank...
+2026-03-18 17:41:58 INFO [phase1] Generating and validating 25 specs...
+17:41:58 INFO [phase1] Generating and validating 25 specs...
+2026-03-18 17:42:08 INFO   [BM017] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+17:42:08 INFO   [BM017] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-18 17:42:59 INFO   [RL015] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+17:42:59 INFO   [RL015] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-18 17:44:07 INFO   [SYN014] tier=silver sany=True tlc=False struct=0.67 attempts=2 (best of 2)
+17:44:07 INFO   [SYN014] tier=silver sany=True tlc=False struct=0.67 attempts=2 (best of 2)
+2026-03-18 17:45:00 INFO   [RL003] tier=bronze sany=False tlc=False struct=0.44 attempts=1 (best of 1)
+17:45:00 INFO   [RL003] tier=bronze sany=False tlc=False struct=0.44 attempts=1 (best of 1)
+2026-03-18 17:45:12 INFO   [SYN016] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+17:45:12 INFO   [SYN016] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-18 17:45:23 INFO   [BM005] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+17:45:23 INFO   [BM005] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-18 17:46:18 INFO   [RL007] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+17:46:18 INFO   [RL007] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-18 17:46:26 INFO   [SYN015] tier=gold sany=True tlc=True struct=0.89 attempts=2 (best of 2)
+17:46:26 INFO   [SYN015] tier=gold sany=True tlc=True struct=0.89 attempts=2 (best of 2)
+2026-03-18 17:46:47 INFO   [SYN010] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+17:46:47 INFO   [SYN010] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-18 17:46:59 INFO   [BM019] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+17:46:59 INFO   [BM019] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-18 17:47:15 INFO   [RL016] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+17:47:15 INFO   [RL016] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-18 17:47:23 INFO   [SYN001] tier=silver sany=True tlc=False struct=0.89 attempts=2 (best of 2)
+17:47:23 INFO   [SYN001] tier=silver sany=True tlc=False struct=0.89 attempts=2 (best of 2)
+2026-03-18 17:48:14 INFO   [BM020] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+17:48:14 INFO   [BM020] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-18 17:48:32 INFO   [SYN009] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+17:48:32 INFO   [SYN009] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-18 17:48:40 INFO   [RL012] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+17:48:40 INFO   [RL012] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-18 17:48:55 INFO   [RL009] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+17:48:55 INFO   [RL009] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-18 17:49:09 INFO   [SYN013] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+17:49:09 INFO   [SYN013] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-18 17:51:20 INFO   [BM007] tier=silver sany=True tlc=False struct=0.89 attempts=2 (best of 2)
+17:51:20 INFO   [BM007] tier=silver sany=True tlc=False struct=0.89 attempts=2 (best of 2)
+2026-03-18 17:51:33 INFO   [RL008] tier=silver sany=True tlc=False struct=0.89 attempts=2 (best of 2)
+17:51:33 INFO   [RL008] tier=silver sany=True tlc=False struct=0.89 attempts=2 (best of 2)
+2026-03-18 17:52:26 INFO   [SYN003] tier=gold sany=True tlc=True struct=0.78 attempts=2 (best of 2)
+17:52:26 INFO   [SYN003] tier=gold sany=True tlc=True struct=0.78 attempts=2 (best of 2)
+2026-03-18 17:54:00 INFO   [BM004] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+17:54:00 INFO   [BM004] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-18 17:55:51 INFO   [SYN008] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+17:55:51 INFO   [SYN008] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-18 17:56:42 INFO   [SYN012] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+17:56:42 INFO   [SYN012] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-18 17:57:51 INFO   [RL005] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+17:57:51 INFO   [RL005] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-18 17:58:02 INFO   [RL014] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+17:58:02 INFO   [RL014] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-18 17:58:05 INFO [phase1] Results: gold=2 silver=22 bronze=16 sany=24/40 tlc=2/40
+17:58:05 INFO [phase1] Results: gold=2 silver=22 bronze=16 sany=24/40 tlc=2/40
+2026-03-18 17:58:05 INFO [phase2] Building training data from results...
+17:58:05 INFO [phase2] Building training data from results...
+2026-03-18 17:58:05 INFO [phase2] Built 15 SFT examples, 7 DPO pairs (from 40 results, 25 prompts)
+17:58:05 INFO [phase2] Built 15 SFT examples, 7 DPO pairs (from 40 results, 25 prompts)
+2026-03-18 17:58:05 INFO [phase2] Persisted 5 SFT examples, 7 DPO pairs. Accumulated: 5
+17:58:05 INFO [phase2] Persisted 5 SFT examples, 7 DPO pairs. Accumulated: 5
+2026-03-18 17:58:05 INFO [phase3] Skipping retrain (5/10 examples accumulated)
+17:58:05 INFO [phase3] Skipping retrain (5/10 examples accumulated)
+2026-03-18 17:58:05 INFO [benchmark] Running 6-problem quick eval (cycle 6, attempts=2)...
+17:58:05 INFO [benchmark] Running 6-problem quick eval (cycle 6, attempts=2)...
+2026-03-18 18:05:38 INFO [benchmark] Results: sany=67% (4/6) tlc=17% (1/6)
+18:05:38 INFO [benchmark] Results: sany=67% (4/6) tlc=17% (1/6)
+2026-03-18 18:05:38 INFO [phase4] Full benchmark deferred to nighttime; quick eval already completed.
+18:05:38 INFO [phase4] Full benchmark deferred to nighttime; quick eval already completed.
+2026-03-18 18:05:38 INFO 
+────────────────────────────────────────────────────────────
+2026-03-18 18:05:38 INFO CYCLE 6 SUMMARY (23.7 min)
+18:05:38 INFO 
+────────────────────────────────────────────────────────────
+18:05:38 INFO CYCLE 6 SUMMARY (23.7 min)
+2026-03-18 18:05:38 INFO   Specs: 40 | SANY: 24 | TLC: 2
+18:05:38 INFO   Specs: 40 | SANY: 24 | TLC: 2
+2026-03-18 18:05:38 INFO   Gold: 2 | Silver: 22 | Bronze: 16
+18:05:38 INFO   Gold: 2 | Silver: 22 | Bronze: 16
+2026-03-18 18:05:38 INFO   New SFT: 5 | New DPO: 7
+18:05:38 INFO   New SFT: 5 | New DPO: 7
+2026-03-18 18:05:38 INFO   Retrained: False | Deployed: False
+18:05:38 INFO   Retrained: False | Deployed: False
+2026-03-18 18:05:38 INFO   Benchmark: SANY=67% TLC=17%
+18:05:38 INFO   Benchmark: SANY=67% TLC=17%
+2026-03-18 18:05:38 INFO ────────────────────────────────────────────────────────────
+
+18:05:38 INFO ────────────────────────────────────────────────────────────
+
+2026-03-18 18:05:38 INFO Sleeping 66.3 min until next cycle...
+18:05:38 INFO Sleeping 66.3 min until next cycle...
+2026-03-18 19:11:59 INFO ============================================================
+2026-03-18 19:11:59 INFO CYCLE 7 | DAYTIME | difficulty_cap=3 | max_prompts=25
+2026-03-18 19:11:59 INFO Pacing: 3.0s between prompts
+2026-03-18 19:11:59 INFO ============================================================
+2026-03-18 19:11:59 INFO [phase1] Loading prompt bank...
+2026-03-18 19:11:59 INFO [phase1] Generating and validating 25 specs...
+19:11:59 INFO ============================================================
+19:11:59 INFO CYCLE 7 | DAYTIME | difficulty_cap=3 | max_prompts=25
+19:11:59 INFO Pacing: 3.0s between prompts
+19:11:59 INFO ============================================================
+19:11:59 INFO [phase1] Loading prompt bank...
+19:11:59 INFO [phase1] Generating and validating 25 specs...
+2026-03-18 19:13:55 INFO   [RL005] tier=silver sany=True tlc=False struct=0.89 attempts=2 (best of 2)
+19:13:55 INFO   [RL005] tier=silver sany=True tlc=False struct=0.89 attempts=2 (best of 2)
+2026-03-18 19:14:47 INFO   [RL003] tier=bronze sany=False tlc=False struct=0.44 attempts=1 (best of 1)
+19:14:47 INFO   [RL003] tier=bronze sany=False tlc=False struct=0.44 attempts=1 (best of 1)
+2026-03-18 19:16:20 INFO   [BM001] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+19:16:20 INFO   [BM001] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-18 19:16:27 INFO   [BM009] tier=gold sany=True tlc=True struct=0.78 attempts=1 (best of 1)
+19:16:27 INFO   [BM009] tier=gold sany=True tlc=True struct=0.78 attempts=1 (best of 1)
+2026-03-18 19:17:18 INFO   [SYN005] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+19:17:18 INFO   [SYN005] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-18 19:18:52 INFO   [RL011] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+19:18:52 INFO   [RL011] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-18 19:20:26 INFO   [SYN009] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+19:20:26 INFO   [SYN009] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-18 19:20:34 INFO   [SYN012] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+19:20:34 INFO   [SYN012] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-18 19:20:44 INFO   [RL015] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+19:20:44 INFO   [RL015] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-18 19:21:07 INFO   [BM012] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+19:21:07 INFO   [BM012] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-18 19:21:54 INFO   [BM002] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+19:21:54 INFO   [BM002] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-18 19:22:01 INFO   [RL008] tier=gold sany=True tlc=True struct=0.89 attempts=1 (best of 1)
+19:22:01 INFO   [RL008] tier=gold sany=True tlc=True struct=0.89 attempts=1 (best of 1)
+2026-03-18 19:22:23 INFO   [RL009] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+19:22:23 INFO   [RL009] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-18 19:23:57 INFO   [SYN018] tier=bronze sany=False tlc=False struct=0.44 attempts=1 (best of 1)
+19:23:57 INFO   [SYN018] tier=bronze sany=False tlc=False struct=0.44 attempts=1 (best of 1)
+2026-03-18 19:24:07 INFO   [SYN019] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+19:24:07 INFO   [SYN019] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-18 19:27:19 INFO   [SYN017] tier=bronze sany=False tlc=False struct=0.44 attempts=1 (best of 1)
+19:27:19 INFO   [SYN017] tier=bronze sany=False tlc=False struct=0.44 attempts=1 (best of 1)
+2026-03-18 19:27:29 INFO   [RL016] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+19:27:29 INFO   [RL016] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-18 19:27:45 INFO   [RL013] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+19:27:45 INFO   [RL013] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-18 19:29:37 INFO   [BM007] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+19:29:37 INFO   [BM007] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-18 19:29:42 INFO   [SYN002] tier=gold sany=True tlc=True struct=0.78 attempts=1 (best of 1)
+19:29:42 INFO   [SYN002] tier=gold sany=True tlc=True struct=0.78 attempts=1 (best of 1)
+2026-03-18 19:30:50 INFO   [SYN020] tier=silver sany=True tlc=False struct=0.89 attempts=2 (best of 2)
+19:30:50 INFO   [SYN020] tier=silver sany=True tlc=False struct=0.89 attempts=2 (best of 2)
+2026-03-18 19:31:41 INFO   [SYN011] tier=silver sany=True tlc=False struct=0.89 attempts=2 (best of 2)
+19:31:41 INFO   [SYN011] tier=silver sany=True tlc=False struct=0.89 attempts=2 (best of 2)
+2026-03-18 19:31:49 INFO   [BM019] tier=gold sany=True tlc=True struct=0.78 attempts=1 (best of 1)
+19:31:49 INFO   [BM019] tier=gold sany=True tlc=True struct=0.78 attempts=1 (best of 1)
+2026-03-18 19:31:54 INFO   [RL001] tier=gold sany=True tlc=True struct=0.67 attempts=1 (best of 1)
+19:31:54 INFO   [RL001] tier=gold sany=True tlc=True struct=0.67 attempts=1 (best of 1)
+2026-03-18 19:32:04 INFO   [BM016] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+19:32:04 INFO   [BM016] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-18 19:32:07 INFO [phase1] Results: gold=5 silver=18 bronze=13 sany=23/36 tlc=5/36
+19:32:07 INFO [phase1] Results: gold=5 silver=18 bronze=13 sany=23/36 tlc=5/36
+2026-03-18 19:32:07 INFO [phase2] Building training data from results...
+19:32:07 INFO [phase2] Building training data from results...
+2026-03-18 19:32:07 INFO [phase2] Built 16 SFT examples, 4 DPO pairs (from 36 results, 25 prompts)
+19:32:07 INFO [phase2] Built 16 SFT examples, 4 DPO pairs (from 36 results, 25 prompts)
+2026-03-18 19:32:07 INFO [phase2] Persisted 7 SFT examples, 3 DPO pairs. Accumulated: 12
+19:32:07 INFO [phase2] Persisted 7 SFT examples, 3 DPO pairs. Accumulated: 12
+2026-03-18 19:32:07 INFO [phase3] Retrain threshold reached (daytime (--allow-daytime-retrain)) (12 >= 10)
+19:32:07 INFO [phase3] Retrain threshold reached (daytime (--allow-daytime-retrain)) (12 >= 10)
+2026-03-18 19:32:07 INFO [retrain] Rebuilding training dataset...
+19:32:07 INFO [retrain] Rebuilding training dataset...
+2026-03-18 19:32:15 INFO [retrain] Dataset rebuilt. [dataset_builder] eval =4  examples → /home/espencer2/ChatTLA/data/processed/eval.jsonl
+19:32:15 INFO [retrain] Dataset rebuilt. [dataset_builder] eval =4  examples → /home/espencer2/ChatTLA/data/processed/eval.jsonl
+2026-03-18 19:32:15 INFO [retrain] 173 training examples, 3 epochs
+19:32:15 INFO [retrain] 173 training examples, 3 epochs
+2026-03-18 19:32:15 INFO [retrain] Starting training (~64 steps, timeout=4320s)...
+19:32:15 INFO [retrain] Starting training (~64 steps, timeout=4320s)...
+2026-03-18 19:32:54 ERROR [retrain] Training failed: mn, 0, max_length)
+  File "/home/espencer2/.local/lib/python3.10/site-packages/pyarrow/compute.py", line 271, in wrapper
+    return func.call(args, options, memory_pool)
+  File "pyarrow/_compute.pyx", line 399, in pyarrow._compute.Function.call
+  File "pyarrow/error.pxi", line 155, in pyarrow.lib.pyarrow_internal_check_status
+  File "pyarrow/error.pxi", line 92, in pyarrow.lib.check_status
+pyarrow.lib.ArrowNotImplementedError: MakeBuilder: cannot construct builder for type extension<arrow.json>
+
+19:32:54 ERROR [retrain] Training failed: mn, 0, max_length)
+  File "/home/espencer2/.local/lib/python3.10/site-packages/pyarrow/compute.py", line 271, in wrapper
+    return func.call(args, options, memory_pool)
+  File "pyarrow/_compute.pyx", line 399, in pyarrow._compute.Function.call
+  File "pyarrow/error.pxi", line 155, in pyarrow.lib.pyarrow_internal_check_status
+  File "pyarrow/error.pxi", line 92, in pyarrow.lib.check_status
+pyarrow.lib.ArrowNotImplementedError: MakeBuilder: cannot construct builder for type extension<arrow.json>
+
+2026-03-18 19:32:54 WARNING [phase3] Retrain failed. Will retry next cycle.
+19:32:54 WARNING [phase3] Retrain failed. Will retry next cycle.
+2026-03-18 19:32:54 INFO [benchmark] Running 6-problem quick eval (cycle 7, attempts=2)...
+19:32:54 INFO [benchmark] Running 6-problem quick eval (cycle 7, attempts=2)...
+2026-03-18 19:41:11 INFO [benchmark] Results: sany=67% (4/6) tlc=0% (0/6)
+19:41:11 INFO [benchmark] Results: sany=67% (4/6) tlc=0% (0/6)
+2026-03-18 19:41:11 INFO 
+────────────────────────────────────────────────────────────
+19:41:11 INFO 
+────────────────────────────────────────────────────────────
+2026-03-18 19:41:11 INFO CYCLE 7 SUMMARY (29.2 min)
+19:41:11 INFO CYCLE 7 SUMMARY (29.2 min)
+2026-03-18 19:41:11 INFO   Specs: 36 | SANY: 23 | TLC: 5
+19:41:11 INFO   Specs: 36 | SANY: 23 | TLC: 5
+2026-03-18 19:41:11 INFO   Gold: 5 | Silver: 18 | Bronze: 13
+19:41:11 INFO   Gold: 5 | Silver: 18 | Bronze: 13
+2026-03-18 19:41:11 INFO   New SFT: 7 | New DPO: 3
+19:41:11 INFO   New SFT: 7 | New DPO: 3
+2026-03-18 19:41:11 INFO   Retrained: False | Deployed: False
+19:41:11 INFO   Retrained: False | Deployed: False
+2026-03-18 19:41:11 INFO   Benchmark: SANY=67% TLC=0%
+19:41:11 INFO   Benchmark: SANY=67% TLC=0%
+2026-03-18 19:41:11 INFO ────────────────────────────────────────────────────────────
+
+19:41:11 INFO ────────────────────────────────────────────────────────────
+
+2026-03-18 19:41:11 INFO Sleeping 60.8 min until next cycle...
+19:41:11 INFO Sleeping 60.8 min until next cycle...
+2026-03-18 19:46:49 INFO Received signal 2. Will shut down after current phase completes.
+2026-03-18 19:47:12 INFO RL loop terminated gracefully.
+2026-03-18 19:47:12 INFO Lifetime: 7 cycles, 22 gold, 82 silver, 0 retrains
+2026-03-18 19:51:55 INFO ============================================================
+2026-03-18 19:51:55 INFO   ChatTLA Autonomous RL Loop
+2026-03-18 19:51:55 INFO   Cycle target: 1.5h | Retrain threshold: 10
+19:51:55 INFO ============================================================
+19:51:55 INFO   ChatTLA Autonomous RL Loop
+2026-03-18 19:51:55 INFO   Daytime retrain: ENABLED (--allow-daytime-retrain)
+19:51:55 INFO   Cycle target: 1.5h | Retrain threshold: 10
+19:51:55 INFO   Daytime retrain: ENABLED (--allow-daytime-retrain)
+2026-03-18 19:51:55 INFO   Benchmark every 3 cycles
+19:51:55 INFO   Benchmark every 3 cycles
+2026-03-18 19:51:55 INFO   Max cycles: infinite
+19:51:55 INFO   Max cycles: infinite
+2026-03-18 19:51:55 INFO   PID: 374738
+19:51:55 INFO   PID: 374738
+2026-03-18 19:51:55 INFO ============================================================
+19:51:55 INFO ============================================================
+2026-03-18 19:51:55 INFO Resuming with accumulated_new=12 (from state)
+19:51:55 INFO Resuming with accumulated_new=12 (from state)
+2026-03-18 19:51:55 INFO Resuming from cycle 8
+19:51:55 INFO Resuming from cycle 8
+2026-03-18 19:51:55 INFO ============================================================
+19:51:55 INFO ============================================================
+2026-03-18 19:51:55 INFO CYCLE 8 | DAYTIME | difficulty_cap=3 | max_prompts=25
+19:51:55 INFO CYCLE 8 | DAYTIME | difficulty_cap=3 | max_prompts=25
+2026-03-18 19:51:55 INFO Pacing: 3.0s between prompts
+19:51:55 INFO Pacing: 3.0s between prompts
+2026-03-18 19:51:55 INFO ============================================================
+19:51:55 INFO ============================================================
+2026-03-18 19:51:55 INFO [phase1] Loading prompt bank...
+19:51:55 INFO [phase1] Loading prompt bank...
+2026-03-18 19:51:55 INFO [phase1] Generating and validating 25 specs...
+19:51:55 INFO [phase1] Generating and validating 25 specs...
+2026-03-18 19:51:59 WARNING [RL015] Generation failed (attempt 1): llama runner process has terminated: CUDA error: out of memory
+  current device: 0, in function ggml_cuda_set_device at //ml/backend/ggml/ggml/src/ggml-cuda/ggml-cuda.cu:101
+  cudaSetDevice(device)
+//ml/backend/ggml/ggml/src/ggml-cuda/ggml-cuda.cu:88: CUDA error (status code: 500)
+19:51:59 WARNING [RL015] Generation failed (attempt 1): llama runner process has terminated: CUDA error: out of memory
+  current device: 0, in function ggml_cuda_set_device at //ml/backend/ggml/ggml/src/ggml-cuda/ggml-cuda.cu:101
+  cudaSetDevice(device)
+//ml/backend/ggml/ggml/src/ggml-cuda/ggml-cuda.cu:88: CUDA error (status code: 500)
+2026-03-18 19:52:03 WARNING [RL015] Generation failed (attempt 2): llama runner process has terminated: CUDA error: out of memory
+  current device: 0, in function ggml_cuda_set_device at //ml/backend/ggml/ggml/src/ggml-cuda/ggml-cuda.cu:101
+  cudaSetDevice(device)
+//ml/backend/ggml/ggml/src/ggml-cuda/ggml-cuda.cu:88: CUDA error (status code: 500)
+19:52:03 WARNING [RL015] Generation failed (attempt 2): llama runner process has terminated: CUDA error: out of memory
+  current device: 0, in function ggml_cuda_set_device at //ml/backend/ggml/ggml/src/ggml-cuda/ggml-cuda.cu:101
+  cudaSetDevice(device)
+//ml/backend/ggml/ggml/src/ggml-cuda/ggml-cuda.cu:88: CUDA error (status code: 500)
+2026-03-18 19:52:10 WARNING [BM002] Generation failed (attempt 1): llama runner process has terminated: CUDA error: out of memory
+  current device: 0, in function ggml_cuda_set_device at //ml/backend/ggml/ggml/src/ggml-cuda/ggml-cuda.cu:101
+  cudaSetDevice(device)
+//ml/backend/ggml/ggml/src/ggml-cuda/ggml-cuda.cu:88: CUDA error (status code: 500)
+19:52:10 WARNING [BM002] Generation failed (attempt 1): llama runner process has terminated: CUDA error: out of memory
+  current device: 0, in function ggml_cuda_set_device at //ml/backend/ggml/ggml/src/ggml-cuda/ggml-cuda.cu:101
+  cudaSetDevice(device)
+//ml/backend/ggml/ggml/src/ggml-cuda/ggml-cuda.cu:88: CUDA error (status code: 500)
+2026-03-18 19:52:14 WARNING [BM002] Generation failed (attempt 2): llama runner process has terminated: CUDA error: out of memory
+  current device: 0, in function ggml_cuda_set_device at //ml/backend/ggml/ggml/src/ggml-cuda/ggml-cuda.cu:101
+  cudaSetDevice(device)
+//ml/backend/ggml/ggml/src/ggml-cuda/ggml-cuda.cu:88: CUDA error (status code: 500)
+19:52:14 WARNING [BM002] Generation failed (attempt 2): llama runner process has terminated: CUDA error: out of memory
+  current device: 0, in function ggml_cuda_set_device at //ml/backend/ggml/ggml/src/ggml-cuda/ggml-cuda.cu:101
+  cudaSetDevice(device)
+//ml/backend/ggml/ggml/src/ggml-cuda/ggml-cuda.cu:88: CUDA error (status code: 500)
+2026-03-18 19:52:20 WARNING [SYN003] Generation failed (attempt 1): llama runner process has terminated: CUDA error: out of memory
+  current device: 0, in function ggml_cuda_set_device at //ml/backend/ggml/ggml/src/ggml-cuda/ggml-cuda.cu:101
+  cudaSetDevice(device)
+//ml/backend/ggml/ggml/src/ggml-cuda/ggml-cuda.cu:88: CUDA error (status code: 500)
+19:52:20 WARNING [SYN003] Generation failed (attempt 1): llama runner process has terminated: CUDA error: out of memory
+  current device: 0, in function ggml_cuda_set_device at //ml/backend/ggml/ggml/src/ggml-cuda/ggml-cuda.cu:101
+  cudaSetDevice(device)
+//ml/backend/ggml/ggml/src/ggml-cuda/ggml-cuda.cu:88: CUDA error (status code: 500)
+2026-03-18 19:52:24 WARNING [SYN003] Generation failed (attempt 2): llama runner process has terminated: CUDA error: out of memory
+  current device: 0, in function ggml_cuda_set_device at //ml/backend/ggml/ggml/src/ggml-cuda/ggml-cuda.cu:101
+  cudaSetDevice(device)
+//ml/backend/ggml/ggml/src/ggml-cuda/ggml-cuda.cu:88: CUDA error (status code: 500)
+19:52:24 WARNING [SYN003] Generation failed (attempt 2): llama runner process has terminated: CUDA error: out of memory
+  current device: 0, in function ggml_cuda_set_device at //ml/backend/ggml/ggml/src/ggml-cuda/ggml-cuda.cu:101
+  cudaSetDevice(device)
+//ml/backend/ggml/ggml/src/ggml-cuda/ggml-cuda.cu:88: CUDA error (status code: 500)
+2026-03-18 19:52:32 WARNING [RL011] Generation failed (attempt 1): llama runner process has terminated: CUDA error: out of memory
+  current device: 0, in function ggml_cuda_set_device at //ml/backend/ggml/ggml/src/ggml-cuda/ggml-cuda.cu:101
+  cudaSetDevice(device)
+//ml/backend/ggml/ggml/src/ggml-cuda/ggml-cuda.cu:88: CUDA error (status code: 500)
+19:52:32 WARNING [RL011] Generation failed (attempt 1): llama runner process has terminated: CUDA error: out of memory
+  current device: 0, in function ggml_cuda_set_device at //ml/backend/ggml/ggml/src/ggml-cuda/ggml-cuda.cu:101
+  cudaSetDevice(device)
+//ml/backend/ggml/ggml/src/ggml-cuda/ggml-cuda.cu:88: CUDA error (status code: 500)
+2026-03-18 19:52:36 WARNING [RL011] Generation failed (attempt 2): llama runner process has terminated: CUDA error: out of memory
+  current device: 0, in function ggml_cuda_set_device at //ml/backend/ggml/ggml/src/ggml-cuda/ggml-cuda.cu:101
+  cudaSetDevice(device)
+//ml/backend/ggml/ggml/src/ggml-cuda/ggml-cuda.cu:88: CUDA error (status code: 500)
+19:52:36 WARNING [RL011] Generation failed (attempt 2): llama runner process has terminated: CUDA error: out of memory
+  current device: 0, in function ggml_cuda_set_device at //ml/backend/ggml/ggml/src/ggml-cuda/ggml-cuda.cu:101
+  cudaSetDevice(device)
+//ml/backend/ggml/ggml/src/ggml-cuda/ggml-cuda.cu:88: CUDA error (status code: 500)
+2026-03-18 19:52:43 WARNING [BM004] Generation failed (attempt 1): llama runner process has terminated: CUDA error: out of memory
+  current device: 0, in function ggml_cuda_set_device at //ml/backend/ggml/ggml/src/ggml-cuda/ggml-cuda.cu:101
+  cudaSetDevice(device)
+//ml/backend/ggml/ggml/src/ggml-cuda/ggml-cuda.cu:88: CUDA error (status code: 500)
+19:52:43 WARNING [BM004] Generation failed (attempt 1): llama runner process has terminated: CUDA error: out of memory
+  current device: 0, in function ggml_cuda_set_device at //ml/backend/ggml/ggml/src/ggml-cuda/ggml-cuda.cu:101
+  cudaSetDevice(device)
+//ml/backend/ggml/ggml/src/ggml-cuda/ggml-cuda.cu:88: CUDA error (status code: 500)
+2026-03-18 19:52:48 WARNING [BM004] Generation failed (attempt 2): llama runner process has terminated: CUDA error: out of memory
+  current device: 0, in function ggml_cuda_set_device at //ml/backend/ggml/ggml/src/ggml-cuda/ggml-cuda.cu:101
+  cudaSetDevice(device)
+//ml/backend/ggml/ggml/src/ggml-cuda/ggml-cuda.cu:88: CUDA error (status code: 500)
+19:52:48 WARNING [BM004] Generation failed (attempt 2): llama runner process has terminated: CUDA error: out of memory
+  current device: 0, in function ggml_cuda_set_device at //ml/backend/ggml/ggml/src/ggml-cuda/ggml-cuda.cu:101
+  cudaSetDevice(device)
+//ml/backend/ggml/ggml/src/ggml-cuda/ggml-cuda.cu:88: CUDA error (status code: 500)
+2026-03-18 19:52:55 WARNING [RL010] Generation failed (attempt 1): llama runner process has terminated: CUDA error: out of memory
+  current device: 0, in function ggml_cuda_set_device at //ml/backend/ggml/ggml/src/ggml-cuda/ggml-cuda.cu:101
+  cudaSetDevice(device)
+//ml/backend/ggml/ggml/src/ggml-cuda/ggml-cuda.cu:88: CUDA error (status code: 500)
+19:52:55 WARNING [RL010] Generation failed (attempt 1): llama runner process has terminated: CUDA error: out of memory
+  current device: 0, in function ggml_cuda_set_device at //ml/backend/ggml/ggml/src/ggml-cuda/ggml-cuda.cu:101
+  cudaSetDevice(device)
+//ml/backend/ggml/ggml/src/ggml-cuda/ggml-cuda.cu:88: CUDA error (status code: 500)
+2026-03-18 19:53:00 WARNING [RL010] Generation failed (attempt 2): llama runner process has terminated: CUDA error: out of memory
+  current device: 0, in function ggml_cuda_set_device at //ml/backend/ggml/ggml/src/ggml-cuda/ggml-cuda.cu:101
+  cudaSetDevice(device)
+//ml/backend/ggml/ggml/src/ggml-cuda/ggml-cuda.cu:88: CUDA error (status code: 500)
+19:53:00 WARNING [RL010] Generation failed (attempt 2): llama runner process has terminated: CUDA error: out of memory
+  current device: 0, in function ggml_cuda_set_device at //ml/backend/ggml/ggml/src/ggml-cuda/ggml-cuda.cu:101
+  cudaSetDevice(device)
+//ml/backend/ggml/ggml/src/ggml-cuda/ggml-cuda.cu:88: CUDA error (status code: 500)
+2026-03-18 19:55:28 INFO   [SYN018] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+19:55:28 INFO   [SYN018] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-18 19:55:43 INFO   [RL006] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+19:55:43 INFO   [RL006] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-18 19:55:51 INFO   [SYN006] tier=gold sany=True tlc=True struct=0.89 attempts=1 (best of 1)
+19:55:51 INFO   [SYN006] tier=gold sany=True tlc=True struct=0.89 attempts=1 (best of 1)
+2026-03-18 19:55:58 INFO   [SYN001] tier=gold sany=True tlc=True struct=0.89 attempts=1 (best of 1)
+19:55:58 INFO   [SYN001] tier=gold sany=True tlc=True struct=0.89 attempts=1 (best of 1)
+2026-03-18 19:56:18 INFO   [RL014] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+19:56:18 INFO   [RL014] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-18 19:56:33 INFO   [BM014] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+19:56:33 INFO   [BM014] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-18 19:58:44 INFO   [BM007] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+19:58:44 INFO   [BM007] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-18 19:59:01 INFO   [SYN013] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+19:59:01 INFO   [SYN013] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-18 19:59:23 INFO   [RL016] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+19:59:23 INFO   [RL016] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-18 19:59:31 INFO   [SYN017] tier=gold sany=True tlc=True struct=0.89 attempts=1 (best of 1)
+19:59:31 INFO   [SYN017] tier=gold sany=True tlc=True struct=0.89 attempts=1 (best of 1)
+2026-03-18 19:59:47 INFO   [RL008] tier=silver sany=True tlc=False struct=0.89 attempts=2 (best of 2)
+19:59:47 INFO   [RL008] tier=silver sany=True tlc=False struct=0.89 attempts=2 (best of 2)
+2026-03-18 20:00:56 INFO   [BM020] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+20:00:56 INFO   [BM020] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-18 20:01:03 INFO   [SYN012] tier=gold sany=True tlc=True struct=0.89 attempts=1 (best of 1)
+20:01:03 INFO   [SYN012] tier=gold sany=True tlc=True struct=0.89 attempts=1 (best of 1)
+2026-03-18 20:01:15 INFO   [SYN004] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+20:01:15 INFO   [SYN004] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-18 20:01:25 INFO   [SYN015] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+20:01:25 INFO   [SYN015] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-18 20:02:02 INFO   [BM003] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+20:02:02 INFO   [BM003] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-18 20:02:44 INFO   [BM018] tier=bronze sany=False tlc=False struct=0.44 attempts=1 (best of 1)
+20:02:44 INFO   [BM018] tier=bronze sany=False tlc=False struct=0.44 attempts=1 (best of 1)
+2026-03-18 20:03:00 INFO   [BM016] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+20:03:00 INFO   [BM016] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-18 20:03:13 INFO   [BM017] tier=silver sany=True tlc=False struct=0.89 attempts=2 (best of 2)
+20:03:13 INFO   [BM017] tier=silver sany=True tlc=False struct=0.89 attempts=2 (best of 2)
+2026-03-18 20:03:16 INFO [phase1] Results: gold=4 silver=8 bronze=13 sany=12/25 tlc=4/25
+2026-03-18 20:03:16 INFO [phase2] Building training data from results...
+20:03:16 INFO [phase1] Results: gold=4 silver=8 bronze=13 sany=12/25 tlc=4/25
+20:03:16 INFO [phase2] Building training data from results...
+2026-03-18 20:03:16 INFO [phase2] Built 10 SFT examples, 4 DPO pairs (from 25 results, 19 prompts)
+20:03:16 INFO [phase2] Built 10 SFT examples, 4 DPO pairs (from 25 results, 19 prompts)
+2026-03-18 20:03:16 INFO [phase2] Persisted 6 SFT examples, 4 DPO pairs. Accumulated: 18
+2026-03-18 20:03:16 INFO [phase3] Retrain threshold reached (daytime (--allow-daytime-retrain)) (18 >= 10)
+20:03:16 INFO [phase2] Persisted 6 SFT examples, 4 DPO pairs. Accumulated: 18
+20:03:16 INFO [phase3] Retrain threshold reached (daytime (--allow-daytime-retrain)) (18 >= 10)
+2026-03-18 20:03:16 INFO [retrain] Rebuilding training dataset...
+20:03:16 INFO [retrain] Rebuilding training dataset...
+2026-03-18 20:03:25 INFO [retrain] Dataset rebuilt. [dataset_builder] eval =4  examples → /home/espencer2/ChatTLA/data/processed/eval.jsonl
+20:03:25 INFO [retrain] Dataset rebuilt. [dataset_builder] eval =4  examples → /home/espencer2/ChatTLA/data/processed/eval.jsonl
+2026-03-18 20:03:25 INFO [retrain] 179 training examples, 3 epochs
+20:03:25 INFO [retrain] 179 training examples, 3 epochs
+2026-03-18 20:03:25 INFO [retrain] Starting training (~67 steps, timeout=4522s)...
+20:03:25 INFO [retrain] Starting training (~67 steps, timeout=4522s)...
+2026-03-18 20:04:37 ERROR [retrain] Training failed: 6 has 20.85 GiB memory in use. Including non-PyTorch memory, this process has 21.47 GiB memory in use. Of the allocated memory 21.10 GiB is allocated by PyTorch, and 169.40 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+
+  0%|          | 0/69 [00:16<?, ?it/s]
+
+20:04:37 ERROR [retrain] Training failed: 6 has 20.85 GiB memory in use. Including non-PyTorch memory, this process has 21.47 GiB memory in use. Of the allocated memory 21.10 GiB is allocated by PyTorch, and 169.40 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+
+  0%|          | 0/69 [00:16<?, ?it/s]
+
+2026-03-18 20:04:37 WARNING [phase3] Retrain failed. Will retry next cycle.
+20:04:37 WARNING [phase3] Retrain failed. Will retry next cycle.
+2026-03-18 20:04:37 INFO [benchmark] Running 6-problem quick eval (cycle 8, attempts=2)...
+20:04:37 INFO [benchmark] Running 6-problem quick eval (cycle 8, attempts=2)...
+2026-03-18 20:09:29 INFO [benchmark] Results: sany=33% (2/6) tlc=17% (1/6)
+20:09:29 INFO [benchmark] Results: sany=33% (2/6) tlc=17% (1/6)
+2026-03-18 20:09:29 INFO 
+────────────────────────────────────────────────────────────
+20:09:29 INFO 
+────────────────────────────────────────────────────────────
+2026-03-18 20:09:29 INFO CYCLE 8 SUMMARY (17.6 min)
+20:09:29 INFO CYCLE 8 SUMMARY (17.6 min)
+2026-03-18 20:09:29 INFO   Specs: 25 | SANY: 12 | TLC: 4
+20:09:29 INFO   Specs: 25 | SANY: 12 | TLC: 4
+2026-03-18 20:09:29 INFO   Gold: 4 | Silver: 8 | Bronze: 13
+20:09:29 INFO   Gold: 4 | Silver: 8 | Bronze: 13
+2026-03-18 20:09:29 INFO   New SFT: 6 | New DPO: 4
+20:09:29 INFO   New SFT: 6 | New DPO: 4
+2026-03-18 20:09:29 INFO   Retrained: False | Deployed: False
+20:09:29 INFO   Retrained: False | Deployed: False
+2026-03-18 20:09:29 INFO   Benchmark: SANY=33% TLC=17%
+20:09:29 INFO   Benchmark: SANY=33% TLC=17%
+2026-03-18 20:09:29 INFO ────────────────────────────────────────────────────────────
+
+20:09:29 INFO ────────────────────────────────────────────────────────────
+
+2026-03-18 20:09:29 INFO Sleeping 72.4 min until next cycle...
+20:09:29 INFO Sleeping 72.4 min until next cycle...
+2026-03-18 20:34:01 INFO Received signal 2. Will shut down after current phase completes.
+2026-03-18 20:34:03 INFO RL loop terminated gracefully.
+2026-03-18 20:34:03 INFO Lifetime: 8 cycles, 26 gold, 90 silver, 0 retrains
