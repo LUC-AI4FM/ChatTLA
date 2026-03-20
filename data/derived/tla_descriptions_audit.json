@@ -1,0 +1,35 @@
+{
+  "generated_at": "2026-03-20T14:39:33.397208",
+  "git": {
+    "tlaplus_examples": {
+      "commit": "ec17f2a115a221502143658775e6eae1bb337a79",
+      "branch": "master",
+      "commit_date": "2026-03-17 17:05:59 -0700"
+    },
+    "tlaplus_tlapm": {
+      "commit": "c706ff1c7a1a20122ee88e085e64a645978d5d2a",
+      "branch": "main",
+      "commit_date": "2026-01-15 14:14:47 +0100"
+    }
+  },
+  "coarse_file": "data/tla-compents-coarse.json",
+  "examples_clone": "data/external/tlaplus-examples",
+  "stats": {
+    "coarse_entries": 205,
+    "resolved_from_tlaplus_examples": 197,
+    "resolved_from_tlapm_library": 8,
+    "missing_file": 0
+  },
+  "readme_titles_parsed": 103,
+  "manifests_loaded": 79,
+  "modules_indexed": 266,
+  "how_to_refresh": [
+    "cd /home/espencer2/ChatTLA/data/external/tlaplus-examples && git pull && cd /home/espencer2/ChatTLA/data/external/tlapm && git pull",
+    "python3 scripts/tla_description_sources/harvest_descriptions.py --update-repo"
+  ],
+  "notes": [
+    "Descriptions combine README table title + manifest authors/sources + first TLA comment block.",
+    "Modules not in Examples are resolved from tlaplus/tlapm/library/ (TLAPS proof library).",
+    "Re-run after upstream changes; both git commits are recorded in each row and in audit."
+  ]
+}
