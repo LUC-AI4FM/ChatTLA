@@ -28,6 +28,9 @@ outputs/llama.cpp/
 # Upstream git mirrors (re-harvest anytime; commits recorded in tla_descriptions*.json)
 data/external/
 
+# PDF fetch cache (re-harvest rebuilds; can be large)
+data/derived/.pdf_cache/
+
 # Data (large — managed separately)
 data/raw/
 data/validated/

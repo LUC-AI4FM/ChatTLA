@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-20T14:39:33.397208",
+  "generated_at": "2026-03-20T19:38:07.189616",
   "git": {
     "tlaplus_examples": {
       "commit": "ec17f2a115a221502143658775e6eae1bb337a79",
@@ -18,7 +18,16 @@
     "coarse_entries": 205,
     "resolved_from_tlaplus_examples": 197,
     "resolved_from_tlapm_library": 8,
-    "missing_file": 0
+    "missing_file": 0,
+    "pdf_excerpt_rows": 15,
+    "pdf_fetch_errors": 0,
+    "pdf_chars_total": 47211,
+    "llm_rows": 0,
+    "llm_parse_failures": 0,
+    "sany_extract_rows": 164,
+    "sany_fallback_static": 41,
+    "static_extract_rows": 0,
+    "output_rows": 205
   },
   "readme_titles_parsed": 103,
   "manifests_loaded": 79,
@@ -28,8 +37,15 @@
     "python3 scripts/tla_description_sources/harvest_descriptions.py --update-repo"
   ],
   "notes": [
-    "Descriptions combine README table title + manifest authors/sources + first TLA comment block.",
-    "Modules not in Examples are resolved from tlaplus/tlapm/library/ (TLAPS proof library).",
-    "Re-run after upstream changes; both git commits are recorded in each row and in audit."
-  ]
+    "Each row: id=<module>_001, module_name, coarse_id (index from tla-compents-coarse), description.{narrative,technical}.",
+    "Use --llm + Ollama to generate full author-style narrative and technical reconstruction fields.",
+    "Without --llm, SANY XMLExporter parses the .tla AST (via tla2tools.jar); falls back to regex-based static extraction if SANY fails. --no-static-extract skips both.",
+    "Harvest sources: README title + manifest authors/sources + first TLA comment; PDF text via pypdf cache.",
+    "Modules not in Examples resolve from tlaplus/tlapm/library/ (TLAPS proof library)."
+  ],
+  "llm": {
+    "enabled": false,
+    "model": null,
+    "host": null
+  }
 }
