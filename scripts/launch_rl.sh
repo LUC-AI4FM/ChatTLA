@@ -15,7 +15,9 @@
 #   --benchmark-every <n>    # benchmark every n cycles (default: 3)
 #   --max-cycles <n>         # max cycles to run (default: 0 = infinite)
 #   --retrain-threshold <n>  # new gold SFT rows before retrain (default: 50 in rl_loop.py)
-#   --cycle-hours <h>        # target hours per cycle (default: 1.5)
+#   --cycle-hours <h>        # pause between cycles (default: 0 = back-to-back; use 1.5 to space runs)
+#   --quick-eval-limit <n>    # problems per quick benchmark (default: 12)
+#   --quick-eval-attempts <n> # attempts per problem in quick eval (default: 2)
 #
 #
 # The loop runs inside a tmux session named "chattla-rl".
@@ -136,7 +138,9 @@ do_start() {
         echo \"\"
         echo \"=== Starting RL loop ===\"
         nice -n 10 python3 scripts/rl_loop.py \
-            --cycle-hours 1.5 \
+            --cycle-hours 0 \
+            --quick-eval-limit 12 \
+            --quick-eval-attempts 2 \
             --retrain-threshold 50 \
             --allow-daytime-retrain \
             --benchmark-every 3 \

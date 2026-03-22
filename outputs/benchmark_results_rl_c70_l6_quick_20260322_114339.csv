@@ -1,0 +1,130 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,0,0.444,silver,48.93,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, turn, flag
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,1,0,0.444,silver,54.1,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES participants, votes, commitDecided, abortDecided, commitSent, abortSent
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,0,0,1.0,bronze,40.86,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS N
+
+VARIABLES forks, states
+
+(* Constants *)
+N \in Nat
+
+(* Types *)
+Forks == [1..N -> 0..1]  (* 0: free, 1: held *)
+States == [1..N -> {""thinking"", ""hungry"", ""eating""}]
+
+(* Initial state *)
+Init == /\ forks = [i \in 1..N |-> 0]
+        /\ states = [i \in 1..N |-> ""thinking""]
+
+(* Helper predicates *)
+LeftFork(i) == IF i = 1 THEN N ELSE i - 1
+RightFork(i) == IF i = N THEN 1 ELSE i + 1
+
+CanEat(i) == forks[LeftFork(i)] = 0 /\ forks[RightFork(i)] = 0
+
+(* Next-state relation *)
+Next == 
+  \E i \in 1..N : 
+    /\ states[i] = ""thinking""
+    /\ states' = [states EXCEPT ![i] = ""hungry""]
+  \/ \E i \in 1..N : 
+    /\ states[i] = ""hungry""
+    /\ CanEat(i)
+    /\ forks' = [forks EXCEPT ![LeftFork(i)] = 1, ![RightFork(i)] = 1]
+    /\ states' = [states EXCEPT ![i] = ""eating""]
+  \/ \E i \in 1..N : 
+    /\ states[i] = ""eating""
+    /\ forks' = [forks EXCEPT ![LeftFork(i)] = 0, ![RightFork(i)] = 0]
+    /\ states' = [states EXCEPT ![i] = ""thinking""]
+
+(* Invariant: No two adjacent philosophers are eating simultaneously *)
+TypeOK == /\ forks \in Forks
+          /\ states \in States
+          /\ \A i \in 1..N : 
+                IF states[i] = ""eating"" THEN forks[LeftFork(i)] = 1 /\ forks[RightFork(i)] = 1
+
+
+Spec == Init /\ [][Next]_<<forks, states>>
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,0,0,0.778,bronze,61.93,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+
+VARIABLES num, flag
+
+Init == /\ num = [i \in 1..N |-> 0]
+        /\ flag = [i \in 1..N |-> FALSE]
+
+Next == \E i \in 1..N :
+          /\ flag[i] = FALSE
+          /\ flag' = [flag EXCEPT ![i] = TRUE]
+          /\ num' = [num EXCEPT ![i] = 1 + Max({num[j] : j \in 1..N})]
+          /\ flag' = [flag EXCEPT ![i] = FALSE]
+
+Spec == Init /\ [][Next]_<<num, flag>>
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,1,0.778,gold,3.28,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail, size
+
+Init == /\ q = <<>>
+        /\ head = 1
+        /\ tail = 1
+        /\ size = 0
+
+Next == 
+  \/ /\ size < K
+      /\ head' = head
+         /\ tail' = (tail % K) + 1
+         /\ size' = size + 1
+         /\ q' = Append(q, head)
+  \/ /\ size > 0
+      /\ head' = (head % K) + 1
+         /\ tail' = tail
+         /\ size' = size - 1
+         /\ q' = Tail(q)
+
+Spec == Init /\ [][Next]_<<q, head, tail, size>>
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,0,0,0.778,bronze,18.26,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+Init == /\ currentTerm = 0
+        /\ votedFor = {}
+        /\ state = ""Follower""
+
+Next == \/ /\ state = ""Follower""
+        /\ currentTerm' = currentTerm
+        /\ votedFor' = votedFor
+        /\ state' = ""Follower""
+        \/ /\ state = ""Candidate""
+        /\ currentTerm' = currentTerm + 1
+        /\ votedFor' = {currentTerm'}
+        /\ state' = ""Candidate""
+        \/ /\ state = ""Leader""
+        /\ currentTerm' = currentTerm
+        /\ votedFor' = votedFor
+        /\ state' = ""Leader""
+
+Spec == Init /\ [][Next]_<<currentTerm, votedFor, state>>
+
+===="

@@ -5,3 +5,4 @@
 {"timestamp": "2026-03-22T04:37:12.432413", "kind": "tlc_regression", "summary": "Benchmark TLC=0% but SANY=50% in cycle 65", "retrained_this_cycle": false, "action": "retrain may have hurt TLC; consider reverting or skipping next retrain"}
 {"timestamp": "2026-03-22T07:35:49.170596", "kind": "tlc_regression", "summary": "Benchmark TLC=0% but SANY=50% in cycle 67", "retrained_this_cycle": false, "action": "retrain may have hurt TLC; consider reverting or skipping next retrain"}
 {"timestamp": "2026-03-22T09:06:47.876977", "kind": "tlc_regression", "summary": "Benchmark TLC=0% but SANY=67% in cycle 68", "retrained_this_cycle": false, "action": "retrain may have hurt TLC; consider reverting or skipping next retrain"}
+{"timestamp": "2026-03-22T11:03:07.735432", "kind": "tlc_regression", "summary": "Benchmark TLC=0% but SANY=50% in cycle 69", "retrained_this_cycle": true, "action": "retrain may have hurt TLC; consider reverting or skipping next retrain"}

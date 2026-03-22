@@ -27,7 +27,7 @@ End-to-end view of how data becomes a deployable model, and where quality metric
 | **2** | Generate with Ollama `chattla:20b`; SANY + TLC; tier gold/silver/bronze; multi-attempt. |
 | **3** | **Persist:** gold SFT + DPO (gold vs worse) + **bugfix** (silver + TLC feedback → gold target) → `augmented.jsonl`, `dpo_pairs.jsonl`. Dedup by spec hash. |
 | **4** | If `accumulated_new >= threshold`: **retrain** (see §3). |
-| **5** | Quick benchmark (6 problems) every cycle; full suite every `BENCHMARK_EVERY_N` at **night**. |
+| **5** | Quick benchmark (default **12** problems; `--quick-eval-limit`) every cycle; full suite every `BENCHMARK_EVERY_N` at **night**. Inter-cycle sleep only when `--cycle-hours` is positive (default **0** = back-to-back). |
 | **6** | **Difficulty cap** from `rl_history.jsonl`: SANY unlocks harder prompts; **TLC rate caps** difficulty so hard tasks aren’t over-sampled while TLC is weak. |
 
 **Hugging Face:** After successful merge + GGUF + Ollama, if `HF_TOKEN` is set and not `--no-publish-hf`, runs `python -m src.training.publish_hf` (versioned `gguf/chattla-20b-vN-Q8_0.gguf`, `gguf/Modelfile`, optional `README.md`). State: `data/benchmarks/hf_publish_state.json`.

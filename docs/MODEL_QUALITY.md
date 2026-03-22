@@ -6,7 +6,7 @@
 2. **SANY pass rate** — necessary gate: invalid syntax never reaches TLC.
 3. **Structural heuristics** — diagnostic only; do not tune the loop primarily on structural score.
 
-**Quick eval (6 problems)** in the RL loop is a **trend signal**; it is noisy. Use **full-suite** CSVs under `outputs/benchmark_results_*_full_*.csv` when comparing models after retrains.
+**Quick eval** (default **12** problems per cycle in `scripts/rl_loop.py`, configurable with `--quick-eval-limit`) is a **trend signal**; it is noisy. Use **full-suite** CSVs under `outputs/benchmark_results_*_full_*.csv` when comparing models after retrains. By default the loop uses **`--cycle-hours 0`** (no padding sleep between cycles); use `--cycle-hours 1.5` if you want spaced cycles.
 
 ## Training levers (implemented in-repo)
 

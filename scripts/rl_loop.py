@@ -13,11 +13,8 @@ Schedule
 - Nighttime (22:00–06:00): full speed, both GPUs available
 - Daytime (06:00–22:00): throttled, single GPU, longer sleeps
 
-Each cycle targets ~1.5 hours:
-  - Generate + Validate: ~20 min
-  - Retrain: ~60 min
-  - Deploy + Eval: ~10 min
-  - Cool-down sleep: remaining time to fill 1.5h
+Each cycle runs phases back-to-back by default (`--cycle-hours 0`). Use `--cycle-hours 1.5`
+to pad with sleep so cycles are spaced (e.g. shared GPU etiquette).
 
 Usage
 -----
@@ -89,7 +86,7 @@ _EVAL_JSONL      = _REPO_ROOT / "data" / "processed" / "eval.jsonl"
 # ─────────────────────────────────────────────────────────────────────────────
 # Config
 # ─────────────────────────────────────────────────────────────────────────────
-CYCLE_HOURS        = 1.5          # target hours per full cycle
+CYCLE_HOURS        = 0.0          # 0 = no sleep between cycles; >0 pads to target hours
 RETRAIN_THRESHOLD  = 50           # new gold examples before retrain (was 10; too aggressive caused overfitting)
 NIGHTTIME_START    = 22           # 10 PM
 NIGHTTIME_END      = 6            # 6 AM
@@ -102,7 +99,7 @@ TEMPERATURE_BASE   = 0.3
 TEMPERATURE_RANGE  = (0.1, 0.6)   # diversity range for multi-attempt
 DAY_PROMPT_COOLDOWN_S = 3.0       # pause between prompts during daytime
 NIGHT_PROMPT_COOLDOWN_S = 0.5     # lighter pause at night
-QUICK_EVAL_LIMIT = 6              # mini-eval every cycle
+QUICK_EVAL_LIMIT = 12             # mini-eval every cycle (trend signal; full suite = ground truth)
 QUICK_EVAL_ATTEMPTS = 2
 
 # Hugging Face Hub (after successful merge + GGUF). Requires HF_TOKEN in env.
@@ -1087,6 +1084,11 @@ def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT
 # ─────────────────────────────────────────────────────────────────────────────
 # Phase 4: Benchmark evaluation
 # ─────────────────────────────────────────────────────────────────────────────
+def quick_benchmark_timeout_s(limit: int, attempts: int) -> int:
+    """Scale subprocess timeout with quick-eval size (default floor matches old 6×2×100s)."""
+    return max(1200, limit * attempts * 150)
+
+
 def run_benchmark(
     cycle_id: int,
     limit: Optional[int] = None,
@@ -1208,6 +1210,8 @@ def run_cycle(
     accumulated_new: int,
     allow_daytime_retrain: bool = False,
     publish_hf: bool = PUBLISH_HF_DEFAULT,
+    quick_eval_limit: int = QUICK_EVAL_LIMIT,
+    quick_eval_attempts: int = QUICK_EVAL_ATTEMPTS,
 ) -> tuple[CycleStats, int]:
     """
     Run one full RL cycle: generate → validate → build data → retrain → eval.
@@ -1306,12 +1310,12 @@ def run_cycle(
             return stats, accumulated_new
 
         # ── Phase 4: Evaluation every cycle + periodic full benchmark ─────
-        # Every 1.5h cycle runs a quick eval so quality is continuously tracked.
+        q_timeout = quick_benchmark_timeout_s(quick_eval_limit, quick_eval_attempts)
         quick_sany, quick_tlc = run_benchmark(
             cycle_id,
-            limit=QUICK_EVAL_LIMIT,
-            attempts=QUICK_EVAL_ATTEMPTS,
-            timeout_s=1200,
+            limit=quick_eval_limit,
+            attempts=quick_eval_attempts,
+            timeout_s=q_timeout,
             suffix="quick",
         )
         stats.benchmark_run = True
@@ -1345,7 +1349,12 @@ def main():
 
     parser = argparse.ArgumentParser(description="ChatTLA autonomous RL loop")
     parser.add_argument("--cycle-hours", type=float, default=CYCLE_HOURS,
-                        help=f"Target hours per cycle (default: {CYCLE_HOURS})")
+                        help="Hours to wait after each cycle before starting the next (0 = no wait; "
+                        f"default: {CYCLE_HOURS})")
+    parser.add_argument("--quick-eval-limit", type=int, default=QUICK_EVAL_LIMIT,
+                        help=f"Problems per quick benchmark each cycle (default: {QUICK_EVAL_LIMIT})")
+    parser.add_argument("--quick-eval-attempts", type=int, default=QUICK_EVAL_ATTEMPTS,
+                        help=f"Self-correct attempts per problem in quick eval (default: {QUICK_EVAL_ATTEMPTS})")
     parser.add_argument("--max-cycles", type=int, default=0,
                         help="Max cycles to run (0 = infinite)")
     parser.add_argument("--retrain-threshold", type=int, default=RETRAIN_THRESHOLD,
@@ -1362,11 +1371,13 @@ def main():
     RETRAIN_THRESHOLD = args.retrain_threshold
     BENCHMARK_EVERY_N = args.benchmark_every
 
-    cycle_seconds = args.cycle_hours * 3600
+    cycle_seconds = max(0.0, args.cycle_hours * 3600)
 
     log.info("=" * 60)
     log.info("  ChatTLA Autonomous RL Loop")
-    log.info(f"  Cycle target: {args.cycle_hours}h | Retrain threshold: {args.retrain_threshold}")
+    log.info(f"  Inter-cycle pause: {args.cycle_hours}h ({'none' if cycle_seconds <= 0 else f'{cycle_seconds/60:.0f} min target'}) "
+             f"| Quick eval: {args.quick_eval_limit} problems × {args.quick_eval_attempts} attempts")
+    log.info(f"  Retrain threshold: {args.retrain_threshold}")
     if args.allow_daytime_retrain:
         log.info("  Daytime retrain: ENABLED (--allow-daytime-retrain)")
     if args.no_publish_hf:
@@ -1403,6 +1414,8 @@ def main():
             accumulated_new,
             args.allow_daytime_retrain,
             publish_hf=not args.no_publish_hf,
+            quick_eval_limit=args.quick_eval_limit,
+            quick_eval_attempts=args.quick_eval_attempts,
         )
         accumulated_new = diagnose_and_fix(stats, accumulated_new)
         save_accumulated_new(accumulated_new)
@@ -1423,18 +1436,17 @@ def main():
             log.info(f"  Error: {stats.error}")
         log.info(f"{'─'*60}\n")
 
-        # Sleep to fill the target cycle time
+        # Optional pacing: sleep to fill target cycle duration (--cycle-hours > 0)
         remaining = cycle_seconds - cycle_elapsed
-        if remaining > 60 and not _SHUTDOWN:
-            # If it's transitioning to/from nighttime, adjust sleep
+        if cycle_seconds <= 0:
+            pass  # back-to-back cycles
+        elif remaining > 60 and not _SHUTDOWN:
             sleep_time = max(60, remaining)
-            log.info(f"Sleeping {sleep_time/60:.1f} min until next cycle...")
-            # Sleep in chunks to allow graceful shutdown
+            log.info(f"Sleeping {sleep_time/60:.1f} min until next cycle (--cycle-hours pacing)...")
             sleep_end = time.time() + sleep_time
             while time.time() < sleep_end and not _SHUTDOWN:
                 time.sleep(min(30, sleep_end - time.time()))
         elif not _SHUTDOWN:
-            # Cycle took longer than target — brief cooldown
             log.info("Cycle exceeded target time. Brief 60s cooldown...")
             time.sleep(60)
 

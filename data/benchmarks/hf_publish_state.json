@@ -1,4 +1,7 @@
 {
-  "last_published_version": 11,
-  "note": "Next RL/automated publish will upload as v12. Edit last_published_version if you manually published."
+  "last_published_version": 12,
+  "note": "Next RL/automated publish will upload as v12. Edit last_published_version if you manually published.",
+  "last_repo": "EricSpencer00/chattla-20b",
+  "last_gguf_path_in_repo": "gguf/chattla-20b-v12-Q8_0.gguf",
+  "last_cycle_id": 69
 }
