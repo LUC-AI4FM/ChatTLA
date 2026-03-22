@@ -4,6 +4,8 @@ Fine-tuning [`openai/gpt-oss-20b`](https://huggingface.co/openai/gpt-oss-20b) to
 
 **Key differentiator**: TLC model checking as the primary training metric — not perplexity.  A generated spec must pass the TLA+ model checker before it counts as a success.
 
+**Environment:** `./scripts/launch_rl.sh setup` (or `start`) creates `.venv`, runs `pip install -r requirements.txt`, and loads `.env`. The tmux session uses `.venv/bin/python` and exports `.env` so `HF_TOKEN` applies to the RL loop. For an interactive shell: `source .venv/bin/activate` then `set -a && source .env && set +a`.
+
 ---
 
 ## Project Structure
@@ -178,6 +180,7 @@ Difficulty: 2 (beginner) — 5 (research-grade).
 
 ## Research Notes
 
+- **Model quality targets** (TLC → SANY → structure): see [`docs/MODEL_QUALITY.md`](docs/MODEL_QUALITY.md). Full pipeline map: [`docs/TRAINING_PIPELINE_AUDIT.md`](docs/TRAINING_PIPELINE_AUDIT.md). Training uses SANY-filtered corpus data, gold-only RL SFT, **2×** oversampling of TLC **bugfix** examples (`--bugfix-oversample`), and a TLC-aware RL difficulty cap. **Hugging Face:** set `HF_TOKEN` so the RL loop uploads versioned GGUF + Modelfile to [EricSpencer00/chattla-20b](https://huggingface.co/EricSpencer00/chattla-20b) after each retrain (`--no-publish-hf` to skip).
 - **Self-annotation**: We use local Ollama `gpt-oss:20b` (not GPT-4o) for NL annotation of specs — zero cost, fully air-gapped.  See `src/scraper/annotate.py`.
 - **TLC as reward signal**: `TLCEvalCallback` runs TLC at every `eval_steps` and logs `tlc_clean_rate` to MLflow.  This is the experiment's primary metric.
 - **Harmony format** is mandatory for gpt-oss — applied at `dataset_builder.py` time so every JSONL record is already formatted.

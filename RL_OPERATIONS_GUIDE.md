@@ -32,6 +32,16 @@ Benchmark baseline (v9_best5_sc2): SANY 15/20, TLC 5/20
 
 ## Usage Commands
 
+### **Bootstrap (venv + deps + `.env`)**
+
+On **`start`**, the script bootstraps `.venv` + `requirements.txt` + `.env` before tmux. **`restart`** runs the same full bootstrap first (E2E), then stops the old session and starts a new one. To only prepare the environment without tmux:
+
+```bash
+./scripts/launch_rl.sh setup   # .venv, pip install -r requirements.txt, load .env in this shell
+```
+
+The tmux session prepends `.venv/bin` to `PATH` and **sources `.env`** before starting `scripts/rl_loop.py` (so `HF_TOKEN` works for Hub publish).
+
 ### **Status & Monitoring**
 
 ```bash
@@ -216,6 +226,10 @@ ollama serve &
 # Wait 10s, then restart loop
 ./scripts/launch_rl.sh restart
 ```
+
+## Hugging Face Hub (after retrain)
+
+If `HF_TOKEN` is set (e.g. in `.env` loaded by your shell or `launch_rl.sh`), each successful retrain **merge + GGUF + Ollama** is followed by `python -m src.training.publish_hf`: versioned `gguf/chattla-20b-vN-Q8_0.gguf`, `gguf/Modelfile`, and an updated `README.md`. Next version is tracked in `data/benchmarks/hf_publish_state.json`. Use `--no-publish-hf` on the RL script to skip uploads. See `docs/TRAINING_PIPELINE_AUDIT.md`.
 
 ## Configuration (scripts/rl_loop.py)
 

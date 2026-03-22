@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "description": "Maps benchmark_suite.json ids to tla-compents-coarse module names for RL prompt enrichment. Modules listed here are EXCLUDED from description_sft_train.jsonl (holdout) to reduce benchmark contamination.",
+  "mappings": [
+    {"benchmark_id": "BM001", "module_name": "DijkstraMutex", "note": "N-process mutex; closest Example"},
+    {"benchmark_id": "BM002", "module_name": "TwoPhase", "note": "Two-phase commit style"},
+    {"benchmark_id": "BM003", "module_name": "DiningPhilosophers", "note": ""},
+    {"benchmark_id": "BM004", "module_name": "Bakery", "note": "Lamport bakery (TLAPS-heavy; SANY may still parse)"},
+    {"benchmark_id": "BM005", "module_name": "RingBuffer", "note": "Bounded circular buffer as producer/consumer proxy"},
+    {"benchmark_id": "BM006", "module_name": "MultiPaxos", "note": "Leader election / replicated log; not identical to Raft"},
+    {"benchmark_id": "BM007", "module_name": "ReadersWriters", "note": ""},
+    {"benchmark_id": "BM008", "module_name": null, "note": "No close Example in coarse list; skip enrichment"},
+    {"benchmark_id": "BM009", "module_name": "TokenRing", "note": ""},
+    {"benchmark_id": "BM010", "module_name": "KeyValueStore", "note": ""},
+    {"benchmark_id": "BM011", "module_name": "Paxos", "note": "Single-decree Paxos family"},
+    {"benchmark_id": "BM012", "module_name": null, "note": "No BRP module in coarse; skip"},
+    {"benchmark_id": "BM013", "module_name": null, "note": "Snapshot isolation — no direct match"},
+    {"benchmark_id": "BM014", "module_name": null, "note": "Clock sync — no direct match"},
+    {"benchmark_id": "BM015", "module_name": null, "note": "Peterson 2-process — not in coarse"},
+    {"benchmark_id": "BM016", "module_name": "Slush", "note": "Gossip-style dissemination proxy"},
+    {"benchmark_id": "BM017", "module_name": "SimpleAllocator", "note": ""},
+    {"benchmark_id": "BM018", "module_name": null, "note": "Pub/sub broker — no direct match"},
+    {"benchmark_id": "BM019", "module_name": null, "note": "Dekker — not in coarse"},
+    {"benchmark_id": "BM020", "module_name": "CRDT", "note": "G-counter style CRDT"}
+  ],
+  "holdout_module_names": [
+    "DijkstraMutex",
+    "TwoPhase",
+    "DiningPhilosophers",
+    "Bakery",
+    "RingBuffer",
+    "MultiPaxos",
+    "ReadersWriters",
+    "TokenRing",
+    "KeyValueStore",
+    "Paxos",
+    "Slush",
+    "SimpleAllocator",
+    "CRDT"
+  ]
+}

@@ -1,17 +1,20 @@
 #!/usr/bin/env bash
-# launch_rl.sh — Start the ChatTLA autonomous RL loop in a tmux session.
+# launch_rl.sh — Bootstrap (.venv + requirements + .env) and run the RL loop in tmux.
 #
 # Usage:
-#   ./scripts/launch_rl.sh          # start/restart the RL loop
+#   ./scripts/launch_rl.sh          # ensure env, then start RL loop (default)
+#   ./scripts/launch_rl.sh setup    # only create .venv + pip install + show .env hint
+#   ./scripts/launch_rl.sh restart  # E2E: pip/venv/.env, then stop + start tmux
 #   ./scripts/launch_rl.sh stop     # gracefully stop the loop
 #   ./scripts/launch_rl.sh status   # show current status
 #   ./scripts/launch_rl.sh logs     # tail the log file
+#   Empty args are ignored (e.g. ./launch_rl.sh '' restart  or  restart '')
 #
 #   --allow-daytime-retrain  # allow retraining during daytime hours
 #   --model <model>          # use a specific model (default: chattla:20b)
 #   --benchmark-every <n>    # benchmark every n cycles (default: 3)
 #   --max-cycles <n>         # max cycles to run (default: 0 = infinite)
-#   --retrain-threshold <n>  # new gold/silver examples before retrain (default: 10)
+#   --retrain-threshold <n>  # new gold SFT rows before retrain (default: 50 in rl_loop.py)
 #   --cycle-hours <h>        # target hours per cycle (default: 1.5)
 #
 #
@@ -34,10 +37,12 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 usage() {
-    echo "Usage: $0 [start|stop|status|logs|restart]"
+    echo "Usage: $0 [start|setup|stop|status|logs|restart]"
     echo ""
     echo "Commands:"
-    echo "  start    Start the RL loop in a tmux session (default)"
+    echo "  start    Ensure .venv + deps + .env, then start RL loop in tmux (default)"
+    echo "  setup    Only bootstrap .venv and pip install -r requirements.txt"
+    echo "  restart  Full E2E: same as start (refresh deps) + stop old session + start new"
     echo "  stop     Gracefully stop the running loop"
     echo "  status   Show loop status and recent stats"
     echo "  logs     Tail the log file"
@@ -45,15 +50,64 @@ usage() {
     echo ""
 }
 
+# ─── Bootstrap (merged from former setup_chattla_env.sh) ─────────────────────
+ensure_training_env() {
+    cd "$REPO_ROOT"
+    if [[ -f .env ]]; then
+        set -a
+        # shellcheck disable=SC1091
+        source .env
+        set +a
+        echo -e "${GREEN}Loaded .env${NC}"
+    else
+        echo -e "${YELLOW}WARN: no .env — copy .env.example (HF_TOKEN, etc.)${NC}"
+    fi
+
+    local venv_dir="$REPO_ROOT/.venv"
+    if [[ ! -d "$venv_dir" ]]; then
+        echo -e "${BLUE}Creating .venv...${NC}"
+        python3 -m venv "$venv_dir"
+    fi
+    # shellcheck disable=SC1091
+    source "$venv_dir/bin/activate"
+    pip install -q -U pip
+    echo -e "${BLUE}Installing requirements.txt (quiet)...${NC}"
+    pip install -q -r "$REPO_ROOT/requirements.txt"
+    deactivate 2>/dev/null || true
+
+    if [[ -n "${HF_TOKEN:-}" ]]; then
+        echo -e "${GREEN}HF_TOKEN is set — Hub publish after retrain enabled${NC}"
+    else
+        echo -e "${YELLOW}HF_TOKEN not set — Hub uploads will skip (optional)${NC}"
+    fi
+    echo -e "${GREEN}Training environment ready.${NC}"
+}
+
 is_running() {
     tmux has-session -t "$SESSION_NAME" 2>/dev/null
 }
 
+do_setup() {
+    ensure_training_env
+    echo ""
+    echo "Interactive shell:  source $REPO_ROOT/.venv/bin/activate"
+    echo "                      set -a && source .env && set +a"
+}
+
+# do_start [skip_ensure]
+#   skip_ensure=1 — venv/pip already ran (e.g. launch_rl.sh restart)
 do_start() {
+    local skip_ensure="${1:-0}"
+
     if is_running; then
         echo -e "${YELLOW}RL loop already running in tmux session '$SESSION_NAME'.${NC}"
         echo "Use '$0 restart' to restart, or '$0 logs' to view output."
         return 1
+    fi
+
+    if [[ "$skip_ensure" != "1" ]]; then
+        ensure_training_env
+        echo ""
     fi
 
     # Ensure log directory exists
@@ -67,25 +121,30 @@ do_start() {
     echo -e "  History:   $HISTORY_FILE"
     echo ""
 
-    # Create tmux session and run the loop
-    tmux new-session -d -s "$SESSION_NAME" -c "$REPO_ROOT" \
-        "bash -c '
-        echo \"[$(date)] ChatTLA RL Loop starting...\"
+    # tmux: use repo .venv first, export .env (HF_TOKEN, etc.) for python
+    tmux new-session -d -s "$SESSION_NAME" -c "$REPO_ROOT" bash -lc "
+        cd \"$REPO_ROOT\" || exit 1
+        export PATH=\"$REPO_ROOT/.venv/bin:\$PATH\"
+        set -a
+        [[ -f .env ]] && source .env
+        set +a
+        echo \"[\$(date -Iseconds)] ChatTLA RL Loop starting...\"
         echo \"PID: \$\$\"
+        echo \"python: \$(command -v python3)\"
         echo \"GPU status:\"
-        nvidia-smi --query-gpu=index,name,memory.used,memory.total --format=csv,noheader
+        nvidia-smi --query-gpu=index,name,memory.used,memory.total --format=csv,noheader 2>/dev/null || true
         echo \"\"
         echo \"=== Starting RL loop ===\"
         nice -n 10 python3 scripts/rl_loop.py \
             --cycle-hours 1.5 \
-            --retrain-threshold 10 \
+            --retrain-threshold 50 \
             --allow-daytime-retrain \
             --benchmark-every 3 \
-            2>&1 | tee -a \"$LOG_FILE\"
+            2>&1
         echo \"\"
-        echo \"[$(date)] RL loop exited. Press any key to close.\"
+        echo \"[\$(date -Iseconds)] RL loop exited. Press any key to close.\"
         read -n 1
-        '"
+    "
 
     sleep 1
 
@@ -206,16 +265,29 @@ do_logs() {
 }
 
 do_restart() {
+    # E2E: refresh .venv + pip + .env, then recycle tmux (deps before stop so state is always current)
+    echo -e "${BLUE}══════════════════════════════════════════════════════════════${NC}"
+    echo -e "${BLUE}  E2E restart: install/update deps, then stop + start RL loop${NC}"
+    echo -e "${BLUE}══════════════════════════════════════════════════════════════${NC}"
+    ensure_training_env
+    echo ""
     do_stop
     sleep 2
-    do_start
+    do_start 1
 }
 
 # ─── Main ────────────────────────────────────────────────────────────────────
+# Drop empty args (wrappers / typos: ./launch_rl.sh '' restart  or  restart '')
+_normalized=()
+for _a in "$@"; do
+    [ -n "$_a" ] && _normalized+=("$_a")
+done
+set -- "${_normalized[@]}"
 CMD="${1:-start}"
 
 case "$CMD" in
     start)   do_start   ;;
+    setup)   do_setup   ;;
     stop)    do_stop    ;;
     status)  do_status  ;;
     logs)    do_logs    ;;

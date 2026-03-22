@@ -51,6 +51,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import re
 import subprocess
 import sys
@@ -806,7 +807,13 @@ def rebuild_dataset() -> tuple[int, int]:
     """Rebuild train/eval JSONL from combined.jsonl + augmented.jsonl."""
     from src.training.dataset_builder import build
 
-    n_train, n_eval = build(include_augmented=True)
+    n_train, n_eval = build(
+        include_augmented=True,
+        include_description_sft=True,
+        bugfix_oversample=2,
+        include_silver_augmented=True,
+        augmented_best_per_prompt=True,
+    )
     log.info(f"[self_improve] Dataset rebuilt: train={n_train}, eval={n_eval}")
     return n_train, n_eval
 
@@ -876,6 +883,21 @@ def retrain_and_deploy() -> bool:
         log.error(f"[self_improve] GGUF conversion failed:\n{result.stderr[-500:]}")
         return False
     log.info("[self_improve] GGUF deployed to Ollama.")
+
+    if os.environ.get("HF_TOKEN"):
+        log.info("[self_improve] Publishing to Hugging Face Hub...")
+        pub = subprocess.run(
+            [sys.executable, "-m", "src.training.publish_hf", "--quant", "Q8_0"],
+            cwd=str(_REPO_ROOT),
+            env=os.environ.copy(),
+            capture_output=True,
+            text=True,
+            timeout=7200,
+        )
+        if pub.returncode != 0:
+            log.warning(f"[self_improve] HF publish failed (non-fatal): {(pub.stderr or pub.stdout)[-400:]}")
+        else:
+            log.info("[self_improve] HF publish complete.")
     return True
 
 

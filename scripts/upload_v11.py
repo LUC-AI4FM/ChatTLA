@@ -1,4 +1,9 @@
-"""Upload ChatTLA v11 GGUF to HuggingFace."""
+"""Legacy one-off upload script.
+
+Prefer:  HF_TOKEN=... python -m src.training.publish_hf
+(Versioned uploads + Modelfile + README; state in data/benchmarks/hf_publish_state.json)
+
+"""
 import os
 import time
 from pathlib import Path

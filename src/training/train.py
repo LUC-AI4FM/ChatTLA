@@ -208,6 +208,7 @@ def build_training_args(
     resume_from: str | None = None,
     use_cpu: bool = False,
     num_epochs: int | None = None,
+    max_length: int = 4096,
 ) -> SFTConfig:
     """Return an SFTConfig tuned for smoke or full runs.
 
@@ -234,8 +235,8 @@ def build_training_args(
         bf16=bf16_enabled,
         gradient_checkpointing=True,
         # --- Sequence length (new in TRL 0.28) ----------------------------
-        # TLA+ specs are long (avg 1924 tokens, p90=3236). Must not truncate.
-        max_length=512 if smoke_test else 4096,
+        # TLA+ specs are long (avg 1924 tokens, p90=3236). Lower max_length saves VRAM.
+        max_length=512 if smoke_test else max_length,
         # --- Logging & checkpointing ----------------------------------------
         # Scale epochs based on dataset size to avoid overfitting.
         # When called from self_improve.py, num_epochs is set dynamically.
@@ -271,6 +272,8 @@ def main(
     lora_layers_override: list[int] | None = None,
     lora_top_k: int | None = None,
     num_epochs: int | None = None,
+    max_length: int = 4096,
+    run_dpo_after: bool = False,
 ) -> None:
     mlflow.set_experiment("ChatTLA-gpt-oss-20b")
 
@@ -467,7 +470,7 @@ def main(
     # Pass `use_cpu=True` when the user explicitly requested `device_map='cpu'`
     # or when CUDA is not available so SFTConfig validates correctly.
     use_cpu_flag = (device_map == "cpu") or (not torch.cuda.is_available())
-    training_args = build_training_args(smoke_test=smoke_test, resume_from=resume_from, use_cpu=use_cpu_flag, num_epochs=num_epochs)
+    training_args = build_training_args(smoke_test=smoke_test, resume_from=resume_from, use_cpu=use_cpu_flag, num_epochs=num_epochs, max_length=max_length)
 
     trainer = SFTTrainer(
         model=model,
@@ -491,10 +494,25 @@ def main(
             print("  - set --device-map=cpu to keep base model on CPU and reduce VRAM usage")
             print("  - reduce LoRA target layers (edit src/training/lora_config.yaml or use smaller device_map)")
             print("  - set PYTORCH_ALLOC_CONF=expandable_segments:True to reduce fragmentation")
-            print("  - lower sequence length or use smaller batch/gradient-accumulation settings")
+            print("  - use --max-length 2048 (or 1536) to reduce activation memory")
         raise
 
     print(f"[train] Training complete. Checkpoints saved to {_CHECKPOINT_DIR}")
+
+    if run_dpo_after:
+        try:
+            from src.training.train_dpo import run_after_sft as _run_dpo
+
+            _run_dpo(
+                model,
+                tokenizer,
+                device_map=device_map,
+                max_gpu_memory_mb=max_gpu_memory_mb,
+                max_length=max_length,
+                smoke_test=smoke_test,
+            )
+        except Exception as e:
+            print(f"[train] DPO phase skipped due to error: {e}")
 
 
 if __name__ == "__main__":
@@ -513,6 +531,10 @@ if __name__ == "__main__":
                         help="Apply LoRA only to the first K transformer layers (indices 0..K-1)")
     parser.add_argument("--epochs", type=int, default=None,
                         help="Override number of training epochs (default: auto-scale by dataset size)")
+    parser.add_argument("--max-length", type=int, default=4096,
+                        help="Max sequence length (default: 4096; lower values reduce VRAM on shared machines)")
+    parser.add_argument("--dpo-after", action="store_true",
+                        help="After SFT, run DPO on gold pairs in data/processed/rl/dpo_pairs.jsonl (if >=2 rows)")
     args = parser.parse_args()
 
     # parse lora_layers override
@@ -528,4 +550,6 @@ if __name__ == "__main__":
         lora_layers_override=lora_layers_override,
         lora_top_k=args.lora_top_k,
         num_epochs=args.epochs,
+        max_length=args.max_length,
+        run_dpo_after=args.dpo_after,
     )

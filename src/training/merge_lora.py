@@ -17,17 +17,19 @@ the merged model to GGUF for Ollama deployment.
 
 Memory note
 -----------
-Merging requires holding the full BF16 model in memory (~40 GB).  This must
-run on GPU 1 alone.  If GPU 1 has insufficient VRAM, use `device_map="cpu"`
-(slower but works with 64+ GB system RAM).
+Merging requires holding the full BF16 model in memory (~40 GB).  Prefer
+`CUDA_VISIBLE_DEVICES=0,1` (default in this script) so `device_map="auto"`
+can shard across two GPUs.  Pinning a single GPU often OOMs during
+`merge_and_unload()`.  If CUDA fails, use `--device cpu` (slow; needs ~64 GB+
+system RAM).
 
 Usage
 -----
-    # Merge from the latest checkpoint:
-    CUDA_VISIBLE_DEVICES=1 python -m src.training.merge_lora
+    # Merge from the latest checkpoint (uses GPUs 0,1 by default):
+    python -m src.training.merge_lora
 
     # Merge from a specific checkpoint:
-    CUDA_VISIBLE_DEVICES=1 python -m src.training.merge_lora \\
+    python -m src.training.merge_lora \\
         --checkpoint outputs/checkpoints/checkpoint-1000
 
     # CPU merge (slow but no VRAM limit):
@@ -83,6 +85,9 @@ def merge(
         print(f"[merge_lora] ERROR: No checkpoint found in {_CHECKPOINT_DIR}")
         sys.exit(1)
 
+    if device != "cpu" and torch.cuda.is_available():
+        torch.cuda.empty_cache()
+
     print(f"[merge_lora] Loading base model: {MODEL_ID} (device={device})")
     model = AutoModelForCausalLM.from_pretrained(
         MODEL_ID,
@@ -114,7 +119,11 @@ def merge(
 if __name__ == "__main__":
     import argparse
 
-    os.environ.setdefault("CUDA_VISIBLE_DEVICES", "1")
+    # Default: same multi-GPU visibility as training (rl_loop / train). Override
+    # with CUDA_VISIBLE_DEVICES=0 or =1 for a single card. Pinning only GPU 1
+    # often OOMs during merge (full 20B BF16 + LoRA matmuls). Use --device cpu
+    # if CUDA_VISIBLE_DEVICES="" (e.g. CPU-only merge subprocess).
+    os.environ.setdefault("CUDA_VISIBLE_DEVICES", "0,1")
 
     parser = argparse.ArgumentParser(description="Merge LoRA adapter into gpt-oss-20b base weights")
     parser.add_argument("--checkpoint", default=None, help="Checkpoint dir (default: latest in outputs/checkpoints)")

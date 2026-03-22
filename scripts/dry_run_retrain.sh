@@ -6,7 +6,7 @@ REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO"
 
 echo "=== Dry run: dataset_builder ==="
-python3 -m src.training.dataset_builder --sany-only --include-augmented || { echo "FAIL: dataset_builder"; exit 1; }
+python3 -m src.training.dataset_builder --sany-only --include-augmented --include-description-sft --bugfix-oversample 2 || { echo "FAIL: dataset_builder"; exit 1; }
 
 echo ""
 echo "=== Dry run: train (smoke test, 5 steps) ==="
