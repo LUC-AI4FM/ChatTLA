@@ -15,10 +15,20 @@ def main() -> int:
     issues = []
     by_repo = {"tlaplus/Examples": 0, "tlaplus/tlapm": 0}
     for row in data:
+        spec = row.get("module_name") or row.get("specification") or "?"
+        rid = row.get("id")
         if row.get("confidence") == "none" or "not_found" in row.get("provenance", []):
-            issues.append(f"id={row['id']} spec={row['specification']}: not resolved")
-        if not (row.get("description") or "").strip():
-            issues.append(f"id={row['id']} spec={row['specification']}: empty description")
+            issues.append(f"id={rid} module={spec}: not resolved")
+        desc = row.get("description")
+        if isinstance(desc, dict):
+            nar = (desc.get("narrative") or "").strip()
+            if not nar:
+                issues.append(f"id={rid} module={spec}: empty description.narrative")
+        elif isinstance(desc, str):
+            if not desc.strip():
+                issues.append(f"id={rid} module={spec}: empty description")
+        else:
+            issues.append(f"id={rid} module={spec}: missing or invalid description")
         sr = row.get("source_repository", "")
         if sr in by_repo:
             by_repo[sr] += 1

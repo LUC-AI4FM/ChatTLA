@@ -241,6 +241,7 @@ def build(
     sany_only: bool = False,
     include_augmented: bool = False,
     augmented_path: Path = _AUGMENTED_JSONL,
+    gold_only_augmented: bool = True,
 ) -> tuple[int, int]:
     """
     Load combined.jsonl → build all task variants → write train/eval JSONL.
@@ -294,13 +295,26 @@ def build(
     # Append augmented data to training set (not eval)
     if include_augmented and augmented_path.exists():
         n_aug = 0
+        skipped = 0
         with train_path.open("a", encoding="utf-8") as f:
             for line in augmented_path.open(encoding="utf-8"):
                 line = line.strip()
                 if line:
+                    if gold_only_augmented:
+                        try:
+                            ex = json.loads(line)
+                            tier = ex.get("_tier")
+                            if tier not in ("gold", "bugfix"):  # bugfix = gold target (corrected spec)
+                                skipped += 1
+                                continue
+                        except (json.JSONDecodeError, KeyError):
+                            skipped += 1
+                            continue
                     f.write(line + "\n")
                     n_aug += 1
         n_train += n_aug
+        if gold_only_augmented and skipped:
+            print(f"[dataset_builder] Filtered augmented to gold only: {n_aug} kept, {skipped} skipped")
         print(f"[dataset_builder] Appended {n_aug} augmented examples to training set")
 
     print(f"[dataset_builder] train={n_train} examples → {train_path}")
@@ -316,6 +330,8 @@ if __name__ == "__main__":
                         help="Filter to only SANY-validated specs (recommended for SANY pass rate improvement)")
     parser.add_argument("--include-augmented", action="store_true",
                         help="Include augmented.jsonl examples in training data")
+    parser.add_argument("--no-gold-only-augmented", action="store_true",
+                        help="Include all augmented tiers (default: gold only to avoid model degradation)")
     parser.add_argument("--combined", default=str(_COMBINED_JSONL),
                         help="Path to combined.jsonl input")
     parser.add_argument("--train-out", default=str(_TRAIN_OUT))
@@ -328,4 +344,5 @@ if __name__ == "__main__":
         eval_path=Path(args.eval_out),
         sany_only=args.sany_only,
         include_augmented=args.include_augmented,
+        gold_only_augmented=not args.no_gold_only_augmented,
     )
