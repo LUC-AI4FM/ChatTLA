@@ -4868,3 +4868,7 @@ KeyboardInterrupt
 2026-03-22 22:55:08 INFO   [RL002] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
 2026-03-22 22:55:58 INFO   [SYN012] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
 2026-03-22 22:56:04 INFO   [SYN008] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-22 22:57:07 INFO   [RL007] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-22 22:57:10 INFO   [SYN003] tier=gold sany=True tlc=True struct=0.78 attempts=1 (best of 1)
+2026-03-22 22:57:13 INFO   [RL003] tier=gold sany=True tlc=True struct=0.78 attempts=1 (best of 1)
+2026-03-22 22:57:17 INFO   [SYN002] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
