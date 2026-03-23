@@ -859,25 +859,35 @@ def persist_training_data(sft_examples: list[dict], dpo_pairs: list[dict]) -> tu
                     n_sft += 1
 
     n_dpo = 0
-    if dpo_pairs:
-        existing_dpo_keys = set()
+    gold_pairs = [p for p in dpo_pairs if p.get("chosen_tier") == "gold"]
+    if gold_pairs:
+        _TIER_VAL = {"gold": 3, "bugfix": 3, "silver": 2, "bronze": 1}
+
+        # Load existing pairs into an ordered dict keyed by prompt prefix.
+        existing: dict[str, dict] = {}
         if _DPO_JSONL.exists():
             with open(_DPO_JSONL, encoding="utf-8") as f:
                 for line in f:
                     if line.strip():
                         try:
                             p = json.loads(line)
-                            existing_dpo_keys.add(p.get("prompt", "")[:200])
+                            existing[p.get("prompt", "")[:200]] = p
                         except (json.JSONDecodeError, KeyError):
                             pass
 
-        with open(_DPO_JSONL, "a", encoding="utf-8") as f:
-            for pair in dpo_pairs:
-                key = pair["prompt"][:200]
-                if key not in existing_dpo_keys:
-                    f.write(json.dumps(pair, ensure_ascii=False) + "\n")
-                    existing_dpo_keys.add(key)
-                    n_dpo += 1
+        for pair in gold_pairs:
+            key = pair["prompt"][:200]
+            prev = existing.get(key)
+            if prev is None:
+                existing[key] = pair
+                n_dpo += 1
+            elif _TIER_VAL.get(pair["chosen_tier"], 0) > _TIER_VAL.get(prev.get("chosen_tier", ""), 0):
+                existing[key] = pair
+                n_dpo += 1
+
+        with open(_DPO_JSONL, "w", encoding="utf-8") as f:
+            for p in existing.values():
+                f.write(json.dumps(p, ensure_ascii=False) + "\n")
 
     return n_sft, n_dpo
 
@@ -907,8 +917,11 @@ def _count_dpo_gold_pairs() -> int:
     return n
 
 
+MIN_TRAIN_EXAMPLES = 500  # don't retrain on tiny datasets — damages the base model
+
+
 def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT) -> bool:
-    """Rebuild training dataset, retrain, merge, GGUF, deploy, optional HF Hub publish."""
+    """Rebuild training dataset, retrain, merge, GGUF, deploy. HF publish is handled by caller."""
 
     # 1. Rebuild dataset
     log.info("[retrain] Rebuilding training dataset...")
@@ -928,12 +941,18 @@ def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT
         log.error("[retrain] Dataset rebuild timed out")
         return False
 
-    # Count training examples for epoch scaling
+    # Count training examples — abort if too few (tiny datasets damage the base model)
     n_train = 0
     if _TRAIN_JSONL.exists():
         with open(_TRAIN_JSONL) as f:
             n_train = sum(1 for line in f if line.strip())
-    num_epochs = 1  # avoid overfitting on small batches (was 3–10)
+    if n_train < MIN_TRAIN_EXAMPLES:
+        log.warning(
+            f"[retrain] Only {n_train} training examples (need >= {MIN_TRAIN_EXAMPLES}). "
+            "Skipping retrain to avoid damaging the base model. Accumulate more data first."
+        )
+        return False
+    num_epochs = 1
     log.info(f"[retrain] {n_train} training examples, {num_epochs} epochs")
 
     # 2. Train — use both GPUs (20B model needs ~40GB + activations; single 48GB GPU OOMs)
@@ -1031,54 +1050,55 @@ def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT
         log.error("[retrain] GGUF conversion timed out")
         return False
 
-    # 5. Hugging Face Hub (GGUF + Modelfile + README) — versioned uploads
-    if publish_hf and os.environ.get("HF_TOKEN"):
-        log.info("[retrain] Publishing to Hugging Face Hub...")
-        try:
-            pub_cmd = [
-                sys.executable, "-m", "src.training.publish_hf",
-                "--repo", _HF_REPO,
-                "--quant", "Q8_0",
-                "--cycle-id", str(cycle_id),
-            ]
-            bench_h = os.environ.get("CHATTLA_PUBLISH_REQUIRE_BENCHMARK_HOURS", "").strip()
-            if bench_h:
-                try:
-                    bh = float(bench_h)
-                    if bh > 0:
-                        pub_cmd += ["--require-fresh-full-benchmark-hours", str(bh)]
-                        log.info(f"[retrain] HF publish requires full benchmark ≤{bh}h old")
-                except ValueError:
-                    pass
-            if os.environ.get("CHATTLA_HF_UPLOAD_MERGED", "").strip().lower() in (
-                "1",
-                "true",
-                "yes",
-            ):
-                pub_cmd.append("--upload-merged-model")
-                log.warning("[retrain] CHATTLA_HF_UPLOAD_MERGED: will upload ~40GB+ merged_bf16/")
-
-            pub = subprocess.run(
-                pub_cmd,
-                cwd=str(_REPO_ROOT),
-                env=os.environ.copy(),
-                capture_output=True,
-                text=True,
-                timeout=7200,
-            )
-            if pub.returncode != 0:
-                log.warning(
-                    f"[retrain] HF publish failed (non-fatal): {(pub.stderr or pub.stdout)[-500:]}"
-                )
-            else:
-                tail = (pub.stdout or "").strip().splitlines()
-                log.info(f"[retrain] HF publish OK. {tail[-1] if tail else ''}")
-        except subprocess.TimeoutExpired:
-            log.warning("[retrain] HF publish timed out (non-fatal)")
-    elif publish_hf:
-        log.info("[retrain] HF publish skipped (set HF_TOKEN to enable)")
-
+    # HF publish is now handled by the caller after a full benchmark quality gate.
     return True
+
+
+def publish_to_hf(cycle_id: int) -> bool:
+    """Upload GGUF + Modelfile + README to Hugging Face Hub."""
+    if not os.environ.get("HF_TOKEN"):
+        log.info("[hf_publish] Skipped (HF_TOKEN not set)")
+        return False
+    log.info("[hf_publish] Publishing to Hugging Face Hub...")
+    try:
+        pub_cmd = [
+            sys.executable, "-m", "src.training.publish_hf",
+            "--repo", _HF_REPO,
+            "--quant", "Q8_0",
+            "--cycle-id", str(cycle_id),
+        ]
+        if os.environ.get("CHATTLA_HF_UPLOAD_MERGED", "").strip().lower() in ("1", "true", "yes"):
+            pub_cmd.append("--upload-merged-model")
+        pub = subprocess.run(
+            pub_cmd, cwd=str(_REPO_ROOT), env=os.environ.copy(),
+            capture_output=True, text=True, timeout=7200,
+        )
+        if pub.returncode != 0:
+            log.warning(f"[hf_publish] Failed (non-fatal): {(pub.stderr or pub.stdout)[-500:]}")
+            return False
+        tail = (pub.stdout or "").strip().splitlines()
+        log.info(f"[hf_publish] OK. {tail[-1] if tail else ''}")
+        return True
+    except subprocess.TimeoutExpired:
+        log.warning("[hf_publish] Timed out (non-fatal)")
+        return False
+
+
+def best_historical_full_tlc() -> float:
+    """Return the best TLC rate from any full benchmark CSV."""
+    best = 0.0
+    import glob as _glob
+    for path in _glob.glob(str(_REPO_ROOT / "outputs" / "benchmark_results_*_full_*.csv")):
+        try:
+            with open(path) as f:
+                reader = csv.DictReader(f)
+                rows = list(reader)
+            if rows:
+                tlc = sum(1 for r in rows if r.get("tlc_pass") == "1") / len(rows)
+                best = max(best, tlc)
+        except Exception:
+            pass
+    return best
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1210,8 +1230,6 @@ def run_cycle(
     accumulated_new: int,
     allow_daytime_retrain: bool = False,
     publish_hf: bool = PUBLISH_HF_DEFAULT,
-    quick_eval_limit: int = QUICK_EVAL_LIMIT,
-    quick_eval_attempts: int = QUICK_EVAL_ATTEMPTS,
 ) -> tuple[CycleStats, int]:
     """
     Run one full RL cycle: generate → validate → build data → retrain → eval.
@@ -1285,18 +1303,20 @@ def run_cycle(
             return stats, accumulated_new
 
         # ── Phase 3: Retrain if threshold met ─────────────────────────────
+        just_retrained = False
         if accumulated_new >= RETRAIN_THRESHOLD:
             if night or allow_daytime_retrain:
                 when = "night" if night else "daytime (--allow-daytime-retrain)"
                 log.info(f"[phase3] Retrain threshold reached ({when}) ({accumulated_new} >= {RETRAIN_THRESHOLD})")
-                success = rebuild_and_retrain(cycle_id=cycle_id, publish_hf=publish_hf)
+                success = rebuild_and_retrain(cycle_id=cycle_id)
                 stats.retrained = success
                 stats.deployed = success
                 if success:
                     accumulated_new = 0
+                    just_retrained = True
                     log.info("[phase3] Retrain + deploy complete!")
                 else:
-                    log.warning("[phase3] Retrain failed. Will retry next cycle.")
+                    log.warning("[phase3] Retrain skipped or failed. Will retry next cycle.")
             else:
                 log.info(
                     f"[phase3] Threshold reached ({accumulated_new} >= {RETRAIN_THRESHOLD}) "
@@ -1309,27 +1329,29 @@ def run_cycle(
             stats.cycle_duration_s = time.time() - t0
             return stats, accumulated_new
 
-        # ── Phase 4: Evaluation every cycle + periodic full benchmark ─────
-        q_timeout = quick_benchmark_timeout_s(quick_eval_limit, quick_eval_attempts)
-        quick_sany, quick_tlc = run_benchmark(
-            cycle_id,
-            limit=quick_eval_limit,
-            attempts=quick_eval_attempts,
-            timeout_s=q_timeout,
-            suffix="quick",
+        # ── Phase 4: Full benchmark every cycle ─────────────────────────
+        # Quick eval was pure noise (12 problems → 0-17% TLC when truth is 10%).
+        # Full benchmark (20 problems, 3 attempts) is stable and the only
+        # meaningful signal.  ~40 min extra per cycle is worth real data.
+        full_sany, full_tlc = run_benchmark(
+            cycle_id, limit=None, attempts=3, timeout_s=3600, suffix="full",
         )
         stats.benchmark_run = True
-        stats.benchmark_sany_rate = quick_sany
-        stats.benchmark_tlc_rate = quick_tlc
+        stats.benchmark_sany_rate = full_sany
+        stats.benchmark_tlc_rate = full_tlc
 
-        # Full 20-problem eval periodically, preferentially at night.
-        if cycle_id % BENCHMARK_EVERY_N == 0:
-            if night:
-                full_sany, full_tlc = run_benchmark(cycle_id, limit=None, attempts=3, timeout_s=3600, suffix="full")
-                stats.benchmark_sany_rate = full_sany
-                stats.benchmark_tlc_rate = full_tlc
+        if just_retrained and publish_hf:
+            prev_best_tlc = best_historical_full_tlc()
+            if full_tlc >= prev_best_tlc and full_tlc > 0:
+                log.info(
+                    f"[phase4] TLC {full_tlc:.0%} >= previous best {prev_best_tlc:.0%} — publishing to HF"
+                )
+                publish_to_hf(cycle_id)
             else:
-                log.info("[phase4] Full benchmark deferred to nighttime; quick eval already completed.")
+                log.warning(
+                    f"[phase4] TLC {full_tlc:.0%} < previous best {prev_best_tlc:.0%} (or zero) "
+                    "— SKIPPING HF publish to avoid pushing a regression"
+                )
 
     except Exception as e:
         stats.error = f"{type(e).__name__}: {str(e)[:200]}"
@@ -1341,7 +1363,7 @@ def run_cycle(
 
 
 def main():
-    global RETRAIN_THRESHOLD, BENCHMARK_EVERY_N
+    global RETRAIN_THRESHOLD
 
     import argparse
 
@@ -1351,10 +1373,6 @@ def main():
     parser.add_argument("--cycle-hours", type=float, default=CYCLE_HOURS,
                         help="Hours to wait after each cycle before starting the next (0 = no wait; "
                         f"default: {CYCLE_HOURS})")
-    parser.add_argument("--quick-eval-limit", type=int, default=QUICK_EVAL_LIMIT,
-                        help=f"Problems per quick benchmark each cycle (default: {QUICK_EVAL_LIMIT})")
-    parser.add_argument("--quick-eval-attempts", type=int, default=QUICK_EVAL_ATTEMPTS,
-                        help=f"Self-correct attempts per problem in quick eval (default: {QUICK_EVAL_ATTEMPTS})")
     parser.add_argument("--max-cycles", type=int, default=0,
                         help="Max cycles to run (0 = infinite)")
     parser.add_argument("--retrain-threshold", type=int, default=RETRAIN_THRESHOLD,
@@ -1362,31 +1380,31 @@ def main():
     parser.add_argument("--allow-daytime-retrain", action="store_true",
                         help="Retrain during daytime when threshold met (default: defer to night)")
     parser.add_argument("--model", default="chattla:20b")
-    parser.add_argument("--benchmark-every", type=int, default=BENCHMARK_EVERY_N,
-                        help=f"Benchmark every N cycles (default: {BENCHMARK_EVERY_N})")
     parser.add_argument("--no-publish-hf", action="store_true",
                         help="Skip Hugging Face Hub upload after retrain (requires HF_TOKEN when enabled)")
+    # Legacy flags — accepted but ignored (full benchmark runs every cycle now).
+    parser.add_argument("--quick-eval-limit", type=int, default=20, help=argparse.SUPPRESS)
+    parser.add_argument("--quick-eval-attempts", type=int, default=3, help=argparse.SUPPRESS)
+    parser.add_argument("--benchmark-every", type=int, default=1, help=argparse.SUPPRESS)
     args = parser.parse_args()
 
     RETRAIN_THRESHOLD = args.retrain_threshold
-    BENCHMARK_EVERY_N = args.benchmark_every
 
     cycle_seconds = max(0.0, args.cycle_hours * 3600)
 
     log.info("=" * 60)
     log.info("  ChatTLA Autonomous RL Loop")
-    log.info(f"  Inter-cycle pause: {args.cycle_hours}h ({'none' if cycle_seconds <= 0 else f'{cycle_seconds/60:.0f} min target'}) "
-             f"| Quick eval: {args.quick_eval_limit} problems × {args.quick_eval_attempts} attempts")
-    log.info(f"  Retrain threshold: {args.retrain_threshold}")
+    log.info(f"  Inter-cycle pause: {args.cycle_hours}h ({'none' if cycle_seconds <= 0 else f'{cycle_seconds/60:.0f} min target'})")
+    log.info(f"  Eval: FULL benchmark (20 problems, 3 attempts) every cycle")
+    log.info(f"  Retrain threshold: {args.retrain_threshold} | Min training size: {MIN_TRAIN_EXAMPLES}")
     if args.allow_daytime_retrain:
         log.info("  Daytime retrain: ENABLED (--allow-daytime-retrain)")
     if args.no_publish_hf:
         log.info("  Hugging Face publish: DISABLED (--no-publish-hf)")
     elif os.environ.get("HF_TOKEN"):
-        log.info(f"  Hugging Face publish: ENABLED → {_HF_REPO} (after retrain)")
+        log.info(f"  Hugging Face publish: ENABLED → {_HF_REPO} (quality-gated: TLC must match/exceed best)")
     else:
         log.info("  Hugging Face publish: will skip (HF_TOKEN not set)")
-    log.info(f"  Benchmark every {args.benchmark_every} cycles (full suite = primary TLC metric)")
     log.info(f"  Max cycles: {'infinite' if args.max_cycles == 0 else args.max_cycles}")
     log.info(f"  PID: {os.getpid()}")
     log.info("=" * 60)
@@ -1414,8 +1432,6 @@ def main():
             accumulated_new,
             args.allow_daytime_retrain,
             publish_hf=not args.no_publish_hf,
-            quick_eval_limit=args.quick_eval_limit,
-            quick_eval_attempts=args.quick_eval_attempts,
         )
         accumulated_new = diagnose_and_fix(stats, accumulated_new)
         save_accumulated_new(accumulated_new)

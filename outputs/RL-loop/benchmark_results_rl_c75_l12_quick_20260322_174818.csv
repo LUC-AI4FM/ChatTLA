@@ -1,0 +1,613 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,0,0.444,silver,89.67,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, turn, flag
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,0,0,0.667,bronze,24.26,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES participants, votes, commit, abort
+
+Init == /\ participants \in 1..N
+        /\ votes \in [p \in participants |-> {Prepare}]
+        /\ commit \in 1..N
+        /\ abort \in 1..N
+
+Next == /\ /\ /\ /\ /\ /\ /\ /\
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,1,0,1.0,silver,29.65,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES forks, states
+
+(* Constants *)
+N == 5
+
+(* Helper functions *)
+LEFT(i) == IF i = 1 THEN N ELSE i - 1
+RIGHT(i) == IF i = N THEN 1 ELSE i + 1
+
+(* State predicates *)
+ForkFree(i) == forks[i] = 0
+ForkHeldBy(i, j) == forks[i] = j
+
+PhilosopherThinking(i) == states[i] = ""thinking""
+PhilosopherHungry(i) == states[i] = ""hungry""
+PhilosopherEating(i) == states[i] = ""eating""
+
+(* Actions *)
+TakeFork(i, j) == forks' = [forks EXCEPT ![j] = i]
+PutFork(i, j) == forks' = [forks EXCEPT ![j] = 0]
+Think(i) == states' = [states EXCEPT ![i] = ""thinking""]
+Hungry(i) == states' = [states EXCEPT ![i] = ""hungry""]
+Eat(i) == states' = [states EXCEPT ![i] = ""eating""]
+
+(* Next action *)
+Next == 
+  \/ \E i \in 1..N : 
+       PhilosopherThinking(i) /\ ForkFree(LEFT(i)) /\ ForkFree(RIGHT(i)) 
+       /\ TakeFork(i, LEFT(i)) 
+       /\ TakeFork(i, RIGHT(i)) 
+       /\ Eat(i)
+  \/ \E i \in 1..N : 
+       PhilosopherEating(i) 
+       /\ PutFork(i, LEFT(i)) 
+       /\ PutFork(i, RIGHT(i)) 
+       /\ Think(i)
+
+(* Initial state *)
+Init == 
+  /\ forks = [i \in 1..N |-> 0]
+  /\ states = [i \in 1..N |-> ""thinking""]
+
+(* Type invariant *)
+TypeOK == 
+  /\ forks \in [1..N -> 0..N]
+  /\ states \in [1..N -> {""thinking"", ""hungry"", ""eating""}]
+
+(* Specification *)
+Spec == Init /\ [][Next]_<<forks, states>>
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,0,0,0.444,bronze,198.1,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+
+VARIABLES num, flag
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,1,0.778,gold,7.22,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES queue, head, tail, count
+
+Init == /\ queue = <<>>
+        /\ head = 1
+        /\ tail = 1
+        /\ count = 0
+
+Next == 
+  \/ /\ count < K
+      /\ head' = head
+         /\ tail' = (tail % K) + 1
+         /\ count' = count + 1
+         /\ queue' = Append(queue, head)
+  \/ /\ count > 0
+      /\ head' = (head % K) + 1
+         /\ tail' = tail
+         /\ count' = count - 1
+         /\ queue' = Tail(queue)
+
+Spec == Init /\ [][Next]_<<queue, head, tail, count>>
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,0,0,0.778,bronze,18.29,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+Init == /\ currentTerm = 0
+        /\ votedFor = NULL
+        /\ state = ""Follower""
+
+Next == \/ /\ state = ""Follower""
+        /\ currentTerm' = currentTerm
+           /\ votedFor' = votedFor
+           /\ state' = ""Follower""
+        \/ /\ state = ""Candidate""
+        /\ currentTerm' = currentTerm + 1
+           /\ votedFor' = NULL
+           /\ state' = ""Candidate""
+        \/ /\ state = ""Leader""
+        /\ currentTerm' = currentTerm
+           /\ votedFor' = votedFor
+           /\ state' = ""Leader""
+
+Spec == Init /\ [][Next]_<<currentTerm, votedFor, state>>
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,0,0,0.778,bronze,181.68,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS Readers
+
+VARIABLES readers, writer_active
+
+Init == /\ readers = <<>>
+       /\ writer_active = FALSE
+
+Next == \/ /\ writer_active = FALSE
+          /\ \E r \in Readers : /\ r \in readers
+          /\ r \notin readers
+          /\ writer_active' = TRUE
+          /\ readers' = <<>>
+       \/ /\ writer_active = FALSE
+          /\ \E r \in Readers : /\ r \notin readers
+          /\ r \in readers'
+          /\ writer_active' = FALSE
+       \/ /\ writer_active = TRUE
+          /\ \E r \in Readers : /\ r \in readers
+          /\ writer_active' = FALSE
+          /\ readers' = <<>>
+       \/ /\ writer_active = FALSE
+          /\ \E r \in Readers : /\ r \notin readers
+          /\ writer_active' = FALSE
+          /\ readers' = <<>>
+
+Spec == Init /\ [][Next]_<<readers, writer_active>>
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,1,0,0.444,silver,53.14,"---- MODULE DistributedSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, channel, marker, snapshot, recorded, finished
+
+===="
+chattla:20b,BM009,Token Ring,networking,2,1,1,0.667,gold,2.22,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLE token
+
+Init == /\ token \in 1..N
+
+Next == /\ token' \in 1..N
+        /\ token' = IF token = N THEN 1 ELSE token + 1
+
+Spec == Init /\ [][Next]_<<token>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,0.667,silver,12.27,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, Values
+VARIABLE store
+
+Init == /\ store \in [Keys -> Values]
+
+Next == /\ \E k \in Keys : \E v \in Values : store' = [store EXCEPT ![k] = v]
+
+Spec == Init /\ [][Next]_<<store>>
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,0,0,1.0,bronze,75.73,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES acceptors, proposers, promises, accepts, chosen, ballots, values
+\* Highest promised ballot among acceptors
+HighestPromisedBallot == 
+  IF acceptors = {} THEN 0
+
+
+\* Highest accepted ballot among acceptors
+HighestAcceptedBallot == 
+  IF acceptors = {} THEN 0
+
+
+\* Value with highest accepted ballot
+HighestAcceptedValue == 
+  IF acceptors = {} THEN {}
+
+    LET maxBallot == HighestAcceptedBallot
+    IN IF maxBallot = 0 THEN {}
+
+         LET maxAcceptors == {p \in acceptors : accepts[p] = maxBallot}
+         IN IF maxAcceptors = {} THEN {}
+
+              LET maxValue == 
+
+                      Head({v \in values : v \in maxAcceptors})
+
+                      Head({v \in values : v \in maxAcceptors}) \* Tie-breaking
+              IN maxValue
+
+\* Initial state
+Init == 
+  /\ acceptors = {1, 2, 3} \* Example set of acceptors
+  /\ proposers = {1, 2} \* Example set of proposers
+  /\ promises = [p \in acceptors |-> 0]
+  /\ accepts = [p \in acceptors |-> 0]
+  /\ chosen = {}
+  /\ ballots = [p \in proposers |-> 0]
+  /\ values = [p \in proposers |-> {}]
+
+\* Next-state relation
+Next == 
+  \/ \E p \in proposers :
+       /\ ballots' = [ballots EXCEPT ![p] = ballots[p] + 1]
+       /\ values' = [values EXCEPT ![p] = values[p]]
+       /\ promises' = promises
+       /\ accepts' = accepts
+       /\ chosen' = chosen
+  \/ \E p \in proposers : \E a \in acceptors :
+       /\ promises' = [promises EXCEPT ![a] = ballots[p]]
+       /\ accepts' = accepts
+       /\ chosen' = chosen
+       /\ ballots' = ballots
+       /\ values' = values
+  \/ \E p \in proposers : \E a \in acceptors :
+       /\ accepts' = [accepts EXCEPT ![a] = ballots[p]]
+       /\ promises' = promises
+       /\ chosen' = chosen
+       /\ ballots' = ballots
+       /\ values' = values
+  \/ \E a \in acceptors : \E v \in values :
+       /\ chosen' = chosen \cup {v}
+       /\ promises' = promises
+       /\ accepts' = accepts
+       /\ ballots' = ballots
+       /\ values' = values
+
+\* Specification
+Spec == Init /\ [][Next]_<<acceptors, proposers, promises, accepts, chosen, ballots, values>>
+
+\* Type invariant
+TypeOK == 
+  /\ acceptors \in SUBSET Nat
+  /\ proposers \in SUBSET Nat
+  /\ promises \in acceptors -> Nat
+  /\ accepts \in acceptors -> Nat
+  /\ chosen \in SUBSET values
+  /\ ballots \in proposers -> Nat
+  /\ values \in proposers -> Nat
+
+===="
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,0,0,0.667,bronze,117.39,"---- MODULE Sender ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS MAX_RETRIES, CHUNK_SIZE, FILE_SIZE
+VARIABLES channel, retransmitCount, sentChunks
+
+    /\ file \in Seq
+    /\ chunks = [i \in 1..Len(file) \div CHUNK_SIZE |-> SubSeq(file, i, i + CHUNK_SIZE - 1)
+
+            SubSeq(file, i, Len(file))]
+    /\ sentChunks = <<>>
+    /\ retransmitCount = 0
+    /\ channel = <<>>
+
+Next ==
+    /\ sentChunks' = sentChunks
+    /\ retransmitCount' = retransmitCount
+    /\ channel' = channel
+    /\ IF Len(sentChunks) < Len(chunks) THEN
+        /\ sentChunks' = Append(sentChunks, Head(chunks))
+        /\ channel' = Append(channel, Head(chunks))
+        /\ retransmitCount' = 0
+
+        /\ IF retransmitCount < MAX_RETRIES THEN
+            /\ channel' = Append(channel, Last(sentChunks))
+            /\ retransmitCount' = retransmitCount + 1
+
+            /\ channel' = channel
+            /\ retransmitCount' = retransmitCount
+
+Spec ==
+    Init /\ [][Next]_<<file, chunks, sentChunks, retransmitCount, channel>>
+
+===="

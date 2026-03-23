@@ -139,11 +139,8 @@ do_start() {
         echo \"=== Starting RL loop ===\"
         nice -n 10 python3 scripts/rl_loop.py \
             --cycle-hours 0 \
-            --quick-eval-limit 12 \
-            --quick-eval-attempts 2 \
             --retrain-threshold 50 \
             --allow-daytime-retrain \
-            --benchmark-every 3 \
             2>&1
         echo \"\"
         echo \"[\$(date -Iseconds)] RL loop exited. Press any key to close.\"

@@ -1,0 +1,1455 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,0,0,0.444,bronze,373.13,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state
+
+
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+labels
+  start
+  try
+  critical
+  exit
+  idle
+  done
+  end
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,1,0,0.444,silver,50.75,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES participants, votes, state, messages, log
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,0,0,1.0,bronze,41.33,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES forks, states
+
+(* Constants *)
+N == 5
+
+(* Helper functions *)
+LEFT(i) == IF i = 1 THEN N ELSE i - 1
+RIGHT(i) == IF i = N THEN 1 ELSE i + 1
+
+(* State definitions *)
+THINKING == 0
+HUNGRY == 1
+EATING == 2
+
+(* Initial state *)
+Init == /\ forks = [i \in 1..N |-> 0]
+        /\ states = [i \in 1..N |-> THINKING]
+
+(* Next-state relation *)
+Next == 
+  \/ (* Philosopher i becomes hungry *)
+     /\ \E i \in 1..N : states[i] = THINKING
+     /\ states' = [states EXCEPT ![i] = HUNGRY]
+  \/ (* Philosopher i starts eating if both forks are free *)
+     /\ \E i \in 1..N : states[i] = HUNGRY
+     /\ forks[LEFT(i)] = 0
+     /\ forks[RIGHT(i)] = 0
+     /\ forks' = [forks EXCEPT ![LEFT(i)] = i, ![RIGHT(i)] = i]
+     /\ states' = [states EXCEPT ![i] = EATING]
+  \/ (* Philosopher i puts down forks after eating *)
+     /\ \E i \in 1..N : states[i] = EATING
+     /\ forks' = [forks EXCEPT ![LEFT(i)] = 0, ![RIGHT(i)] = 0]
+     /\ states' = [states EXCEPT ![i] = THINKING]
+
+(* Type invariant *)
+TypeOK == /\ forks \in [1..N -> 1..N]
+          /\ states \in [1..N -> {THINKING, HUNGRY, EATING}]
+
+(* Specification *)
+Spec == Init /\ [][Next]_<<forks, states>>
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,0,0,0.444,bronze,202.74,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+
+VARIABLES num, flag
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,0,0.778,silver,9.97,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail
+
+Init == /\ q \in Seq(1..K)
+        /\ head \in 1..K
+        /\ tail \in 1..K
+        /\ Len(q) = 0
+        /\ head = 1
+        /\ tail = 1
+
+Producer == /\ Len(q) < K
+           /\ head' = head
+           /\ tail' = tail
+           /\ q' = Append(q, 1)
+
+Consumer == /\ Len(q) > 0
+           /\ head' = head
+           /\ tail' = tail
+           /\ q' = Tail(q)
+
+Next == Producer \/ Consumer
+
+Spec == Init /\ [][Next]_<<q, head, tail>>
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,0,0,0.778,bronze,19.24,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+Init == /\ currentTerm = 0
+        /\ votedFor = NULL
+        /\ state = ""Follower""
+
+Next == \/ /\ state = ""Follower""
+        /\ currentTerm' = currentTerm
+        /\ votedFor' = votedFor
+        /\ state' = ""Follower""
+        \/ /\ state = ""Candidate""
+        /\ currentTerm' = currentTerm + 1
+        /\ votedFor' = NULL
+        /\ state' = ""Candidate""
+        \/ /\ state = ""Leader""
+        /\ currentTerm' = currentTerm
+        /\ votedFor' = votedFor
+        /\ state' = ""Leader""
+
+Spec == Init /\ [][Next]_<<currentTerm, votedFor, state>>
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,1,0,0.667,silver,283.9,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES readers, writer_active
+
+Init == /\ readers = <<>>
+       /\ writer_active = FALSE
+
+Next == \/ /\ writer_active = FALSE
+          /\ \E r \in 1..10 : /\ r \notin readers
+              /\ readers' = Append(readers, r)
+       \/ /\ writer_active = FALSE
+          /\ \E r \in readers : /\ r \in readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+          /\ \E r \in 1..10 : r \notin readers
+    "
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,1,0,0.444,silver,90.05,"---- MODULE DistributedSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, channel, recorded, markerSent, markerReceived
+===="
+chattla:20b,BM009,Token Ring,networking,2,1,1,0.667,gold,2.26,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLE token
+
+Init == /\ token \in 1..N
+
+Next == /\ token' \in 1..N
+        /\ token' = IF token = N THEN 1 ELSE token + 1
+
+Spec == Init /\ [][Next]_<<token>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,0,0,0.778,bronze,12.95,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, Values
+
+VARIABLES store
+
+Init == /\ store \in [Keys -> Values]
+Next == /\ \E k \in Keys : \E v \in Values :
+        /\ store' = [store EXCEPT ![k] = v]
+        /\ UNCHANGED <<>>
+Spec == Init /\ [][Next]_<<store>>
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,1,0,0.444,silver,52.99,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES acceptors, proposers, promises, accepts, chosen, ballots, values
+
+===="
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,0,0,0.889,bronze,39.38,"---- MODULE Sender ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS MAX_RETRIES, CHUNK_SIZE, FILE_SIZE
+VARIABLES retransmitCount, sentChunks
+
+    /\ file \in Seq
+    /\ chunks = [i \in 1..Len(file) \div i \in 1..Len(file) \div CHUNK_SIZE |-> SubSeq(file, i, CHUNK_SIZE)]
+    /\ sentChunks = <<>>
+    /\ retransmitCount = 0
+
+Next ==
+    /\ sentChunks' = Append(sentChunks, [chunk |-> chunks[Len(sentChunks)+1], retransmitCount |-> retransmitCount])
+    /\ retransmitCount' = IF retransmitCount < MAX_RETRIES THEN retransmitCount + 1 ELSE retransmitCount
+
+Spec ==
+    Init /\ [][Next]_<<file, chunks, sentChunks, retransmitCount>>
+
+TypeOK ==
+    /\ file \in Seq
+    /\ chunks \in [1..Len(file) \div CHUNK_SIZE \in 1..Len(file) \div CHUNK_SIZE |-> Seq]
+    /\ sentChunks \in Seq
+    /\ retransmitCount \in Nat
+
+===="
