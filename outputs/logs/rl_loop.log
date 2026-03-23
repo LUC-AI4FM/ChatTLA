@@ -4872,3 +4872,936 @@ KeyboardInterrupt
 2026-03-22 22:57:10 INFO   [SYN003] tier=gold sany=True tlc=True struct=0.78 attempts=1 (best of 1)
 2026-03-22 22:57:13 INFO   [RL003] tier=gold sany=True tlc=True struct=0.78 attempts=1 (best of 1)
 2026-03-22 22:57:17 INFO   [SYN002] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-22 22:58:09 INFO   [RL009] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-22 22:58:37 INFO   [BM007] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-22 22:58:48 INFO   [BM018] tier=bronze sany=False tlc=False struct=0.44 attempts=1 (best of 1)
+2026-03-22 22:58:58 INFO   [RL012] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-22 22:59:01 INFO   [SYN006] tier=gold sany=True tlc=True struct=0.78 attempts=1 (best of 1)
+2026-03-22 22:59:10 INFO   [RL015] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-22 22:59:17 INFO   [BM019] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-22 22:59:23 INFO   [SYN015] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-22 22:59:56 INFO   [BM003] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-22 23:00:21 INFO   [BM012] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-22 23:00:47 INFO   [BM016] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-22 23:00:55 INFO   [RL011] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-22 23:02:59 INFO   [RL005] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-22 23:03:03 INFO   [SYN020] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-22 23:03:13 INFO   [SYN010] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-22 23:03:15 INFO   [RL001] tier=gold sany=True tlc=True struct=0.78 attempts=1 (best of 1)
+2026-03-22 23:03:19 INFO   [SYN014] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-22 23:03:23 INFO   [SYN016] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-22 23:05:50 INFO   [BM004] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-22 23:06:48 INFO   [BM005] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-22 23:07:42 INFO   [BM020] tier=bronze sany=False tlc=False struct=0.67 attempts=1 (best of 1)
+2026-03-22 23:07:49 INFO   [SYN018] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-22 23:08:38 INFO   [BM015] tier=bronze sany=False tlc=False struct=0.67 attempts=1 (best of 1)
+2026-03-22 23:08:45 INFO   [RL006] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-22 23:08:48 INFO   [SYN017] tier=gold sany=True tlc=True struct=0.78 attempts=1 (best of 1)
+2026-03-22 23:09:23 INFO   [BM002] tier=bronze sany=False tlc=False struct=0.56 attempts=1 (best of 1)
+2026-03-22 23:09:30 INFO   [RL010] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-22 23:10:19 INFO   [RL014] tier=bronze sany=False tlc=False struct=0.67 attempts=1 (best of 1)
+2026-03-22 23:10:20 INFO [phase1] Results: gold=5 silver=18 bronze=28 sany=23/51 tlc=5/51
+2026-03-22 23:10:20 INFO [phase2] Building training data from results...
+2026-03-22 23:10:20 INFO [phase2] Built 16 SFT examples, 0 DPO pairs (from 51 results, 40 prompts)
+2026-03-22 23:10:20 INFO [phase2] Persisted 13 SFT examples, 0 DPO pairs. Accumulated: 46
+2026-03-22 23:10:20 INFO [phase3] Skipping retrain (46/50 examples accumulated)
+2026-03-22 23:10:20 INFO [benchmark] Running full benchmark suite (cycle 82, attempts=3)...
+2026-03-22 23:53:32 INFO [benchmark] Results: sany=85% (17/20) tlc=10% (2/20)
+2026-03-22 23:53:32 INFO [benchmark] Full suite: prioritize TLC rate for model comparison (SANY is the funnel).
+2026-03-22 23:53:32 INFO 
+────────────────────────────────────────────────────────────
+2026-03-22 23:53:32 INFO CYCLE 82 SUMMARY (62.3 min)
+2026-03-22 23:53:32 INFO   Specs: 51 | SANY: 23 | TLC: 5
+2026-03-22 23:53:32 INFO   Gold: 5 | Silver: 18 | Bronze: 28
+2026-03-22 23:53:32 INFO   New SFT: 13 | New DPO: 0
+2026-03-22 23:53:32 INFO   Retrained: False | Deployed: False
+2026-03-22 23:53:32 INFO   Benchmark: SANY=85% TLC=10%
+2026-03-22 23:53:32 INFO ────────────────────────────────────────────────────────────
+
+2026-03-22 23:53:32 INFO ============================================================
+2026-03-22 23:53:32 INFO CYCLE 83 | NIGHTTIME | difficulty_cap=3 | max_prompts=40
+2026-03-22 23:53:32 INFO Pacing: 0.5s between prompts
+2026-03-22 23:53:32 INFO ============================================================
+2026-03-22 23:53:32 INFO [phase1] Loading prompt bank...
+2026-03-22 23:53:32 INFO [prompt_bank] Injected condensed descriptions for 11 benchmark prompt(s)
+2026-03-22 23:53:32 INFO [phase1] Generating and validating 40 specs...
+2026-03-22 23:54:23 INFO   [BM015] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-22 23:54:35 INFO   [BM020] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-22 23:55:06 INFO   [BM010] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-22 23:55:55 INFO   [RL006] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-22 23:56:03 INFO   [SYN005] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-22 23:56:10 INFO   [SYN019] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-22 23:57:14 INFO   [SYN014] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-22 23:57:21 INFO   [SYN006] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-22 23:59:45 INFO   [BM005] tier=bronze sany=False tlc=False struct=0.67 attempts=1 (best of 1)
+2026-03-22 23:59:56 INFO   [RL008] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 00:00:58 INFO   [BM017] tier=bronze sany=False tlc=False struct=0.56 attempts=1 (best of 1)
+2026-03-23 00:01:20 INFO   [BM016] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 00:02:11 INFO   [RL011] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 00:02:34 INFO   [SYN007] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 00:02:36 INFO   [SYN012] tier=gold sany=True tlc=True struct=0.78 attempts=1 (best of 1)
+2026-03-23 00:02:45 INFO   [BM014] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 00:03:18 INFO   [BM001] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 00:03:24 INFO   [RL015] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 00:03:36 INFO   [SYN008] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 00:04:53 INFO   [BM003] tier=bronze sany=False tlc=False struct=0.67 attempts=1 (best of 1)
+2026-03-23 00:04:56 INFO   [SYN016] tier=gold sany=True tlc=True struct=0.89 attempts=1 (best of 1)
+2026-03-23 00:05:07 INFO   [SYN010] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 00:05:35 INFO   [BM007] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 00:05:40 INFO   [SYN003] tier=gold sany=True tlc=True struct=0.89 attempts=1 (best of 1)
+2026-03-23 00:06:38 INFO   [BM004] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 00:07:31 INFO   [RL013] tier=bronze sany=False tlc=False struct=0.44 attempts=1 (best of 1)
+2026-03-23 00:07:39 INFO   [RL014] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 00:07:47 INFO   [SYN004] tier=bronze sany=False tlc=False struct=0.67 attempts=1 (best of 1)
+2026-03-23 00:09:52 INFO   [RL005] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 00:10:00 INFO   [SYN009] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 00:10:08 INFO   [SYN017] tier=gold sany=True tlc=True struct=0.78 attempts=2 (best of 2)
+2026-03-23 00:11:20 INFO   [BM002] tier=bronze sany=False tlc=False struct=0.56 attempts=1 (best of 1)
+2026-03-23 00:11:34 INFO   [RL009] tier=gold sany=True tlc=True struct=0.78 attempts=2 (best of 2)
+2026-03-23 00:11:38 INFO   [RL004] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 00:12:25 INFO   [SYN011] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 00:12:30 INFO   [SYN018] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 00:12:44 INFO   [BM012] tier=bronze sany=False tlc=False struct=0.67 attempts=1 (best of 1)
+2026-03-23 00:12:50 INFO   [SYN013] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 00:14:42 INFO   [BM018] tier=bronze sany=False tlc=False struct=0.44 attempts=1 (best of 1)
+2026-03-23 00:14:47 INFO   [SYN002] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 00:14:48 INFO [phase1] Results: gold=5 silver=20 bronze=28 sany=25/53 tlc=5/53
+2026-03-23 00:14:48 INFO [phase2] Building training data from results...
+2026-03-23 00:14:48 INFO [phase2] Built 17 SFT examples, 2 DPO pairs (from 53 results, 40 prompts)
+2026-03-23 00:14:48 INFO [phase2] Persisted 12 SFT examples, 1 DPO pairs. Accumulated: 58
+2026-03-23 00:14:48 INFO [phase3] Retrain threshold reached (night) (58 >= 50)
+2026-03-23 00:14:48 INFO [retrain] Rebuilding training dataset...
+2026-03-23 00:14:55 INFO [retrain] Dataset rebuilt. [dataset_builder] eval =4  examples → /home/espencer2/ChatTLA/data/processed/eval.jsonl
+2026-03-23 00:14:55 WARNING [retrain] Only 317 training examples (need >= 500). Skipping retrain to avoid damaging the base model. Accumulate more data first.
+2026-03-23 00:14:55 WARNING [phase3] Retrain skipped or failed. Will retry next cycle.
+2026-03-23 00:14:55 INFO [benchmark] Running full benchmark suite (cycle 83, attempts=3)...
+2026-03-23 00:53:36 INFO [benchmark] Results: sany=70% (14/20) tlc=10% (2/20)
+2026-03-23 00:53:36 INFO [benchmark] Full suite: prioritize TLC rate for model comparison (SANY is the funnel).
+2026-03-23 00:53:36 INFO 
+────────────────────────────────────────────────────────────
+2026-03-23 00:53:36 INFO CYCLE 83 SUMMARY (60.1 min)
+2026-03-23 00:53:36 INFO   Specs: 53 | SANY: 25 | TLC: 5
+2026-03-23 00:53:36 INFO   Gold: 5 | Silver: 20 | Bronze: 28
+2026-03-23 00:53:36 INFO   New SFT: 12 | New DPO: 1
+2026-03-23 00:53:36 INFO   Retrained: False | Deployed: False
+2026-03-23 00:53:36 INFO   Benchmark: SANY=70% TLC=10%
+2026-03-23 00:53:36 INFO ────────────────────────────────────────────────────────────
+
+2026-03-23 00:53:36 INFO ============================================================
+2026-03-23 00:53:36 INFO CYCLE 84 | NIGHTTIME | difficulty_cap=3 | max_prompts=40
+2026-03-23 00:53:36 INFO Pacing: 0.5s between prompts
+2026-03-23 00:53:36 INFO ============================================================
+2026-03-23 00:53:36 INFO [phase1] Loading prompt bank...
+2026-03-23 00:53:36 INFO [prompt_bank] Injected condensed descriptions for 11 benchmark prompt(s)
+2026-03-23 00:53:36 INFO [phase1] Generating and validating 40 specs...
+2026-03-23 00:53:40 INFO   [SYN017] tier=gold sany=True tlc=True struct=0.78 attempts=1 (best of 1)
+2026-03-23 00:53:49 INFO   [SYN003] tier=gold sany=True tlc=True struct=0.89 attempts=2 (best of 2)
+2026-03-23 00:53:55 INFO   [SYN013] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 00:55:02 INFO   [RL016] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 00:55:10 INFO   [SYN004] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 00:55:12 INFO   [RL001] tier=gold sany=True tlc=True struct=0.67 attempts=1 (best of 1)
+2026-03-23 00:55:17 INFO   [RL004] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 00:55:24 INFO   [SYN018] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 00:56:31 INFO   [BM018] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 00:56:58 INFO   [BM002] tier=bronze sany=False tlc=False struct=0.56 attempts=1 (best of 1)
+2026-03-23 00:57:07 INFO   [RL006] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 00:58:11 INFO   [SYN020] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 00:58:17 INFO   [RL009] tier=gold sany=True tlc=True struct=0.78 attempts=1 (best of 1)
+2026-03-23 00:58:26 INFO   [SYN001] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 00:58:55 INFO   [BM001] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 00:59:01 INFO   [RL012] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 00:59:08 INFO   [RL013] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 01:00:08 INFO   [SYN007] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 01:01:12 INFO   [BM012] tier=silver sany=True tlc=False struct=0.33 attempts=2 (best of 2)
+2026-03-23 01:03:48 INFO   [BM004] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 01:06:13 INFO   [BM005] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 01:06:22 INFO   [SYN005] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 01:06:29 INFO   [RL015] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 01:06:36 INFO   [BM014] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 01:06:38 INFO   [RL002] tier=gold sany=True tlc=True struct=0.67 attempts=1 (best of 1)
+2026-03-23 01:07:29 INFO   [RL010] tier=bronze sany=False tlc=False struct=0.67 attempts=1 (best of 1)
+2026-03-23 01:07:37 INFO   [RL008] tier=silver sany=True tlc=False struct=0.89 attempts=2 (best of 2)
+2026-03-23 01:07:42 INFO   [SYN002] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 01:08:10 INFO   [BM007] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 01:08:13 INFO   [RL007] tier=gold sany=True tlc=True struct=0.78 attempts=1 (best of 1)
+2026-03-23 01:08:22 INFO   [BM015] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 01:08:26 INFO   [BM019] tier=gold sany=True tlc=True struct=0.78 attempts=1 (best of 1)
+2026-03-23 01:09:32 INFO   [RL011] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 01:09:37 INFO   [RL003] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 01:11:42 INFO   [RL005] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 01:11:48 INFO   [SYN015] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 01:12:30 INFO   [BM003] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 01:12:33 INFO   [SYN016] tier=gold sany=True tlc=True struct=0.78 attempts=1 (best of 1)
+2026-03-23 01:12:39 INFO   [SYN008] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 01:13:43 INFO   [SYN014] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 01:13:44 INFO [phase1] Results: gold=8 silver=25 bronze=23 sany=33/56 tlc=8/56
+2026-03-23 01:13:44 INFO [phase2] Building training data from results...
+2026-03-23 01:13:44 INFO [phase2] Built 24 SFT examples, 1 DPO pairs (from 56 results, 40 prompts)
+2026-03-23 01:13:44 INFO [phase2] Persisted 16 SFT examples, 0 DPO pairs. Accumulated: 74
+2026-03-23 01:13:44 INFO [phase3] Retrain threshold reached (night) (74 >= 50)
+2026-03-23 01:13:44 INFO [retrain] Rebuilding training dataset...
+2026-03-23 01:13:51 INFO [retrain] Dataset rebuilt. [dataset_builder] eval =4  examples → /home/espencer2/ChatTLA/data/processed/eval.jsonl
+2026-03-23 01:13:51 WARNING [retrain] Only 320 training examples (need >= 500). Skipping retrain to avoid damaging the base model. Accumulate more data first.
+2026-03-23 01:13:51 WARNING [phase3] Retrain skipped or failed. Will retry next cycle.
+2026-03-23 01:13:51 INFO [benchmark] Running full benchmark suite (cycle 84, attempts=3)...
+2026-03-23 01:48:37 INFO [benchmark] Results: sany=75% (15/20) tlc=10% (2/20)
+2026-03-23 01:48:37 INFO [benchmark] Full suite: prioritize TLC rate for model comparison (SANY is the funnel).
+2026-03-23 01:48:37 WARNING [diag:retrain_fail_streak] Retrain failed 2 times in a row
+2026-03-23 01:48:37 WARNING [diag] Resetting accumulated_new to 0 after repeated retrain failures
+2026-03-23 01:48:37 INFO 
+────────────────────────────────────────────────────────────
+2026-03-23 01:48:37 INFO CYCLE 84 SUMMARY (55.0 min)
+2026-03-23 01:48:37 INFO   Specs: 56 | SANY: 33 | TLC: 8
+2026-03-23 01:48:37 INFO   Gold: 8 | Silver: 25 | Bronze: 23
+2026-03-23 01:48:37 INFO   New SFT: 16 | New DPO: 0
+2026-03-23 01:48:37 INFO   Retrained: False | Deployed: False
+2026-03-23 01:48:37 INFO   Benchmark: SANY=75% TLC=10%
+2026-03-23 01:48:37 INFO ────────────────────────────────────────────────────────────
+
+2026-03-23 01:48:37 INFO ============================================================
+2026-03-23 01:48:37 INFO CYCLE 85 | NIGHTTIME | difficulty_cap=3 | max_prompts=40
+2026-03-23 01:48:37 INFO Pacing: 0.5s between prompts
+2026-03-23 01:48:37 INFO ============================================================
+2026-03-23 01:48:37 INFO [phase1] Loading prompt bank...
+2026-03-23 01:48:37 INFO [prompt_bank] Injected condensed descriptions for 11 benchmark prompt(s)
+2026-03-23 01:48:37 INFO [phase1] Generating and validating 40 specs...
+2026-03-23 01:49:40 INFO   [SYN014] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 01:49:45 INFO   [RL004] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 01:52:06 INFO   [RL013] tier=bronze sany=False tlc=False struct=0.67 attempts=1 (best of 1)
+2026-03-23 01:52:19 INFO   [BM020] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 01:54:07 INFO   [RL007] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 01:54:09 INFO   [RL002] tier=gold sany=True tlc=True struct=0.67 attempts=1 (best of 1)
+2026-03-23 01:54:15 INFO   [SYN010] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 01:54:21 INFO   [RL010] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 01:54:24 INFO   [SYN016] tier=gold sany=True tlc=True struct=0.78 attempts=1 (best of 1)
+2026-03-23 01:55:14 INFO   [SYN012] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 01:56:03 INFO   [SYN007] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 01:56:32 INFO   [BM001] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 01:56:56 INFO   [BM007] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 01:57:02 INFO   [SYN004] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 01:57:08 INFO   [RL011] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 01:57:10 INFO   [RL001] tier=gold sany=True tlc=True struct=0.67 attempts=1 (best of 1)
+2026-03-23 01:57:15 INFO   [SYN020] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 01:57:25 INFO   [SYN009] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 01:57:31 INFO   [SYN015] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 01:59:56 INFO   [BM005] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 02:00:01 INFO   [SYN018] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 02:00:29 INFO   [BM018] tier=bronze sany=False tlc=False struct=0.44 attempts=1 (best of 1)
+2026-03-23 02:00:47 INFO   [BM017] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 02:00:58 INFO   [SYN006] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 02:01:24 INFO   [BM012] tier=bronze sany=False tlc=False struct=0.67 attempts=1 (best of 1)
+2026-03-23 02:01:30 INFO   [SYN013] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 02:02:07 INFO   [BM003] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 02:02:10 INFO   [BM019] tier=gold sany=True tlc=True struct=0.78 attempts=1 (best of 1)
+2026-03-23 02:03:02 INFO   [SYN008] tier=bronze sany=False tlc=False struct=0.67 attempts=1 (best of 1)
+2026-03-23 02:03:24 INFO   [RL009] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 02:03:59 INFO   [BM004] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 02:07:05 INFO   [BM014] tier=bronze sany=False tlc=False struct=0.67 attempts=1 (best of 1)
+2026-03-23 02:07:22 INFO   [BM016] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 02:09:46 INFO   [RL016] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 02:09:49 INFO   [SYN003] tier=gold sany=True tlc=True struct=0.78 attempts=1 (best of 1)
+2026-03-23 02:09:52 INFO   [SYN017] tier=gold sany=True tlc=True struct=0.78 attempts=1 (best of 1)
+2026-03-23 02:10:01 INFO   [BM015] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 02:10:11 INFO   [SYN001] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 02:10:16 INFO   [RL008] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 02:10:47 INFO   [BM010] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 02:10:48 INFO [phase1] Results: gold=6 silver=16 bronze=30 sany=22/52 tlc=6/52
+2026-03-23 02:10:48 INFO [phase2] Building training data from results...
+2026-03-23 02:10:48 INFO [phase2] Built 18 SFT examples, 0 DPO pairs (from 52 results, 40 prompts)
+2026-03-23 02:10:48 INFO [phase2] Persisted 13 SFT examples, 0 DPO pairs. Accumulated: 13
+2026-03-23 02:10:48 INFO [phase3] Skipping retrain (13/50 examples accumulated)
+2026-03-23 02:10:48 INFO [benchmark] Running full benchmark suite (cycle 85, attempts=3)...
+2026-03-23 02:46:48 INFO [benchmark] Results: sany=75% (15/20) tlc=0% (0/20)
+2026-03-23 02:46:48 INFO [benchmark] Full suite: prioritize TLC rate for model comparison (SANY is the funnel).
+2026-03-23 02:46:48 WARNING [diag:tlc_regression] Benchmark TLC=0% but SANY=75% in cycle 85
+2026-03-23 02:46:48 INFO 
+────────────────────────────────────────────────────────────
+2026-03-23 02:46:48 INFO CYCLE 85 SUMMARY (58.2 min)
+2026-03-23 02:46:48 INFO   Specs: 52 | SANY: 22 | TLC: 6
+2026-03-23 02:46:48 INFO   Gold: 6 | Silver: 16 | Bronze: 30
+2026-03-23 02:46:48 INFO   New SFT: 13 | New DPO: 0
+2026-03-23 02:46:48 INFO   Retrained: False | Deployed: False
+2026-03-23 02:46:48 INFO   Benchmark: SANY=75% TLC=0%
+2026-03-23 02:46:48 INFO ────────────────────────────────────────────────────────────
+
+2026-03-23 02:46:48 INFO ============================================================
+2026-03-23 02:46:48 INFO CYCLE 86 | NIGHTTIME | difficulty_cap=3 | max_prompts=40
+2026-03-23 02:46:48 INFO Pacing: 0.5s between prompts
+2026-03-23 02:46:48 INFO ============================================================
+2026-03-23 02:46:48 INFO [phase1] Loading prompt bank...
+2026-03-23 02:46:48 INFO [prompt_bank] Injected condensed descriptions for 11 benchmark prompt(s)
+2026-03-23 02:46:48 INFO [phase1] Generating and validating 40 specs...
+2026-03-23 02:49:09 INFO   [RL013] tier=bronze sany=False tlc=False struct=0.67 attempts=1 (best of 1)
+2026-03-23 02:49:47 INFO   [BM010] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 02:52:13 INFO   [BM018] tier=bronze sany=False tlc=False struct=0.44 attempts=1 (best of 1)
+2026-03-23 02:52:38 INFO   [BM007] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 02:52:43 INFO   [RL015] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 02:53:33 INFO   [RL007] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 02:53:41 INFO   [SYN005] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 02:56:47 INFO   [BM014] tier=bronze sany=False tlc=False struct=0.67 attempts=1 (best of 1)
+2026-03-23 02:56:54 INFO   [BM009] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 02:57:00 INFO   [RL011] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 02:57:07 INFO   [SYN019] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 02:57:57 INFO   [RL009] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 02:59:08 INFO   [BM001] tier=bronze sany=False tlc=False struct=0.67 attempts=1 (best of 1)
+2026-03-23 02:59:21 INFO   [SYN010] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 03:00:43 INFO   [BM003] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 03:00:48 INFO   [SYN002] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 03:03:13 INFO   [SYN009] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 03:03:22 INFO   [SYN001] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 03:03:26 INFO   [SYN020] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 03:03:28 INFO   [RL002] tier=gold sany=True tlc=True struct=0.67 attempts=1 (best of 1)
+2026-03-23 03:03:51 INFO   [BM012] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 03:03:58 INFO   [BM019] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 03:04:11 INFO   [RL014] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 03:04:28 INFO   [BM017] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 03:06:52 INFO   [BM016] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 03:06:57 INFO   [RL004] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 03:07:02 INFO   [SYN017] tier=gold sany=True tlc=True struct=0.78 attempts=1 (best of 1)
+2026-03-23 03:07:10 INFO   [RL012] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 03:09:34 INFO   [RL016] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 03:09:38 INFO   [SYN016] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 03:09:41 INFO   [SYN006] tier=gold sany=True tlc=True struct=0.78 attempts=1 (best of 1)
+2026-03-23 03:10:46 INFO   [RL005] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 03:11:14 INFO   [BM002] tier=bronze sany=False tlc=False struct=0.56 attempts=1 (best of 1)
+2026-03-23 03:11:19 INFO   [SYN004] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 03:11:24 INFO   [SYN014] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 03:11:32 INFO   [BM015] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 03:11:43 INFO   [RL006] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 03:11:47 INFO   [SYN011] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 03:11:50 INFO   [RL003] tier=gold sany=True tlc=True struct=0.78 attempts=1 (best of 1)
+2026-03-23 03:12:38 INFO   [SYN018] tier=bronze sany=False tlc=False struct=0.67 attempts=1 (best of 1)
+2026-03-23 03:12:38 INFO [phase1] Results: gold=4 silver=17 bronze=29 sany=21/50 tlc=4/50
+2026-03-23 03:12:38 INFO [phase2] Building training data from results...
+2026-03-23 03:12:38 INFO [phase2] Built 14 SFT examples, 0 DPO pairs (from 50 results, 40 prompts)
+2026-03-23 03:12:38 INFO [phase2] Persisted 11 SFT examples, 0 DPO pairs. Accumulated: 24
+2026-03-23 03:12:38 INFO [phase3] Skipping retrain (24/50 examples accumulated)
+2026-03-23 03:12:38 INFO [benchmark] Running full benchmark suite (cycle 86, attempts=3)...
+2026-03-23 03:52:17 INFO [benchmark] Results: sany=75% (15/20) tlc=10% (2/20)
+2026-03-23 03:52:17 INFO [benchmark] Full suite: prioritize TLC rate for model comparison (SANY is the funnel).
+2026-03-23 03:52:17 INFO 
+────────────────────────────────────────────────────────────
+2026-03-23 03:52:17 INFO CYCLE 86 SUMMARY (65.5 min)
+2026-03-23 03:52:17 INFO   Specs: 50 | SANY: 21 | TLC: 4
+2026-03-23 03:52:17 INFO   Gold: 4 | Silver: 17 | Bronze: 29
+2026-03-23 03:52:17 INFO   New SFT: 11 | New DPO: 0
+2026-03-23 03:52:17 INFO   Retrained: False | Deployed: False
+2026-03-23 03:52:17 INFO   Benchmark: SANY=75% TLC=10%
+2026-03-23 03:52:17 INFO ────────────────────────────────────────────────────────────
+
+2026-03-23 03:52:17 INFO ============================================================
+2026-03-23 03:52:17 INFO CYCLE 87 | NIGHTTIME | difficulty_cap=3 | max_prompts=40
+2026-03-23 03:52:17 INFO Pacing: 0.5s between prompts
+2026-03-23 03:52:17 INFO ============================================================
+2026-03-23 03:52:17 INFO [phase1] Loading prompt bank...
+2026-03-23 03:52:18 INFO [prompt_bank] Injected condensed descriptions for 11 benchmark prompt(s)
+2026-03-23 03:52:18 INFO [phase1] Generating and validating 40 specs...
+2026-03-23 03:52:42 INFO   [BM016] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 03:52:46 INFO   [SYN006] tier=gold sany=True tlc=True struct=0.78 attempts=1 (best of 1)
+2026-03-23 03:52:49 INFO   [BM019] tier=gold sany=True tlc=True struct=0.78 attempts=1 (best of 1)
+2026-03-23 03:52:57 INFO   [SYN019] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 03:54:36 INFO   [RL013] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 03:55:23 INFO   [SYN017] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 03:56:14 INFO   [SYN012] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 03:56:17 INFO   [RL002] tier=gold sany=True tlc=True struct=0.67 attempts=1 (best of 1)
+2026-03-23 03:56:21 INFO   [RL003] tier=gold sany=True tlc=True struct=0.78 attempts=2 (best of 2)
+2026-03-23 03:56:32 INFO   [BM005] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 03:57:21 INFO   [RL008] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 03:57:34 INFO   [RL014] tier=bronze sany=False tlc=False struct=0.67 attempts=1 (best of 1)
+2026-03-23 03:57:50 INFO   [SYN009] tier=silver sany=True tlc=False struct=0.89 attempts=2 (best of 2)
+2026-03-23 04:00:22 INFO   [BM001] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 04:00:48 INFO   [BM012] tier=bronze sany=False tlc=False struct=0.44 attempts=1 (best of 1)
+2026-03-23 04:00:55 INFO   [SYN004] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 04:01:09 INFO   [BM020] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 04:01:13 INFO   [RL004] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 04:01:18 INFO   [SYN002] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 04:01:23 INFO   [SYN015] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 04:01:31 INFO   [BM014] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 04:02:20 INFO   [BM015] tier=bronze sany=False tlc=False struct=0.67 attempts=1 (best of 1)
+2026-03-23 04:02:32 INFO   [BM009] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 04:02:37 INFO   [SYN001] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 04:02:47 INFO   [SYN007] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 04:02:54 INFO   [RL016] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 04:03:02 INFO   [SYN005] tier=bronze sany=False tlc=False struct=0.67 attempts=1 (best of 1)
+2026-03-23 04:03:10 INFO   [RL015] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 04:04:11 INFO   [BM017] tier=bronze sany=False tlc=False struct=0.56 attempts=1 (best of 1)
+2026-03-23 04:04:16 INFO   [RL006] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 04:04:21 INFO   [BM010] tier=bronze sany=False tlc=False struct=0.67 attempts=1 (best of 1)
+2026-03-23 04:05:38 INFO   [BM003] tier=bronze sany=False tlc=False struct=0.67 attempts=1 (best of 1)
+2026-03-23 04:05:44 INFO   [RL005] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 04:05:47 INFO   [RL001] tier=gold sany=True tlc=True struct=0.78 attempts=1 (best of 1)
+2026-03-23 04:06:38 INFO   [RL012] tier=bronze sany=False tlc=False struct=0.67 attempts=1 (best of 1)
+2026-03-23 04:06:42 INFO   [SYN020] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 04:09:08 INFO   [BM007] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 04:09:15 INFO   [SYN018] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 04:09:22 INFO   [SYN013] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 04:09:26 INFO   [SYN016] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 04:09:27 INFO [phase1] Results: gold=5 silver=15 bronze=32 sany=20/52 tlc=5/52
+2026-03-23 04:09:27 INFO [phase2] Building training data from results...
+2026-03-23 04:09:27 INFO [phase2] Built 16 SFT examples, 1 DPO pairs (from 52 results, 40 prompts)
+2026-03-23 04:09:27 INFO [phase2] Persisted 11 SFT examples, 0 DPO pairs. Accumulated: 35
+2026-03-23 04:09:27 INFO [phase3] Skipping retrain (35/50 examples accumulated)
+2026-03-23 04:09:27 INFO [benchmark] Running full benchmark suite (cycle 87, attempts=3)...
+2026-03-23 04:55:15 INFO [benchmark] Results: sany=80% (16/20) tlc=15% (3/20)
+2026-03-23 04:55:15 INFO [benchmark] Full suite: prioritize TLC rate for model comparison (SANY is the funnel).
+2026-03-23 04:55:15 INFO 
+────────────────────────────────────────────────────────────
+2026-03-23 04:55:15 INFO CYCLE 87 SUMMARY (63.0 min)
+2026-03-23 04:55:15 INFO   Specs: 52 | SANY: 20 | TLC: 5
+2026-03-23 04:55:15 INFO   Gold: 5 | Silver: 15 | Bronze: 32
+2026-03-23 04:55:15 INFO   New SFT: 11 | New DPO: 0
+2026-03-23 04:55:15 INFO   Retrained: False | Deployed: False
+2026-03-23 04:55:15 INFO   Benchmark: SANY=80% TLC=15%
+2026-03-23 04:55:15 INFO ────────────────────────────────────────────────────────────
+
+2026-03-23 04:55:15 INFO ============================================================
+2026-03-23 04:55:15 INFO CYCLE 88 | NIGHTTIME | difficulty_cap=3 | max_prompts=40
+2026-03-23 04:55:15 INFO Pacing: 0.5s between prompts
+2026-03-23 04:55:15 INFO ============================================================
+2026-03-23 04:55:15 INFO [phase1] Loading prompt bank...
+2026-03-23 04:55:15 INFO [prompt_bank] Injected condensed descriptions for 11 benchmark prompt(s)
+2026-03-23 04:55:15 INFO [phase1] Generating and validating 40 specs...
+2026-03-23 04:56:23 INFO   [RL007] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 04:56:30 INFO   [SYN019] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 04:57:05 INFO   [BM002] tier=bronze sany=False tlc=False struct=0.56 attempts=1 (best of 1)
+2026-03-23 04:57:38 INFO   [BM001] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 04:57:40 INFO   [RL002] tier=gold sany=True tlc=True struct=0.67 attempts=1 (best of 1)
+2026-03-23 04:57:43 INFO   [SYN012] tier=gold sany=True tlc=True struct=0.78 attempts=1 (best of 1)
+2026-03-23 04:58:36 INFO   [RL013] tier=bronze sany=False tlc=False struct=0.44 attempts=1 (best of 1)
+2026-03-23 04:58:41 INFO   [RL015] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 04:58:48 INFO   [RL014] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 04:58:55 INFO   [BM009] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 04:59:00 INFO   [RL003] tier=gold sany=True tlc=True struct=0.78 attempts=2 (best of 2)
+2026-03-23 04:59:12 INFO   [RL009] tier=silver sany=True tlc=False struct=0.89 attempts=2 (best of 2)
+2026-03-23 04:59:21 INFO   [RL012] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 04:59:29 INFO   [SYN018] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 04:59:32 INFO   [SYN020] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 05:01:03 INFO   [SYN009] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 05:01:11 INFO   [SYN008] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 05:01:19 INFO   [SYN001] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 05:03:47 INFO   [BM016] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 05:04:02 INFO   [BM005] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 05:04:08 INFO   [SYN006] tier=gold sany=True tlc=True struct=0.78 attempts=2 (best of 2)
+2026-03-23 05:04:13 INFO   [SYN002] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 05:05:02 INFO   [SYN010] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 05:05:14 INFO   [BM014] tier=bronze sany=False tlc=False struct=0.67 attempts=1 (best of 1)
+2026-03-23 05:05:22 INFO   [RL006] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 05:05:25 INFO   [BM019] tier=gold sany=True tlc=True struct=0.78 attempts=1 (best of 1)
+2026-03-23 05:07:51 INFO   [BM012] tier=bronze sany=False tlc=False struct=0.67 attempts=1 (best of 1)
+2026-03-23 05:08:12 INFO   [BM017] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 05:08:29 INFO   [BM007] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 05:08:35 INFO   [SYN016] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 05:08:42 INFO   [RL011] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 05:08:46 INFO   [SYN017] tier=gold sany=True tlc=True struct=0.89 attempts=1 (best of 1)
+2026-03-23 05:09:16 INFO   [BM003] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 05:11:21 INFO   [RL005] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 05:11:30 INFO   [SYN007] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 05:11:35 INFO   [RL004] tier=silver sany=True tlc=False struct=0.67 attempts=2 (best of 2)
+2026-03-23 05:11:42 INFO   [SYN003] tier=gold sany=True tlc=True struct=0.78 attempts=2 (best of 2)
+2026-03-23 05:11:48 INFO   [SYN013] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 05:12:02 INFO   [BM020] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 05:12:10 INFO   [BM018] tier=bronze sany=False tlc=False struct=0.44 attempts=1 (best of 1)
+2026-03-23 05:12:11 INFO [phase1] Results: gold=7 silver=22 bronze=26 sany=29/55 tlc=7/55
+2026-03-23 05:12:11 INFO [phase2] Building training data from results...
+2026-03-23 05:12:11 INFO [phase2] Built 20 SFT examples, 3 DPO pairs (from 55 results, 40 prompts)
+2026-03-23 05:12:11 INFO [phase2] Persisted 16 SFT examples, 0 DPO pairs. Accumulated: 51
+2026-03-23 05:12:11 INFO [phase3] Retrain threshold reached (night) (51 >= 50)
+2026-03-23 05:12:11 INFO [retrain] Rebuilding training dataset...
+2026-03-23 05:12:18 INFO [retrain] Dataset rebuilt. [dataset_builder] eval =4  examples → /home/espencer2/ChatTLA/data/processed/eval.jsonl
+2026-03-23 05:12:18 WARNING [retrain] Only 320 training examples (need >= 500). Skipping retrain to avoid damaging the base model. Accumulate more data first.
+2026-03-23 05:12:18 WARNING [phase3] Retrain skipped or failed. Will retry next cycle.
+2026-03-23 05:12:18 INFO [benchmark] Running full benchmark suite (cycle 88, attempts=3)...
+2026-03-23 05:55:28 INFO [benchmark] Results: sany=70% (14/20) tlc=5% (1/20)
+2026-03-23 05:55:28 INFO [benchmark] Full suite: prioritize TLC rate for model comparison (SANY is the funnel).
+2026-03-23 05:55:28 INFO 
+────────────────────────────────────────────────────────────
+2026-03-23 05:55:28 INFO CYCLE 88 SUMMARY (60.2 min)
+2026-03-23 05:55:28 INFO   Specs: 55 | SANY: 29 | TLC: 7
+2026-03-23 05:55:28 INFO   Gold: 7 | Silver: 22 | Bronze: 26
+2026-03-23 05:55:28 INFO   New SFT: 16 | New DPO: 0
+2026-03-23 05:55:28 INFO   Retrained: False | Deployed: False
+2026-03-23 05:55:28 INFO   Benchmark: SANY=70% TLC=5%
+2026-03-23 05:55:28 INFO ────────────────────────────────────────────────────────────
+
+2026-03-23 05:55:28 INFO ============================================================
+2026-03-23 05:55:28 INFO CYCLE 89 | NIGHTTIME | difficulty_cap=3 | max_prompts=40
+2026-03-23 05:55:28 INFO Pacing: 0.5s between prompts
+2026-03-23 05:55:28 INFO ============================================================
+2026-03-23 05:55:28 INFO [phase1] Loading prompt bank...
+2026-03-23 05:55:28 INFO [prompt_bank] Injected condensed descriptions for 11 benchmark prompt(s)
+2026-03-23 05:55:28 INFO [phase1] Generating and validating 40 specs...
+2026-03-23 05:55:31 INFO   [RL002] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 05:55:36 INFO   [RL015] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 05:55:41 INFO   [SYN011] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 05:55:50 INFO   [BM015] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 05:56:37 INFO   [SYN005] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 05:56:53 INFO   [BM016] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 05:56:58 INFO   [SYN013] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 05:57:05 INFO   [SYN019] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 05:57:10 INFO   [RL003] tier=gold sany=True tlc=True struct=0.78 attempts=2 (best of 2)
+2026-03-23 05:58:00 INFO   [RL009] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 05:58:03 INFO   [SYN001] tier=gold sany=True tlc=True struct=0.78 attempts=1 (best of 1)
+2026-03-23 05:58:55 INFO   [SYN008] tier=bronze sany=False tlc=False struct=0.56 attempts=1 (best of 1)
+2026-03-23 05:59:04 INFO   [SYN018] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 05:59:10 INFO   [BM019] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 05:59:13 INFO   [SYN016] tier=gold sany=True tlc=True struct=0.78 attempts=1 (best of 1)
+2026-03-23 06:00:03 INFO   [SYN012] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 06:00:10 INFO   [RL013] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 06:00:25 INFO   [BM012] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 06:01:21 INFO   [SYN009] tier=bronze sany=False tlc=False struct=0.44 attempts=1 (best of 1)
+2026-03-23 06:01:29 INFO   [SYN004] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 06:04:35 INFO   [BM014] tier=bronze sany=False tlc=False struct=0.67 attempts=1 (best of 1)
+2026-03-23 06:05:26 INFO   [RL010] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 06:05:31 INFO   [BM010] tier=bronze sany=False tlc=False struct=0.67 attempts=1 (best of 1)
+2026-03-23 06:05:36 INFO   [RL004] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 06:06:46 INFO   [BM001] tier=bronze sany=False tlc=False struct=0.67 attempts=1 (best of 1)
+2026-03-23 06:06:55 INFO   [RL006] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 06:07:02 INFO   [SYN006] tier=gold sany=True tlc=True struct=0.78 attempts=2 (best of 2)
+2026-03-23 06:07:13 INFO   [SYN007] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 06:07:18 INFO   [SYN020] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 06:07:35 INFO   [BM007] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 06:07:45 INFO   [RL011] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 06:08:34 INFO   [BM003] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 06:08:46 INFO   [RL014] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 06:08:51 INFO   [SYN014] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 06:09:07 INFO   [BM017] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 06:10:17 INFO   [BM004] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 06:10:28 INFO   [BM005] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 06:10:36 INFO   [RL016] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 06:12:40 INFO   [RL005] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 06:12:51 INFO   [SYN017] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 06:12:51 INFO [phase1] Results: gold=4 silver=26 bronze=28 sany=30/58 tlc=4/58
+2026-03-23 06:12:51 INFO [phase2] Building training data from results...
+2026-03-23 06:12:51 INFO [phase2] Built 21 SFT examples, 2 DPO pairs (from 58 results, 40 prompts)
+2026-03-23 06:12:51 INFO [phase2] Persisted 13 SFT examples, 0 DPO pairs. Accumulated: 64
+2026-03-23 06:12:51 INFO [phase3] Retrain threshold reached (night) (64 >= 50)
+2026-03-23 06:12:51 INFO [retrain] Rebuilding training dataset...
+2026-03-23 06:12:58 INFO [retrain] Dataset rebuilt. [dataset_builder] eval =4  examples → /home/espencer2/ChatTLA/data/processed/eval.jsonl
+2026-03-23 06:12:58 WARNING [retrain] Only 320 training examples (need >= 500). Skipping retrain to avoid damaging the base model. Accumulate more data first.
+2026-03-23 06:12:58 WARNING [phase3] Retrain skipped or failed. Will retry next cycle.
+2026-03-23 06:12:58 INFO [benchmark] Running full benchmark suite (cycle 89, attempts=3)...
+2026-03-23 06:51:01 INFO [benchmark] Results: sany=70% (14/20) tlc=10% (2/20)
+2026-03-23 06:51:01 INFO [benchmark] Full suite: prioritize TLC rate for model comparison (SANY is the funnel).
+2026-03-23 06:51:01 WARNING [diag:retrain_fail_streak] Retrain failed 2 times in a row
+2026-03-23 06:51:01 WARNING [diag] Resetting accumulated_new to 0 after repeated retrain failures
+2026-03-23 06:51:01 INFO 
+────────────────────────────────────────────────────────────
+2026-03-23 06:51:01 INFO CYCLE 89 SUMMARY (55.6 min)
+2026-03-23 06:51:01 INFO   Specs: 58 | SANY: 30 | TLC: 4
+2026-03-23 06:51:01 INFO   Gold: 4 | Silver: 26 | Bronze: 28
+2026-03-23 06:51:01 INFO   New SFT: 13 | New DPO: 0
+2026-03-23 06:51:01 INFO   Retrained: False | Deployed: False
+2026-03-23 06:51:01 INFO   Benchmark: SANY=70% TLC=10%
+2026-03-23 06:51:01 INFO ────────────────────────────────────────────────────────────
+
+2026-03-23 06:51:01 INFO ============================================================
+2026-03-23 06:51:01 INFO CYCLE 90 | DAYTIME | difficulty_cap=3 | max_prompts=25
+2026-03-23 06:51:01 INFO Pacing: 3.0s between prompts
+2026-03-23 06:51:01 INFO ============================================================
+2026-03-23 06:51:01 INFO [phase1] Loading prompt bank...
+2026-03-23 06:51:01 INFO [prompt_bank] Injected condensed descriptions for 11 benchmark prompt(s)
+2026-03-23 06:51:01 INFO [phase1] Generating and validating 25 specs...
+2026-03-23 06:51:05 INFO   [RL010] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 06:51:14 INFO   [SYN009] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 06:52:04 INFO   [SYN001] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 06:52:14 INFO   [SYN019] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 06:52:22 INFO   [SYN015] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 06:53:12 INFO   [SYN008] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 06:53:21 INFO   [SYN004] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 06:53:28 INFO   [RL004] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 06:53:34 INFO   [RL001] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 06:53:44 INFO   [RL006] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 06:53:53 INFO   [SYN003] tier=gold sany=True tlc=True struct=0.67 attempts=2 (best of 2)
+2026-03-23 06:54:00 INFO   [SYN013] tier=silver sany=True tlc=False struct=0.89 attempts=2 (best of 2)
+2026-03-23 06:54:33 INFO   [BM010] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 06:54:40 INFO   [RL015] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 06:55:54 INFO   [BM002] tier=bronze sany=False tlc=False struct=0.56 attempts=1 (best of 1)
+2026-03-23 06:56:06 INFO   [RL011] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 06:59:14 INFO   [BM014] tier=bronze sany=False tlc=False struct=0.67 attempts=1 (best of 1)
+2026-03-23 06:59:59 INFO   [BM003] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 07:00:04 INFO   [RL002] tier=gold sany=True tlc=True struct=0.78 attempts=1 (best of 1)
+2026-03-23 07:00:55 INFO   [RL016] tier=silver sany=True tlc=False struct=0.67 attempts=2 (best of 2)
+2026-03-23 07:01:45 INFO   [SYN005] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 07:02:04 INFO   [BM017] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 07:02:57 INFO   [RL013] tier=bronze sany=False tlc=False struct=0.44 attempts=1 (best of 1)
+2026-03-23 07:05:23 INFO   [RL012] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 07:05:32 INFO   [BM009] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 07:05:36 INFO [phase1] Results: gold=2 silver=15 bronze=20 sany=17/37 tlc=2/37
+2026-03-23 07:05:36 INFO [phase2] Building training data from results...
+2026-03-23 07:05:36 INFO [phase2] Built 13 SFT examples, 1 DPO pairs (from 37 results, 25 prompts)
+2026-03-23 07:05:36 INFO [phase2] Persisted 9 SFT examples, 0 DPO pairs. Accumulated: 9
+2026-03-23 07:05:36 INFO [phase3] Skipping retrain (9/50 examples accumulated)
+2026-03-23 07:05:36 INFO [benchmark] Running full benchmark suite (cycle 90, attempts=3)...
+2026-03-23 07:35:37 INFO [benchmark] Results: sany=90% (18/20) tlc=15% (3/20)
+2026-03-23 07:35:37 INFO [benchmark] Full suite: prioritize TLC rate for model comparison (SANY is the funnel).
+2026-03-23 07:35:37 INFO 
+────────────────────────────────────────────────────────────
+2026-03-23 07:35:37 INFO CYCLE 90 SUMMARY (44.6 min)
+2026-03-23 07:35:37 INFO   Specs: 37 | SANY: 17 | TLC: 2
+2026-03-23 07:35:37 INFO   Gold: 2 | Silver: 15 | Bronze: 20
+2026-03-23 07:35:37 INFO   New SFT: 9 | New DPO: 0
+2026-03-23 07:35:37 INFO   Retrained: False | Deployed: False
+2026-03-23 07:35:37 INFO   Benchmark: SANY=90% TLC=15%
+2026-03-23 07:35:37 INFO ────────────────────────────────────────────────────────────
+
+2026-03-23 07:35:37 INFO ============================================================
+2026-03-23 07:35:37 INFO CYCLE 91 | DAYTIME | difficulty_cap=3 | max_prompts=25
+2026-03-23 07:35:37 INFO Pacing: 3.0s between prompts
+2026-03-23 07:35:37 INFO ============================================================
+2026-03-23 07:35:37 INFO [phase1] Loading prompt bank...
+2026-03-23 07:35:37 INFO [prompt_bank] Injected condensed descriptions for 11 benchmark prompt(s)
+2026-03-23 07:35:37 INFO [phase1] Generating and validating 25 specs...
+2026-03-23 07:38:21 INFO   [BM004] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 07:38:29 INFO   [SYN015] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 07:39:20 INFO   [BM015] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 07:39:31 INFO   [RL010] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 07:39:42 INFO   [SYN004] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 07:39:51 INFO   [SYN013] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 07:40:04 INFO   [BM005] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 07:40:12 INFO   [SYN011] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 07:40:18 INFO   [SYN003] tier=gold sany=True tlc=True struct=0.78 attempts=1 (best of 1)
+2026-03-23 07:41:09 INFO   [RL006] tier=bronze sany=False tlc=False struct=0.67 attempts=1 (best of 1)
+2026-03-23 07:42:01 INFO   [SYN001] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 07:42:32 INFO   [BM012] tier=bronze sany=False tlc=False struct=0.67 attempts=1 (best of 1)
+2026-03-23 07:43:25 INFO   [BM018] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 07:44:17 INFO   [RL007] tier=bronze sany=False tlc=False struct=0.67 attempts=1 (best of 1)
+2026-03-23 07:45:24 INFO   [BM007] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 07:45:30 INFO   [SYN002] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 07:45:37 INFO   [SYN017] tier=gold sany=True tlc=True struct=0.89 attempts=1 (best of 1)
+2026-03-23 07:45:48 INFO   [SYN005] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 07:46:45 INFO   [RL012] tier=bronze sany=False tlc=False struct=0.67 attempts=1 (best of 1)
+2026-03-23 07:46:51 INFO   [SYN014] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 07:46:59 INFO   [BM019] tier=gold sany=True tlc=True struct=0.78 attempts=2 (best of 2)
+2026-03-23 07:48:13 INFO   [BM002] tier=bronze sany=False tlc=False struct=0.56 attempts=1 (best of 1)
+2026-03-23 07:48:20 INFO   [RL004] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 07:49:13 INFO   [SYN012] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 07:49:23 INFO   [RL014] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 07:49:26 INFO [phase1] Results: gold=3 silver=12 bronze=18 sany=15/33 tlc=3/33
+2026-03-23 07:49:26 INFO [phase2] Building training data from results...
+2026-03-23 07:49:26 INFO [phase2] Built 11 SFT examples, 1 DPO pairs (from 33 results, 25 prompts)
+2026-03-23 07:49:26 INFO [phase2] Persisted 7 SFT examples, 0 DPO pairs. Accumulated: 16
+2026-03-23 07:49:26 INFO [phase3] Skipping retrain (16/50 examples accumulated)
+2026-03-23 07:49:26 INFO [benchmark] Running full benchmark suite (cycle 91, attempts=3)...
+2026-03-23 08:44:33 INFO [benchmark] Results: sany=75% (15/20) tlc=5% (1/20)
+2026-03-23 08:44:33 INFO [benchmark] Full suite: prioritize TLC rate for model comparison (SANY is the funnel).
+2026-03-23 08:44:33 INFO 
+────────────────────────────────────────────────────────────
+2026-03-23 08:44:33 INFO CYCLE 91 SUMMARY (68.9 min)
+2026-03-23 08:44:33 INFO   Specs: 33 | SANY: 15 | TLC: 3
+2026-03-23 08:44:33 INFO   Gold: 3 | Silver: 12 | Bronze: 18
+2026-03-23 08:44:33 INFO   New SFT: 7 | New DPO: 0
+2026-03-23 08:44:33 INFO   Retrained: False | Deployed: False
+2026-03-23 08:44:33 INFO   Benchmark: SANY=75% TLC=5%
+2026-03-23 08:44:33 INFO ────────────────────────────────────────────────────────────
+
+2026-03-23 08:44:33 INFO ============================================================
+2026-03-23 08:44:33 INFO CYCLE 92 | DAYTIME | difficulty_cap=3 | max_prompts=25
+2026-03-23 08:44:33 INFO Pacing: 3.0s between prompts
+2026-03-23 08:44:33 INFO ============================================================
+2026-03-23 08:44:33 INFO [phase1] Loading prompt bank...
+2026-03-23 08:44:33 INFO [prompt_bank] Injected condensed descriptions for 11 benchmark prompt(s)
+2026-03-23 08:44:33 INFO [phase1] Generating and validating 25 specs...
+2026-03-23 08:44:39 INFO   [BM019] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 08:44:53 INFO   [RL009] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 08:45:03 INFO   [SYN019] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 08:45:08 INFO   [SYN003] tier=gold sany=True tlc=True struct=0.78 attempts=1 (best of 1)
+2026-03-23 08:45:18 INFO   [SYN007] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 08:45:30 INFO   [RL011] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 08:45:38 INFO   [SYN018] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 08:46:19 INFO   [BM010] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 08:47:16 INFO   [BM012] tier=bronze sany=False tlc=False struct=0.67 attempts=1 (best of 1)
+2026-03-23 08:47:25 INFO   [SYN013] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 08:48:14 INFO   [RL015] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 08:49:22 INFO   [RL005] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 08:51:48 INFO   [RL013] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 08:52:04 INFO   [RL007] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 08:54:27 INFO   [BM016] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 08:54:36 INFO   [BM009] tier=bronze sany=False tlc=False struct=0.67 attempts=1 (best of 1)
+2026-03-23 08:55:29 INFO   [SYN012] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 08:55:46 INFO   [BM020] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 08:56:15 INFO   [BM007] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 08:56:25 INFO   [SYN001] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 08:59:00 INFO   [BM001] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 08:59:56 INFO   [RL014] tier=bronze sany=False tlc=False struct=0.67 attempts=1 (best of 1)
+2026-03-23 09:03:04 INFO   [BM014] tier=bronze sany=False tlc=False struct=0.67 attempts=1 (best of 1)
+2026-03-23 09:03:12 INFO   [RL006] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 09:05:38 INFO   [RL016] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 09:05:42 INFO [phase1] Results: gold=1 silver=11 bronze=20 sany=12/32 tlc=1/32
+2026-03-23 09:05:42 INFO [phase2] Building training data from results...
+2026-03-23 09:05:42 INFO [phase2] Built 8 SFT examples, 0 DPO pairs (from 32 results, 25 prompts)
+2026-03-23 09:05:42 INFO [phase2] Persisted 5 SFT examples, 0 DPO pairs. Accumulated: 21
+2026-03-23 09:05:42 INFO [phase3] Skipping retrain (21/50 examples accumulated)
+2026-03-23 09:05:42 INFO [benchmark] Running full benchmark suite (cycle 92, attempts=3)...
+2026-03-23 09:42:11 INFO [benchmark] Results: sany=85% (17/20) tlc=10% (2/20)
+2026-03-23 09:42:11 INFO [benchmark] Full suite: prioritize TLC rate for model comparison (SANY is the funnel).
+2026-03-23 09:42:12 INFO 
+────────────────────────────────────────────────────────────
+2026-03-23 09:42:12 INFO CYCLE 92 SUMMARY (57.6 min)
+2026-03-23 09:42:12 INFO   Specs: 32 | SANY: 12 | TLC: 1
+2026-03-23 09:42:12 INFO   Gold: 1 | Silver: 11 | Bronze: 20
+2026-03-23 09:42:12 INFO   New SFT: 5 | New DPO: 0
+2026-03-23 09:42:12 INFO   Retrained: False | Deployed: False
+2026-03-23 09:42:12 INFO   Benchmark: SANY=85% TLC=10%
+2026-03-23 09:42:12 INFO ────────────────────────────────────────────────────────────
+
+2026-03-23 09:42:12 INFO ============================================================
+2026-03-23 09:42:12 INFO CYCLE 93 | DAYTIME | difficulty_cap=3 | max_prompts=25
+2026-03-23 09:42:12 INFO Pacing: 3.0s between prompts
+2026-03-23 09:42:12 INFO ============================================================
+2026-03-23 09:42:12 INFO [phase1] Loading prompt bank...
+2026-03-23 09:42:12 INFO [prompt_bank] Injected condensed descriptions for 11 benchmark prompt(s)
+2026-03-23 09:42:12 INFO [phase1] Generating and validating 25 specs...
+2026-03-23 09:42:15 INFO   [SYN020] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 09:43:59 INFO   [BM016] tier=bronze sany=False tlc=False struct=0.67 attempts=1 (best of 1)
+2026-03-23 09:44:06 INFO   [RL015] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 09:44:14 INFO   [SYN013] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 09:44:19 INFO   [RL002] tier=gold sany=True tlc=True struct=0.67 attempts=1 (best of 1)
+2026-03-23 09:44:27 INFO   [RL013] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 09:45:36 INFO   [BM002] tier=bronze sany=False tlc=False struct=0.56 attempts=1 (best of 1)
+2026-03-23 09:45:44 INFO   [SYN004] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 09:45:49 INFO   [RL001] tier=gold sany=True tlc=True struct=0.78 attempts=1 (best of 1)
+2026-03-23 09:48:21 INFO   [BM004] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 09:48:33 INFO   [SYN005] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 09:48:47 INFO   [BM012] tier=bronze sany=False tlc=False struct=0.67 attempts=1 (best of 1)
+2026-03-23 09:48:55 INFO   [BM010] tier=bronze sany=False tlc=False struct=0.67 attempts=1 (best of 1)
+2026-03-23 09:49:02 INFO   [RL006] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 09:50:51 INFO   [RL007] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 09:51:01 INFO   [RL014] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 09:51:09 INFO   [SYN015] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 09:51:24 INFO   [BM020] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 09:51:59 INFO   [BM001] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 09:55:08 INFO   [BM015] tier=bronze sany=False tlc=False struct=0.67 attempts=1 (best of 1)
+2026-03-23 09:55:16 INFO   [SYN012] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 09:56:06 INFO   [RL003] tier=gold sany=True tlc=True struct=0.78 attempts=2 (best of 2)
+2026-03-23 09:56:11 INFO   [SYN016] tier=gold sany=True tlc=True struct=0.78 attempts=1 (best of 1)
+2026-03-23 09:56:22 INFO   [SYN008] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 09:56:29 INFO   [SYN002] tier=gold sany=True tlc=True struct=0.78 attempts=2 (best of 2)
+2026-03-23 09:56:32 INFO [phase1] Results: gold=5 silver=6 bronze=20 sany=11/31 tlc=5/31
+2026-03-23 09:56:32 INFO [phase2] Building training data from results...
+2026-03-23 09:56:32 INFO [phase2] Built 10 SFT examples, 2 DPO pairs (from 31 results, 25 prompts)
+2026-03-23 09:56:32 INFO [phase2] Persisted 5 SFT examples, 1 DPO pairs. Accumulated: 26
+2026-03-23 09:56:32 INFO [phase3] Skipping retrain (26/50 examples accumulated)
+2026-03-23 09:56:32 INFO [benchmark] Running full benchmark suite (cycle 93, attempts=3)...
+2026-03-23 10:28:53 INFO [benchmark] Results: sany=80% (16/20) tlc=5% (1/20)
+2026-03-23 10:28:53 INFO [benchmark] Full suite: prioritize TLC rate for model comparison (SANY is the funnel).
+2026-03-23 10:28:53 INFO 
+────────────────────────────────────────────────────────────
+2026-03-23 10:28:53 INFO CYCLE 93 SUMMARY (46.7 min)
+2026-03-23 10:28:53 INFO   Specs: 31 | SANY: 11 | TLC: 5
+2026-03-23 10:28:53 INFO   Gold: 5 | Silver: 6 | Bronze: 20
+2026-03-23 10:28:53 INFO   New SFT: 5 | New DPO: 1
+2026-03-23 10:28:53 INFO   Retrained: False | Deployed: False
+2026-03-23 10:28:53 INFO   Benchmark: SANY=80% TLC=5%
+2026-03-23 10:28:53 INFO ────────────────────────────────────────────────────────────
+
+2026-03-23 10:28:53 INFO ============================================================
+2026-03-23 10:28:53 INFO CYCLE 94 | DAYTIME | difficulty_cap=3 | max_prompts=25
+2026-03-23 10:28:53 INFO Pacing: 3.0s between prompts
+2026-03-23 10:28:53 INFO ============================================================
+2026-03-23 10:28:53 INFO [phase1] Loading prompt bank...
+2026-03-23 10:28:53 INFO [prompt_bank] Injected condensed descriptions for 11 benchmark prompt(s)
+2026-03-23 10:28:53 INFO [phase1] Generating and validating 25 specs...
+2026-03-23 10:30:58 INFO   [RL005] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 10:31:08 INFO   [SYN018] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 10:31:13 INFO   [SYN019] tier=gold sany=True tlc=True struct=0.78 attempts=1 (best of 1)
+2026-03-23 10:31:18 INFO   [RL002] tier=gold sany=True tlc=True struct=0.67 attempts=1 (best of 1)
+2026-03-23 10:33:43 INFO   [RL006] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 10:35:16 INFO   [SYN007] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 10:35:27 INFO   [RL013] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 10:35:41 INFO   [SYN010] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 10:35:51 INFO   [SYN005] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 10:36:28 INFO   [BM001] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 10:37:19 INFO   [BM019] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 10:38:04 INFO   [BM018] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 10:38:34 INFO   [BM007] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 10:38:40 INFO   [SYN002] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 10:38:49 INFO   [SYN013] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 10:38:57 INFO   [SYN003] tier=gold sany=True tlc=True struct=0.89 attempts=1 (best of 1)
+2026-03-23 10:39:07 INFO   [RL008] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 10:39:23 INFO   [BM020] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 10:39:31 INFO   [SYN015] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 10:39:44 INFO   [SYN008] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 10:40:37 INFO   [RL012] tier=bronze sany=False tlc=False struct=0.67 attempts=1 (best of 1)
+2026-03-23 10:41:39 INFO   [BM017] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 10:41:44 INFO   [SYN012] tier=gold sany=True tlc=True struct=0.78 attempts=1 (best of 1)
+2026-03-23 10:42:55 INFO   [RL007] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 10:44:01 INFO   [SYN009] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 10:44:04 INFO [phase1] Results: gold=4 silver=12 bronze=18 sany=16/34 tlc=4/34
+2026-03-23 10:44:04 INFO [phase2] Building training data from results...
+2026-03-23 10:44:04 INFO [phase2] Built 13 SFT examples, 0 DPO pairs (from 34 results, 25 prompts)
+2026-03-23 10:44:04 INFO [phase2] Persisted 8 SFT examples, 0 DPO pairs. Accumulated: 34
+2026-03-23 10:44:04 INFO [phase3] Skipping retrain (34/50 examples accumulated)
+2026-03-23 10:44:04 INFO [benchmark] Running full benchmark suite (cycle 94, attempts=3)...
+2026-03-23 11:07:52 INFO Received signal 2. Will shut down after current phase completes.
+2026-03-23 11:07:52 ERROR [benchmark] Failed: A/.venv/lib/python3.10/site-packages/httpcore/_sync/http11.py", line 217, in _receive_event
+    data = self._network_stream.read(
+  File "/home/espencer2/ChatTLA/.venv/lib/python3.10/site-packages/httpcore/_backends/sync.py", line 128, in read
+    return self._sock.recv(max_bytes)
+KeyboardInterrupt
+
+2026-03-23 11:07:52 INFO 
+────────────────────────────────────────────────────────────
+2026-03-23 11:07:52 INFO CYCLE 94 SUMMARY (39.0 min)
+2026-03-23 11:07:52 INFO   Specs: 34 | SANY: 16 | TLC: 4
+2026-03-23 11:07:52 INFO   Gold: 4 | Silver: 12 | Bronze: 18
+2026-03-23 11:07:52 INFO   New SFT: 8 | New DPO: 0
+2026-03-23 11:07:52 INFO   Retrained: False | Deployed: False
+2026-03-23 11:07:52 INFO   Benchmark: SANY=0% TLC=0%
+2026-03-23 11:07:52 INFO ────────────────────────────────────────────────────────────
+
+2026-03-23 11:07:52 INFO RL loop terminated gracefully.
+2026-03-23 11:07:52 INFO Lifetime: 94 cycles, 470 gold, 1244 silver, 7 retrains
+2026-03-23 11:12:57 INFO ============================================================
+2026-03-23 11:12:57 INFO   ChatTLA Autonomous RL Loop
+2026-03-23 11:12:57 INFO   Inter-cycle pause: 0.0h (none)
+2026-03-23 11:12:57 INFO   Eval: FULL benchmark (20 problems, 3 attempts) every cycle
+2026-03-23 11:12:57 INFO   Retrain threshold: 50 | Min training size: 500
+2026-03-23 11:12:57 INFO   Daytime retrain: ENABLED (--allow-daytime-retrain)
+2026-03-23 11:12:57 INFO   Hugging Face publish: ENABLED → EricSpencer00/chattla-20b (quality-gated: TLC must match/exceed best)
+2026-03-23 11:12:57 INFO   Max cycles: infinite
+2026-03-23 11:12:57 INFO   PID: 3257644
+2026-03-23 11:12:57 INFO ============================================================
+2026-03-23 11:12:57 INFO Resuming with accumulated_new=34 (from state)
+2026-03-23 11:12:57 INFO Resuming from cycle 95
+2026-03-23 11:12:57 INFO ============================================================
+2026-03-23 11:12:57 INFO CYCLE 95 | DAYTIME | difficulty_cap=3 | max_prompts=25
+2026-03-23 11:12:57 INFO Pacing: 3.0s between prompts
+2026-03-23 11:12:57 INFO ============================================================
+2026-03-23 11:12:57 INFO [phase1] Loading prompt bank...
+2026-03-23 11:12:57 INFO [prompt_bank] Injected condensed descriptions for 11 benchmark prompt(s)
+2026-03-23 11:12:57 INFO [phase1] Generating and validating 25 specs...
+2026-03-23 11:15:44 INFO   [BM004] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 11:15:55 INFO   [BM019] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 11:16:03 INFO   [SYN018] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 11:16:38 INFO   [BM001] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 11:16:52 INFO   [BM009] tier=bronze sany=False tlc=False struct=0.67 attempts=1 (best of 1)
+2026-03-23 11:19:00 INFO   [RL005] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 11:19:06 INFO   [RL001] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 11:21:36 INFO   [BM016] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 11:22:37 INFO   [SYN003] tier=silver sany=True tlc=False struct=0.89 attempts=2 (best of 2)
+2026-03-23 11:23:43 INFO   [BM018] tier=bronze sany=False tlc=False struct=0.44 attempts=1 (best of 1)
+2026-03-23 11:23:58 INFO   [SYN008] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 11:24:28 INFO   [BM007] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 11:27:39 INFO   [BM014] tier=bronze sany=False tlc=False struct=0.67 attempts=1 (best of 1)
+2026-03-23 11:27:48 INFO   [RL010] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 11:28:03 INFO   [SYN010] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 11:28:14 INFO   [RL011] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 11:28:19 INFO   [RL002] tier=gold sany=True tlc=True struct=0.78 attempts=1 (best of 1)
+2026-03-23 11:28:27 INFO   [RL003] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 11:28:40 INFO   [SYN017] tier=gold sany=True tlc=True struct=0.78 attempts=2 (best of 2)
+2026-03-23 11:28:54 INFO   [RL016] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 11:29:02 INFO   [SYN002] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 11:29:10 INFO   [SYN012] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 11:29:21 INFO   [SYN004] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 11:29:30 INFO   [RL013] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 11:29:41 INFO   [SYN005] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 11:29:44 INFO [phase1] Results: gold=2 silver=10 bronze=21 sany=12/33 tlc=2/33
+2026-03-23 11:29:44 INFO [phase2] Building training data from results...
+2026-03-23 11:29:44 INFO [phase2] Built 9 SFT examples, 1 DPO pairs (from 33 results, 25 prompts)
+2026-03-23 11:29:44 INFO [phase2] Persisted 5 SFT examples, 0 DPO pairs. Accumulated: 39
+2026-03-23 11:29:44 INFO [phase3] Skipping retrain (39/50 examples accumulated)
+2026-03-23 11:29:44 INFO [benchmark] Running full benchmark suite (cycle 95, attempts=3)...
+2026-03-23 12:03:25 INFO [benchmark] Results: sany=80% (16/20) tlc=5% (1/20)
+2026-03-23 12:03:25 INFO [benchmark] Full suite: prioritize TLC rate for model comparison (SANY is the funnel).
+2026-03-23 12:03:25 INFO 
+────────────────────────────────────────────────────────────
+2026-03-23 12:03:25 INFO CYCLE 95 SUMMARY (50.5 min)
+2026-03-23 12:03:25 INFO   Specs: 33 | SANY: 12 | TLC: 2
+2026-03-23 12:03:25 INFO   Gold: 2 | Silver: 10 | Bronze: 21
+2026-03-23 12:03:25 INFO   New SFT: 5 | New DPO: 0
+2026-03-23 12:03:25 INFO   Retrained: False | Deployed: False
+2026-03-23 12:03:25 INFO   Benchmark: SANY=80% TLC=5%
+2026-03-23 12:03:25 INFO ────────────────────────────────────────────────────────────
+
+2026-03-23 12:03:25 INFO ============================================================
+2026-03-23 12:03:25 INFO CYCLE 96 | DAYTIME | difficulty_cap=3 | max_prompts=25
+2026-03-23 12:03:25 INFO Pacing: 3.0s between prompts
+2026-03-23 12:03:25 INFO ============================================================
+2026-03-23 12:03:25 INFO [phase1] Loading prompt bank...
+2026-03-23 12:03:25 INFO [prompt_bank] Injected condensed descriptions for 11 benchmark prompt(s)
+2026-03-23 12:03:25 INFO [phase1] Generating and validating 25 specs...
+2026-03-23 12:04:17 INFO   [SYN010] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 12:05:08 INFO   [RL013] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 12:05:21 INFO   [RL010] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 12:05:50 INFO   [BM018] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 12:08:20 INFO   [RL016] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 12:08:53 INFO   [BM010] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 12:09:04 INFO   [SYN005] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 12:09:15 INFO   [SYN001] tier=bronze sany=False tlc=False struct=0.67 attempts=1 (best of 1)
+2026-03-23 12:10:25 INFO   [SYN003] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 12:10:30 INFO   [BM019] tier=gold sany=True tlc=True struct=0.78 attempts=1 (best of 1)
+2026-03-23 12:10:39 INFO   [SYN013] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 12:10:47 INFO   [RL003] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 12:11:18 INFO   [BM002] tier=bronze sany=False tlc=False struct=0.56 attempts=1 (best of 1)
+2026-03-23 12:12:10 INFO   [RL011] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 12:12:48 INFO   [BM012] tier=bronze sany=False tlc=False struct=0.44 attempts=1 (best of 1)
+2026-03-23 12:12:55 INFO   [SYN016] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 12:13:02 INFO   [RL002] tier=gold sany=True tlc=True struct=0.67 attempts=2 (best of 2)
+2026-03-23 12:16:13 INFO   [BM014] tier=bronze sany=False tlc=False struct=0.67 attempts=1 (best of 1)
+2026-03-23 12:16:21 INFO   [RL015] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 12:16:29 INFO   [SYN004] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 12:16:37 INFO   [SYN015] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 12:17:38 INFO   [SYN009] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 12:17:46 INFO   [SYN008] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 12:18:00 INFO   [RL012] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 12:18:38 INFO   [BM004] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 12:18:41 INFO [phase1] Results: gold=2 silver=10 bronze=21 sany=12/33 tlc=2/33
+2026-03-23 12:18:41 INFO [phase2] Building training data from results...
+2026-03-23 12:18:41 INFO [phase2] Built 10 SFT examples, 1 DPO pairs (from 33 results, 25 prompts)
+2026-03-23 12:18:41 INFO [phase2] Persisted 7 SFT examples, 1 DPO pairs. Accumulated: 46
+2026-03-23 12:18:41 INFO [phase3] Skipping retrain (46/50 examples accumulated)
+2026-03-23 12:18:41 INFO [benchmark] Running full benchmark suite (cycle 96, attempts=3)...
+2026-03-23 12:53:08 INFO [benchmark] Results: sany=85% (17/20) tlc=10% (2/20)
+2026-03-23 12:53:08 INFO [benchmark] Full suite: prioritize TLC rate for model comparison (SANY is the funnel).
+2026-03-23 12:53:08 INFO 
+────────────────────────────────────────────────────────────
+2026-03-23 12:53:08 INFO CYCLE 96 SUMMARY (49.7 min)
+2026-03-23 12:53:08 INFO   Specs: 33 | SANY: 12 | TLC: 2
+2026-03-23 12:53:08 INFO   Gold: 2 | Silver: 10 | Bronze: 21
+2026-03-23 12:53:08 INFO   New SFT: 7 | New DPO: 1
+2026-03-23 12:53:08 INFO   Retrained: False | Deployed: False
+2026-03-23 12:53:08 INFO   Benchmark: SANY=85% TLC=10%
+2026-03-23 12:53:08 INFO ────────────────────────────────────────────────────────────
+
+2026-03-23 12:53:08 INFO ============================================================
+2026-03-23 12:53:08 INFO CYCLE 97 | DAYTIME | difficulty_cap=2 | max_prompts=25
+2026-03-23 12:53:08 INFO Pacing: 3.0s between prompts
+2026-03-23 12:53:08 INFO ============================================================
+2026-03-23 12:53:08 INFO [phase1] Loading prompt bank...
+2026-03-23 12:53:08 INFO [prompt_bank] Injected condensed descriptions for 6 benchmark prompt(s)
+2026-03-23 12:53:08 INFO [phase1] Generating and validating 25 specs...
+2026-03-23 12:53:50 INFO   [BM003] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 12:53:55 INFO   [RL001] tier=gold sany=True tlc=True struct=0.78 attempts=1 (best of 1)
+2026-03-23 12:55:04 INFO   [SYN009] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 12:58:12 INFO   [BM017] tier=bronze sany=False tlc=False struct=0.67 attempts=1 (best of 1)
+2026-03-23 12:59:08 INFO   [SYN010] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 12:59:16 INFO   [RL006] tier=bronze sany=False tlc=False struct=0.67 attempts=1 (best of 1)
+2026-03-23 13:01:38 INFO   [SYN003] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 13:01:52 INFO   [SYN018] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 13:01:59 INFO   [SYN020] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 13:02:05 INFO   [SYN016] tier=gold sany=True tlc=True struct=0.78 attempts=1 (best of 1)
+2026-03-23 13:03:09 INFO   [RL009] tier=bronze sany=False tlc=False struct=0.44 attempts=1 (best of 1)
+2026-03-23 13:03:20 INFO   [SYN007] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 13:03:26 INFO   [SYN014] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 13:03:33 INFO   [SYN006] tier=gold sany=True tlc=True struct=0.78 attempts=1 (best of 1)
+2026-03-23 13:03:44 INFO   [SYN005] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 13:03:52 INFO   [RL004] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 13:04:06 INFO   [BM009] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 13:04:15 INFO   [SYN015] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 13:05:05 INFO   [RL007] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 13:05:30 INFO   [BM007] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 13:05:42 INFO   [SYN004] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-03-23 13:05:53 INFO   [BM015] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-23 13:06:47 INFO   [SYN012] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 13:06:58 INFO   [SYN001] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-03-23 13:07:06 INFO   [RL003] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-23 13:07:09 INFO [phase1] Results: gold=3 silver=12 bronze=18 sany=15/33 tlc=3/33
+2026-03-23 13:07:09 INFO [phase2] Building training data from results...
+2026-03-23 13:07:09 INFO [phase2] Built 11 SFT examples, 0 DPO pairs (from 33 results, 25 prompts)
+2026-03-23 13:07:09 INFO [phase2] Persisted 8 SFT examples, 0 DPO pairs. Accumulated: 54
+2026-03-23 13:07:09 INFO [phase3] Retrain threshold reached (daytime (--allow-daytime-retrain)) (54 >= 50)
+2026-03-23 13:07:09 INFO [retrain] Rebuilding training dataset...
+2026-03-23 13:07:17 INFO [retrain] Dataset rebuilt. [dataset_builder] eval =4  examples → /home/espencer2/ChatTLA/data/processed/eval.jsonl
+2026-03-23 13:07:17 WARNING [retrain] Only 320 training examples (need >= 500). Skipping retrain to avoid damaging the base model. Accumulate more data first.
+2026-03-23 13:07:17 WARNING [phase3] Retrain skipped or failed. Will retry next cycle.
+2026-03-23 13:07:17 INFO [benchmark] Running full benchmark suite (cycle 97, attempts=3)...

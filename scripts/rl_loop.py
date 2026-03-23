@@ -41,7 +41,9 @@ import time
 import traceback
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Optional
+from typing import Literal, Optional
+
+RetrainOutcome = Literal["ok", "skipped_min_train", "failed"]
 
 
 def _check_training_deps() -> None:
@@ -172,6 +174,8 @@ class CycleStats:
     new_dpo_pairs: int = 0
     retrained: bool = False
     deployed: bool = False
+    retrain_skipped_min_data: bool = False
+    retrain_deferred_to_night: bool = False
     benchmark_run: bool = False
     benchmark_sany_rate: float = 0.0
     benchmark_tlc_rate: float = 0.0
@@ -299,18 +303,26 @@ def diagnose_and_fix(stats: CycleStats, accumulated_new: int) -> int:
         _stall_state["error_repeat_count"] = 0
 
     # ── Retrain failure streak ───────────────────────────────────────────────
-    if stats.retrained is False and accumulated_new >= RETRAIN_THRESHOLD:
-        # Retrain was attempted but failed
-        _stall_state["retrain_fail_streak"] += 1
-        if _stall_state["retrain_fail_streak"] >= 2:
-            _write_diag("retrain_fail_streak", {
-                "summary": f"Retrain failed {_stall_state['retrain_fail_streak']} times in a row",
-                "accumulated_new": accumulated_new,
-                "action": "reset accumulated_new to 0 to stop hammering retrain",
-            })
-            log.warning("[diag] Resetting accumulated_new to 0 after repeated retrain failures")
-            accumulated_new = 0
+    # Only count real pipeline failures (train/merge/GGUF). Do not count:
+    # - MIN_TRAIN_EXAMPLES gate (intentional; accumulate more data)
+    # - deferred daytime retrain (threshold met but waiting for night window)
+    threshold_met = accumulated_new >= RETRAIN_THRESHOLD
+    deferred = getattr(stats, "retrain_deferred_to_night", False)
+    skipped_min = getattr(stats, "retrain_skipped_min_data", False)
+    if threshold_met and not deferred and not stats.retrained:
+        if skipped_min:
             _stall_state["retrain_fail_streak"] = 0
+        else:
+            _stall_state["retrain_fail_streak"] += 1
+            if _stall_state["retrain_fail_streak"] >= 2:
+                _write_diag("retrain_fail_streak", {
+                    "summary": f"Retrain failed {_stall_state['retrain_fail_streak']} times in a row",
+                    "accumulated_new": accumulated_new,
+                    "action": "reset accumulated_new to 0 to stop hammering retrain",
+                })
+                log.warning("[diag] Resetting accumulated_new to 0 after repeated retrain failures")
+                accumulated_new = 0
+                _stall_state["retrain_fail_streak"] = 0
     else:
         _stall_state["retrain_fail_streak"] = 0
 
@@ -920,7 +932,7 @@ def _count_dpo_gold_pairs() -> int:
 MIN_TRAIN_EXAMPLES = 500  # don't retrain on tiny datasets — damages the base model
 
 
-def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT) -> bool:
+def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT) -> RetrainOutcome:
     """Rebuild training dataset, retrain, merge, GGUF, deploy. HF publish is handled by caller."""
 
     # 1. Rebuild dataset
@@ -935,11 +947,11 @@ def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT
         )
         if result.returncode != 0:
             log.error(f"[retrain] Dataset rebuild failed: {result.stderr[-300:]}")
-            return False
+            return "failed"
         log.info(f"[retrain] Dataset rebuilt. {result.stdout.strip().split(chr(10))[-1]}")
     except subprocess.TimeoutExpired:
         log.error("[retrain] Dataset rebuild timed out")
-        return False
+        return "failed"
 
     # Count training examples — abort if too few (tiny datasets damage the base model)
     n_train = 0
@@ -951,7 +963,7 @@ def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT
             f"[retrain] Only {n_train} training examples (need >= {MIN_TRAIN_EXAMPLES}). "
             "Skipping retrain to avoid damaging the base model. Accumulate more data first."
         )
-        return False
+        return "skipped_min_train"
     num_epochs = 1
     log.info(f"[retrain] {n_train} training examples, {num_epochs} epochs")
 
@@ -987,11 +999,11 @@ def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT
     )
     if result.returncode != 0:
         log.error(f"[retrain] Training failed: {result.stderr[-500:]}")
-        return False
+        return "failed"
     log.info("[retrain] Training complete.")
 
     if _SHUTDOWN:
-        return False
+        return "failed"
 
     # 3. Merge LoRA — use same GPU visibility as training; merge_lora used to
     # default to a single GPU and OOM / CUBLAS_ALLOC_FAILED on 20B + PEFT merge.
@@ -1026,13 +1038,13 @@ def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT
             )
             if result.returncode != 0:
                 log.error(f"[retrain] CPU merge also failed: {(result.stderr or '')[-500:]}")
-                return False
+                return "failed"
             log.info("[retrain] LoRA merged (CPU fallback).")
         else:
             log.info("[retrain] LoRA merged.")
     except subprocess.TimeoutExpired:
         log.error("[retrain] Merge timed out")
-        return False
+        return "failed"
 
     # 4. Convert to GGUF + register with Ollama
     log.info("[retrain] Converting to GGUF and deploying to Ollama...")
@@ -1044,14 +1056,14 @@ def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT
         )
         if result.returncode != 0:
             log.error(f"[retrain] GGUF conversion failed: {result.stderr[-300:]}")
-            return False
+            return "failed"
         log.info("[retrain] GGUF deployed to Ollama.")
     except subprocess.TimeoutExpired:
         log.error("[retrain] GGUF conversion timed out")
-        return False
+        return "failed"
 
     # HF publish is now handled by the caller after a full benchmark quality gate.
-    return True
+    return "ok"
 
 
 def publish_to_hf(cycle_id: int) -> bool:
@@ -1308,16 +1320,18 @@ def run_cycle(
             if night or allow_daytime_retrain:
                 when = "night" if night else "daytime (--allow-daytime-retrain)"
                 log.info(f"[phase3] Retrain threshold reached ({when}) ({accumulated_new} >= {RETRAIN_THRESHOLD})")
-                success = rebuild_and_retrain(cycle_id=cycle_id)
-                stats.retrained = success
-                stats.deployed = success
-                if success:
+                outcome = rebuild_and_retrain(cycle_id=cycle_id)
+                stats.retrained = outcome == "ok"
+                stats.deployed = outcome == "ok"
+                stats.retrain_skipped_min_data = outcome == "skipped_min_train"
+                if outcome == "ok":
                     accumulated_new = 0
                     just_retrained = True
                     log.info("[phase3] Retrain + deploy complete!")
                 else:
                     log.warning("[phase3] Retrain skipped or failed. Will retry next cycle.")
             else:
+                stats.retrain_deferred_to_night = True
                 log.info(
                     f"[phase3] Threshold reached ({accumulated_new} >= {RETRAIN_THRESHOLD}) "
                     "but retrain deferred to nighttime. Use --allow-daytime-retrain to force."

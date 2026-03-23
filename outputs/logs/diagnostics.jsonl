@@ -10,3 +10,6 @@
 {"timestamp": "2026-03-22T16:23:13.572097", "kind": "tlc_regression", "summary": "Benchmark TLC=0% but SANY=58% in cycle 73", "retrained_this_cycle": false, "action": "retrain may have hurt TLC; consider reverting or skipping next retrain"}
 {"timestamp": "2026-03-22T19:44:37.264857", "kind": "retrain_fail_streak", "summary": "Retrain failed 2 times in a row", "accumulated_new": 69, "action": "reset accumulated_new to 0 to stop hammering retrain"}
 {"timestamp": "2026-03-22T19:44:37.265452", "kind": "tlc_regression", "summary": "Benchmark TLC=0% but SANY=42% in cycle 77", "retrained_this_cycle": false, "action": "retrain may have hurt TLC; consider reverting or skipping next retrain"}
+{"timestamp": "2026-03-23T01:48:37.268522", "kind": "retrain_fail_streak", "summary": "Retrain failed 2 times in a row", "accumulated_new": 74, "action": "reset accumulated_new to 0 to stop hammering retrain"}
+{"timestamp": "2026-03-23T02:46:48.032426", "kind": "tlc_regression", "summary": "Benchmark TLC=0% but SANY=75% in cycle 85", "retrained_this_cycle": false, "action": "retrain may have hurt TLC; consider reverting or skipping next retrain"}
+{"timestamp": "2026-03-23T06:51:01.240483", "kind": "retrain_fail_streak", "summary": "Retrain failed 2 times in a row", "accumulated_new": 64, "action": "reset accumulated_new to 0 to stop hammering retrain"}
