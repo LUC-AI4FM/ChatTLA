@@ -17,8 +17,10 @@ from pathlib import Path
 
 _REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(_REPO / "scripts" / "tla_description_sources"))
+sys.path.insert(0, str(_REPO))
 
 from description_prompt import condense_description_row  # noqa: E402
+from src.training.module_family import is_model_check_shim  # noqa: E402
 
 _DEFAULT_DESC = _REPO / "data" / "derived" / "tla_descriptions.json"
 _DEFAULT_BM = _REPO / "data" / "benchmarks" / "benchmark_to_module.json"
@@ -70,6 +72,11 @@ def main() -> int:
     ap.add_argument("--out-train", type=Path, default=_OUT_TRAIN)
     ap.add_argument("--out-holdout", type=Path, default=_OUT_HOLDOUT)
     ap.add_argument("--max-tla-chars", type=int, default=120_000, help="Cap reference spec size")
+    ap.add_argument(
+        "--no-skip-mc-shims",
+        action="store_true",
+        help="Include TLC MC* wrapper modules (default: skip — they pair long NL with stub .tla)",
+    )
     args = ap.parse_args()
 
     rows = json.loads(args.descriptions.read_text(encoding="utf-8"))
@@ -97,6 +104,9 @@ def main() -> int:
             continue
         if len(tla_text) > args.max_tla_chars:
             tla_text = tla_text[: args.max_tla_chars] + "\n\\* [truncated for training cap]\n"
+        if not args.no_skip_mc_shims and is_model_check_shim(mn, tla_text):
+            skipped += 1
+            continue
         ex = build_example(row, tla_text)
         if mn in holdout:
             hold_ex.append(ex)
@@ -113,7 +123,7 @@ def main() -> int:
 
     print(f"[build_description_sft] train={len(train_ex)} -> {args.out_train}")
     print(f"[build_description_sft] holdout={len(hold_ex)} -> {args.out_holdout}")
-    print(f"[build_description_sft] skipped_rows={skipped} holdout_modules={len(holdout)}")
+    print(f"[build_description_sft] skipped_rows={skipped} (includes MC* TLC shims unless --no-skip-mc-shims) holdout_modules={len(holdout)}")
     return 0
 
 

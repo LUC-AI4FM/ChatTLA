@@ -52,6 +52,7 @@ from pathlib import Path
 from typing import Iterator
 
 from src.shared.schemas.dataset_schema import DatasetRecord
+from .module_family import is_model_check_shim, parse_module_name
 
 log = logging.getLogger(__name__)
 
@@ -257,6 +258,14 @@ def _prompt_aggregate_key(ex: dict) -> str:
 _TIER_RANK = {"gold": 3, "bugfix": 3, "silver": 2, "bronze": 1, "description_sft": 2}
 
 
+def _record_module_name(record: DatasetRecord) -> str | None:
+    meta = record.metadata or {}
+    mn = meta.get("module_name")
+    if isinstance(mn, str) and mn.strip():
+        return mn.strip()
+    return parse_module_name(record.tla_content)
+
+
 def dedupe_augmented_best_per_prompt(examples: list[dict]) -> list[dict]:
     """
     Keep one row per prompt key — the highest toolchain tier wins (gold ≈ bugfix > silver > bronze).
@@ -292,6 +301,7 @@ def build(
     bugfix_oversample: int = 2,
     include_silver_augmented: bool = True,
     augmented_best_per_prompt: bool = True,
+    skip_model_check_shims: bool = True,
 ) -> tuple[int, int]:
     """
     Load combined.jsonl → build all task variants → write train/eval JSONL.
@@ -317,6 +327,9 @@ def build(
     augmented_best_per_prompt : bool  If True, collapse augmented.jsonl to **one row
                                per prompt** (`_prompt_id` or user-text hash), keeping the
                                **best tier** seen across all RL runs (cumulative quality).
+    skip_model_check_shims : bool  If True, drop TLC `MC*` wrapper modules (EXTENDS parent
+                               + TLC; tiny files). Training on them pairs rich NL with
+                               stub specs and poisons spec-generation.
 
     Returns (n_train, n_eval).
     """
@@ -327,6 +340,22 @@ def build(
             records.append(DatasetRecord.from_dict(json.loads(line)))
 
     print(f"[dataset_builder] Loaded {len(records)} records from {combined_path}")
+
+    if skip_model_check_shims:
+        before = len(records)
+        kept: list[DatasetRecord] = []
+        for r in records:
+            mn = _record_module_name(r)
+            if is_model_check_shim(mn, r.tla_content):
+                continue
+            kept.append(r)
+        n_skip = before - len(kept)
+        records = kept
+        if n_skip:
+            print(
+                f"[dataset_builder] Skipped {n_skip} MC* TLC model-check shims "
+                f"(train on parent modules instead; use --no-skip-mc-shims to keep)"
+            )
 
     if sany_only:
         print(f"[dataset_builder] Filtering to SANY-valid specs only...")
@@ -401,14 +430,31 @@ def build(
 
     if include_description_sft and description_sft_path.exists():
         n_ds = 0
+        n_ds_skip = 0
         with train_path.open("a", encoding="utf-8") as f:
             for line in description_sft_path.open(encoding="utf-8"):
                 line = line.strip()
-                if line:
-                    f.write(line + "\n")
-                    n_ds += 1
+                if not line:
+                    continue
+                if skip_model_check_shims:
+                    try:
+                        ex = json.loads(line)
+                    except json.JSONDecodeError:
+                        f.write(line + "\n")
+                        n_ds += 1
+                        continue
+                    mn = ex.get("_module_name")
+                    spec = _extract_final_spec_from_messages(ex)
+                    if is_model_check_shim(mn if isinstance(mn, str) else None, spec):
+                        n_ds_skip += 1
+                        continue
+                f.write(line + "\n")
+                n_ds += 1
         n_train += n_ds
-        print(f"[dataset_builder] Appended {n_ds} description_sft examples to training set")
+        msg = f"[dataset_builder] Appended {n_ds} description_sft examples to training set"
+        if n_ds_skip:
+            msg += f" (skipped {n_ds_skip} MC* TLC shims)"
+        print(msg)
     elif include_description_sft:
         print(f"[dataset_builder] Warning: --include-description-sft but {description_sft_path} missing; run scripts/build_description_sft_jsonl.py")
 
@@ -441,6 +487,8 @@ if __name__ == "__main__":
                         help="Exclude silver-tier RL rows (default: include SANY-valid silver)")
     parser.add_argument("--no-augmented-best-per-prompt", action="store_true",
                         help="Keep every augmented line (no collapse by prompt; may duplicate prompts)")
+    parser.add_argument("--no-skip-mc-shims", action="store_true",
+                        help="Keep TLC MC* wrapper modules (default: skip; they poison NL→spec SFT)")
     args = parser.parse_args()
 
     build(
@@ -455,4 +503,5 @@ if __name__ == "__main__":
         bugfix_oversample=max(1, args.bugfix_oversample),
         include_silver_augmented=not args.no_silver_augmented,
         augmented_best_per_prompt=not args.no_augmented_best_per_prompt,
+        skip_model_check_shims=not args.no_skip_mc_shims,
     )
