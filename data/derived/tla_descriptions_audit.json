@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-20T19:38:07.189616",
+  "generated_at": "2026-03-24T18:10:01.334614",
   "git": {
     "tlaplus_examples": {
       "commit": "ec17f2a115a221502143658775e6eae1bb337a79",
@@ -7,9 +7,9 @@
       "commit_date": "2026-03-17 17:05:59 -0700"
     },
     "tlaplus_tlapm": {
-      "commit": "c706ff1c7a1a20122ee88e085e64a645978d5d2a",
+      "commit": "128e44cbc3e3f741899d9432253d8e1281eea38c",
       "branch": "main",
-      "commit_date": "2026-01-15 14:14:47 +0100"
+      "commit_date": "2026-03-24 15:06:07 -0400"
     }
   },
   "coarse_file": "data/tla-compents-coarse.json",

@@ -16,6 +16,7 @@ End-to-end view of how data becomes a deployable model, and where quality metric
 - `--include-augmented` — append `data/processed/augmented.jsonl` (RL/self-improve gold + **bugfix**).
 - `--include-description-sft` — append `description_sft.jsonl` (holdout-safe; see `data/benchmarks/README_DESCRIPTION_INTEGRATION.md`).
 - `--bugfix-oversample 2` — duplicate **bugfix** rows (TLC-error → fix signal).
+- **MC\* TLC shims (default: skipped)** — `dataset_builder` and `scripts/build_description_sft_jsonl.py` drop tiny `MC…` modules that only `EXTENDS` the real protocol + `TLC` (e.g. `MCConsensus` vs `Consensus`). Training on those pairs **long NL descriptions** with **stub specs**, which poisons spec-generation SFT. Implementation: `src/training/module_family.py`. Use `--no-skip-mc-shims` only if you know you need the wrappers. After skipping, **prefer harvesting / describing the parent module** (e.g. `Consensus.tla`, `KeyValueStore.tla`) so the curriculum still covers that example family.
 
 **Task variants per record:** spec generation, spec completion, invariant gen (where annotations exist).
 
