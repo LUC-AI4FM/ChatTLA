@@ -670,10 +670,15 @@ def _generate_for_prompt(
     p: dict,
     model: str,
     max_attempts: int,
-    client: "ChatTLAClient",
+    client: Optional["ChatTLAClient"] = None,
 ) -> list[SpecResult]:
     """Generate + validate one prompt. Pass ``client=None`` to create a thread-local client."""
     from src.inference.ollama_client import ChatTLAClient
+    
+    # If no client passed, create one (standard for worker threads)
+    if client is None:
+        client = ChatTLAClient(model=model, reasoning="medium")
+
     from src.inference.benchmark import score_structural
     from src.validators.sany_validator import validate_string as sany_validate
     from src.validators.tlc_validator import validate_string as tlc_validate
@@ -817,10 +822,12 @@ def generate_and_validate(
 
     log.info(f"[phase1] Parallel generation: {workers} workers for {len(prompts)} prompts")
     max_w = min(workers, len(prompts))
-    client = ChatTLAClient(model=model, reasoning="medium")
+    
+    # We should NOT share one client across multiple threads in Ollama; 
+    # instead, each worker thread should create its own instance to avoid race conditions.
     with ThreadPoolExecutor(max_workers=max_w) as ex:
         futs = [
-            ex.submit(_generate_for_prompt, p, model, max_attempts, client)
+            ex.submit(_generate_for_prompt, p, model, max_attempts, None)
             for p in prompts
         ]
         for fut in futs:
@@ -846,7 +853,9 @@ When asked to write a TLA+ spec, follow these rules exactly:
 4. After the TLA+ module, append a TLC configuration block:
    SPECIFICATION Spec
    INVARIANT TypeOK   (if TypeOK is defined)
-5. Output only valid TLA+ code. No markdown fences, no explanation outside the spec.
+5. IMPORTANT: For model checking to succeed, ensure all variables are bounded.
+   Use TypeOK to define finite ranges (e.g., x \in 0..100) and ensure sets are finite.
+6. Output only valid TLA+ code. No markdown fences, no explanation outside the spec.
 Reasoning: medium\
 """
 
@@ -875,8 +884,8 @@ def build_training_data(results: list[SpecResult]) -> tuple[list[dict], list[dic
 
         best = group[0]
 
-        # SFT: gold (always) + silver when no gold in group (SANY-valid; TLC may fail).
-        # Silver is optional at dataset_builder merge time (--no-silver-augmented to drop).
+        # SFT: Gold is the target. High-structural Silver (SANY pass, high-score)
+        # serves as a fallback but is NOT labeled 'gold'.
         if best.tier == "gold":
             sft_examples.append({
                 "_tier": "gold",
@@ -888,7 +897,38 @@ def build_training_data(results: list[SpecResult]) -> tuple[list[dict], list[dic
                     {"role": "assistant", "channel": "final", "content": best.spec.strip()},
                 ],
             })
-            # DPO: only gold (chosen) vs worse — teaches model to prefer TLC-passing specs
+        elif best.tier == "silver" and getattr(best, "structural_score", 0) > 0.85:
+            # Silver SFT: Stricter filtering (0.85).
+            sft_examples.append({
+                "_tier": "silver",
+                "_prompt_id": pid,
+                "messages": [
+                    {"role": "developer", "content": _DEVELOPER_PROMPT},
+                    {"role": "user", "content": f"Write a TLA+ specification for the following:\n\n{best.prompt_text}"},
+                    {"role": "assistant", "channel": "analysis", "content": "I'll ensure the TLA+ syntax is correct and the core logic is sound."},
+                    {"role": "assistant", "channel": "final", "content": best.spec.strip()},
+                ],
+            })
+
+            # Check for bug_fix potential: if model-corrected (multiple attempts)
+            # save the failure-to-success transition.
+            if len(group) > 1:
+                # Find a SANY failure that was fixed to a SANY pass
+                failed = next((r for r in group if not r.sany_pass), None)
+                if failed:
+                    sft_examples.append({
+                        "_tier": "bugfix",
+                        "_prompt_id": pid,
+                        "messages": [
+                            {"role": "developer", "content": _DEVELOPER_PROMPT},
+                            {"role": "user", "content": f"Fix the SANY errors in this spec:\n\n{failed.spec.strip()}"},
+                            {"role": "assistant", "channel": "analysis", "content": "Correcting TLA+ syntax errors and module structure."},
+                            {"role": "assistant", "channel": "final", "content": best.spec.strip()},
+                        ]
+                    })
+
+        # DPO: Gold (chosen) vs worse — teaches model to prefer TLC-passing specs
+        if best.tier == "gold" and len(group) > 1:
             worst = group[-1]
             if worst.tier != "gold" and tier_rank.get(worst.tier, 0) < tier_rank.get(best.tier, 0):
                 feedback = ""
@@ -1490,14 +1530,33 @@ def run_cycle(
         log.info("[phase1] Loading prompt bank...")
         all_prompts = load_prompt_bank(difficulty_cap=difficulty_cap)
         
-        # Skip prompts that already produced gold specs
-        filtered_prompts = [p for p in all_prompts if p.get("id") not in gold_prompt_ids]
-        if len(filtered_prompts) < len(all_prompts):
-            skipped = len(all_prompts) - len(filtered_prompts)
-            log.info(f"[phase1] Skipping {skipped} prompts (already produced gold specs)")
+        # ── Stratified Sampling logic ──────────────────────────────────────
+        # 1. Anchor set: 20% from prompts that ALREADY produced gold specs (check for regression)
+        # 2. Hard set:   30% from difficulty 4-5 prompts
+        # 3. Random:     50% from the remaining (mostly unknown or easy-mid)
         
-        random.shuffle(filtered_prompts)
-        prompts = filtered_prompts[:max_prompts]
+        gold_bank = [p for p in all_prompts if p.get("id") in gold_prompt_ids]
+        non_gold_bank = [p for p in all_prompts if p.get("id") not in gold_prompt_ids]
+        hard_bank = [p for p in non_gold_bank if p.get("difficulty", 1) >= 4]
+        rest_bank = [p for p in non_gold_bank if p.get("difficulty", 1) < 4]
+
+        n_anchor = max(1, int(max_prompts * 0.20))
+        n_hard   = max(1, int(max_prompts * 0.30))
+        n_random = max_prompts - n_anchor - n_hard
+
+        anchors = random.sample(gold_bank, min(len(gold_bank), n_anchor)) if gold_bank else []
+        hards   = random.sample(hard_bank, min(len(hard_bank), n_hard)) if hard_bank else []
+        
+        # Fill remaining budget from rest_bank, then overflow back into hard_bank if needed
+        pool = rest_bank
+        random.shuffle(pool)
+        selected_random = pool[:n_random]
+        
+        prompts = anchors + hards + selected_random
+        # Ensure we don't exceed max_prompts if we over-sampled anchors/hards
+        prompts = prompts[:max_prompts]
+        
+        log.info(f"[phase1] Stratified: anchors={len(anchors)} hard={len(hards)} random={len(selected_random)}")
         stats.prompts_tried = len(prompts)
 
         log.info(f"[phase1] Generating and validating {len(prompts)} specs...")
@@ -1633,6 +1692,10 @@ def run_cycle(
                         f"[phase4] TLC {full_tlc:.0%} < previous best {prev_best_tlc:.0%} (or zero) "
                         "— SKIPPING HF publish to avoid pushing a regression"
                     )
+                    # ── Phase 5: Safety Valve ──────────────────────────────
+                    if full_tlc < (prev_best_tlc - 0.15) and full_tlc < 0.35:
+                        log.error(f"[safety] CRITICAL REGRESSION: TLC rate {full_tlc:.3f} dropped significantly!")
+                        log.warning("[safety] Manual review of training data (silver poisoning) recommended.")
 
     except Exception as e:
         stats.error = f"{type(e).__name__}: {str(e)[:200]}"

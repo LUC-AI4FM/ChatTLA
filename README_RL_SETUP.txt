@@ -16,6 +16,8 @@ QUICK COMMANDS:
   Stop gracefully: ./scripts/launch_rl.sh stop
   Restart:         ./scripts/launch_rl.sh restart
 
+  tmux kill-session -t chattla-rl
+
 WHAT IT DOES:
   • Every 1.5 hours:
     1. Generate TLA+ specs (25/day, 40/night)

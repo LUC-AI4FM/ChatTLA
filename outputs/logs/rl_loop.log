@@ -9016,3 +9016,81 @@ KeyboardInterrupt
 2026-03-27 15:30:10 INFO [phase1] Generating and validating 25 specs...
 2026-03-27 15:30:10 INFO [phase1] Parallel generation: 2 workers for 25 prompts
 2026-03-27 15:36:28 INFO Received signal 2. Will shut down after current phase completes.
+2026-03-27 15:36:54 INFO Received signal 2. Will shut down after current phase completes.
+2026-03-27 15:37:07 INFO Received signal 2. Will shut down after current phase completes.
+2026-03-27 15:37:52 INFO Received signal 2. Will shut down after current phase completes.
+2026-03-27 15:38:34 INFO ============================================================
+2026-03-27 15:38:34 INFO   ChatTLA Autonomous RL Loop
+2026-03-27 15:38:34 INFO   Inter-cycle pause: 0.0h (none)
+2026-03-27 15:38:34 INFO   Eval: full benchmark every 3 cycles (2 attempts); quick eval (12×2) otherwise
+2026-03-27 15:38:34 INFO   Retrain threshold: 50 | Min training size: 280
+2026-03-27 15:38:34 INFO   Phase 1 workers: auto (3 night / 2 day)
+2026-03-27 15:38:34 INFO   Daytime retrain: ENABLED (--allow-daytime-retrain)
+2026-03-27 15:38:34 INFO   Hugging Face publish: ENABLED → EricSpencer00/chattla-20b (quality-gated: TLC must match/exceed best)
+2026-03-27 15:38:34 INFO   Max cycles: infinite
+2026-03-27 15:38:34 INFO   PID: 1101798
+2026-03-27 15:38:34 INFO ============================================================
+2026-03-27 15:38:34 INFO [startup] Loaded 10 gold prompts from benchmark results
+2026-03-27 15:38:34 INFO Resuming with accumulated_new=20 (from state)
+2026-03-27 15:38:34 INFO Resuming from cycle 152
+2026-03-27 15:38:34 INFO ============================================================
+2026-03-27 15:38:34 INFO CYCLE 152 | DAYTIME | difficulty_cap=3 | max_prompts=25
+2026-03-27 15:38:34 INFO Pacing: 3.0s between prompts
+2026-03-27 15:38:34 INFO ============================================================
+2026-03-27 15:38:34 INFO [phase1] Loading prompt bank...
+2026-03-27 15:38:34 INFO [prompt_bank] Injected condensed descriptions for 11 benchmark prompt(s)
+2026-03-27 15:38:34 INFO [phase1] Skipping 7 prompts (already produced gold specs)
+2026-03-27 15:38:34 INFO [phase1] Generating and validating 25 specs...
+2026-03-27 15:38:34 INFO [phase1] Parallel generation: 2 workers for 25 prompts
+2026-03-27 15:39:31 INFO   [RL004] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-27 15:41:11 INFO   [RL016] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-27 15:42:51 INFO Received signal 2. Will shut down after current phase completes.
+2026-03-27 15:43:17 INFO ============================================================
+2026-03-27 15:43:17 INFO   ChatTLA Autonomous RL Loop
+2026-03-27 15:43:17 INFO   Inter-cycle pause: 0.0h (none)
+2026-03-27 15:43:17 INFO   Eval: full benchmark every 3 cycles (2 attempts); quick eval (12×2) otherwise
+2026-03-27 15:43:17 INFO   Retrain threshold: 50 | Min training size: 280
+2026-03-27 15:43:17 INFO   Phase 1 workers: auto (3 night / 2 day)
+2026-03-27 15:43:17 INFO   Daytime retrain: ENABLED (--allow-daytime-retrain)
+2026-03-27 15:43:17 INFO   Hugging Face publish: ENABLED → EricSpencer00/chattla-20b (quality-gated: TLC must match/exceed best)
+2026-03-27 15:43:17 INFO   Max cycles: infinite
+2026-03-27 15:43:17 INFO   PID: 1255530
+2026-03-27 15:43:17 INFO ============================================================
+2026-03-27 15:43:17 INFO [startup] Loaded 10 gold prompts from benchmark results
+2026-03-27 15:43:17 INFO Resuming with accumulated_new=20 (from state)
+2026-03-27 15:43:17 INFO Resuming from cycle 152
+2026-03-27 15:43:17 INFO ============================================================
+2026-03-27 15:43:17 INFO CYCLE 152 | DAYTIME | difficulty_cap=3 | max_prompts=25
+2026-03-27 15:43:17 INFO Pacing: 3.0s between prompts
+2026-03-27 15:43:17 INFO ============================================================
+2026-03-27 15:43:17 INFO [phase1] Loading prompt bank...
+2026-03-27 15:43:17 INFO [prompt_bank] Injected condensed descriptions for 11 benchmark prompt(s)
+2026-03-27 15:43:17 INFO [phase1] Skipping 7 prompts (already produced gold specs)
+2026-03-27 15:43:17 INFO [phase1] Generating and validating 25 specs...
+2026-03-27 15:43:17 INFO [phase1] Parallel generation: 2 workers for 25 prompts
+2026-03-27 15:45:02 INFO   [SYN003] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-27 15:45:17 INFO   [SYN012] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-27 15:47:52 INFO Received signal 2. Will shut down after current phase completes.
+2026-03-27 15:48:13 INFO ============================================================
+2026-03-27 15:48:13 INFO   ChatTLA Autonomous RL Loop
+2026-03-27 15:48:13 INFO   Inter-cycle pause: 0.0h (none)
+2026-03-27 15:48:13 INFO   Eval: full benchmark every 3 cycles (2 attempts); quick eval (12×2) otherwise
+2026-03-27 15:48:13 INFO   Retrain threshold: 50 | Min training size: 280
+2026-03-27 15:48:13 INFO   Phase 1 workers: auto (3 night / 2 day)
+2026-03-27 15:48:13 INFO   Daytime retrain: ENABLED (--allow-daytime-retrain)
+2026-03-27 15:48:13 INFO   Hugging Face publish: ENABLED → EricSpencer00/chattla-20b (quality-gated: TLC must match/exceed best)
+2026-03-27 15:48:13 INFO   Max cycles: infinite
+2026-03-27 15:48:13 INFO   PID: 1427021
+2026-03-27 15:48:13 INFO ============================================================
+2026-03-27 15:48:13 INFO [startup] Loaded 10 gold prompts from benchmark results
+2026-03-27 15:48:13 INFO Resuming with accumulated_new=20 (from state)
+2026-03-27 15:48:13 INFO Resuming from cycle 152
+2026-03-27 15:48:13 INFO ============================================================
+2026-03-27 15:48:13 INFO CYCLE 152 | DAYTIME | difficulty_cap=3 | max_prompts=25
+2026-03-27 15:48:13 INFO Pacing: 3.0s between prompts
+2026-03-27 15:48:13 INFO ============================================================
+2026-03-27 15:48:13 INFO [phase1] Loading prompt bank...
+2026-03-27 15:48:13 INFO [prompt_bank] Injected condensed descriptions for 11 benchmark prompt(s)
+2026-03-27 15:48:14 INFO [phase1] Stratified: anchors=5 hard=0 random=13
+2026-03-27 15:48:14 INFO [phase1] Generating and validating 18 specs...
+2026-03-27 15:48:14 INFO [phase1] Parallel generation: 2 workers for 18 prompts
