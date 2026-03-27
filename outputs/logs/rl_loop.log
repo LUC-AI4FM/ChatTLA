@@ -9015,3 +9015,4 @@ KeyboardInterrupt
 2026-03-27 15:30:10 INFO [phase1] Skipping 7 prompts (already produced gold specs)
 2026-03-27 15:30:10 INFO [phase1] Generating and validating 25 specs...
 2026-03-27 15:30:10 INFO [phase1] Parallel generation: 2 workers for 25 prompts
+2026-03-27 15:36:28 INFO Received signal 2. Will shut down after current phase completes.

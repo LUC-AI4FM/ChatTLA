@@ -670,7 +670,7 @@ def _generate_for_prompt(
     p: dict,
     model: str,
     max_attempts: int,
-    client: Optional["ChatTLAClient"],
+    client: "ChatTLAClient",
 ) -> list[SpecResult]:
     """Generate + validate one prompt. Pass ``client=None`` to create a thread-local client."""
     from src.inference.ollama_client import ChatTLAClient
@@ -678,10 +678,6 @@ def _generate_for_prompt(
     from src.validators.sany_validator import validate_string as sany_validate
     from src.validators.tlc_validator import validate_string as tlc_validate
     from src.training.self_improve import fix_tla_syntax
-
-    own_client = client is None
-    if own_client:
-        client = ChatTLAClient(model=model, reasoning="medium")
 
     pid = p["id"]
     prompt_text = p["prompt"]
@@ -789,8 +785,6 @@ def _generate_for_prompt(
             f"attempts={len(attempt_results)} (best of {len(attempt_results)})"
         )
 
-    if own_client:
-        client._temp_override = None
     return out
 
 
@@ -823,9 +817,10 @@ def generate_and_validate(
 
     log.info(f"[phase1] Parallel generation: {workers} workers for {len(prompts)} prompts")
     max_w = min(workers, len(prompts))
+    client = ChatTLAClient(model=model, reasoning="medium")
     with ThreadPoolExecutor(max_workers=max_w) as ex:
         futs = [
-            ex.submit(_generate_for_prompt, p, model, max_attempts, None)
+            ex.submit(_generate_for_prompt, p, model, max_attempts, client)
             for p in prompts
         ]
         for fut in futs:
@@ -836,7 +831,7 @@ def generate_and_validate(
             except Exception as e:
                 log.error(f"[phase1] Prompt worker failed: {e}")
 
-    return results
+    client._temp_override = None
 
 
 # ─────────────────────────────────────────────────────────────────────────────
