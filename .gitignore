@@ -24,6 +24,7 @@ outputs/checkpoints/
 outputs/merged_model/
 outputs/gguf/
 outputs/llama.cpp/
+outputs/benchmark_results/
 
 # Upstream git mirrors (re-harvest anytime; commits recorded in tla_descriptions*.json)
 data/external/

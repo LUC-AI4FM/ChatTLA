@@ -2,6 +2,8 @@
 Structured TLA+ dataset records for regeneration training.
 
 The model returns JSON matching the schema in STRUCTURED_SYSTEM_PROMPT.
+HARVEST_BASELINE_STRATEGY documents the non-LLM harvest path; see also
+data/derived/tla_descriptions_audit.json → generation_strategy.
 """
 
 from __future__ import annotations
@@ -25,6 +27,21 @@ Return a single JSON object with this exact structure:
 { "id": "<module_name_lowercase>_001", "module_name": "<ExactTLAModuleName>", "description": { "narrative": "<3-5 sentence paper-style abstract: problem, protocol intuition, liveness guarantees. No variables, no syntax>", "technical": { "algorithm": "<Name — one-sentence purpose>", "constants_and_processes": "<Definitions + brief rationale>", "variables": [ { "name": "<varName>", "type": "<TLA+ type>", "role": "<one-line author-voice role>" } ], "init": "<Compact TLA+-style init, one entry per variable>", "actions": [ {"name": "<ActionName(i)>", "intent": "<one-sentence protocol purpose>", "pre": "<TLA+-style precondition>", "post": "<TLA+-style postcondition, branches where applicable>" } ], "next_and_fairness": "<Action composition + fairness justification>","invariants_and_properties": [ { "name": "<Name>", "assertion": "<TLA+-style>", "purpose": "<one-line why it matters>" } ],"critical_design_decisions": [ "<bullet: non-obvious choice and its purpose>" ] } } }
 
 Use the exact module name given in the user message. The id must be <that_name_lower>_001.
+"""
+
+# Baseline harvest (no LLM): what fills `tla_descriptions.json` when `--llm` is off.
+# Kept next to STRUCTURED_SYSTEM_PROMPT so “strategy” is one place for humans and for
+# `tla_descriptions_audit.json` → `generation_strategy`.
+HARVEST_BASELINE_STRATEGY = """\
+Baseline dataset (no `--llm`): official sources per module in the coarse list:
+- tlaplus/Examples: README.md curated titles, each folder’s manifest.json (authors, paper/PDF URLs),
+  first `(* … *)` comment block after MODULE, optional PDF text (first pages via pypdf cache).
+- tlaplus/tlapm: `library/*.tla` for TLAPS proof modules not shipped under Examples.
+
+Technical fields: SANY XMLExporter on each `.tla` when possible; regex/static extraction fallback;
+`--no-static-extract` disables both. Narrative merges harvested prose with SANY/static structure.
+Optional `--llm` replaces the normalized `description` with output matching STRUCTURED_SYSTEM_PROMPT
+(author voice, same JSON schema as rows committed without LLM but aimed at reconstruction).
 """
 
 

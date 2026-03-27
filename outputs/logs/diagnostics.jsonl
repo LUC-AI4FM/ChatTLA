@@ -13,3 +13,4 @@
 {"timestamp": "2026-03-23T01:48:37.268522", "kind": "retrain_fail_streak", "summary": "Retrain failed 2 times in a row", "accumulated_new": 74, "action": "reset accumulated_new to 0 to stop hammering retrain"}
 {"timestamp": "2026-03-23T02:46:48.032426", "kind": "tlc_regression", "summary": "Benchmark TLC=0% but SANY=75% in cycle 85", "retrained_this_cycle": false, "action": "retrain may have hurt TLC; consider reverting or skipping next retrain"}
 {"timestamp": "2026-03-23T06:51:01.240483", "kind": "retrain_fail_streak", "summary": "Retrain failed 2 times in a row", "accumulated_new": 64, "action": "reset accumulated_new to 0 to stop hammering retrain"}
+{"timestamp": "2026-03-27T02:34:51.024303", "kind": "retrain_fail_streak", "summary": "Retrain failed 2 times in a row", "accumulated_new": 60, "action": "reset accumulated_new to 0 to stop hammering retrain"}

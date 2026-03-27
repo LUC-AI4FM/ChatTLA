@@ -209,24 +209,33 @@ def build_training_args(
     use_cpu: bool = False,
     num_epochs: int | None = None,
     max_length: int = 4096,
+    per_device_batch_size: int | None = None,
+    gradient_accumulation_steps_override: int | None = None,
 ) -> SFTConfig:
     """Return an SFTConfig tuned for smoke or full runs.
 
     - `use_cpu=True` will disable `bf16` and set TrainingArguments.use_cpu so
       the Transformers/Accelerate runtime knows we're executing on the CPU.
+    - `per_device_batch_size` and `gradient_accumulation_steps_override` can override
+      defaults for tight-memory situations.
     """
     _CHECKPOINT_DIR.mkdir(parents=True, exist_ok=True)
 
     # When running on CPU we must not request bf16 (invalid on CPU).
     bf16_enabled = False if use_cpu else True
 
+    # Adaptive batch size: allow overrides for tight-memory situations
+    batch_size = per_device_batch_size if per_device_batch_size is not None else (1 if smoke_test else 1)
+    accum_steps = gradient_accumulation_steps_override if gradient_accumulation_steps_override is not None else (2 if smoke_test else 8)
+
     return SFTConfig(
         output_dir=str(_CHECKPOINT_DIR),
         # --- Batch / accumulation ------------------------------------------
         # With longer sequences (4096), use batch=1 with higher accum to stay
         # within VRAM. Effective batch = 1*8 = 8 (good for 57 training examples)
-        per_device_train_batch_size=1 if smoke_test else 1,
-        gradient_accumulation_steps=2 if smoke_test else 8,
+        # Can be overridden for tight-memory conditions.
+        per_device_train_batch_size=batch_size,
+        gradient_accumulation_steps=accum_steps,
         # --- Optimizer / schedule ------------------------------------------
         learning_rate=1e-4,
         lr_scheduler_type="cosine",
@@ -274,6 +283,8 @@ def main(
     num_epochs: int | None = None,
     max_length: int = 4096,
     run_dpo_after: bool = False,
+    per_device_batch_size: int | None = None,
+    gradient_accumulation_steps: int | None = None,
 ) -> None:
     mlflow.set_experiment("ChatTLA-gpt-oss-20b")
 
@@ -470,7 +481,15 @@ def main(
     # Pass `use_cpu=True` when the user explicitly requested `device_map='cpu'`
     # or when CUDA is not available so SFTConfig validates correctly.
     use_cpu_flag = (device_map == "cpu") or (not torch.cuda.is_available())
-    training_args = build_training_args(smoke_test=smoke_test, resume_from=resume_from, use_cpu=use_cpu_flag, num_epochs=num_epochs, max_length=max_length)
+    training_args = build_training_args(
+        smoke_test=smoke_test,
+        resume_from=resume_from,
+        use_cpu=use_cpu_flag,
+        num_epochs=num_epochs,
+        max_length=max_length,
+        per_device_batch_size=per_device_batch_size,
+        gradient_accumulation_steps_override=gradient_accumulation_steps,
+    )
 
     trainer = SFTTrainer(
         model=model,
@@ -533,6 +552,10 @@ if __name__ == "__main__":
                         help="Override number of training epochs (default: auto-scale by dataset size)")
     parser.add_argument("--max-length", type=int, default=4096,
                         help="Max sequence length (default: 4096; lower values reduce VRAM on shared machines)")
+    parser.add_argument("--per-device-batch-size", type=int, default=None,
+                        help="Override per_device_train_batch_size (default: 1; use 1 for tight memory)")
+    parser.add_argument("--gradient-accumulation-steps", type=int, default=None,
+                        help="Override gradient_accumulation_steps (default: 2 smoke / 8 full; lower for tight memory)")
     parser.add_argument("--dpo-after", action="store_true",
                         help="After SFT, run DPO on gold pairs in data/processed/rl/dpo_pairs.jsonl (if >=2 rows)")
     args = parser.parse_args()
@@ -552,4 +575,6 @@ if __name__ == "__main__":
         num_epochs=args.epochs,
         max_length=args.max_length,
         run_dpo_after=args.dpo_after,
+        per_device_batch_size=args.per_device_batch_size,
+        gradient_accumulation_steps=args.gradient_accumulation_steps,
     )

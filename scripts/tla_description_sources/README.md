@@ -7,6 +7,13 @@ Pulls **official** descriptions for every module in `data/tla-compents-coarse.js
 
 Each output row records **both** upstream git SHAs so you can diff when the community adds specs.
 
+### Combined strategy (baseline + author-voice spec)
+
+- **Baseline (default):** Harvest README / manifest / header / optional PDF text, then fill `description.technical` with **SANY** (or static regex fallback). This is summarized in code as `HARVEST_BASELINE_STRATEGY` in `structured_dataset.py`.
+- **Optional `--llm`:** Same JSON row shape, but `description` is produced by an LM following **`STRUCTURED_SYSTEM_PROMPT`** in `structured_dataset.py` — formal-methods expert, author voice, inline TLA+ (no fenced code blocks), nondeterminism explained, infer unnamed algorithms when needed, exact nested schema for narrative + technical reconstruction.
+
+The committed snapshot **`data/derived/tla_descriptions_audit.json`** includes a **`generation_strategy`** object: `baseline_harvest`, `llm_author_voice_spec` (full system prompt text), and pointers to canonical files. `data/derived/tla_descriptions.json` remains a **flat array** of module rows (no wrapper object) so loaders stay simple.
+
 ### Dataset shape (regeneration-oriented)
 
 Each row is built for feeding an LM that **reconstructs** the spec:
@@ -45,7 +52,7 @@ First run **clones** into `data/external/` (gitignored — large). The **derived
 | File | Purpose |
 |------|---------|
 | `data/derived/tla_descriptions.json` | Per-module: `id`, `module_name`, `coarse_id`, structured `description`, `confidence`, `provenance`, `paths`, optional `official_sources` / `authors`, optional `pdf_excerpt_meta`, optional `llm` when `--llm` was used |
-| `data/derived/tla_descriptions_audit.json` | Aggregate stats, both repo commits, refresh commands |
+| `data/derived/tla_descriptions_audit.json` | Stats, git pins, refresh commands, and **`generation_strategy`** (baseline + full `STRUCTURED_SYSTEM_PROMPT` text) |
 
 ## When upstream changes
 

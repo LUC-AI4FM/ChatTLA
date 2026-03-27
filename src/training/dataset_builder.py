@@ -122,9 +122,16 @@ def build_messages_invariant_gen(record: DatasetRecord) -> list[dict] | None:
     invs = _extract_invariants(record.tla_content)
     if not invs:
         return None
+    from src.training.module_family import format_spec_context_gap_notice
+
+    tla = record.tla_content.strip()
+    gap = format_spec_context_gap_notice(record.tla_content)
+    user_body = f"Given this TLA+ spec, write safety invariants:\n\n{tla}"
+    if gap:
+        user_body = f"{gap}\n\n---\n\n{user_body}"
     return [
         {"role": "developer", "content": _DEVELOPER_PROMPT},
-        {"role": "user",      "content": f"Given this TLA+ spec, write safety invariants:\n\n{record.tla_content.strip()}"},
+        {"role": "user",      "content": user_body},
         {"role": "assistant", "channel": "analysis",  "content": "I'll identify the key safety properties and express them as TLA+ invariant operators."},
         {"role": "assistant", "channel": "final",     "content": "\n\n".join(invs)},
     ]
@@ -132,16 +139,22 @@ def build_messages_invariant_gen(record: DatasetRecord) -> list[dict] | None:
 
 def build_messages_bug_fix(record: DatasetRecord, error_msg: str, buggy_tla: str) -> list[dict]:
     """User: buggy spec + TLC error → Assistant: fixed spec."""
+    from src.training.module_family import format_spec_context_gap_notice
+
+    buggy = buggy_tla.strip()
+    gap = format_spec_context_gap_notice(buggy_tla)
+    core = (
+        f"This TLA+ spec has an error that TLC found:\n\n"
+        f"```\n{error_msg}\n```\n\n"
+        f"Buggy spec:\n{buggy}\n\n"
+        f"Fix the spec."
+    )
+    user_content = f"{gap}\n\n---\n\n{core}" if gap else core
     return [
         {"role": "developer", "content": _DEVELOPER_PROMPT},
         {
             "role": "user",
-            "content": (
-                f"This TLA+ spec has an error that TLC found:\n\n"
-                f"```\n{error_msg}\n```\n\n"
-                f"Buggy spec:\n{buggy_tla.strip()}\n\n"
-                f"Fix the spec."
-            ),
+            "content": user_content,
         },
         {"role": "assistant", "channel": "analysis",  "content": "I'll analyse the TLC error and produce a corrected specification."},
         {"role": "assistant", "channel": "final",     "content": record.tla_content.strip()},

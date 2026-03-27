@@ -114,6 +114,19 @@ def benchmark_context_block(
     return text
 
 
+def prepend_spec_context_gap_notice(tla_text: str, body: str) -> str:
+    """
+    When showing a single .tla file to an LLM, prepend a warning if EXTENDS / INSTANCE
+    pull in modules that are not included in the snippet (prevents invented definitions).
+    """
+    from src.training.module_family import format_spec_context_gap_notice
+
+    notice = format_spec_context_gap_notice(tla_text)
+    if not notice:
+        return body
+    return notice + "\n\n---\n\n" + body
+
+
 def load_descriptions_index(path) -> dict[str, dict[str, Any]]:
     """module_name -> full row."""
     import json

@@ -58,10 +58,13 @@ def _save_state(state: dict) -> None:
 
 
 def latest_full_benchmark_stats() -> dict | None:
-    """Parse newest outputs/benchmark_results_*_full_*.csv for SANY/TLC rates."""
+    """Parse newest outputs/benchmark_results_*_full_*.csv or outputs/benchmark_results/benchmark_results_*_full_*.csv for SANY/TLC rates."""
     pattern = "benchmark_results_*_full_*.csv"
+    
+    # Check both old location (outputs/) and new location (outputs/benchmark_results/)
     candidates = sorted(
-        _REPO_ROOT.glob(f"outputs/{pattern}"),
+        list(_REPO_ROOT.glob(f"outputs/{pattern}")) + 
+        list(_REPO_ROOT.glob(f"outputs/benchmark_results/{pattern}")),
         key=lambda p: p.stat().st_mtime,
         reverse=True,
     )

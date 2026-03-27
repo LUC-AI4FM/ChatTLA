@@ -24,6 +24,8 @@ from typing import Any, Optional
 
 from pdf_extract import collect_pdf_excerpts_for_sources
 from structured_dataset import (
+    HARVEST_BASELINE_STRATEGY,
+    STRUCTURED_SYSTEM_PROMPT,
     build_llm_user_message,
     call_ollama_structured,
     dataset_record_id,
@@ -590,6 +592,19 @@ def harvest(
             "enabled": use_llm,
             "model": llm_model if use_llm else None,
             "host": llm_host if use_llm else None,
+        },
+        "generation_strategy": {
+            "overview": (
+                "Combined: (1) baseline harvest fills each row with official prose, paths, and "
+                "programmatic technical extraction (SANY / static fallback); (2) optional --llm "
+                "applies the author-voice JSON contract for reconstruction-oriented descriptions."
+            ),
+            "baseline_harvest": HARVEST_BASELINE_STRATEGY.strip(),
+            "llm_author_voice_spec": STRUCTURED_SYSTEM_PROMPT,
+            "canonical_sources": {
+                "prompt_constants": "scripts/tla_description_sources/structured_dataset.py",
+                "audit_snapshot": "data/derived/tla_descriptions_audit.json",
+            },
         },
     }
     audit_path.write_text(json.dumps(audit, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")

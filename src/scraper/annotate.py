@@ -106,7 +106,12 @@ def _build_user_prompt(record: DatasetRecord) -> str:
     If pre-existing comments are available (from FormaLLM), include them as
     additional context — the model should incorporate that signal.
     """
+    from src.training.module_family import format_spec_context_gap_notice
+
     parts = []
+    gap = format_spec_context_gap_notice(record.tla_content)
+    if gap:
+        parts.append(gap + "\n")
     if record.annotation and record.annotation.natural_language_description:
         parts.append(f"Existing description hint:\n{record.annotation.natural_language_description[:500]}\n")
     parts.append(f"TLA+ Specification:\n```\n{record.tla_content[:3000]}\n```")

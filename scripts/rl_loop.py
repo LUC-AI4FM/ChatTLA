@@ -16,6 +16,9 @@ Schedule
 Each cycle runs phases back-to-back by default (`--cycle-hours 0`). Use `--cycle-hours 1.5`
 to pad with sleep so cycles are spaced (e.g. shared GPU etiquette).
 
+Phase 1 can process multiple prompts in parallel (``--phase1-workers`` or ``CHATTLA_PHASE1_WORKERS``).
+Full benchmark runs every ``--benchmark-every N`` cycles (default 3); other cycles use quick eval only.
+
 Usage
 -----
     # Launched by scripts/launch_rl.sh (recommended)
@@ -39,6 +42,7 @@ import subprocess
 import sys
 import time
 import traceback
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Literal, Optional
@@ -177,6 +181,7 @@ class CycleStats:
     retrain_skipped_min_data: bool = False
     retrain_deferred_to_night: bool = False
     benchmark_run: bool = False
+    benchmark_full_suite: bool = False
     benchmark_sany_rate: float = 0.0
     benchmark_tlc_rate: float = 0.0
     cycle_duration_s: float = 0.0
@@ -208,17 +213,28 @@ def total_gpu_memory_free_mb() -> int:
         total = 0
         for d in (0, 1):
             if d < torch.cuda.device_count():
-                free_bytes, _ = torch.cuda.mem_get_info(d)
-                total += int(free_bytes // (1024 * 1024))
+                try:
+                    free_bytes, _ = torch.cuda.mem_get_info(d)
+                    total += int(free_bytes // (1024 * 1024))
+                except Exception:
+                    # If we can't get info for one GPU, assume ~40GB free
+                    total += 40000
         return total if total > 0 else 40000
     except Exception:
+        log.warning("[memory] Could not detect GPU VRAM; assuming 40GB available")
         return 40000
 
 
 def max_length_for_vram(free_mb: int) -> int:
     """Choose max_length based on available VRAM to avoid OOM."""
+    if free_mb < 10_000:
+        return 512    # critical (~10 GiB free, ~38 GiB in use)
+    if free_mb < 15_000:
+        return 768    # very tight (~15 GiB free)
+    if free_mb < 22_000:
+        return 1024   # very tight (~24 GiB reported in use on shared 48 GiB cards)
     if free_mb < 35_000:
-        return 1536   # very tight (~1 GPU shared)
+        return 1536   # moderate (~1 GPU shared)
     if free_mb < 55_000:
         return 2048   # ~1 GPU free or 2 heavily shared
     if free_mb < 80_000:
@@ -582,140 +598,186 @@ def extract_tlc_feedback(spec_result: SpecResult) -> str:
 # ─────────────────────────────────────────────────────────────────────────────
 # Phase 1: Generate + Validate specs
 # ─────────────────────────────────────────────────────────────────────────────
+def _resolve_phase1_workers(requested: int) -> int:
+    """Parallel prompts against Ollama; TLC/SANY use isolated temp dirs per call."""
+    if requested > 0:
+        return max(1, requested)
+    env = os.environ.get("CHATTLA_PHASE1_WORKERS", "").strip()
+    if env.isdigit():
+        return max(1, int(env))
+    return 3 if is_nighttime() else 2
+
+
+def _generate_for_prompt(
+    p: dict,
+    model: str,
+    max_attempts: int,
+    client: Optional["ChatTLAClient"],
+) -> list[SpecResult]:
+    """Generate + validate one prompt. Pass ``client=None`` to create a thread-local client."""
+    from src.inference.ollama_client import ChatTLAClient
+    from src.inference.benchmark import score_structural
+    from src.validators.sany_validator import validate_string as sany_validate
+    from src.validators.tlc_validator import validate_string as tlc_validate
+    from src.training.self_improve import fix_tla_syntax
+
+    own_client = client is None
+    if own_client:
+        client = ChatTLAClient(model=model, reasoning="medium")
+
+    pid = p["id"]
+    prompt_text = p["prompt"]
+    module_hint = p.get("module_hint", "Spec")
+    attempt_results: list[SpecResult] = []
+    out: list[SpecResult] = []
+
+    for attempt in range(max_attempts):
+        if _SHUTDOWN:
+            break
+        temp = TEMPERATURE_BASE + random.uniform(-0.15, 0.25) if attempt > 0 else TEMPERATURE_BASE
+        temp = max(TEMPERATURE_RANGE[0], min(TEMPERATURE_RANGE[1], temp))
+
+        try:
+            client._temp_override = temp if attempt > 0 else None
+            spec = client.generate_spec(prompt_text, module_name=module_hint, temperature=temp)
+        except Exception as e:
+            log.warning(f"[{pid}] Generation failed (attempt {attempt+1}): {e}")
+            continue
+
+        m = re.search(r"----\s*MODULE\s+(\w+)", spec)
+        module_name = m.group(1) if m else module_hint
+
+        fix_result = fix_tla_syntax(spec)
+        if fix_result.fixes_applied:
+            spec = fix_result.fixed_spec
+
+        sany_result = sany_validate(spec, module_name=module_name)
+        sany_ok = sany_result.valid
+
+        tlc_ok = False
+        tlc_violations: list[str] = []
+        tlc_raw = ""
+        tier = "bronze"
+
+        if sany_ok:
+            tlc_result = tlc_validate(spec, module_name=module_name)
+            tier = tlc_result.tier
+            tlc_ok = (tier == "gold")
+            tlc_violations = tlc_result.tlc_violations
+            tlc_raw = tlc_result.raw_output
+
+        struct_score = score_structural(spec, [])
+
+        result = SpecResult(
+            prompt_id=pid,
+            prompt_text=prompt_text,
+            spec=spec,
+            tier=tier,
+            sany_pass=sany_ok,
+            tlc_pass=tlc_ok,
+            tlc_violations=tlc_violations,
+            tlc_raw_output=tlc_raw,
+            fixes_applied=fix_result.fixes_applied,
+            structural_score=struct_score,
+            attempts=attempt + 1,
+            temperature=temp,
+        )
+        attempt_results.append(result)
+
+        if tier in ("silver", "bronze") and (tlc_violations or tlc_raw):
+            log_tlc_error(pid, prompt_text, tier, tlc_violations, tlc_raw, spec[:1200])
+
+        if tier == "gold":
+            break
+
+        if not sany_ok and attempt < max_attempts - 1:
+            try:
+                corrected_spec, _corrected_tier = client.validate_and_generate(
+                    prompt_text, max_retries=2
+                )
+                c_sany = sany_validate(corrected_spec, module_name=module_name)
+                if c_sany.valid:
+                    c_m = re.search(r"----\s*MODULE\s+(\w+)", corrected_spec)
+                    c_mod = c_m.group(1) if c_m else module_name
+                    c_tlc = tlc_validate(corrected_spec, module_name=c_mod)
+                    corrected_result = SpecResult(
+                        prompt_id=pid,
+                        prompt_text=prompt_text,
+                        spec=corrected_spec,
+                        tier=c_tlc.tier,
+                        sany_pass=True,
+                        tlc_pass=(c_tlc.tier == "gold"),
+                        tlc_violations=c_tlc.tlc_violations,
+                        tlc_raw_output=c_tlc.raw_output,
+                        fixes_applied=[],
+                        structural_score=score_structural(corrected_spec, []),
+                        attempts=attempt + 1,
+                        temperature=temp,
+                    )
+                    attempt_results.append(corrected_result)
+                    if c_tlc.tier == "gold":
+                        break
+            except Exception:
+                pass
+            break
+
+    if attempt_results:
+        tier_rank = {"gold": 3, "silver": 2, "bronze": 1}
+        best = max(attempt_results, key=lambda r: tier_rank.get(r.tier, 0))
+        out.extend(attempt_results)
+        log.info(
+            f"  [{pid}] tier={best.tier} sany={best.sany_pass} "
+            f"tlc={best.tlc_pass} struct={best.structural_score:.2f} "
+            f"attempts={len(attempt_results)} (best of {len(attempt_results)})"
+        )
+
+    if own_client:
+        client._temp_override = None
+    return out
+
+
 def generate_and_validate(
     prompts: list[dict],
     model: str = "chattla:20b",
     max_attempts: int = 3,
     prompt_cooldown_s: float = 0.0,
+    phase1_max_workers: int = 0,
 ) -> list[SpecResult]:
     """Generate specs for all prompts, validate each, and return results."""
     from src.inference.ollama_client import ChatTLAClient
-    from src.validators.sany_validator import validate_string as sany_validate
-    from src.validators.tlc_validator import validate_string as tlc_validate
-    from src.training.self_improve import fix_tla_syntax
 
-    client = ChatTLAClient(model=model, reasoning="medium")
-    results = []
+    workers = _resolve_phase1_workers(phase1_max_workers)
+    results: list[SpecResult] = []
 
-    for p in prompts:
-        if _SHUTDOWN:
-            break
+    if len(prompts) == 0:
+        return results
 
-        pid = p["id"]
-        prompt_text = p["prompt"]
-        module_hint = p.get("module_hint", "Spec")
-        attempt_results: list[SpecResult] = []  # keep ALL attempts for DPO pairs
-
-        for attempt in range(max_attempts):
-            temp = TEMPERATURE_BASE + random.uniform(-0.15, 0.25) if attempt > 0 else TEMPERATURE_BASE
-            temp = max(TEMPERATURE_RANGE[0], min(TEMPERATURE_RANGE[1], temp))
-
-            try:
-                client._temp_override = temp if attempt > 0 else None
-                spec = client.generate_spec(prompt_text, module_name=module_hint, temperature=temp)
-            except Exception as e:
-                log.warning(f"[{pid}] Generation failed (attempt {attempt+1}): {e}")
-                continue
-
-            # Extract module name from generated spec
-            m = re.search(r"----\s*MODULE\s+(\w+)", spec)
-            module_name = m.group(1) if m else module_hint
-
-            # Try Python fixer
-            fix_result = fix_tla_syntax(spec)
-            if fix_result.fixes_applied:
-                spec = fix_result.fixed_spec
-
-            # SANY check
-            sany_result = sany_validate(spec, module_name=module_name)
-            sany_ok = sany_result.valid
-
-            # TLC check (only if SANY passes)
-            tlc_ok = False
-            tlc_violations = []
-            tlc_raw = ""
-            tier = "bronze"
-
-            if sany_ok:
-                tlc_result = tlc_validate(spec, module_name=module_name)
-                tier = tlc_result.tier
-                tlc_ok = (tier == "gold")
-                tlc_violations = tlc_result.tlc_violations
-                tlc_raw = tlc_result.raw_output
-
-            # Structural score
-            from src.inference.benchmark import score_structural
-            struct_score = score_structural(spec, [])
-
-            result = SpecResult(
-                prompt_id=pid,
-                prompt_text=prompt_text,
-                spec=spec,
-                tier=tier,
-                sany_pass=sany_ok,
-                tlc_pass=tlc_ok,
-                tlc_violations=tlc_violations,
-                tlc_raw_output=tlc_raw,
-                fixes_applied=fix_result.fixes_applied,
-                structural_score=struct_score,
-                attempts=attempt + 1,
-                temperature=temp,
-            )
-            attempt_results.append(result)
-
-            # Log TLC failures for failure analysis (invariant violations, deadlocks, etc.)
-            if tier in ("silver", "bronze") and (tlc_violations or tlc_raw):
-                log_tlc_error(pid, prompt_text, tier, tlc_violations, tlc_raw, spec[:1200])
-
-            # If gold, no need to try more
-            if tier == "gold":
+    if workers <= 1 or len(prompts) == 1:
+        client = ChatTLAClient(model=model, reasoning="medium")
+        for p in prompts:
+            if _SHUTDOWN:
                 break
+            results.extend(_generate_for_prompt(p, model, max_attempts, client))
+            if prompt_cooldown_s > 0 and not _SHUTDOWN:
+                time.sleep(prompt_cooldown_s)
+        client._temp_override = None
+        return results
 
-            # If SANY failed and we have more attempts, try self-correction
-            if not sany_ok and attempt < max_attempts - 1:
-                try:
-                    corrected_spec, corrected_tier = client.validate_and_generate(
-                        prompt_text, max_retries=2
-                    )
-                    c_sany = sany_validate(corrected_spec, module_name=module_name)
-                    if c_sany.valid:
-                        c_tlc = tlc_validate(corrected_spec, module_name=module_name)
-                        corrected_result = SpecResult(
-                            prompt_id=pid,
-                            prompt_text=prompt_text,
-                            spec=corrected_spec,
-                            tier=c_tlc.tier,
-                            sany_pass=True,
-                            tlc_pass=(c_tlc.tier == "gold"),
-                            tlc_violations=c_tlc.tlc_violations,
-                            tlc_raw_output=c_tlc.raw_output,
-                            fixes_applied=[],
-                            structural_score=score_structural(corrected_spec, []),
-                            attempts=attempt + 1,
-                            temperature=temp,
-                        )
-                        attempt_results.append(corrected_result)
-                        if c_tlc.tier == "gold":
-                            break
-                except Exception:
-                    pass
-                break  # self-correction already retries internally
+    log.info(f"[phase1] Parallel generation: {workers} workers for {len(prompts)} prompts")
+    max_w = min(workers, len(prompts))
+    with ThreadPoolExecutor(max_workers=max_w) as ex:
+        futs = [
+            ex.submit(_generate_for_prompt, p, model, max_attempts, None)
+            for p in prompts
+        ]
+        for fut in futs:
+            if _SHUTDOWN:
+                break
+            try:
+                results.extend(fut.result())
+            except Exception as e:
+                log.error(f"[phase1] Prompt worker failed: {e}")
 
-        if attempt_results:
-            # Append ALL attempts for DPO pairs (chosen vs rejected)
-            tier_rank = {"gold": 3, "silver": 2, "bronze": 1}
-            best = max(attempt_results, key=lambda r: tier_rank.get(r.tier, 0))
-            for r in attempt_results:
-                results.append(r)
-            log.info(f"  [{pid}] tier={best.tier} sany={best.sany_pass} "
-                     f"tlc={best.tlc_pass} struct={best.structural_score:.2f} "
-                     f"attempts={len(attempt_results)} (best of {len(attempt_results)})")
-
-        # Gentle pacing to avoid monopolizing shared GPUs.
-        if prompt_cooldown_s > 0 and not _SHUTDOWN:
-            time.sleep(prompt_cooldown_s)
-
-    client._temp_override = None
     return results
 
 
@@ -929,7 +991,9 @@ def _count_dpo_gold_pairs() -> int:
     return n
 
 
-MIN_TRAIN_EXAMPLES = 500  # don't retrain on tiny datasets — damages the base model
+# Lower than 500 so RL-augmented runs can train once the merged pool is stable (~280–400 lines).
+# Override with --min-train-examples or CHATTLA_MIN_TRAIN_EXAMPLES.
+MIN_TRAIN_EXAMPLES = int(os.environ.get("CHATTLA_MIN_TRAIN_EXAMPLES", "280"))
 
 
 def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT) -> RetrainOutcome:
@@ -967,6 +1031,19 @@ def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT
     num_epochs = 1
     log.info(f"[retrain] {n_train} training examples, {num_epochs} epochs")
 
+    # Clean up GPU memory from previous phases (inference, benchmarks, etc.)
+    # This is critical on shared machines where 35+ GiB may be in use
+    try:
+        import torch
+        import gc
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+            gc.collect()
+            torch.cuda.synchronize()
+            log.info("[retrain] GPU memory cleaned (empty_cache + gc)")
+    except Exception as e:
+        log.warning(f"[retrain] Could not clean GPU memory: {e}")
+
     # 2. Train — use both GPUs (20B model needs ~40GB + activations; single 48GB GPU OOMs)
     env = os.environ.copy()
     env["CUDA_VISIBLE_DEVICES"] = "0,1"
@@ -981,13 +1058,34 @@ def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT
     # Adapt max_length to available VRAM (avoids OOM on shared machines)
     free_mb = total_gpu_memory_free_mb()
     max_length = max_length_for_vram(free_mb)
+    
+    # Determine gradient accumulation steps based on memory availability
+    # Lower accumulation = lower peak memory but smaller effective batch
+    grad_accum_steps = None  # None means use default (8)
+    if free_mb < 10_000:
+        max_length = min(max_length, 512)
+        grad_accum_steps = 2  # Minimum to keep learning stable
+        log.warning(f"[retrain] CRITICAL: Only {free_mb}MB free VRAM. Using max_length=512 + grad_accum=2")
+    elif free_mb < 15_000:
+        max_length = min(max_length, 768)
+        grad_accum_steps = 4  # Reduce to lower peak memory
+        log.warning(f"[retrain] Extremely tight VRAM ({free_mb}MB free). Using max_length=768 + grad_accum=4")
+    elif free_mb < 22_000:
+        grad_accum_steps = 6  # Conservative
+        log.info(f"[retrain] Tight VRAM ({free_mb}MB free). Limiting to grad_accum=6")
+    else:
+        log.info(f"[retrain] VRAM available: {free_mb}MB free")
+    
     env["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
+    log.info(f"[retrain] Training with max_length={max_length}, grad_accum={grad_accum_steps or 8} (free_mb={free_mb})")
     train_cmd = [
         sys.executable, "-m", "src.training.train",
         "--epochs", str(num_epochs),
         "--max-gpu-memory-mb", str(max_gpu_memory_mb),
         "--max-length", str(max_length),
     ]
+    if grad_accum_steps is not None:
+        train_cmd.extend(["--gradient-accumulation-steps", str(grad_accum_steps)])
     dpo_n = _count_dpo_gold_pairs()
     if dpo_n >= 2:
         train_cmd.append("--dpo-after")
@@ -1005,43 +1103,65 @@ def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT
     if _SHUTDOWN:
         return "failed"
 
-    # 3. Merge LoRA — use same GPU visibility as training; merge_lora used to
-    # default to a single GPU and OOM / CUBLAS_ALLOC_FAILED on 20B + PEFT merge.
+    # 3. Merge LoRA — GPU first unless CHATTLA_MERGE_ON_CPU=1 (avoids CUBLAS OOM on merge).
     merge_env = os.environ.copy()
     merge_env["CUDA_VISIBLE_DEVICES"] = env.get("CUDA_VISIBLE_DEVICES", "0,1")
     merge_env.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
 
-    log.info("[retrain] Merging LoRA weights (GPU)...")
-    try:
-        result = subprocess.run(
+    prefer_cpu_merge = os.environ.get("CHATTLA_MERGE_ON_CPU", "").strip().lower() in (
+        "1", "true", "yes",
+    )
+    merged_ok = False
+
+    def _merge_cpu() -> subprocess.CompletedProcess:
+        cpu_env = os.environ.copy()
+        cpu_env["CUDA_VISIBLE_DEVICES"] = ""
+        return subprocess.run(
+            [sys.executable, "-m", "src.training.merge_lora", "--device", "cpu"],
+            cwd=str(_REPO_ROOT),
+            env=cpu_env,
+            capture_output=True,
+            text=True,
+            timeout=7200,
+        )
+
+    def _merge_gpu() -> subprocess.CompletedProcess:
+        return subprocess.run(
             [sys.executable, "-m", "src.training.merge_lora"],
             cwd=str(_REPO_ROOT),
             env=merge_env,
-            capture_output=True, text=True, timeout=1800,
+            capture_output=True,
+            text=True,
+            timeout=1800,
         )
-        if result.returncode != 0:
-            err_tail = (result.stderr or "")[-800:]
-            log.warning(
-                f"[retrain] GPU merge failed ({err_tail[-400:]}); retrying on CPU (slow, ~RAM-heavy)..."
-            )
-            cpu_env = os.environ.copy()
-            # Hide GPUs so merge runs purely on CPU; avoids CUBLAS init + VRAM.
-            cpu_env["CUDA_VISIBLE_DEVICES"] = ""
-            result = subprocess.run(
-                [
-                    sys.executable, "-m", "src.training.merge_lora",
-                    "--device", "cpu",
-                ],
-                cwd=str(_REPO_ROOT),
-                env=cpu_env,
-                capture_output=True, text=True, timeout=7200,
-            )
+
+    try:
+        if prefer_cpu_merge:
+            log.info("[retrain] Merging LoRA on CPU (CHATTLA_MERGE_ON_CPU)...")
+            result = _merge_cpu()
+            if result.returncode == 0:
+                log.info("[retrain] LoRA merged (CPU).")
+                merged_ok = True
+            else:
+                log.warning(
+                    f"[retrain] CPU merge failed; retrying GPU: {(result.stderr or '')[-400:]}"
+                )
+
+        if not merged_ok:
+            log.info("[retrain] Merging LoRA weights (GPU)...")
+            result = _merge_gpu()
             if result.returncode != 0:
-                log.error(f"[retrain] CPU merge also failed: {(result.stderr or '')[-500:]}")
-                return "failed"
-            log.info("[retrain] LoRA merged (CPU fallback).")
-        else:
-            log.info("[retrain] LoRA merged.")
+                err_tail = (result.stderr or "")[-800:]
+                log.warning(
+                    f"[retrain] GPU merge failed ({err_tail[-400:]}); retrying on CPU (slow, ~RAM-heavy)..."
+                )
+                result = _merge_cpu()
+                if result.returncode != 0:
+                    log.error(f"[retrain] CPU merge also failed: {(result.stderr or '')[-500:]}")
+                    return "failed"
+                log.info("[retrain] LoRA merged (CPU fallback).")
+            else:
+                log.info("[retrain] LoRA merged.")
     except subprocess.TimeoutExpired:
         log.error("[retrain] Merge timed out")
         return "failed"
@@ -1100,14 +1220,20 @@ def best_historical_full_tlc() -> float:
     """Return the best TLC rate from any full benchmark CSV."""
     best = 0.0
     import glob as _glob
-    for path in _glob.glob(str(_REPO_ROOT / "outputs" / "benchmark_results_*_full_*.csv")):
-        try:
-            with open(path) as f:
-                reader = csv.DictReader(f)
-                rows = list(reader)
-            if rows:
-                tlc = sum(1 for r in rows if r.get("tlc_pass") == "1") / len(rows)
-                best = max(best, tlc)
+    
+    # Check both old location (outputs/) and new location (outputs/benchmark_results/)
+    for pattern in [
+        str(_REPO_ROOT / "outputs" / "benchmark_results_*_full_*.csv"),
+        str(_REPO_ROOT / "outputs" / "benchmark_results" / "benchmark_results_*_full_*.csv"),
+    ]:
+        for path in _glob.glob(pattern):
+            try:
+                with open(path) as f:
+                    reader = csv.DictReader(f)
+                    rows = list(reader)
+                if rows:
+                    tlc = sum(1 for r in rows if r.get("tlc_pass") == "1") / len(rows)
+                    best = max(best, tlc)
         except Exception:
             pass
     return best
@@ -1121,6 +1247,21 @@ def quick_benchmark_timeout_s(limit: int, attempts: int) -> int:
     return max(1200, limit * attempts * 150)
 
 
+# Must match `src.inference.benchmark` when run without --limit (full handcrafted suite).
+_FULL_BENCHMARK_N = 20
+
+
+def compute_full_benchmark_timeout(attempts: int, problems: int = _FULL_BENCHMARK_N) -> int:
+    """
+    Wall-clock cap for the full benchmark subprocess.
+
+    Self-correct + TLC can exceed 2h on a busy GPU after a long retrain; the old
+    fixed 7200s caused false (0%, 0%) metrics and skipped HF publish.
+    Scales with problems × attempts; floor 4h.
+    """
+    return max(14_400, problems * attempts * 360)
+
+
 def run_benchmark(
     cycle_id: int,
     limit: Optional[int] = None,
@@ -1132,10 +1273,28 @@ def run_benchmark(
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     lim = f"_l{limit}" if limit else ""
     suf = f"_{suffix}" if suffix else ""
-    output_csv = _REPO_ROOT / "outputs" / f"benchmark_results_rl_c{cycle_id}{lim}{suf}_{timestamp}.csv"
+    
+    # Create benchmark_results directory if it doesn't exist
+    benchmark_dir = _REPO_ROOT / "outputs" / "benchmark_results"
+    benchmark_dir.mkdir(parents=True, exist_ok=True)
+    
+    output_csv = benchmark_dir / f"benchmark_results_rl_c{cycle_id}{lim}{suf}_{timestamp}.csv"
 
     scope = f"{limit}-problem quick eval" if limit else "full benchmark suite"
     log.info(f"[benchmark] Running {scope} (cycle {cycle_id}, attempts={attempts})...")
+    
+    # Clean up GPU memory before benchmark to avoid memory fragmentation issues
+    try:
+        import torch
+        import gc
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+            gc.collect()
+            torch.cuda.synchronize()
+            log.debug("[benchmark] GPU memory cleaned")
+    except Exception:
+        pass  # Non-critical
+    
     try:
         cmd = [
             sys.executable, "-m", "src.inference.benchmark",
@@ -1242,6 +1401,12 @@ def run_cycle(
     accumulated_new: int,
     allow_daytime_retrain: bool = False,
     publish_hf: bool = PUBLISH_HF_DEFAULT,
+    phase1_max_workers: int = 0,
+    benchmark_every_n: int = BENCHMARK_EVERY_N,
+    full_benchmark_attempts: int = 2,
+    full_benchmark_timeout_override: int = 0,
+    quick_eval_limit: int = QUICK_EVAL_LIMIT,
+    quick_eval_attempts: int = QUICK_EVAL_ATTEMPTS,
 ) -> tuple[CycleStats, int]:
     """
     Run one full RL cycle: generate → validate → build data → retrain → eval.
@@ -1281,6 +1446,7 @@ def run_cycle(
             model="chattla:20b",
             max_attempts=2,
             prompt_cooldown_s=prompt_cooldown,
+            phase1_max_workers=phase1_max_workers,
         )
         stats.specs_generated = len(results)
         stats.sany_pass = sum(1 for r in results if r.sany_pass)
@@ -1343,29 +1509,65 @@ def run_cycle(
             stats.cycle_duration_s = time.time() - t0
             return stats, accumulated_new
 
-        # ── Phase 4: Full benchmark every cycle ─────────────────────────
-        # Quick eval was pure noise (12 problems → 0-17% TLC when truth is 10%).
-        # Full benchmark (20 problems, 3 attempts) is stable and the only
-        # meaningful signal.  ~40 min extra per cycle is worth real data.
-        full_sany, full_tlc = run_benchmark(
-            cycle_id, limit=None, attempts=3, timeout_s=3600, suffix="full",
-        )
+        # ── Phase 4: Full benchmark every N cycles; quick eval otherwise ──
+        if benchmark_every_n <= 0:
+            want_full = False
+        elif benchmark_every_n == 1:
+            want_full = True
+        else:
+            want_full = (cycle_id % benchmark_every_n) == 0
+
         stats.benchmark_run = True
+        if want_full:
+            stats.benchmark_full_suite = True
+            fb_to = (
+                full_benchmark_timeout_override
+                if full_benchmark_timeout_override > 0
+                else compute_full_benchmark_timeout(full_benchmark_attempts)
+            )
+            log.info(
+                f"[benchmark] Full suite timeout {fb_to}s "
+                f"({_FULL_BENCHMARK_N} problems × {full_benchmark_attempts} attempts; "
+                f"override with --full-benchmark-timeout)"
+            )
+            full_sany, full_tlc = run_benchmark(
+                cycle_id,
+                limit=None,
+                attempts=full_benchmark_attempts,
+                timeout_s=fb_to,
+                suffix="full",
+            )
+        else:
+            stats.benchmark_full_suite = False
+            q_to = quick_benchmark_timeout_s(quick_eval_limit, quick_eval_attempts)
+            full_sany, full_tlc = run_benchmark(
+                cycle_id,
+                limit=quick_eval_limit,
+                attempts=quick_eval_attempts,
+                timeout_s=q_to,
+                suffix="quick",
+            )
         stats.benchmark_sany_rate = full_sany
         stats.benchmark_tlc_rate = full_tlc
 
         if just_retrained and publish_hf:
-            prev_best_tlc = best_historical_full_tlc()
-            if full_tlc >= prev_best_tlc and full_tlc > 0:
+            if not stats.benchmark_full_suite:
                 log.info(
-                    f"[phase4] TLC {full_tlc:.0%} >= previous best {prev_best_tlc:.0%} — publishing to HF"
+                    "[phase4] HF publish skipped: quality gate needs a full benchmark "
+                    f"(this cycle was quick eval only; full runs every {benchmark_every_n} cycles when >1)."
                 )
-                publish_to_hf(cycle_id)
             else:
-                log.warning(
-                    f"[phase4] TLC {full_tlc:.0%} < previous best {prev_best_tlc:.0%} (or zero) "
-                    "— SKIPPING HF publish to avoid pushing a regression"
-                )
+                prev_best_tlc = best_historical_full_tlc()
+                if full_tlc >= prev_best_tlc and full_tlc > 0:
+                    log.info(
+                        f"[phase4] TLC {full_tlc:.0%} >= previous best {prev_best_tlc:.0%} — publishing to HF"
+                    )
+                    publish_to_hf(cycle_id)
+                else:
+                    log.warning(
+                        f"[phase4] TLC {full_tlc:.0%} < previous best {prev_best_tlc:.0%} (or zero) "
+                        "— SKIPPING HF publish to avoid pushing a regression"
+                    )
 
     except Exception as e:
         stats.error = f"{type(e).__name__}: {str(e)[:200]}"
@@ -1377,11 +1579,13 @@ def run_cycle(
 
 
 def main():
-    global RETRAIN_THRESHOLD
+    global RETRAIN_THRESHOLD, MIN_TRAIN_EXAMPLES
 
     import argparse
 
     _check_training_deps()
+
+    _default_min_train = int(os.environ.get("CHATTLA_MIN_TRAIN_EXAMPLES", "280"))
 
     parser = argparse.ArgumentParser(description="ChatTLA autonomous RL loop")
     parser.add_argument("--cycle-hours", type=float, default=CYCLE_HOURS,
@@ -1391,26 +1595,62 @@ def main():
                         help="Max cycles to run (0 = infinite)")
     parser.add_argument("--retrain-threshold", type=int, default=RETRAIN_THRESHOLD,
                         help=f"SFT examples before retrain (default: {RETRAIN_THRESHOLD})")
+    parser.add_argument("--min-train-examples", type=int, default=_default_min_train,
+                        help="Minimum merged train.jsonl rows before SFT (default: from env or 280)")
     parser.add_argument("--allow-daytime-retrain", action="store_true",
                         help="Retrain during daytime when threshold met (default: defer to night)")
     parser.add_argument("--model", default="chattla:20b")
     parser.add_argument("--no-publish-hf", action="store_true",
                         help="Skip Hugging Face Hub upload after retrain (requires HF_TOKEN when enabled)")
-    # Legacy flags — accepted but ignored (full benchmark runs every cycle now).
-    parser.add_argument("--quick-eval-limit", type=int, default=20, help=argparse.SUPPRESS)
-    parser.add_argument("--quick-eval-attempts", type=int, default=3, help=argparse.SUPPRESS)
-    parser.add_argument("--benchmark-every", type=int, default=1, help=argparse.SUPPRESS)
+    parser.add_argument(
+        "--benchmark-every",
+        type=int,
+        default=BENCHMARK_EVERY_N,
+        help=f"Run full benchmark every N cycles (1=every cycle, 0=quick eval only; default {BENCHMARK_EVERY_N})",
+    )
+    parser.add_argument(
+        "--full-benchmark-attempts",
+        type=int,
+        default=2,
+        help="Attempts per problem for full benchmark (default: 2; lower is faster)",
+    )
+    parser.add_argument(
+        "--full-benchmark-timeout",
+        type=int,
+        default=0,
+        help="Subprocess timeout seconds for full benchmark (0=auto from suite size; default scales past 2h)",
+    )
+    parser.add_argument("--quick-eval-limit", type=int, default=QUICK_EVAL_LIMIT,
+                        help=f"Problems for quick eval when not a full benchmark cycle (default {QUICK_EVAL_LIMIT})")
+    parser.add_argument("--quick-eval-attempts", type=int, default=QUICK_EVAL_ATTEMPTS,
+                        help=f"Attempts per problem for quick eval (default {QUICK_EVAL_ATTEMPTS})")
+    parser.add_argument(
+        "--phase1-workers",
+        type=int,
+        default=0,
+        help="Parallel prompt workers for phase 1 (0=auto: 3 night / 2 day; set 1 to disable)",
+    )
     args = parser.parse_args()
 
     RETRAIN_THRESHOLD = args.retrain_threshold
+    MIN_TRAIN_EXAMPLES = args.min_train_examples
 
     cycle_seconds = max(0.0, args.cycle_hours * 3600)
 
     log.info("=" * 60)
     log.info("  ChatTLA Autonomous RL Loop")
     log.info(f"  Inter-cycle pause: {args.cycle_hours}h ({'none' if cycle_seconds <= 0 else f'{cycle_seconds/60:.0f} min target'})")
-    log.info(f"  Eval: FULL benchmark (20 problems, 3 attempts) every cycle")
+    if args.benchmark_every <= 0:
+        log.info("  Eval: quick eval only (full benchmark disabled; use --benchmark-every >=1 for full runs)")
+    elif args.benchmark_every == 1:
+        log.info(f"  Eval: FULL benchmark every cycle ({args.full_benchmark_attempts} attempts/problem)")
+    else:
+        log.info(
+            f"  Eval: full benchmark every {args.benchmark_every} cycles "
+            f"({args.full_benchmark_attempts} attempts); quick eval ({args.quick_eval_limit}×{args.quick_eval_attempts}) otherwise"
+        )
     log.info(f"  Retrain threshold: {args.retrain_threshold} | Min training size: {MIN_TRAIN_EXAMPLES}")
+    log.info(f"  Phase 1 workers: {args.phase1_workers or 'auto (3 night / 2 day)'}")
     if args.allow_daytime_retrain:
         log.info("  Daytime retrain: ENABLED (--allow-daytime-retrain)")
     if args.no_publish_hf:
@@ -1446,6 +1686,12 @@ def main():
             accumulated_new,
             args.allow_daytime_retrain,
             publish_hf=not args.no_publish_hf,
+            phase1_max_workers=args.phase1_workers,
+            benchmark_every_n=args.benchmark_every,
+            full_benchmark_attempts=args.full_benchmark_attempts,
+            full_benchmark_timeout_override=args.full_benchmark_timeout,
+            quick_eval_limit=args.quick_eval_limit,
+            quick_eval_attempts=args.quick_eval_attempts,
         )
         accumulated_new = diagnose_and_fix(stats, accumulated_new)
         save_accumulated_new(accumulated_new)
@@ -1461,7 +1707,10 @@ def main():
         log.info(f"  New SFT: {stats.new_train_examples} | New DPO: {stats.new_dpo_pairs}")
         log.info(f"  Retrained: {stats.retrained} | Deployed: {stats.deployed}")
         if stats.benchmark_run:
-            log.info(f"  Benchmark: SANY={stats.benchmark_sany_rate:.0%} TLC={stats.benchmark_tlc_rate:.0%}")
+            _tag = "FULL" if getattr(stats, "benchmark_full_suite", False) else "quick"
+            log.info(
+                f"  Benchmark ({_tag}): SANY={stats.benchmark_sany_rate:.0%} TLC={stats.benchmark_tlc_rate:.0%}"
+            )
         if stats.error:
             log.info(f"  Error: {stats.error}")
         log.info(f"{'─'*60}\n")

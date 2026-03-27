@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-24T18:10:01.334614",
+  "generated_at": "2026-03-24T21:46:21.621175",
   "git": {
     "tlaplus_examples": {
       "commit": "ec17f2a115a221502143658775e6eae1bb337a79",
@@ -47,5 +47,14 @@
     "enabled": false,
     "model": null,
     "host": null
+  },
+  "generation_strategy": {
+    "overview": "Combined: (1) baseline harvest fills each row with official prose, paths, and programmatic technical extraction (SANY / static fallback); (2) optional --llm applies the author-voice JSON contract for reconstruction-oriented descriptions.",
+    "baseline_harvest": "Baseline dataset (no `--llm`): official sources per module in the coarse list:\n- tlaplus/Examples: README.md curated titles, each folder’s manifest.json (authors, paper/PDF URLs),\n  first `(* … *)` comment block after MODULE, optional PDF text (first pages via pypdf cache).\n- tlaplus/tlapm: `library/*.tla` for TLAPS proof modules not shipped under Examples.\n\nTechnical fields: SANY XMLExporter on each `.tla` when possible; regex/static extraction fallback;\n`--no-static-extract` disables both. Narrative merges harvested prose with SANY/static structure.\nOptional `--llm` replaces the normalized `description` with output matching STRUCTURED_SYSTEM_PROMPT\n(author voice, same JSON schema as rows committed without LLM but aimed at reconstruction).",
+    "llm_author_voice_spec": "You are a formal methods expert. Analyze the TLA+ spec and describe it as the paper's authors would. Output will be fed to an AI to regenerate the spec.\n\nRULES\n- Author voice: explain protocol intent, not just mechanics\n- Inline TLA+ syntax for variables, values, transitions (no raw code blocks)\n- No padding — every sentence must serve reconstruction\n- Explain nondeterminism: what real behavior does it model?\n- If algorithm is unnamed or PDF unavailable, infer and state so\n- Output must be valid JSON\n\nOUTPUT FORMAT\nReturn a single JSON object with this exact structure:\n{ \"id\": \"<module_name_lowercase>_001\", \"module_name\": \"<ExactTLAModuleName>\", \"description\": { \"narrative\": \"<3-5 sentence paper-style abstract: problem, protocol intuition, liveness guarantees. No variables, no syntax>\", \"technical\": { \"algorithm\": \"<Name — one-sentence purpose>\", \"constants_and_processes\": \"<Definitions + brief rationale>\", \"variables\": [ { \"name\": \"<varName>\", \"type\": \"<TLA+ type>\", \"role\": \"<one-line author-voice role>\" } ], \"init\": \"<Compact TLA+-style init, one entry per variable>\", \"actions\": [ {\"name\": \"<ActionName(i)>\", \"intent\": \"<one-sentence protocol purpose>\", \"pre\": \"<TLA+-style precondition>\", \"post\": \"<TLA+-style postcondition, branches where applicable>\" } ], \"next_and_fairness\": \"<Action composition + fairness justification>\",\"invariants_and_properties\": [ { \"name\": \"<Name>\", \"assertion\": \"<TLA+-style>\", \"purpose\": \"<one-line why it matters>\" } ],\"critical_design_decisions\": [ \"<bullet: non-obvious choice and its purpose>\" ] } } }\n\nUse the exact module name given in the user message. The id must be <that_name_lower>_001.\n",
+    "canonical_sources": {
+      "prompt_constants": "scripts/tla_description_sources/structured_dataset.py",
+      "audit_snapshot": "data/derived/tla_descriptions_audit.json"
+    }
   }
 }

@@ -7976,16 +7976,16 @@
             "post": "/\\ active[p]\n              /\\ \\E e \\in OutEdges(p) : \n                     /\\ sentUnacked' = [sentUnacked EXCEPT ![e] = @ + 1] \n                     /\\ msgs' = [msgs EXCEPT ![e] = @ + 1]\n              /\\ UNCHANGED <<active, acks, rcvdUnacked, upEdge>>"
           },
           {
-            "name": "RcvMsg",
-            "intent": "Transition RcvMsg (extracted from definition).",
-            "pre": "[see definition body]",
-            "post": "\\E e \\in InEdges(p) : \n                  /\\ msgs[e] > 0  \n                  /\\ msgs' = [msgs EXCEPT ![e] = @ - 1]  \n                  /\\ rcvdUnacked' = [rcvdUnacked EXCEPT ![e] = @ + 1]\n                  /\\ active' = [active EXCEPT ![p] = TRUE]\n                  \n                  \n                  /\\ upEdge' = IF neutral(p) THEN [upEdge EXCEPT ![p] = e]\n                                             ELSE upEdge\n                  /\\ UNCHANGED <<acks, sentUnacked>>"
-          },
-          {
             "name": "RcvAck",
             "intent": "Transition RcvAck (extracted from definition).",
             "pre": "[see definition body]",
             "post": "\\E e \\in OutEdges(p) :\n                  /\\ acks[e] > 0\n                  /\\ acks' = [acks EXCEPT ![e] = @ - 1]\n                  /\\ sentUnacked' = [sentUnacked EXCEPT ![e] = @ - 1]\n                  /\\ UNCHANGED <<active, msgs, rcvdUnacked, upEdge>>\n\n----------------------------------------------------------------------------"
+          },
+          {
+            "name": "RcvMsg",
+            "intent": "Transition RcvMsg (extracted from definition).",
+            "pre": "[see definition body]",
+            "post": "\\E e \\in InEdges(p) : \n                  /\\ msgs[e] > 0  \n                  /\\ msgs' = [msgs EXCEPT ![e] = @ - 1]  \n                  /\\ rcvdUnacked' = [rcvdUnacked EXCEPT ![e] = @ + 1]\n                  /\\ active' = [active EXCEPT ![p] = TRUE]\n                  \n                  \n                  /\\ upEdge' = IF neutral(p) THEN [upEdge EXCEPT ![p] = e]\n                                             ELSE upEdge\n                  /\\ UNCHANGED <<acks, sentUnacked>>"
           },
           {
             "name": "Idle",
