@@ -261,11 +261,69 @@ def load_accumulated_new() -> int:
     return 0
 
 
-def save_accumulated_new(accumulated_new: int) -> None:
-    """Persist accumulated_new so it survives restarts."""
+def load_gold_prompt_ids() -> set[str]:
+    """Load set of prompt IDs that have ever produced gold results."""
+    if _RL_STATE_FILE.exists():
+        try:
+            with open(_RL_STATE_FILE) as f:
+                data = json.load(f)
+            ids = data.get("gold_prompt_ids", [])
+            return set(ids) if ids else set()
+        except (json.JSONDecodeError, KeyError, ValueError):
+            pass
+    return set()
+
+
+def load_gold_prompt_ids_from_benchmarks() -> set[str]:
+    """Load gold prompt IDs from benchmark CSV results (bootstraps from past runs)."""
+    import glob as _glob
+    gold_ids = set()
+    
+    # Check both old location and new location
+    for pattern in [
+        str(_REPO_ROOT / "outputs" / "benchmark_results_*_full_*.csv"),
+        str(_REPO_ROOT / "outputs" / "benchmark_results" / "benchmark_results_*_full_*.csv"),
+    ]:
+        for path in _glob.glob(pattern):
+            try:
+                with open(path, encoding="utf-8") as f:
+                    reader = csv.DictReader(f)
+                    for row in reader:
+                        # Gold = passes both SANY and TLC
+                        sany = str(row.get("sany_pass", "")).strip() in ("1", "True", "true", "yes")
+                        tlc = str(row.get("tlc_pass", "")).strip() in ("1", "True", "true", "yes")
+                        if sany and tlc:
+                            bid = row.get("benchmark_id") or row.get("prompt_id")
+                            if bid:
+                                gold_ids.add(str(bid).strip())
+            except (OSError, csv.Error):
+                pass
+    
+    return gold_ids
+
+
+def save_accumulated_new(accumulated_new: int, gold_prompt_ids: set[str] | None = None) -> None:
+    """Persist accumulated_new and gold_prompt_ids so they survive restarts."""
     _RL_DATA_DIR.mkdir(parents=True, exist_ok=True)
+    
+    # Load existing gold_prompt_ids if not provided
+    if gold_prompt_ids is None:
+        gold_prompt_ids = load_gold_prompt_ids()
+    
     with open(_RL_STATE_FILE, "w") as f:
-        json.dump({"accumulated_new": accumulated_new}, f)
+        json.dump({
+            "accumulated_new": accumulated_new,
+            "gold_prompt_ids": sorted(gold_prompt_ids),
+        }, f)
+
+
+def add_gold_prompts(results: list, gold_prompt_ids: set[str]) -> set[str]:
+    """Extract prompt IDs that produced gold tier results and add to the set."""
+    updated = gold_prompt_ids.copy()
+    for r in results:
+        if hasattr(r, 'tier') and r.tier == "gold":
+            updated.add(r.prompt_id)
+    return updated
 
 
 _DIAG_JSONL = _RL_LOG_DIR / "diagnostics.jsonl"
@@ -1232,11 +1290,10 @@ def best_historical_full_tlc() -> float:
                     reader = csv.DictReader(f)
                     rows = list(reader)
                 if rows:
-                    tlc = sum(1 for r in rows if r.get("tlc_pass") == "1") / len(rows)
-                    best = max(best, tlc)
-        except Exception:
-            pass
-    return best
+                        tlc = sum(1 for r in rows if r.get("tlc_pass") == "1") / len(rows)
+                        best = max(best, tlc)
+            except Exception:
+                pass
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1399,6 +1456,7 @@ def compute_difficulty_cap(history_path: Path = _RL_HISTORY) -> int:
 def run_cycle(
     cycle_id: int,
     accumulated_new: int,
+    gold_prompt_ids: set[str],
     allow_daytime_retrain: bool = False,
     publish_hf: bool = PUBLISH_HF_DEFAULT,
     phase1_max_workers: int = 0,
@@ -1407,11 +1465,11 @@ def run_cycle(
     full_benchmark_timeout_override: int = 0,
     quick_eval_limit: int = QUICK_EVAL_LIMIT,
     quick_eval_attempts: int = QUICK_EVAL_ATTEMPTS,
-) -> tuple[CycleStats, int]:
+) -> tuple[CycleStats, int, set[str]]:
     """
     Run one full RL cycle: generate → validate → build data → retrain → eval.
 
-    Returns (stats, updated_accumulated_new).
+    Returns (stats, updated_accumulated_new, gold_prompt_ids).
     """
     stats = CycleStats(
         cycle_id=cycle_id,
@@ -1436,8 +1494,15 @@ def run_cycle(
         # ── Phase 1: Generate + Validate ──────────────────────────────────
         log.info("[phase1] Loading prompt bank...")
         all_prompts = load_prompt_bank(difficulty_cap=difficulty_cap)
-        random.shuffle(all_prompts)
-        prompts = all_prompts[:max_prompts]
+        
+        # Skip prompts that already produced gold specs
+        filtered_prompts = [p for p in all_prompts if p.get("id") not in gold_prompt_ids]
+        if len(filtered_prompts) < len(all_prompts):
+            skipped = len(all_prompts) - len(filtered_prompts)
+            log.info(f"[phase1] Skipping {skipped} prompts (already produced gold specs)")
+        
+        random.shuffle(filtered_prompts)
+        prompts = filtered_prompts[:max_prompts]
         stats.prompts_tried = len(prompts)
 
         log.info(f"[phase1] Generating and validating {len(prompts)} specs...")
@@ -1461,7 +1526,7 @@ def run_cycle(
 
         if _SHUTDOWN:
             stats.cycle_duration_s = time.time() - t0
-            return stats, accumulated_new
+            return stats, accumulated_new, gold_prompt_ids
 
         # ── Phase 2: Build training data ──────────────────────────────────
         log.info("[phase2] Building training data from results...")
@@ -1473,12 +1538,17 @@ def run_cycle(
         stats.new_dpo_pairs = n_dpo
         accumulated_new += n_sft
 
+        # Track which prompts produced gold specs for future cycles
+        gold_prompt_ids = add_gold_prompts(results, gold_prompt_ids)
+        if len(gold_prompt_ids) > 0:
+            log.info(f"[phase2] Tracking {len(gold_prompt_ids)} prompts with gold results (skip in future cycles)")
+
         log.info(f"[phase2] Persisted {n_sft} SFT examples, {n_dpo} DPO pairs. "
                  f"Accumulated: {accumulated_new}")
 
         if _SHUTDOWN:
             stats.cycle_duration_s = time.time() - t0
-            return stats, accumulated_new
+            return stats, accumulated_new, gold_prompt_ids
 
         # ── Phase 3: Retrain if threshold met ─────────────────────────────
         just_retrained = False
@@ -1507,7 +1577,7 @@ def run_cycle(
 
         if _SHUTDOWN:
             stats.cycle_duration_s = time.time() - t0
-            return stats, accumulated_new
+            return stats, accumulated_new, gold_prompt_ids
 
         # ── Phase 4: Full benchmark every N cycles; quick eval otherwise ──
         if benchmark_every_n <= 0:
@@ -1575,7 +1645,7 @@ def run_cycle(
         log.error(traceback.format_exc())
 
     stats.cycle_duration_s = time.time() - t0
-    return stats, accumulated_new
+    return stats, accumulated_new, gold_prompt_ids
 
 
 def main():
@@ -1665,6 +1735,16 @@ def main():
 
     cycle_id = 0
     accumulated_new = load_accumulated_new()
+    
+    # Load gold prompt IDs from both persisted state and benchmark CSVs
+    gold_prompt_ids = load_gold_prompt_ids()
+    gold_from_benchmarks = load_gold_prompt_ids_from_benchmarks()
+    gold_prompt_ids.update(gold_from_benchmarks)
+    
+    if gold_from_benchmarks:
+        log.info(f"[startup] Loaded {len(gold_from_benchmarks)} gold prompts from benchmark results")
+    if len(gold_prompt_ids) > len(gold_from_benchmarks):
+        log.info(f"[startup] Total {len(gold_prompt_ids)} gold prompts (including state cache)")
     if accumulated_new > 0:
         log.info(f"Resuming with accumulated_new={accumulated_new} (from state)")
 
@@ -1681,9 +1761,10 @@ def main():
             break
 
         cycle_start = time.time()
-        stats, accumulated_new = run_cycle(
+        stats, accumulated_new, gold_prompt_ids = run_cycle(
             cycle_id,
             accumulated_new,
+            gold_prompt_ids,
             args.allow_daytime_retrain,
             publish_hf=not args.no_publish_hf,
             phase1_max_workers=args.phase1_workers,
@@ -1694,7 +1775,7 @@ def main():
             quick_eval_attempts=args.quick_eval_attempts,
         )
         accumulated_new = diagnose_and_fix(stats, accumulated_new)
-        save_accumulated_new(accumulated_new)
+        save_accumulated_new(accumulated_new, gold_prompt_ids)
         log_history(stats)
 
         cycle_elapsed = time.time() - cycle_start

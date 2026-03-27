@@ -126,8 +126,7 @@ do_start() {
     # tmux: use repo .venv first, export .env (HF_TOKEN, etc.) for python
     tmux new-session -d -s "$SESSION_NAME" -c "$REPO_ROOT" bash -lc "
         cd \"$REPO_ROOT\" || exit 1
-        export PATH=\"$REPO_ROOT/.venv/bin:\$PATH\"
-        set -a
+        export PATH=\"$REPO_ROOT/.venv/bin:\$PATH\"        export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True        set -a
         [[ -f .env ]] && source .env
         set +a
         echo \"[\$(date -Iseconds)] ChatTLA RL Loop starting...\"
@@ -148,6 +147,12 @@ do_start() {
     "
 
     sleep 1
+
+    if ! is_running; then
+        echo -e "${RED}ERROR: tmux session failed to start.${NC}"
+        echo "Try running 'tmux' to diagnose, or check logs in '$REPO_ROOT/outputs/logs'."
+        return 1
+    fi
 
     if is_running; then
         echo -e "${GREEN}RL loop started successfully!${NC}"
