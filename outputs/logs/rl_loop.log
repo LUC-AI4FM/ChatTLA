@@ -8974,3 +8974,5 @@ KeyboardInterrupt
 2026-03-27 15:05:20 INFO [phase1] Generating and validating 25 specs...
 2026-03-27 15:05:20 INFO [phase1] Parallel generation: 2 workers for 25 prompts
 2026-03-27 15:06:36 INFO   [RL003] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-03-27 15:08:05 INFO   [SYN014] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-03-27 15:08:10 INFO   [RL005] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
