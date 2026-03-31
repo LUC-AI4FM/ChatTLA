@@ -180,6 +180,7 @@ class CycleStats:
     deployed: bool = False
     retrain_skipped_min_data: bool = False
     retrain_deferred_to_night: bool = False
+    retrain_deferred_vram: bool = False
     benchmark_run: bool = False
     benchmark_full_suite: bool = False
     benchmark_sany_rate: float = 0.0
@@ -706,7 +707,11 @@ def _generate_for_prompt(
     
     # If no client passed, create one (standard for worker threads)
     if client is None:
-        client = ChatTLAClient(model=model, reasoning="medium")
+        try:
+            client = ChatTLAClient(model=model, reasoning="medium")
+        except Exception as e:
+            log.error(f"Failed to create ChatTLAClient for prompt {p.get('id', 'unknown')}: {e}")
+            return []
 
     from src.inference.benchmark import score_structural
     from src.validators.sany_validator import validate_string as sany_validate
@@ -726,8 +731,12 @@ def _generate_for_prompt(
         temp = max(TEMPERATURE_RANGE[0], min(TEMPERATURE_RANGE[1], temp))
 
         try:
-            client._temp_override = temp if attempt > 0 else None
-            spec = client.generate_spec(prompt_text, module_name=module_hint, temperature=temp)
+            if client:
+                client._temp_override = temp if attempt > 0 else None
+                spec = client.generate_spec(prompt_text, module_name=module_hint, temperature=temp)
+            else:
+                log.error(f"[{pid}] Client is None during generation attempt {attempt+1}")
+                continue
         except Exception as e:
             log.warning(f"[{pid}] Generation failed (attempt {attempt+1}): {e}")
             continue
@@ -869,7 +878,10 @@ def generate_and_validate(
 
     # Safety: Only clear _temp_override if client exists in this scope
     if 'client' in locals() and client:
-        client._temp_override = None
+        try:
+            client._temp_override = None
+        except (AttributeError, NameError):
+            pass
 
     # Return all collected results from parallel generation
     return results
@@ -1359,10 +1371,12 @@ def best_historical_full_tlc() -> float:
                     reader = csv.DictReader(f)
                     rows = list(reader)
                 if rows:
-                        tlc = sum(1 for r in rows if r.get("tlc_pass") == "1") / len(rows)
-                        best = max(best, tlc)
+                    tlc = sum(1 for r in rows if r.get("tlc_pass") == "1") / len(rows)
+                    best = max(best, tlc)
             except Exception:
                 pass
+    
+    return best
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1601,6 +1615,10 @@ def run_cycle(
             prompt_cooldown_s=prompt_cooldown,
             phase1_max_workers=phase1_max_workers,
         )
+        if results is None:
+            log.error("[phase1] generate_and_validate returned None, using empty list.")
+            results = []
+
         stats.specs_generated = len(results)
         stats.sany_pass = sum(1 for r in results if r.sany_pass)
         stats.tlc_pass = sum(1 for r in results if r.tlc_pass)
@@ -1644,7 +1662,16 @@ def run_cycle(
             if night or allow_daytime_retrain:
                 when = "night" if night else "daytime (--allow-daytime-retrain)"
                 log.info(f"[phase3] Retrain threshold reached ({when}) ({accumulated_new} >= {RETRAIN_THRESHOLD})")
-                outcome = rebuild_and_retrain(cycle_id=cycle_id)
+                
+                # Check for free GPU memory before retraining to avoid OOM
+                free_mb = total_gpu_memory_free_mb()
+                if free_mb < 8000:
+                    log.warning(f"[phase3] Critically low VRAM ({free_mb}MB < 8000MB). Deferring retrain to avoid OOM crash.")
+                    stats.retrain_deferred_vram = True
+                    outcome = "skipped_vram"
+                else:
+                    outcome = rebuild_and_retrain(cycle_id=cycle_id)
+                
                 stats.retrained = outcome == "ok"
                 stats.deployed = outcome == "ok"
                 stats.retrain_skipped_min_data = outcome == "skipped_min_train"
@@ -1652,6 +1679,8 @@ def run_cycle(
                     accumulated_new = 0
                     just_retrained = True
                     log.info("[phase3] Retrain + deploy complete!")
+                elif outcome == "skipped_vram":
+                    log.info("[phase3] Retrain deferred due to memory; will attempt next cycle.")
                 else:
                     log.warning("[phase3] Retrain skipped or failed. Will retry next cycle.")
             else:
