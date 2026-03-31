@@ -7,6 +7,35 @@ Fine-tuning [`openai/gpt-oss-20b`](https://huggingface.co/openai/gpt-oss-20b) to
 **Environment:** `./scripts/launch_rl.sh setup` (or `start`) creates `.venv`, runs `pip install -r requirements.txt`, and loads `.env`. The tmux session uses `.venv/bin/python` and exports `.env` so `HF_TOKEN` applies to the RL loop. For an interactive shell: `source .venv/bin/activate` then `set -a && source .env && set +a`.
 
 ---
+```
+FormaLLM (205)  ──┐
+GitHub scrape ────┼─→ validated/combined.jsonl (gold/silver/bronze)
+                  │
+                  ├─→ processed/augmented.jsonl (RL-generated, deduplicated)
+                  │
+                  ├─→ derived/tla_descriptions.json (module summaries)
+                  │
+                  └─→ dataset_builder.py
+                      └─→ processed/train.jsonl (295 examples)
+                      └─→ processed/eval.jsonl (4 examples)
+                      └─→ processed/rl/dpo_pairs.jsonl (18 gold pairs)
+
+    ↓ Training ↓
+
+outputs/checkpoints/ (LoRA adapter)
+          ↓ merge_lora.py ↓
+outputs/merged_model/ (merged BF16)
+          ↓ convert_to_gguf.py ↓
+outputs/gguf/chattla-20b-Q8_0.gguf (21 GB)
+          ↓ Register with Ollama ↓
+
+RL Loop continuously:
+  - Ollama client generates specs
+  - TLC validator classifies
+  - New examples → augmented.jsonl
+  - At 50 gold: rebuild + retrain
+```
+---
 
 ## Project Structure
 
