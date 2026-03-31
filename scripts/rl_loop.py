@@ -186,6 +186,34 @@ class CycleStats:
     benchmark_tlc_rate: float = 0.0
     cycle_duration_s: float = 0.0
     error: str = ""
+    full_traceback: str = ""
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Self-Healing
+# ─────────────────────────────────────────────────────────────────────────────
+def _self_heal(error_msg: str, tb: str):
+    """
+    Experimental: Report loop crashes to GitHub Copilot / Subagent for autonomous fix.
+    Requires external supervisor or periodic log scraping to trigger 'apply'.
+    """
+    heal_log = _REPO_ROOT / "outputs" / "logs" / "self_healing.jsonl"
+    heal_log.parent.mkdir(parents=True, exist_ok=True)
+    
+    # We strip common noise to make the prompt cleaner
+    clean_tb = "\n".join([line for line in tb.splitlines() if "site-packages" not in line])
+    
+    entry = {
+        "timestamp": datetime.datetime.now().isoformat(),
+        "error": error_msg,
+        "traceback": clean_tb,
+        "status": "pending_analysis"
+    }
+    
+    with open(heal_log, "a") as f:
+        f.write(json.dumps(entry) + "\n")
+    
+    log.info(f"[self-heal] Logged loop crash for autonomous repair: {error_msg}")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -663,7 +691,8 @@ def _resolve_phase1_workers(requested: int) -> int:
     env = os.environ.get("CHATTLA_PHASE1_WORKERS", "").strip()
     if env.isdigit():
         return max(1, int(env))
-    return 3 if is_nighttime() else 2
+    # Optimized for 2x RTX 3090/A6000 (48GB each) + Ollama concurrency
+    return 8 if is_nighttime() else 4
 
 
 def _generate_for_prompt(
@@ -736,7 +765,7 @@ def _generate_for_prompt(
             tlc_pass=tlc_ok,
             tlc_violations=tlc_violations,
             tlc_raw_output=tlc_raw,
-            fixes_applied=fix_result.fixes_applied,
+            fixes_applied=fix_result.fixes_applied if fix_result.fixes_applied else [],
             structural_score=struct_score,
             attempts=attempt + 1,
             temperature=temp,
@@ -838,7 +867,12 @@ def generate_and_validate(
             except Exception as e:
                 log.error(f"[phase1] Prompt worker failed: {e}")
 
-    client._temp_override = None
+    # Safety: Only clear _temp_override if client exists in this scope
+    if 'client' in locals() and client:
+        client._temp_override = None
+
+    # Return all collected results from parallel generation
+    return results
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1699,8 +1733,12 @@ def run_cycle(
 
     except Exception as e:
         stats.error = f"{type(e).__name__}: {str(e)[:200]}"
+        stats.full_traceback = traceback.format_exc()
         log.error(f"[cycle {cycle_id}] Unhandled error: {e}")
-        log.error(traceback.format_exc())
+        log.error(stats.full_traceback)
+        
+        # Self-healing hook
+        _self_heal(stats.error, stats.full_traceback)
 
     stats.cycle_duration_s = time.time() - t0
     return stats, accumulated_new, gold_prompt_ids
