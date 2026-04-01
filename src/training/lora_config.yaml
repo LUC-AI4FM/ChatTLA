@@ -1,41 +1,35 @@
 # =============================================================================
-# ChatTLA — LoRA Configuration for gpt-oss-20b Fine-tuning
+# ChatTLA — LoRA Configuration for DeepSeek-R1-Distill-Qwen-8B Fine-tuning
 # =============================================================================
 #
 # Architecture context
 # --------------------
-# gpt-oss-20b is a Mixture-of-Experts (MoE) transformer:
-#   - 21B total parameters, ~3.6B active per forward pass
-#   - MXFP4-quantized MoE weights (loaded via Mxfp4Config(dequantize=True))
-#   - MoE expert layers at transformer blocks 7, 15, 23
+# DeepSeek-R1-Distill-Qwen-8B is a dense Qwen2.5-based transformer:
+#   - 8B parameters (all active per forward pass — no MoE)
+#   - ~16GB in BF16, fits on a single 48GB GPU for LoRA training
+#   - Standard Qwen2 attention + MLP layers
 #
 # LoRA strategy
 # -------------
-# Two-part target:
-#   1. target_modules="all-linear" — standard attention + FFN projection layers
-#   2. target_parameters — the MoE expert projection layers that "all-linear"
-#      would otherwise miss because they are accessed via dynamic routing.
-#      Without this, fine-tuning has no gradient signal through the experts.
+# target_modules="all-linear" covers all attention (q/k/v/o projections)
+# and MLP (gate/up/down projections) layers. For a dense model this is
+# comprehensive — no special MoE routing layers to worry about.
 #
-# Rank choice: r=8 is the official cookbook recommendation for the 20b model.
-# Higher rank (16, 32) marginally improves fit but doubles adapter size.
-# We prefer r=8 to keep the adapter small for fast iteration.
+# Rank choice: r=16 for better capacity on the smaller 8B model.
+# The model is small enough that the adapter overhead is negligible.
 
 peft_type: LORA
 
 # --- Core LoRA hyperparameters ---------------------------------------------
-r: 8                           # LoRA rank — 2x base for more capacity, fits in VRAM
-lora_alpha: 16                 # scaling factor; effective scale = alpha/r = 2.0
-lora_dropout: 0.05             # reduced dropout: more data (121 examples) reduces overfitting risk
+r: 16                          # LoRA rank — higher rank for better capacity on 8B model
+lora_alpha: 32                 # scaling factor; effective scale = alpha/r = 2.0
+lora_dropout: 0.05             # light dropout to prevent overfitting
 bias: none
 
-# Target all standard linear layers (attention + FFN + MoE gate/expert projections)
+# Target all standard linear layers (attention + MLP projections)
 target_modules: "all-linear"
 
 # --- Inference / merge settings -------------------------------------------
-# Use the adapter during inference without merging into base weights
-# (for fast iteration).  Use merge_lora.py to create a standalone model
-# for production deployment.
 merge_weights: false
 
 # --- Adapter metadata -------------------------------------------------------

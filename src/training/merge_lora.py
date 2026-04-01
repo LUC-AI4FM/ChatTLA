@@ -50,7 +50,7 @@ _REPO_ROOT       = Path(__file__).resolve().parents[2]
 _CHECKPOINT_DIR  = _REPO_ROOT / "outputs" / "checkpoints"
 _MERGED_OUT      = _REPO_ROOT / "outputs" / "merged_model"
 
-MODEL_ID = "openai/gpt-oss-20b"
+MODEL_ID = "deepseek-ai/DeepSeek-R1-Distill-Qwen-8B"
 
 
 def find_latest_checkpoint(checkpoint_dir: Path) -> Path | None:

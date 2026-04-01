@@ -17,6 +17,7 @@ import json
 import sys
 from pathlib import Path
 
+import torch
 from datasets import Dataset
 
 from src.training.dataset_builder import _DEVELOPER_PROMPT
@@ -179,14 +180,13 @@ def main() -> int:
         return 1
 
     model = AutoModelForCausalLM.from_pretrained(
-        "openai/gpt-oss-20b",
-        attn_implementation="eager",
+        "deepseek-ai/DeepSeek-R1-Distill-Qwen-8B",
+        torch_dtype=torch.bfloat16,
         use_cache=False,
         device_map="auto",
-        trust_remote_code=True,
     )
     model = PeftModel.from_pretrained(model, str(ckpt))
-    tokenizer = AutoTokenizer.from_pretrained("openai/gpt-oss-20b")
+    tokenizer = AutoTokenizer.from_pretrained("deepseek-ai/DeepSeek-R1-Distill-Qwen-8B")
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
 

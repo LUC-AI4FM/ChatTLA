@@ -94,7 +94,7 @@ _EVAL_JSONL   = _REPO_ROOT / "data" / "processed" / "eval.jsonl"
 _CHECKPOINT_DIR = _REPO_ROOT / "outputs" / "checkpoints"
 _LORA_CFG_PATH  = Path(__file__).parent / "lora_config.yaml"
 
-MODEL_ID = "openai/gpt-oss-20b"
+MODEL_ID = "deepseek-ai/DeepSeek-R1-Distill-Qwen-8B"
 
 
 def load_lora_config() -> LoraConfig:
@@ -114,10 +114,10 @@ def load_lora_config() -> LoraConfig:
 
 def load_model_and_tokenizer(device_map: str = "auto", max_gpu_memory_mb: int | None = None):
     """
-    Load gpt-oss-20b with BitsAndBytes 8-bit quantization for fine-tuning.
-    - `device_map`: passed through to `from_pretrained` ("auto" | "cpu" | "cuda").
-    - `max_gpu_memory_mb`: when provided and `device_map=="auto"`, it's used to
-      cap the memory assigned to `cuda:0` by the accelerate dispatcher.
+    Load DeepSeek-R1-Distill-Qwen-8B for fine-tuning with BF16.
+
+    DeepSeek R1 8B is a dense Qwen2.5-based model (~8B params, ~16GB BF16).
+    Fits comfortably on a single 48GB GPU for LoRA fine-tuning.
 
     gradient_checkpointing requires use_cache=False.
     """
@@ -130,71 +130,26 @@ def load_model_and_tokenizer(device_map: str = "auto", max_gpu_memory_mb: int | 
         vram_gb = None
         print("[train] VRAM available: unknown")
 
-    # gpt-oss-20b comes pre-quantized with Mxfp4Config (weight-only quantization).
-    # The model's native quantization is fully compatible with LoRA fine-tuning.
-    # We do not apply additional quantization.
-
-    # Build max_memory mapping for accelerate / transformers dispatch when the
-    # user requests automatic device placement.
-    max_memory = None
-    if device_map == "auto":
-        try:
-            n_gpus = torch.cuda.device_count()
-            print(f"[train] Detected {n_gpus} GPU(s)")
-
-            # total system RAM for a sensible cpu cap (fallback to 64GB)
-            try:
-                total_ram_bytes = os.sysconf("SC_PAGE_SIZE") * os.sysconf("SC_PHYS_PAGES")
-                total_ram_mb = int(total_ram_bytes // (1024 * 1024))
-            except Exception:
-                total_ram_mb = 64 * 1024
-
-            # Build max_memory for ALL visible GPUs.  Previous code only set
-            # GPU 0, causing the dispatcher to skip GPU 1 and offload to CPU
-            # (meta device) — which then crashes DataParallel.
-            max_memory = {"cpu": f"{total_ram_mb}MB"}
-            for gpu_id in range(n_gpus):
-                total_vram_mb = int(torch.cuda.get_device_properties(gpu_id).total_memory // (1024 * 1024))
-
-                # Try to read *currently free* VRAM
-                free_vram_mb = None
-                try:
-                    free_bytes, _ = torch.cuda.mem_get_info(gpu_id)
-                    free_vram_mb = int(free_bytes // (1024 * 1024))
-                except Exception:
-                    pass
-
-                # User-provided cap or 90% of total (was 60% — too conservative)
-                user_cap_mb = max_gpu_memory_mb or int(total_vram_mb * 0.90)
-
-                # If we know free VRAM, cap to 90% of free to avoid overcommit
-                if free_vram_mb is not None:
-                    cap_mb = int(min(user_cap_mb, int(free_vram_mb * 0.90)))
-                else:
-                    cap_mb = user_cap_mb
-
-                # Floor: never go below 4GB
-                cap_mb = max(4096, cap_mb)
-                max_memory[gpu_id] = f"{cap_mb}MB"
-                print(f"[train] GPU {gpu_id}: total={total_vram_mb}MB free={free_vram_mb}MB -> cap={cap_mb}MB")
-
-            print(f"[train] max_memory for dispatch: {max_memory}")
-        except Exception:
-            max_memory = None
-
     try:
         model = AutoModelForCausalLM.from_pretrained(
             MODEL_ID,
-            attn_implementation="eager",
+            torch_dtype=torch.bfloat16,
+            attn_implementation="flash_attention_2",
             use_cache=False,           # required for gradient checkpointing
             device_map=device_map,
-            max_memory=max_memory,
-            low_cpu_mem_usage=True,    # stream weights to devices to reduce peak memory
-            trust_remote_code=True,    # gpt-oss requires special modeling code
+            low_cpu_mem_usage=True,
         )
     except Exception as exc:
-        print("[train] ERROR loading model:", exc)
-        raise
+        # Fallback without flash attention
+        print(f"[train] Flash attention failed ({exc}), falling back to eager...")
+        model = AutoModelForCausalLM.from_pretrained(
+            MODEL_ID,
+            torch_dtype=torch.bfloat16,
+            attn_implementation="eager",
+            use_cache=False,
+            device_map=device_map,
+            low_cpu_mem_usage=True,
+        )
 
     tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
     if tokenizer.pad_token is None:
@@ -265,7 +220,7 @@ def build_training_args(
         logging_steps=1 if smoke_test else 5,
         # --- MLflow --------------------------------------------------------
         report_to="mlflow",
-        run_name="chattla-gpt-oss-20b",
+        run_name="chattla-deepseek-r1-8b",
         # --- CPU flag (Transformers) --------------------------------------
         use_cpu=use_cpu,
         # --- Resume --------------------------------------------------------
@@ -286,7 +241,7 @@ def main(
     per_device_batch_size: int | None = None,
     gradient_accumulation_steps: int | None = None,
 ) -> None:
-    mlflow.set_experiment("ChatTLA-gpt-oss-20b")
+    mlflow.set_experiment("ChatTLA-deepseek-r1-8b")
 
     # --- Data ---------------------------------------------------------------
     if not _TRAIN_JSONL.exists():

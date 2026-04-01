@@ -2,21 +2,12 @@
 ollama_client.py — Local Ollama inference client for ChatTLA.
 
 Wraps the Ollama Python SDK to provide a clean API for TLA+ spec generation
-using the fine-tuned ChatTLA model (or the base gpt-oss:20b for comparison).
-
-The client always applies the gpt-oss harmony format via openai-harmony.
-Without this the model produces degraded output.
+using the fine-tuned ChatTLA model or the base DeepSeek R1 8B.
 
 Models
 ------
-  chattla:20b      — Fine-tuned ChatTLA model (after convert_to_gguf.py)
-  gpt-oss:20b      — Base model baseline
-
-Reasoning levels
-----------------
-  low    — fast responses, suitable for interactive use
-  medium — balanced; default for spec generation
-  high   — deep analysis; use for complex distributed systems specs
+  deepseek-r1:8b   — Base model (DeepSeek R1 distilled into Qwen2.5 8B)
+  chattla:8b       — Fine-tuned ChatTLA model (after convert_to_gguf.py)
 
 Usage
 -----
@@ -38,7 +29,7 @@ import re
 from typing import Optional
 
 _OLLAMA_HOST   = os.getenv("OLLAMA_HOST",   "http://localhost:11434")
-_DEFAULT_MODEL = os.getenv("CHATTLA_MODEL", "chattla:20b")
+_DEFAULT_MODEL = os.getenv("CHATTLA_MODEL", "deepseek-r1:8b")
 
 _DEVELOPER_PROMPT = """\
 You are ChatTLA, an expert at writing verified TLA+ formal specifications.
@@ -63,20 +54,16 @@ Critical TLA+ syntax rules:
 """
 
 
-def _build_harmony_prompt(developer_content: str, user_content: str) -> str:
-    """Build a raw harmony-format prompt that forces TLA+ code output.
+def _build_chat_messages(system_content: str, user_content: str) -> list[dict]:
+    """Build a standard chat messages list for DeepSeek R1.
 
-    gpt-oss-20b uses the harmony prompt format with channels (analysis, final).
-    By jumping straight to ``<|channel|>final<|message|>`` AND seeding the
-    output with ``---- MODULE``, we prevent the model from entering a
-    degenerate analysis loop and force it to produce TLA+ immediately.
+    DeepSeek R1 uses a standard ChatML-style format. The model has a built-in
+    reasoning/thinking phase followed by the final answer.
     """
-    return (
-        f"<|start|>system<|message|>You are ChatTLA, an expert at writing verified TLA+ formal specifications.<|end|>\n"
-        f"<|start|>developer<|message|>{developer_content}<|end|>\n"
-        f"<|start|>user<|message|>{user_content}<|end|>\n"
-        f"<|start|>assistant<|channel|>final<|message|>---- MODULE"
-    )
+    return [
+        {"role": "system", "content": system_content},
+        {"role": "user", "content": user_content},
+    ]
 
 
 class ChatTLAClient:
@@ -85,16 +72,15 @@ class ChatTLAClient:
 
     Parameters
     ----------
-    model         : str   Ollama model tag (default: chattla:20b)
+    model         : str   Ollama model tag (default: deepseek-r1:8b)
     host          : str   Ollama server host (default: http://localhost:11434)
-    reasoning     : str   Harmony reasoning level: "low", "medium", or "high"
     """
 
     def __init__(
         self,
         model: str = _DEFAULT_MODEL,
         host:  str = _OLLAMA_HOST,
-        reasoning: str = "medium",
+        reasoning: str = "medium",  # kept for API compat, unused with DeepSeek R1
     ):
         import ollama  # lazy import
 
@@ -127,25 +113,26 @@ class ChatTLAClient:
         if module_name:
             user_content += f"\n\nUse module name: {module_name}"
 
-        developer_content = f"{_DEVELOPER_PROMPT}\nReasoning: {self.reasoning}"
-        prompt = _build_harmony_prompt(developer_content, user_content)
+        messages = _build_chat_messages(_DEVELOPER_PROMPT, user_content)
 
         temp = self._temp_override if self._temp_override is not None else temperature
-        response = self._client.generate(
+        response = self._client.chat(
             model=self.model,
-            prompt=prompt,
-            raw=True,
+            messages=messages,
             options={
                 "temperature": temp,
                 "repeat_penalty": 1.3,
-                "num_predict": 4096,
+                "num_predict": 8192,
                 "top_k": 40,
                 "top_p": 0.9,
-                "stop": ["<|return|>", "<|end|>", "<|start|>", "\n===="],
             },
         )
-        # Reconstruct: prompt seeded "---- MODULE", model continues from there
-        raw = "---- MODULE" + response["response"]
+        raw = response["message"]["content"]
+        # Strip <think>...</think> blocks (DeepSeek R1 reasoning traces)
+        raw = re.sub(r"<think>.*?</think>", "", raw, flags=re.DOTALL).strip()
+        # Strip markdown code fences
+        raw = re.sub(r"```(?:tla\+?|TLA\+?)?\s*\n?", "", raw)
+        raw = re.sub(r"```\s*$", "", raw, flags=re.MULTILINE)
         # Ensure the module has a closing delimiter
         if "====" not in raw:
             raw += "\n===="
@@ -274,8 +261,6 @@ class ChatTLAClient:
 
     def _self_correct_sany(self, buggy_spec: str, sany_errors: str, attempt: int) -> str:
         """Ask the model to fix SANY parse errors with targeted guidance."""
-        developer_content = f"{_DEVELOPER_PROMPT}\nReasoning: high"
-
         # Build targeted hints based on common SANY failure patterns
         hints = _diagnose_sany_errors(buggy_spec, sany_errors)
 
@@ -289,45 +274,46 @@ class ChatTLAClient:
             f"Buggy spec:\n{buggy_spec}\n\n"
             f"Fix ALL syntax errors. Output only pure TLA+ (no PlusCal, no markdown)."
         )
-        prompt = _build_harmony_prompt(developer_content, user_content)
+        messages = _build_chat_messages(_DEVELOPER_PROMPT, user_content)
 
-        response = self._client.generate(
+        response = self._client.chat(
             model=self.model,
-            prompt=prompt,
-            raw=True,
+            messages=messages,
             options={
                 "temperature": 0.05,
                 "repeat_penalty": 1.3,
-                "num_predict": 4096,
-                "stop": ["<|return|>", "<|end|>", "<|start|>", "\n===="],
+                "num_predict": 8192,
             },
         )
-        raw = "---- MODULE" + response["response"]
+        raw = response["message"]["content"]
+        raw = re.sub(r"<think>.*?</think>", "", raw, flags=re.DOTALL).strip()
+        raw = re.sub(r"```(?:tla\+?|TLA\+?)?\s*\n?", "", raw)
+        raw = re.sub(r"```\s*$", "", raw, flags=re.MULTILINE)
         if "====" not in raw:
             raw += "\n===="
         return _sanitize_spec(_extract_tla(raw))
 
     def _self_correct(self, buggy_spec: str, error_msg: str) -> str:
         """Ask the model to fix a spec given a TLC error message."""
-        developer_content = f"{_DEVELOPER_PROMPT}\nReasoning: {self.reasoning}"
         user_content = (
             f"This TLA+ spec has errors:\n{error_msg}\n\n"
             f"Buggy spec:\n{buggy_spec}\n\nFix the spec and output only the corrected TLA+ module."
         )
-        prompt = _build_harmony_prompt(developer_content, user_content)
+        messages = _build_chat_messages(_DEVELOPER_PROMPT, user_content)
 
-        response = self._client.generate(
+        response = self._client.chat(
             model=self.model,
-            prompt=prompt,
-            raw=True,
+            messages=messages,
             options={
                 "temperature": 0.05,
                 "repeat_penalty": 1.3,
-                "num_predict": 4096,
-                "stop": ["<|return|>", "<|end|>", "<|start|>", "\n===="],
+                "num_predict": 8192,
             },
         )
-        raw = "---- MODULE" + response["response"]
+        raw = response["message"]["content"]
+        raw = re.sub(r"<think>.*?</think>", "", raw, flags=re.DOTALL).strip()
+        raw = re.sub(r"```(?:tla\+?|TLA\+?)?\s*\n?", "", raw)
+        raw = re.sub(r"```\s*$", "", raw, flags=re.MULTILINE)
         if "====" not in raw:
             raw += "\n===="
         return _sanitize_spec(_extract_tla(raw))

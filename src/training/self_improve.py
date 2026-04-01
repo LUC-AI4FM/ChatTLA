@@ -674,7 +674,7 @@ def load_prompts(limit: Optional[int] = None) -> list[dict]:
 # ─────────────────────────────────────────────────────────────────────────────
 
 def run_iteration(
-    model: str = "chattla:20b",
+    model: str = "deepseek-r1:8b",
     num_prompts: Optional[int] = None,
     temperature: float = 0.4,
 ) -> IterationStats:
@@ -917,7 +917,7 @@ def main():
                         help="Limit number of prompts per iteration (default: all)")
     parser.add_argument("--retrain-threshold", type=int, default=15,
                         help="Retrain after accumulating this many new examples (default: 15)")
-    parser.add_argument("--model", default="chattla:20b",
+    parser.add_argument("--model", default="deepseek-r1:8b",
                         help="Ollama model tag to use for generation")
     parser.add_argument("--temperature", type=float, default=0.4,
                         help="Sampling temperature for generation")

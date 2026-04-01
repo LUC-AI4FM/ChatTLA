@@ -111,7 +111,7 @@ QUICK_EVAL_ATTEMPTS = 2
 
 # Hugging Face Hub (after successful merge + GGUF). Requires HF_TOKEN in env.
 PUBLISH_HF_DEFAULT = True
-_HF_REPO = "EricSpencer00/chattla-20b"
+_HF_REPO = "EricSpencer00/chattla-8b"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Logging
@@ -1001,7 +1001,7 @@ def _generate_for_prompt(
 
 def generate_and_validate(
     prompts: list[dict],
-    model: str = "chattla:20b",
+    model: str = "deepseek-r1:8b",
     max_attempts: int = 3,
     prompt_cooldown_s: float = 0.0,
     phase1_max_workers: int = 0,
@@ -1707,7 +1707,7 @@ def run_benchmark(
     try:
         cmd = [
             sys.executable, "-m", "src.inference.benchmark",
-            "--model", "chattla:20b",
+            "--model", "deepseek-r1:8b",
             "--self-correct",
             "--attempts", str(attempts),
             "--output", str(output_csv),
@@ -1880,7 +1880,7 @@ def run_cycle(
         log.info(f"[phase1] Generating and validating {len(prompts)} specs...")
         results = generate_and_validate(
             prompts,
-            model="chattla:20b",
+            model="deepseek-r1:8b",
             max_attempts=2,
             prompt_cooldown_s=prompt_cooldown,
             phase1_max_workers=phase1_max_workers,
@@ -2094,7 +2094,7 @@ def main():
                         help="Minimum merged train.jsonl rows before SFT (default: from env or 300)")
     parser.add_argument("--allow-daytime-retrain", action="store_true",
                         help="Retrain during daytime when threshold met (default: defer to night)")
-    parser.add_argument("--model", default="chattla:20b")
+    parser.add_argument("--model", default="deepseek-r1:8b")
     parser.add_argument("--no-publish-hf", action="store_true",
                         help="Skip Hugging Face Hub upload after retrain (requires HF_TOKEN when enabled)")
     parser.add_argument(

@@ -42,8 +42,8 @@ _BENCH_JSON    = _REPO_ROOT / "data" / "benchmarks" / "benchmark_suite.json"
 _RESULTS_CSV   = _REPO_ROOT / "outputs" / "benchmark_results.csv"
 
 _MODELS = {
-    "base":      "gpt-oss:20b",
-    "chattla":   "chattla:20b",
+    "base":      "deepseek-r1:8b",
+    "chattla":   "chattla:8b",
 }
 
 _CSV_FIELDS = [
