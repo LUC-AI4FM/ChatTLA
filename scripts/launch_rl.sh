@@ -126,7 +126,9 @@ do_start() {
     # tmux: use repo .venv first, export .env (HF_TOKEN, etc.) for python
     tmux new-session -d -s "$SESSION_NAME" -c "$REPO_ROOT" bash -lc "
         cd \"$REPO_ROOT\" || exit 1
-        export PATH=\"$REPO_ROOT/.venv/bin:\$PATH\"        export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True        set -a
+        export PATH=\"$REPO_ROOT/.venv/bin:\$PATH\"
+        export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+        set -a
         [[ -f .env ]] && source .env
         set +a
         echo \"[\$(date -Iseconds)] ChatTLA RL Loop starting...\"
@@ -138,8 +140,9 @@ do_start() {
         echo \"=== Starting RL loop ===\"
         nice -n 10 python3 scripts/rl_loop.py \
             --cycle-hours 0 \
-            --retrain-threshold 50 \
+            --retrain-threshold 25 \
             --allow-daytime-retrain \
+            --benchmark-every 3 \
             2>&1
         echo \"\"
         echo \"[\$(date -Iseconds)] RL loop exited. Press any key to close.\"

@@ -103,6 +103,7 @@ MAX_PROMPTS_NIGHT  = 40           # full speed at night
 BENCHMARK_EVERY_N  = 3            # run full benchmark every N cycles
 TEMPERATURE_BASE   = 0.3
 TEMPERATURE_RANGE  = (0.1, 0.6)   # diversity range for multi-attempt
+MAX_REPAIR_ROUNDS  = 1             # RLVR: verifier-guided repair attempts per silver spec
 DAY_PROMPT_COOLDOWN_S = 3.0       # pause between prompts during daytime
 NIGHT_PROMPT_COOLDOWN_S = 0.5     # lighter pause at night
 QUICK_EVAL_LIMIT = 12             # mini-eval every cycle (trend signal; full suite = ground truth)
@@ -160,6 +161,10 @@ class SpecResult:
     structural_score: float = 0.0
     attempts: int = 1
     temperature: float = 0.3
+    tlc_timeout: bool = False
+    # RLVR: set when this result was produced by verifier-guided repair
+    repair_from_spec: str = ""
+    repair_from_violations: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -494,13 +499,13 @@ def log_tlc_error(prompt_id: str, prompt_text: str, tier: str, violations: list[
 _EXTRA_PROMPTS = [
     # Difficulty 1 — trivial state machines
     {"id": "RL001", "prompt": "A boolean flag that can be toggled between TRUE and FALSE.", "difficulty": 1, "module_hint": "BoolFlag"},
-    {"id": "RL002", "prompt": "A counter that increments from 0 to 5 and stops.", "difficulty": 1, "module_hint": "SimpleCounter"},
+    {"id": "RL002", "prompt": "A counter that increments from 0 to MAX and then stops (use CONSTANTS MAX, set MAX=5 in TLC config). TypeOK must constrain the counter to 0..MAX.", "difficulty": 1, "module_hint": "SimpleCounter"},
     {"id": "RL003", "prompt": "A two-state light switch: ON and OFF.", "difficulty": 1, "module_hint": "LightSwitch"},
-    {"id": "RL004", "prompt": "A variable that holds a natural number and can be doubled or reset to 1.", "difficulty": 1, "module_hint": "DoublerReset"},
+    {"id": "RL004", "prompt": "A variable that holds a natural number bounded by MAX (use CONSTANTS MAX, set MAX=8 in TLC config) and can be doubled (if 2*x <= MAX) or reset to 1.", "difficulty": 1, "module_hint": "DoublerReset"},
     # Difficulty 2 — simple protocols
-    {"id": "RL005", "prompt": "A ticket dispenser: customers take increasing ticket numbers, and a counter shows the currently-served number.", "difficulty": 2, "module_hint": "TicketDispenser"},
+    {"id": "RL005", "prompt": "A ticket dispenser bounded by MAX tickets (use CONSTANTS MAX, set MAX=5 in TLC config): customers take increasing ticket numbers up to MAX, and a counter shows the currently-served number. The system halts gracefully when all tickets are dispensed.", "difficulty": 2, "module_hint": "TicketDispenser"},
     {"id": "RL006", "prompt": "A simple FIFO queue with enqueue and dequeue operations. The queue has bounded capacity N.", "difficulty": 2, "module_hint": "BoundedFIFO"},
-    {"id": "RL007", "prompt": "A readers-writers lock where multiple readers can hold the lock simultaneously but writers are exclusive.", "difficulty": 2, "module_hint": "ReadersWriters"},
+    {"id": "RL007", "prompt": "A readers-writers lock with at most N readers (use CONSTANTS N, set N=3 in TLC config). Multiple readers can hold the lock simultaneously but writers are exclusive. TypeOK constrains readers count to 0..N.", "difficulty": 2, "module_hint": "ReadersWriters"},
     {"id": "RL008", "prompt": "A circular buffer of size N with a read pointer and write pointer.", "difficulty": 2, "module_hint": "CircularBuffer"},
     {"id": "RL009", "prompt": "A simple state machine for an ATM: Idle, CardInserted, PINEntered, Dispensing, Done.", "difficulty": 2, "module_hint": "ATM"},
     {"id": "RL010", "prompt": "A parking lot with N spaces. Cars can enter if spaces available and leave when parked.", "difficulty": 2, "module_hint": "ParkingLot"},
@@ -683,6 +688,149 @@ def extract_tlc_feedback(spec_result: SpecResult) -> str:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# RLVR — Verifier-guided repair
+# ─────────────────────────────────────────────────────────────────────────────
+_REPAIR_PROMPT_TEMPLATE = """\
+This TLA+ specification fails TLC model-checking with the following errors:
+
+--- TLC ERRORS ---
+{tlc_feedback}
+--- END ERRORS ---
+
+Broken spec:
+{broken_spec}
+
+Fix ALL errors. The most common causes are:
+1. Unbounded sets: replace \\IN Nat/Int with \\IN 0..N (declare CONSTANTS N)
+2. Deadlock: every state must have a successor — add UNCHANGED <<vars>> to actions that terminate
+3. Integer overflow: guard incrementing ops with x < MAX precondition
+4. Undefined CONSTANTS: declare them and assign values in the TLC config block at the end
+5. Non-enumerable initial states: ensure Init assigns concrete finite values
+
+Output ONLY the corrected TLA+ spec. No explanation.\
+"""
+
+
+def _attempt_tlc_repair(
+    client,
+    p: dict,
+    broken_spec: str,
+    tlc_violations: list[str],
+    tlc_raw: str,
+    module_name: str,
+    max_rounds: int = MAX_REPAIR_ROUNDS,
+) -> list["SpecResult"]:
+    """
+    RLVR core: feed TLC verifier errors back to the model and attempt repair.
+
+    Each successful repair (SANY+TLC pass) becomes a strong training signal:
+    the (broken_spec, tlc_error) → fixed_spec trajectory is stored on the
+    returned SpecResult for use in build_training_data.
+
+    Returns a list of SpecResult objects produced by repair rounds.
+    """
+    from src.inference.benchmark import score_structural
+    from src.validators.sany_validator import validate_string as sany_validate
+    from src.validators.tlc_validator import validate_string as tlc_validate
+    from src.training.self_improve import fix_tla_syntax
+
+    pid = p["id"]
+    prompt_text = p["prompt"]
+    module_hint = p.get("module_hint", "Spec")
+    repair_results: list[SpecResult] = []
+
+    current_broken = broken_spec
+    current_violations = tlc_violations
+    current_raw = tlc_raw
+
+    for round_i in range(max_rounds):
+        if _SHUTDOWN:
+            break
+
+        # Build concise, actionable TLC feedback
+        feedback_parts = []
+        for v in current_violations[:6]:
+            if v and "TLC_TIMEOUT" not in v:
+                feedback_parts.append(v)
+        if "not enumerable" in current_raw.lower():
+            feedback_parts.append("FIX: replace \\\\IN Nat/Int with bounded range like 0..N")
+        if "deadlock" in current_raw.lower():
+            feedback_parts.append("FIX: add UNCHANGED <<vars>> to ensure every state has a successor")
+        if "overflow" in current_raw.lower():
+            feedback_parts.append("FIX: guard the operation with a bound check (e.g., x < MAX)")
+        tlc_feedback_str = "\n".join(feedback_parts) if feedback_parts else "\n".join(current_violations[:4])
+
+        repair_prompt = _REPAIR_PROMPT_TEMPLATE.format(
+            tlc_feedback=tlc_feedback_str[:800],
+            broken_spec=current_broken[:2500],
+        )
+
+        try:
+            repaired = client.generate_spec(repair_prompt, module_name=module_hint, temperature=0.15)
+        except Exception as e:
+            log.warning(f"[{pid}] RLVR repair round {round_i + 1} failed: {e}")
+            break
+
+        m = re.search(r"----\s*MODULE\s+(\w+)", repaired)
+        rep_module = m.group(1) if m else module_name
+
+        fix_result = fix_tla_syntax(repaired)
+        if fix_result.fixes_applied:
+            repaired = fix_result.fixed_spec
+
+        sany_result = sany_validate(repaired, module_name=rep_module)
+        if not sany_result.valid:
+            log.debug(f"[{pid}] RLVR round {round_i + 1}: SANY still failing — stopping repair")
+            break
+
+        rep_timeout = False
+        tlc_result = tlc_validate(repaired, module_name=rep_module)
+        tier = tlc_result.tier
+        tlc_ok = (tier == "gold")
+        rep_violations = list(tlc_result.tlc_violations)
+        rep_raw = tlc_result.raw_output
+
+        if "timed out" in rep_raw.lower():
+            rep_timeout = True
+            rep_violations.append("TLC_TIMEOUT: state space too large — add CONSTANTS bounds")
+
+        struct_score = score_structural(repaired, [])
+
+        result = SpecResult(
+            prompt_id=pid,
+            prompt_text=prompt_text,
+            spec=repaired,
+            tier=tier,
+            sany_pass=True,
+            tlc_pass=tlc_ok,
+            tlc_violations=rep_violations,
+            tlc_raw_output=rep_raw,
+            fixes_applied=fix_result.fixes_applied or [],
+            structural_score=struct_score,
+            attempts=round_i + 1,
+            temperature=0.15,
+            tlc_timeout=rep_timeout,
+            repair_from_spec=current_broken,
+            repair_from_violations=current_violations,
+        )
+        repair_results.append(result)
+
+        if tlc_ok:
+            log.info(f"  [{pid}] RLVR repair round {round_i + 1}: GOLD — verifier-guided fix succeeded")
+            break
+        elif rep_timeout:
+            break  # no point iterating on an unbounded spec
+        else:
+            # Not gold yet but SANY passes — try one more round with the improved spec
+            log.debug(f"[{pid}] RLVR round {round_i + 1}: silver → try again")
+            current_broken = repaired
+            current_violations = rep_violations
+            current_raw = rep_raw
+
+    return repair_results
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Phase 1: Generate + Validate specs
 # ─────────────────────────────────────────────────────────────────────────────
 def _resolve_phase1_workers(requested: int) -> int:
@@ -756,12 +904,17 @@ def _generate_for_prompt(
         tlc_raw = ""
         tier = "bronze"
 
+        tlc_timeout = False
         if sany_ok:
             tlc_result = tlc_validate(spec, module_name=module_name)
             tier = tlc_result.tier
             tlc_ok = (tier == "gold")
             tlc_violations = tlc_result.tlc_violations
             tlc_raw = tlc_result.raw_output
+            if "timed out" in tlc_raw.lower() or "timed out" in " ".join(tlc_violations).lower():
+                tlc_timeout = True
+                if "TLC_TIMEOUT" not in tlc_violations:
+                    tlc_violations = list(tlc_violations) + ["TLC_TIMEOUT: state space too large — add CONSTANTS bounds"]
 
         struct_score = score_structural(spec, [])
 
@@ -778,6 +931,7 @@ def _generate_for_prompt(
             structural_score=struct_score,
             attempts=attempt + 1,
             temperature=temp,
+            tlc_timeout=tlc_timeout,
         )
         attempt_results.append(result)
 
@@ -786,6 +940,20 @@ def _generate_for_prompt(
 
         if tier == "gold":
             break
+
+        # ── RLVR: verifier-guided repair ─────────────────────────────────
+        # If the spec is silver (SANY passes, TLC fails) and not a timeout,
+        # feed the TLC errors back to the model and attempt repair.
+        # Repair results carry repair_from_spec so build_training_data can
+        # create (broken + error → fixed) training pairs.
+        if tier == "silver" and sany_ok and not tlc_timeout and tlc_violations:
+            repair_results = _attempt_tlc_repair(
+                client, p, spec, tlc_violations, tlc_raw, module_name,
+                max_rounds=MAX_REPAIR_ROUNDS,
+            )
+            attempt_results.extend(repair_results)
+            if any(r.tier == "gold" for r in repair_results):
+                break
 
         if not sany_ok and attempt < max_attempts - 1:
             try:
@@ -848,21 +1016,28 @@ def generate_and_validate(
         return results
 
     if workers <= 1 or len(prompts) == 1:
-        client = ChatTLAClient(model=model, reasoning="medium")
+        client = None
+        try:
+            client = ChatTLAClient(model=model, reasoning="medium")
+        except Exception as e:
+            log.error(f"[phase1] Failed to create client: {e}")
+            return results
         for p in prompts:
             if _SHUTDOWN:
                 break
             results.extend(_generate_for_prompt(p, model, max_attempts, client))
             if prompt_cooldown_s > 0 and not _SHUTDOWN:
                 time.sleep(prompt_cooldown_s)
-        client._temp_override = None
+        try:
+            client._temp_override = None
+        except AttributeError:
+            pass
         return results
 
     log.info(f"[phase1] Parallel generation: {workers} workers for {len(prompts)} prompts")
     max_w = min(workers, len(prompts))
-    
-    # We should NOT share one client across multiple threads in Ollama; 
-    # instead, each worker thread should create its own instance to avoid race conditions.
+
+    # Each worker thread creates its own client to avoid Ollama race conditions.
     with ThreadPoolExecutor(max_workers=max_w) as ex:
         futs = [
             ex.submit(_generate_for_prompt, p, model, max_attempts, None)
@@ -876,14 +1051,6 @@ def generate_and_validate(
             except Exception as e:
                 log.error(f"[phase1] Prompt worker failed: {e}")
 
-    # Safety: Only clear _temp_override if client exists in this scope
-    if 'client' in locals() and client:
-        try:
-            client._temp_override = None
-        except (AttributeError, NameError):
-            pass
-
-    # Return all collected results from parallel generation
     return results
 
 
@@ -893,15 +1060,38 @@ def generate_and_validate(
 _DEVELOPER_PROMPT = """\
 You are ChatTLA, an expert at writing verified TLA+ formal specifications.
 When asked to write a TLA+ spec, follow these rules exactly:
+
 1. Start the module with ---- MODULE <ModuleName> ----
 2. End with ====
-3. Include EXTENDS, VARIABLES, Init, Next, and Spec operators
-4. After the TLA+ module, append a TLC configuration block:
+3. Include EXTENDS Integers, VARIABLES, Init, Next, Spec, and TypeOK operators.
+
+4. BOUNDED STATE SPACE (critical — TLC will fail without this):
+   - NEVER use Nat, Int, or SUBSET without a bound. TLC cannot enumerate them.
+   - Always declare numeric limits as CONSTANTS (e.g., CONSTANTS N, MAX).
+   - Use ranges like 0..MAX or 1..N everywhere a number appears.
+   - TypeOK must constrain EVERY variable to a finite set, e.g.:
+       TypeOK == /\\ x \in 0..MAX /\\ state \in {"idle", "busy"}
+
+5. NEXT MUST BE TOTAL — every state must have a successor:
+   - Every action in Next must either change something OR explicitly list
+     UNCHANGED <<var1, var2, ...>> for all unchanged variables.
+   - If no action applies from a state, TLC reports Deadlock. Prevent this by
+     ensuring the disjunction of all actions covers all reachable states, or
+     add a terminal "Done" action with UNCHANGED <<all vars>>.
+
+6. OVERFLOW PREVENTION:
+   - For variables that increment (counters, indices), guard with:
+       /\\ x < MAX  (precondition)  or  x' = x + 1 (bounded by TypeOK)
+   - Never let a variable grow without bound.
+
+7. TLC CONFIG BLOCK (after ====, on a new line):
+   \\* TLC configuration
    SPECIFICATION Spec
-   INVARIANT TypeOK   (if TypeOK is defined)
-5. IMPORTANT: For model checking to succeed, ensure all variables are bounded.
-   Use TypeOK to define finite ranges (e.g., x \in 0..100) and ensure sets are finite.
-6. Output only valid TLA+ code. No markdown fences, no explanation outside the spec.
+   INVARIANT TypeOK
+   CONSTANTS N = 3
+   (adjust constant values to keep state space under ~10^6 states)
+
+8. Output only valid TLA+ code. No markdown fences, no explanation outside the spec.
 Reasoning: medium\
 """
 
@@ -932,6 +1122,10 @@ def build_training_data(results: list[SpecResult]) -> tuple[list[dict], list[dic
 
         # SFT: Gold is the target. High-structural Silver (SANY pass, high-score)
         # serves as a fallback but is NOT labeled 'gold'.
+        # Never use a timed-out spec as SFT — it means the state space is unbounded.
+        if best.tlc_timeout and best.tier != "gold":
+            continue
+
         if best.tier == "gold":
             sft_examples.append({
                 "_tier": "gold",
@@ -993,8 +1187,9 @@ def build_training_data(results: list[SpecResult]) -> tuple[list[dict], list[dic
                     "rejected_tier": worst.tier,
                     "feedback": feedback,
                 })
-        elif best.tier == "silver":
+        elif best.tier == "silver" and not best.tlc_timeout:
             # Cumulative curriculum: keep SANY-valid specs even when TLC fails (benchmark 30–50% regime).
+            # Exclude timeout silvers — they represent unbounded state spaces, not TLC-checkable specs.
             sft_examples.append({
                 "_tier": "silver",
                 "_prompt_id": pid,
@@ -1029,6 +1224,52 @@ def build_training_data(results: list[SpecResult]) -> tuple[list[dict], list[dic
                             ],
                         })
                     break  # only one bug_fix per prompt
+
+        # ── RLVR training pairs ───────────────────────────────────────────
+        # For specs produced by verifier-guided repair, create two signals:
+        # 1. SFT: (broken_spec + tlc_error → fixed_spec) — teaches the model
+        #    how to respond to verifier feedback, not just what good specs look like.
+        # 2. DPO: prefer the repaired gold over the original broken silver —
+        #    teaches preference in the repair context.
+        for r in group:
+            if not r.repair_from_spec or not r.repair_from_violations:
+                continue
+
+            repair_feedback = "\n".join(
+                v for v in r.repair_from_violations[:6] if "TLC_TIMEOUT" not in v
+            )
+
+            if r.tier == "gold":
+                # Strongest signal: repair succeeded — teach the exact fix
+                sft_examples.append({
+                    "_tier": "rlvr_repair",
+                    "_prompt_id": f"{pid}_rlvr",
+                    "messages": [
+                        {"role": "developer", "content": _DEVELOPER_PROMPT},
+                        {"role": "user", "content": (
+                            f"Fix this TLA+ spec. TLC model-checker errors:\n\n"
+                            f"{repair_feedback[:600]}\n\n"
+                            f"Broken spec:\n{r.repair_from_spec.strip()[:2000]}"
+                        )},
+                        {"role": "assistant", "channel": "analysis", "content": (
+                            "I'll fix the TLC errors by bounding the state space, "
+                            "adding UNCHANGED clauses, and declaring any missing CONSTANTS."
+                        )},
+                        {"role": "assistant", "channel": "final", "content": r.spec.strip()},
+                    ],
+                })
+                # DPO: repaired gold (chosen) vs original broken silver (rejected)
+                dpo_pairs.append({
+                    "prompt": (
+                        f"Fix this TLA+ spec. TLC errors:\n{repair_feedback[:500]}\n\n"
+                        f"Broken spec:\n{r.repair_from_spec.strip()[:1500]}"
+                    ),
+                    "chosen": r.spec.strip(),
+                    "rejected": r.repair_from_spec.strip(),
+                    "chosen_tier": "gold",
+                    "rejected_tier": "silver",
+                    "feedback": repair_feedback,
+                })
 
     return sft_examples, dpo_pairs
 
@@ -1130,9 +1371,11 @@ def _count_dpo_gold_pairs() -> int:
     return n
 
 
-# Lower than 500 so RL-augmented runs can train once the merged pool is stable (~280–400 lines).
+# 300 examples is the observed safe floor (cycle 201 at 295 examples: SANY=70%, TLC=15%).
+# The cycle-14 collapse at ~200 examples was a data quality issue (silver poisoning + no
+# gradient checkpointing), not a size issue. Both are now fixed.
 # Override with --min-train-examples or CHATTLA_MIN_TRAIN_EXAMPLES.
-MIN_TRAIN_EXAMPLES = int(os.environ.get("CHATTLA_MIN_TRAIN_EXAMPLES", "280"))
+MIN_TRAIN_EXAMPLES = int(os.environ.get("CHATTLA_MIN_TRAIN_EXAMPLES", "300"))
 
 
 def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT) -> RetrainOutcome:
@@ -1188,43 +1431,69 @@ def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT
     env["CUDA_VISIBLE_DEVICES"] = "0,1"
     night = is_nighttime()
 
-    # Keep a safety margin for shared-machine usage.
-    cap_ratio = GPU_VRAM_CAP_NIGHT if night else GPU_VRAM_CAP_DAY
-    max_gpu_memory_mb = int(49152 * cap_ratio)
+    # Measure actual free VRAM per GPU. On a shared machine other users' processes
+    # consume GPU memory that hardcoded limits would ignore, causing OOM at step 3.
+    # Leave a conservative safety margin: 70% of free (not total) VRAM per GPU.
+    try:
+        import torch
+        n_gpus = torch.cuda.device_count()
+        per_gpu_free: list[int] = []
+        for d in range(n_gpus):
+            try:
+                free_b, _ = torch.cuda.mem_get_info(d)
+                per_gpu_free.append(int(free_b // (1024 * 1024)))
+            except Exception:
+                per_gpu_free.append(20_000)
+        # Per-GPU cap: 70% of current free memory (conservative for shared systems)
+        safety = 0.70 if not night else 0.75
+        max_gpu_memory_mb = int(min(per_gpu_free[0] if per_gpu_free else 20_000, 49152) * safety)
+        free_mb = sum(per_gpu_free)
+        log.info(f"[retrain] Per-GPU free VRAM: {per_gpu_free} MB → cap={max_gpu_memory_mb} MB/GPU")
+    except Exception:
+        free_mb = total_gpu_memory_free_mb()
+        max_gpu_memory_mb = int(20_000 * 0.70)  # conservative fallback
+        log.warning(f"[retrain] Could not measure per-GPU VRAM; using fallback cap={max_gpu_memory_mb} MB")
 
     est_steps = (n_train * num_epochs) // 8
 
     # Adapt max_length to available VRAM (avoids OOM on shared machines)
-    free_mb = total_gpu_memory_free_mb()
     max_length = max_length_for_vram(free_mb)
-    
-    # Determine gradient accumulation steps based on memory availability
-    # Lower accumulation = lower peak memory but smaller effective batch
-    grad_accum_steps = None  # None means use default (8)
+
+    # Gradient accumulation: lower = less peak memory, smaller effective batch.
+    # Always use batch_size=1 per device to minimise activation memory on shared GPUs.
+    grad_accum_steps: int
     if free_mb < 10_000:
         max_length = min(max_length, 512)
-        grad_accum_steps = 2  # Minimum to keep learning stable
-        log.warning(f"[retrain] CRITICAL: Only {free_mb}MB free VRAM. Using max_length=512 + grad_accum=2")
+        grad_accum_steps = 2
+        log.warning(f"[retrain] CRITICAL: Only {free_mb}MB free VRAM. max_length=512 grad_accum=2")
     elif free_mb < 15_000:
         max_length = min(max_length, 768)
-        grad_accum_steps = 4  # Reduce to lower peak memory
-        log.warning(f"[retrain] Extremely tight VRAM ({free_mb}MB free). Using max_length=768 + grad_accum=4")
+        grad_accum_steps = 4
+        log.warning(f"[retrain] Tight VRAM ({free_mb}MB free). max_length=768 grad_accum=4")
     elif free_mb < 22_000:
-        grad_accum_steps = 6  # Conservative
-        log.info(f"[retrain] Tight VRAM ({free_mb}MB free). Limiting to grad_accum=6")
+        grad_accum_steps = 6
+        log.info(f"[retrain] Moderate VRAM ({free_mb}MB free). grad_accum=6")
+    elif free_mb < 40_000:
+        grad_accum_steps = 8
+        log.info(f"[retrain] VRAM {free_mb}MB free. grad_accum=8")
     else:
-        log.info(f"[retrain] VRAM available: {free_mb}MB free")
-    
+        grad_accum_steps = 8
+        log.info(f"[retrain] VRAM {free_mb}MB free. grad_accum=8")
+
     env["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
-    log.info(f"[retrain] Training with max_length={max_length}, grad_accum={grad_accum_steps or 8} (free_mb={free_mb})")
+    log.info(
+        f"[retrain] Training: max_length={max_length} grad_accum={grad_accum_steps} "
+        f"batch=1/device free_mb={free_mb} cap={max_gpu_memory_mb} MB/GPU"
+    )
     train_cmd = [
         sys.executable, "-m", "src.training.train",
         "--epochs", str(num_epochs),
         "--max-gpu-memory-mb", str(max_gpu_memory_mb),
         "--max-length", str(max_length),
+        "--per-device-train-batch-size", "1",   # minimise activation memory on shared GPUs
+        "--gradient-checkpointing",              # trade compute for ~30% less VRAM
+        "--gradient-accumulation-steps", str(grad_accum_steps),
     ]
-    if grad_accum_steps is not None:
-        train_cmd.extend(["--gradient-accumulation-steps", str(grad_accum_steps)])
     dpo_n = _count_dpo_gold_pairs()
     if dpo_n >= 2:
         train_cmd.append("--dpo-after")
@@ -1554,6 +1823,7 @@ def run_cycle(
 
     Returns (stats, updated_accumulated_new, gold_prompt_ids).
     """
+    global RETRAIN_THRESHOLD
     stats = CycleStats(
         cycle_id=cycle_id,
         timestamp=datetime.datetime.now().isoformat(),
@@ -1744,21 +2014,51 @@ def run_cycle(
                     f"(this cycle was quick eval only; full runs every {benchmark_every_n} cycles when >1)."
                 )
             else:
-                prev_best_tlc = best_historical_full_tlc()
-                if full_tlc >= prev_best_tlc and full_tlc > 0:
+                prev_best_tlc = best_historical_full_tlc() or 0.0
+                full_tlc_safe = full_tlc if isinstance(full_tlc, float) else 0.0
+                if full_tlc_safe >= prev_best_tlc and full_tlc_safe > 0:
                     log.info(
-                        f"[phase4] TLC {full_tlc:.0%} >= previous best {prev_best_tlc:.0%} — publishing to HF"
+                        f"[phase4] TLC {full_tlc_safe:.0%} >= previous best {prev_best_tlc:.0%} — publishing to HF"
                     )
                     publish_to_hf(cycle_id)
                 else:
                     log.warning(
-                        f"[phase4] TLC {full_tlc:.0%} < previous best {prev_best_tlc:.0%} (or zero) "
+                        f"[phase4] TLC {full_tlc_safe:.0%} < previous best {prev_best_tlc:.0%} (or zero) "
                         "— SKIPPING HF publish to avoid pushing a regression"
                     )
-                    # ── Phase 5: Safety Valve ──────────────────────────────
-                    if full_tlc < (prev_best_tlc - 0.15) and full_tlc < 0.35:
-                        log.error(f"[safety] CRITICAL REGRESSION: TLC rate {full_tlc:.3f} dropped significantly!")
-                        log.warning("[safety] Manual review of training data (silver poisoning) recommended.")
+                    # ── Phase 5: Regression Guard ─────────────────────────
+                    # If TLC dropped significantly, raise the retrain threshold
+                    # so the next retrain requires more/better gold data.
+                    if full_tlc_safe < (prev_best_tlc - 0.10):
+                        new_thresh = min(RETRAIN_THRESHOLD * 2, 200)
+                        log.error(
+                            f"[safety] TLC REGRESSION: {full_tlc:.0%} vs best {prev_best_tlc:.0%}. "
+                            f"Doubling retrain threshold {RETRAIN_THRESHOLD} → {new_thresh} "
+                            "to require more gold data before next retrain."
+                        )
+                        _write_diag("retrain_regression_guard", {
+                            "summary": (
+                                f"Post-retrain TLC {full_tlc:.0%} regressed from best {prev_best_tlc:.0%}. "
+                                f"Raised threshold {RETRAIN_THRESHOLD}→{new_thresh}."
+                            ),
+                            "full_tlc": full_tlc,
+                            "prev_best_tlc": prev_best_tlc,
+                            "old_threshold": RETRAIN_THRESHOLD,
+                            "new_threshold": new_thresh,
+                            "action": "retrain threshold doubled; more gold examples required",
+                        })
+                        RETRAIN_THRESHOLD = new_thresh
+                    elif full_tlc_safe == 0.0 and prev_best_tlc > 0.0:
+                        log.error(
+                            f"[safety] Post-retrain TLC=0%. Model likely damaged. "
+                            "Skipping next retrain until 50 more gold examples accumulate."
+                        )
+                        _write_diag("retrain_zero_tlc", {
+                            "summary": f"Post-retrain TLC=0% in cycle {cycle_id}",
+                            "prev_best_tlc": prev_best_tlc,
+                            "action": "threshold raised to prevent further damage",
+                        })
+                        RETRAIN_THRESHOLD = max(RETRAIN_THRESHOLD, accumulated_new + 50)
 
     except Exception as e:
         stats.error = f"{type(e).__name__}: {str(e)[:200]}"
@@ -1780,7 +2080,7 @@ def main():
 
     _check_training_deps()
 
-    _default_min_train = int(os.environ.get("CHATTLA_MIN_TRAIN_EXAMPLES", "280"))
+    _default_min_train = int(os.environ.get("CHATTLA_MIN_TRAIN_EXAMPLES", "300"))
 
     parser = argparse.ArgumentParser(description="ChatTLA autonomous RL loop")
     parser.add_argument("--cycle-hours", type=float, default=CYCLE_HOURS,
@@ -1791,7 +2091,7 @@ def main():
     parser.add_argument("--retrain-threshold", type=int, default=RETRAIN_THRESHOLD,
                         help=f"SFT examples before retrain (default: {RETRAIN_THRESHOLD})")
     parser.add_argument("--min-train-examples", type=int, default=_default_min_train,
-                        help="Minimum merged train.jsonl rows before SFT (default: from env or 280)")
+                        help="Minimum merged train.jsonl rows before SFT (default: from env or 300)")
     parser.add_argument("--allow-daytime-retrain", action="store_true",
                         help="Retrain during daytime when threshold met (default: defer to night)")
     parser.add_argument("--model", default="chattla:20b")

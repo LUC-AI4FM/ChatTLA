@@ -14849,3 +14849,188 @@ TypeError: '>=' not supported between instances of 'float' and 'NoneType'
 2026-04-01 12:14:14 INFO [phase2] Persisted 5 SFT examples, 0 DPO pairs. Accumulated: 20
 2026-04-01 12:14:14 INFO [phase3] Skipping retrain (20/50 examples accumulated)
 2026-04-01 12:14:14 INFO [benchmark] Running 12-problem quick eval (cycle 263, attempts=2)...
+2026-04-01 12:32:29 INFO Received signal 2. Will shut down after current phase completes.
+2026-04-01 12:32:29 ERROR [benchmark] Failed: A/.venv/lib/python3.10/site-packages/httpcore/_sync/http11.py", line 217, in _receive_event
+    data = self._network_stream.read(
+  File "/home/espencer2/ChatTLA/.venv/lib/python3.10/site-packages/httpcore/_backends/sync.py", line 128, in read
+    return self._sock.recv(max_bytes)
+KeyboardInterrupt
+
+2026-04-01 12:32:29 INFO 
+────────────────────────────────────────────────────────────
+2026-04-01 12:32:29 INFO CYCLE 263 SUMMARY (21.9 min)
+2026-04-01 12:32:29 INFO   Specs: 21 | SANY: 11 | TLC: 1
+2026-04-01 12:32:29 INFO   Gold: 1 | Silver: 10 | Bronze: 10
+2026-04-01 12:32:29 INFO   New SFT: 5 | New DPO: 0
+2026-04-01 12:32:29 INFO   Retrained: False | Deployed: False
+2026-04-01 12:32:29 INFO   Benchmark (quick): SANY=0% TLC=0%
+2026-04-01 12:32:29 INFO ────────────────────────────────────────────────────────────
+
+2026-04-01 12:32:29 INFO RL loop terminated gracefully.
+2026-04-01 12:32:29 INFO Lifetime: 263 cycles, 839 gold, 2814 silver, 15 retrains
+2026-04-01 12:34:39 INFO ============================================================
+2026-04-01 12:34:39 INFO   ChatTLA Autonomous RL Loop
+2026-04-01 12:34:39 INFO   Inter-cycle pause: 0.0h (none)
+2026-04-01 12:34:39 INFO   Eval: full benchmark every 3 cycles (2 attempts); quick eval (12×2) otherwise
+2026-04-01 12:34:39 INFO   Retrain threshold: 50 | Min training size: 280
+2026-04-01 12:34:39 INFO   Phase 1 workers: auto (3 night / 2 day)
+2026-04-01 12:34:39 INFO   Daytime retrain: ENABLED (--allow-daytime-retrain)
+2026-04-01 12:34:39 INFO   Hugging Face publish: ENABLED → EricSpencer00/chattla-20b (quality-gated: TLC must match/exceed best)
+2026-04-01 12:34:39 INFO   Max cycles: infinite
+2026-04-01 12:34:39 INFO   PID: 1466973
+2026-04-01 12:34:39 INFO ============================================================
+2026-04-01 12:34:39 INFO [startup] Loaded 11 gold prompts from benchmark results
+2026-04-01 12:34:39 INFO [startup] Total 36 gold prompts (including state cache)
+2026-04-01 12:34:39 INFO Resuming with accumulated_new=20 (from state)
+2026-04-01 12:34:39 INFO Resuming from cycle 264
+2026-04-01 12:34:39 INFO ============================================================
+2026-04-01 12:34:39 INFO CYCLE 264 | DAYTIME | difficulty_cap=3 | max_prompts=25
+2026-04-01 12:34:39 INFO Pacing: 3.0s between prompts
+2026-04-01 12:34:39 INFO ============================================================
+2026-04-01 12:34:39 INFO [phase1] Loading prompt bank...
+2026-04-01 12:34:39 INFO [prompt_bank] Injected condensed descriptions for 11 benchmark prompt(s)
+2026-04-01 12:34:39 INFO [phase1] Stratified: anchors=5 hard=0 random=13
+2026-04-01 12:34:39 INFO [phase1] Generating and validating 18 specs...
+2026-04-01 12:34:39 INFO [phase1] Parallel generation: 4 workers for 18 prompts
+2026-04-01 12:34:43 INFO   [SYN006] tier=gold sany=True tlc=True struct=0.78 attempts=1 (best of 1)
+2026-04-01 12:35:33 INFO   [SYN012] tier=gold sany=True tlc=True struct=0.78 attempts=1 (best of 1)
+2026-04-01 12:36:24 INFO   [SYN009] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-04-01 12:37:18 INFO   [RL001] tier=bronze sany=False tlc=False struct=0.67 attempts=1 (best of 1)
+2026-04-01 12:37:21 INFO   [SYN011] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-04-01 12:37:26 INFO   [SYN007] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-04-01 12:38:10 INFO   [RL015] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-04-01 12:39:21 INFO   [BM010] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-04-01 12:39:40 INFO   [SYN008] tier=bronze sany=False tlc=False struct=0.67 attempts=1 (best of 1)
+2026-04-01 12:39:43 INFO   [BM020] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-04-01 12:39:52 INFO   [BM007] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-04-01 12:41:07 INFO   [BM018] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-04-01 12:41:10 INFO   [RL012] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-04-01 12:42:00 INFO   [RL016] tier=gold sany=True tlc=True struct=0.78 attempts=1 (best of 1)
+2026-04-01 12:43:31 INFO   [BM004] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-04-01 12:43:32 INFO   [SYN013] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-04-01 12:43:34 INFO   [RL004] tier=gold sany=True tlc=True struct=0.67 attempts=1 (best of 1)
+2026-04-01 12:43:39 INFO   [SYN005] tier=bronze sany=False tlc=False struct=0.44 attempts=1 (best of 1)
+2026-04-01 12:43:39 INFO [phase1] Results: gold=4 silver=5 bronze=12 sany=9/21 tlc=4/21
+2026-04-01 12:43:39 INFO [phase2] Building training data from results...
+2026-04-01 12:43:39 INFO [phase2] Built 7 SFT examples, 0 DPO pairs (from 21 results, 18 prompts)
+2026-04-01 12:43:39 INFO [phase2] Tracking 38 prompts with gold results (skip in future cycles)
+2026-04-01 12:43:39 INFO [phase2] Persisted 4 SFT examples, 0 DPO pairs. Accumulated: 24
+2026-04-01 12:43:39 INFO [phase3] Skipping retrain (24/50 examples accumulated)
+2026-04-01 12:43:39 INFO [benchmark] Full suite timeout 14400s (20 problems × 2 attempts; override with --full-benchmark-timeout)
+2026-04-01 12:43:39 INFO [benchmark] Running full benchmark suite (cycle 264, attempts=2)...
+2026-04-01 13:00:52 INFO Received signal 2. Will shut down after current phase completes.
+2026-04-01 13:00:52 ERROR [benchmark] Failed: A/.venv/lib/python3.10/site-packages/httpcore/_sync/http11.py", line 217, in _receive_event
+    data = self._network_stream.read(
+  File "/home/espencer2/ChatTLA/.venv/lib/python3.10/site-packages/httpcore/_backends/sync.py", line 128, in read
+    return self._sock.recv(max_bytes)
+KeyboardInterrupt
+
+2026-04-01 13:00:52 INFO 
+────────────────────────────────────────────────────────────
+2026-04-01 13:00:52 INFO CYCLE 264 SUMMARY (26.2 min)
+2026-04-01 13:00:52 INFO   Specs: 21 | SANY: 9 | TLC: 4
+2026-04-01 13:00:52 INFO   Gold: 4 | Silver: 5 | Bronze: 12
+2026-04-01 13:00:52 INFO   New SFT: 4 | New DPO: 0
+2026-04-01 13:00:52 INFO   Retrained: False | Deployed: False
+2026-04-01 13:00:52 INFO   Benchmark (FULL): SANY=0% TLC=0%
+2026-04-01 13:00:52 INFO ────────────────────────────────────────────────────────────
+
+2026-04-01 13:00:52 INFO RL loop terminated gracefully.
+2026-04-01 13:00:52 INFO Lifetime: 264 cycles, 843 gold, 2819 silver, 15 retrains
+2026-04-01 13:01:14 INFO ============================================================
+2026-04-01 13:01:14 INFO   ChatTLA Autonomous RL Loop
+2026-04-01 13:01:14 INFO   Inter-cycle pause: 0.0h (none)
+2026-04-01 13:01:14 INFO   Eval: quick eval only (full benchmark disabled; use --benchmark-every >=1 for full runs)
+2026-04-01 13:01:14 INFO   Retrain threshold: 50 | Min training size: 280
+2026-04-01 13:01:14 INFO   Phase 1 workers: auto (3 night / 2 day)
+2026-04-01 13:01:14 INFO   Daytime retrain: ENABLED (--allow-daytime-retrain)
+2026-04-01 13:01:14 INFO   Hugging Face publish: ENABLED → EricSpencer00/chattla-20b (quality-gated: TLC must match/exceed best)
+2026-04-01 13:01:14 INFO   Max cycles: infinite
+2026-04-01 13:01:14 INFO   PID: 1497985
+2026-04-01 13:01:14 INFO ============================================================
+2026-04-01 13:01:14 INFO [startup] Loaded 11 gold prompts from benchmark results
+2026-04-01 13:01:14 INFO [startup] Total 38 gold prompts (including state cache)
+2026-04-01 13:01:14 INFO Resuming with accumulated_new=24 (from state)
+2026-04-01 13:01:14 INFO Resuming from cycle 265
+2026-04-01 13:01:14 INFO ============================================================
+2026-04-01 13:01:14 INFO CYCLE 265 | DAYTIME | difficulty_cap=3 | max_prompts=25
+2026-04-01 13:01:14 INFO Pacing: 3.0s between prompts
+2026-04-01 13:01:14 INFO ============================================================
+2026-04-01 13:01:14 INFO [phase1] Loading prompt bank...
+2026-04-01 13:01:14 INFO [prompt_bank] Injected condensed descriptions for 11 benchmark prompt(s)
+2026-04-01 13:01:14 INFO [phase1] Stratified: anchors=5 hard=0 random=13
+2026-04-01 13:01:14 INFO [phase1] Generating and validating 18 specs...
+2026-04-01 13:01:14 INFO [phase1] Parallel generation: 4 workers for 18 prompts
+2026-04-01 13:03:39 INFO   [SYN018] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-04-01 13:03:43 INFO   [SYN009] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-04-01 13:05:24 INFO   [BM016] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-04-01 13:05:26 INFO   [RL014] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-04-01 13:05:27 INFO   [RL002] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-04-01 13:05:53 INFO   [SYN020] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-04-01 13:06:29 INFO   [BM007] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-04-01 13:06:33 INFO   [BM018] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-04-01 13:06:37 INFO   [BM017] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-04-01 13:06:43 INFO   [BM012] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-04-01 13:07:02 INFO   [SYN011] tier=silver sany=True tlc=False struct=0.78 attempts=3 (best of 3)
+2026-04-01 13:07:04 INFO   [BM010] tier=bronze sany=False tlc=False struct=0.67 attempts=1 (best of 1)
+2026-04-01 13:07:07 INFO   [BM020] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-04-01 13:08:52 INFO   [RL005] tier=silver sany=True tlc=False struct=0.89 attempts=2 (best of 2)
+2026-04-01 13:09:04 INFO   [BM014] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-04-01 13:12:25 INFO   [SYN008] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-04-01 13:12:32 INFO   [BM004] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-04-01 13:12:36 INFO   [RL012] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-04-01 13:12:36 INFO [phase1] Results: gold=0 silver=8 bronze=17 sany=8/25 tlc=0/25
+2026-04-01 13:12:36 INFO [phase2] Building training data from results...
+2026-04-01 13:12:36 INFO [phase2] Built 8 SFT examples, 0 DPO pairs (from 25 results, 18 prompts)
+2026-04-01 13:12:36 INFO [phase2] Tracking 38 prompts with gold results (skip in future cycles)
+2026-04-01 13:12:36 INFO [phase2] Persisted 5 SFT examples, 0 DPO pairs. Accumulated: 29
+2026-04-01 13:12:36 INFO [phase3] Skipping retrain (29/50 examples accumulated)
+2026-04-01 13:12:36 INFO [benchmark] Running 12-problem quick eval (cycle 265, attempts=2)...
+2026-04-01 13:18:15 INFO Received signal 2. Will shut down after current phase completes.
+2026-04-01 13:18:16 ERROR [benchmark] Failed: A/.venv/lib/python3.10/site-packages/httpcore/_sync/http11.py", line 217, in _receive_event
+    data = self._network_stream.read(
+  File "/home/espencer2/ChatTLA/.venv/lib/python3.10/site-packages/httpcore/_backends/sync.py", line 128, in read
+    return self._sock.recv(max_bytes)
+KeyboardInterrupt
+
+2026-04-01 13:18:16 WARNING [diag:zero_gold_cycle] Zero gold specs in cycle 265 (25 specs tried)
+2026-04-01 13:18:16 INFO 
+────────────────────────────────────────────────────────────
+2026-04-01 13:18:16 INFO CYCLE 265 SUMMARY (17.0 min)
+2026-04-01 13:18:16 INFO   Specs: 25 | SANY: 8 | TLC: 0
+2026-04-01 13:18:16 INFO   Gold: 0 | Silver: 8 | Bronze: 17
+2026-04-01 13:18:16 INFO   New SFT: 5 | New DPO: 0
+2026-04-01 13:18:16 INFO   Retrained: False | Deployed: False
+2026-04-01 13:18:16 INFO   Benchmark (quick): SANY=0% TLC=0%
+2026-04-01 13:18:16 INFO ────────────────────────────────────────────────────────────
+
+2026-04-01 13:18:16 INFO RL loop terminated gracefully.
+2026-04-01 13:18:16 INFO Lifetime: 265 cycles, 843 gold, 2827 silver, 15 retrains
+2026-04-01 13:18:24 INFO ============================================================
+2026-04-01 13:18:24 INFO   ChatTLA Autonomous RL Loop
+2026-04-01 13:18:24 INFO   Inter-cycle pause: 0.0h (none)
+2026-04-01 13:18:24 INFO   Eval: full benchmark every 3 cycles (2 attempts); quick eval (12×2) otherwise
+2026-04-01 13:18:24 INFO   Retrain threshold: 25 | Min training size: 300
+2026-04-01 13:18:24 INFO   Phase 1 workers: auto (3 night / 2 day)
+2026-04-01 13:18:24 INFO   Daytime retrain: ENABLED (--allow-daytime-retrain)
+2026-04-01 13:18:24 INFO   Hugging Face publish: ENABLED → EricSpencer00/chattla-20b (quality-gated: TLC must match/exceed best)
+2026-04-01 13:18:24 INFO   Max cycles: infinite
+2026-04-01 13:18:24 INFO   PID: 1515748
+2026-04-01 13:18:24 INFO ============================================================
+2026-04-01 13:18:24 INFO [startup] Loaded 11 gold prompts from benchmark results
+2026-04-01 13:18:24 INFO [startup] Total 38 gold prompts (including state cache)
+2026-04-01 13:18:24 INFO Resuming with accumulated_new=29 (from state)
+2026-04-01 13:18:24 INFO Resuming from cycle 266
+2026-04-01 13:18:24 INFO ============================================================
+2026-04-01 13:18:24 INFO CYCLE 266 | DAYTIME | difficulty_cap=3 | max_prompts=25
+2026-04-01 13:18:24 INFO Pacing: 3.0s between prompts
+2026-04-01 13:18:24 INFO ============================================================
+2026-04-01 13:18:24 INFO [phase1] Loading prompt bank...
+2026-04-01 13:18:24 INFO [prompt_bank] Injected condensed descriptions for 11 benchmark prompt(s)
+2026-04-01 13:18:24 INFO [phase1] Stratified: anchors=5 hard=0 random=13
+2026-04-01 13:18:24 INFO [phase1] Generating and validating 18 specs...
+2026-04-01 13:18:24 INFO [phase1] Parallel generation: 4 workers for 18 prompts
+2026-04-01 13:18:28 INFO   [RL002] tier=gold sany=True tlc=True struct=0.78 attempts=1 (best of 1)
+2026-04-01 13:19:24 INFO   [RL006] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-04-01 13:19:35 INFO   [SYN014] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-04-01 13:19:43 INFO   [RL010] tier=bronze sany=False tlc=False struct=0.67 attempts=1 (best of 1)
