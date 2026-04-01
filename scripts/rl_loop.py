@@ -93,7 +93,7 @@ _EVAL_JSONL      = _REPO_ROOT / "data" / "processed" / "eval.jsonl"
 # Config
 # ─────────────────────────────────────────────────────────────────────────────
 CYCLE_HOURS        = 0.0          # 0 = no sleep between cycles; >0 pads to target hours
-RETRAIN_THRESHOLD  = 50           # new gold examples before retrain (was 10; too aggressive caused overfitting)
+RETRAIN_THRESHOLD  = 25           # new gold examples before retrain (was 50; accelerated for better signal)
 NIGHTTIME_START    = 22           # 10 PM
 NIGHTTIME_END      = 6            # 6 AM
 GPU_VRAM_CAP_DAY   = 0.75         # 75% VRAM cap during daytime (leave 25%)
@@ -451,8 +451,8 @@ def diagnose_and_fix(stats: CycleStats, accumulated_new: int) -> int:
         _stall_state["zero_sft_streak"] = 0  # reset so we don't spam
 
     # ── Gold rate cliff ──────────────────────────────────────────────────────
-    if stats.specs_generated >= 10:
-        gold_rate = stats.gold_count / stats.specs_generated
+    if stats and (stats.specs_generated or 0) >= 10:
+        gold_rate = (stats.gold_count or 0) / (stats.specs_generated or 1)
         if gold_rate == 0.0:
             _write_diag("zero_gold_cycle", {
                 "summary": f"Zero gold specs in cycle {stats.cycle_id} ({stats.specs_generated} specs tried)",
