@@ -1371,11 +1371,11 @@ def _count_dpo_gold_pairs() -> int:
     return n
 
 
-# 300 examples is the observed safe floor (cycle 201 at 295 examples: SANY=70%, TLC=15%).
-# The cycle-14 collapse at ~200 examples was a data quality issue (silver poisoning + no
-# gradient checkpointing), not a size issue. Both are now fixed.
+# 250 is the safe floor — the cycle-14 collapse was a data quality issue (silver
+# poisoning), not a size issue.  With gold-only augmented + gold benchmark data +
+# structurally-filtered description_sft, quality is high enough at 250+.
 # Override with --min-train-examples or CHATTLA_MIN_TRAIN_EXAMPLES.
-MIN_TRAIN_EXAMPLES = int(os.environ.get("CHATTLA_MIN_TRAIN_EXAMPLES", "300"))
+MIN_TRAIN_EXAMPLES = int(os.environ.get("CHATTLA_MIN_TRAIN_EXAMPLES", "250"))
 
 
 def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT) -> RetrainOutcome:
@@ -1387,7 +1387,7 @@ def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT
         result = subprocess.run(
             [sys.executable, "-m", "src.training.dataset_builder",
              "--sany-only", "--include-augmented", "--include-description-sft",
-             "--bugfix-oversample", "2"],
+             "--include-gold-benchmark", "--bugfix-oversample", "2"],
             cwd=str(_REPO_ROOT),
             capture_output=True, text=True, timeout=300,
         )
@@ -2080,7 +2080,7 @@ def main():
 
     _check_training_deps()
 
-    _default_min_train = int(os.environ.get("CHATTLA_MIN_TRAIN_EXAMPLES", "300"))
+    _default_min_train = int(os.environ.get("CHATTLA_MIN_TRAIN_EXAMPLES", "250"))
 
     parser = argparse.ArgumentParser(description="ChatTLA autonomous RL loop")
     parser.add_argument("--cycle-hours", type=float, default=CYCLE_HOURS,

@@ -62,6 +62,7 @@ _AUGMENTED_JSONL = _REPO_ROOT / "data" / "processed" / "augmented.jsonl"
 _TRAIN_OUT      = _REPO_ROOT / "data" / "processed" / "train.jsonl"
 _EVAL_OUT       = _REPO_ROOT / "data" / "processed" / "eval.jsonl"
 _DESCRIPTION_SFT_JSONL = _REPO_ROOT / "data" / "processed" / "description_sft.jsonl"
+_GOLD_BENCHMARK_JSONL  = _REPO_ROOT / "data" / "processed" / "gold_benchmark_sft.jsonl"
 
 # System prompt goes into the harmony 'developer' role so it's developer-
 # authored context, not the auto-injected system message.
@@ -311,6 +312,8 @@ def build(
     gold_only_augmented: bool = True,
     include_description_sft: bool = False,
     description_sft_path: Path = _DESCRIPTION_SFT_JSONL,
+    include_gold_benchmark: bool = False,
+    gold_benchmark_path: Path = _GOLD_BENCHMARK_JSONL,
     bugfix_oversample: int = 2,
     include_silver_augmented: bool = True,
     augmented_best_per_prompt: bool = True,
@@ -471,6 +474,20 @@ def build(
     elif include_description_sft:
         print(f"[dataset_builder] Warning: --include-description-sft but {description_sft_path} missing; run scripts/build_description_sft_jsonl.py")
 
+    if include_gold_benchmark and gold_benchmark_path.exists():
+        n_gb = 0
+        with train_path.open("a", encoding="utf-8") as f:
+            for line in gold_benchmark_path.open(encoding="utf-8"):
+                line = line.strip()
+                if not line:
+                    continue
+                f.write(line + "\n")
+                n_gb += 1
+        n_train += n_gb
+        print(f"[dataset_builder] Appended {n_gb} gold_benchmark examples to training set")
+    elif include_gold_benchmark:
+        print(f"[dataset_builder] Warning: --include-gold-benchmark but {gold_benchmark_path} missing; run scripts/build_gold_benchmark_sft.py")
+
     print(f"[dataset_builder] train={n_train} examples → {train_path}")
     print(f"[dataset_builder] eval ={n_eval}  examples → {eval_path}")
     return n_train, n_eval
@@ -488,6 +505,10 @@ if __name__ == "__main__":
                         help="Append description_sft.jsonl (tla_descriptions + local .tla; excludes benchmark holdout)")
     parser.add_argument("--description-sft", default=str(_DESCRIPTION_SFT_JSONL),
                         help="Path to description_sft.jsonl")
+    parser.add_argument("--include-gold-benchmark", action="store_true",
+                        help="Append gold_benchmark_sft.jsonl (TLC-verified specs from benchmark runs)")
+    parser.add_argument("--gold-benchmark", default=str(_GOLD_BENCHMARK_JSONL),
+                        help="Path to gold_benchmark_sft.jsonl")
     parser.add_argument("--no-gold-only-augmented", action="store_true",
                         help="Include all augmented tiers (default: gold only to avoid model degradation)")
     parser.add_argument("--combined", default=str(_COMBINED_JSONL),
@@ -513,6 +534,8 @@ if __name__ == "__main__":
         gold_only_augmented=not args.no_gold_only_augmented,
         include_description_sft=args.include_description_sft,
         description_sft_path=Path(args.description_sft),
+        include_gold_benchmark=args.include_gold_benchmark,
+        gold_benchmark_path=Path(args.gold_benchmark),
         bugfix_oversample=max(1, args.bugfix_oversample),
         include_silver_augmented=not args.no_silver_augmented,
         augmented_best_per_prompt=not args.no_augmented_best_per_prompt,

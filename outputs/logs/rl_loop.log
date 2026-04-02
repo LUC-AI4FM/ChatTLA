@@ -1,0 +1,34 @@
+17:14:16 INFO ============================================================
+17:14:16 INFO   ChatTLA Autonomous RL Loop
+17:14:16 INFO   Inter-cycle pause: 0.0h (none)
+17:14:16 INFO   Eval: full benchmark every 3 cycles (2 attempts); quick eval (12×2) otherwise
+17:14:16 INFO   Retrain threshold: 25 | Min training size: 250
+17:14:16 INFO   Phase 1 workers: auto (3 night / 2 day)
+17:14:16 INFO   Hugging Face publish: will skip (HF_TOKEN not set)
+17:14:16 INFO   Max cycles: infinite
+17:14:16 INFO   PID: 3078390
+17:14:16 INFO ============================================================
+17:14:16 INFO [startup] Loaded 11 gold prompts from benchmark results
+17:14:16 INFO [startup] Total 31 gold prompts (including state cache)
+17:14:16 INFO Resuming with accumulated_new=143 (from state)
+17:14:16 INFO Resuming from cycle 23
+17:14:16 INFO ============================================================
+17:14:16 INFO CYCLE 23 | DAYTIME | difficulty_cap=3 | max_prompts=25
+17:14:16 INFO Pacing: 3.0s between prompts
+17:14:16 INFO ============================================================
+17:14:16 INFO [phase1] Loading prompt bank...
+17:14:16 INFO [prompt_bank] Injected condensed descriptions for 11 benchmark prompt(s)
+17:14:16 INFO [phase1] Stratified: anchors=5 hard=0 random=13
+17:14:16 INFO [phase1] Generating and validating 18 specs...
+17:14:16 INFO [phase1] Parallel generation: 4 workers for 18 prompts
+17:14:44 INFO   [RL007] tier=gold sany=True tlc=True struct=0.89 attempts=1 (best of 1)
+17:14:45 INFO   [BM019] tier=gold sany=True tlc=True struct=0.78 attempts=1 (best of 1)
+17:15:01 INFO   [SYN003] tier=gold sany=True tlc=True struct=0.89 attempts=2 (best of 2)
+17:15:06 INFO   [SYN010] tier=bronze sany=False tlc=False struct=0.67 attempts=1 (best of 1)
+17:15:13 INFO   [RL014] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+17:15:20 INFO   [BM017] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+17:15:25 INFO   [RL006] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+tempts=1 (best of 1)
+2026-04-02 17:15:13 INFO   [RL014] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-04-02 17:15:20 INFO   [BM017] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-04-02 17:15:25 INFO   [RL006] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)

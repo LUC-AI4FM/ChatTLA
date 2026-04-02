@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -115,6 +116,14 @@ def main() -> int:
         if len(tla_text) > args.max_tla_chars:
             tla_text = tla_text[: args.max_tla_chars] + "\n\\* [truncated for training cap]\n"
         if not args.no_skip_mc_shims and is_model_check_shim(mn, tla_text):
+            skipped += 1
+            continue
+        # Only include specs with core TLA+ structure (Init, Next, VARIABLES)
+        # to avoid teaching the model that incomplete specs are acceptable.
+        has_init = bool(re.search(r'\bInit\b', tla_text))
+        has_next = bool(re.search(r'\bNext\b', tla_text))
+        has_vars = bool(re.search(r'\bVARIABLE', tla_text))
+        if not (has_init and has_next and has_vars):
             skipped += 1
             continue
         ex = build_example(row, tla_text)
