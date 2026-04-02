@@ -60,7 +60,7 @@ def _build_dpo_dataset(tokenizer, max_samples: int | None = None) -> Dataset | N
     formatted: list[dict] = []
     for row in raw:
         messages = [
-            {"role": "developer", "content": _DEVELOPER_PROMPT},
+            {"role": "system", "content": _DEVELOPER_PROMPT},
             {"role": "user", "content": row["prompt"]},
         ]
         try:
@@ -180,13 +180,13 @@ def main() -> int:
         return 1
 
     model = AutoModelForCausalLM.from_pretrained(
-        "deepseek-ai/DeepSeek-R1-Distill-Qwen-8B",
+        "deepseek-ai/DeepSeek-R1-0528-Qwen3-8B",
         torch_dtype=torch.bfloat16,
         use_cache=False,
         device_map="auto",
     )
     model = PeftModel.from_pretrained(model, str(ckpt))
-    tokenizer = AutoTokenizer.from_pretrained("deepseek-ai/DeepSeek-R1-Distill-Qwen-8B")
+    tokenizer = AutoTokenizer.from_pretrained("deepseek-ai/DeepSeek-R1-0528-Qwen3-8B")
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
 

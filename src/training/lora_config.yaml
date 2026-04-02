@@ -1,13 +1,13 @@
 # =============================================================================
-# ChatTLA — LoRA Configuration for DeepSeek-R1-Distill-Qwen-8B Fine-tuning
+# ChatTLA — LoRA Configuration for DeepSeek-R1-0528-Qwen3-8B Fine-tuning
 # =============================================================================
 #
 # Architecture context
 # --------------------
-# DeepSeek-R1-Distill-Qwen-8B is a dense Qwen2.5-based transformer:
-#   - 8B parameters (all active per forward pass — no MoE)
+# DeepSeek-R1-0528-Qwen3-8B is a dense Qwen3-based transformer:
+#   - 8.2B parameters (all active per forward pass — no MoE)
 #   - ~16GB in BF16, fits on a single 48GB GPU for LoRA training
-#   - Standard Qwen2 attention + MLP layers
+#   - Standard Qwen3 attention + MLP layers
 #
 # LoRA strategy
 # -------------

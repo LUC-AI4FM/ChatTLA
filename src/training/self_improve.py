@@ -587,23 +587,22 @@ def validate_with_sany(spec: str) -> tuple[bool, str]:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Training example builders (harmony format)
+# Training example builders (ChatML format for DeepSeek R1)
 # ─────────────────────────────────────────────────────────────────────────────
 
 def build_spec_gen_example(prompt: str, spec: str) -> dict:
-    """Build a spec_generation training example in harmony format."""
+    """Build a spec_generation training example in ChatML format."""
     return {"messages": [
-        {"role": "developer", "content": _DEVELOPER_PROMPT},
+        {"role": "system",    "content": _DEVELOPER_PROMPT},
         {"role": "user",      "content": f"Write a TLA+ specification for the following:\n\n{prompt}"},
-        {"role": "assistant", "channel": "analysis",  "content": "I'll write a well-formed TLA+ specification with proper Init, Next, and invariants."},
-        {"role": "assistant", "channel": "final",     "content": spec.strip()},
+        {"role": "assistant", "content": spec.strip()},
     ]}
 
 
 def build_bug_fix_example(prompt: str, buggy_spec: str, sany_errors: str, fixed_spec: str) -> dict:
-    """Build a bug_fix training example in harmony format."""
+    """Build a bug_fix training example in ChatML format."""
     return {"messages": [
-        {"role": "developer", "content": _DEVELOPER_PROMPT},
+        {"role": "system", "content": _DEVELOPER_PROMPT},
         {
             "role": "user",
             "content": (
@@ -613,8 +612,7 @@ def build_bug_fix_example(prompt: str, buggy_spec: str, sany_errors: str, fixed_
                 f"Fix the spec."
             ),
         },
-        {"role": "assistant", "channel": "analysis",  "content": "I'll analyse the SANY errors and produce a corrected specification."},
-        {"role": "assistant", "channel": "final",     "content": fixed_spec.strip()},
+        {"role": "assistant", "content": fixed_spec.strip()},
     ]}
 
 

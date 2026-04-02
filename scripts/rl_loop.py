@@ -1001,7 +1001,7 @@ def _generate_for_prompt(
 
 def generate_and_validate(
     prompts: list[dict],
-    model: str = "deepseek-r1:8b",
+    model: str = "chattla:8b",
     max_attempts: int = 3,
     prompt_cooldown_s: float = 0.0,
     phase1_max_workers: int = 0,
@@ -1131,10 +1131,9 @@ def build_training_data(results: list[SpecResult]) -> tuple[list[dict], list[dic
                 "_tier": "gold",
                 "_prompt_id": pid,
                 "messages": [
-                    {"role": "developer", "content": _DEVELOPER_PROMPT},
+                    {"role": "system", "content": _DEVELOPER_PROMPT},
                     {"role": "user", "content": f"Write a TLA+ specification for the following:\n\n{best.prompt_text}"},
-                    {"role": "assistant", "channel": "analysis", "content": "I'll write a well-formed TLA+ specification with proper Init, Next, and invariants."},
-                    {"role": "assistant", "channel": "final", "content": best.spec.strip()},
+                    {"role": "assistant", "content": best.spec.strip()},
                 ],
             })
         elif best.tier == "silver" and getattr(best, "structural_score", 0) > 0.85:
@@ -1143,10 +1142,9 @@ def build_training_data(results: list[SpecResult]) -> tuple[list[dict], list[dic
                 "_tier": "silver",
                 "_prompt_id": pid,
                 "messages": [
-                    {"role": "developer", "content": _DEVELOPER_PROMPT},
+                    {"role": "system", "content": _DEVELOPER_PROMPT},
                     {"role": "user", "content": f"Write a TLA+ specification for the following:\n\n{best.prompt_text}"},
-                    {"role": "assistant", "channel": "analysis", "content": "I'll ensure the TLA+ syntax is correct and the core logic is sound."},
-                    {"role": "assistant", "channel": "final", "content": best.spec.strip()},
+                    {"role": "assistant", "content": best.spec.strip()},
                 ],
             })
 
@@ -1160,10 +1158,9 @@ def build_training_data(results: list[SpecResult]) -> tuple[list[dict], list[dic
                         "_tier": "bugfix",
                         "_prompt_id": pid,
                         "messages": [
-                            {"role": "developer", "content": _DEVELOPER_PROMPT},
+                            {"role": "system", "content": _DEVELOPER_PROMPT},
                             {"role": "user", "content": f"Fix the SANY errors in this spec:\n\n{failed.spec.strip()}"},
-                            {"role": "assistant", "channel": "analysis", "content": "Correcting TLA+ syntax errors and module structure."},
-                            {"role": "assistant", "channel": "final", "content": best.spec.strip()},
+                            {"role": "assistant", "content": best.spec.strip()},
                         ]
                     })
 
@@ -1194,10 +1191,9 @@ def build_training_data(results: list[SpecResult]) -> tuple[list[dict], list[dic
                 "_tier": "silver",
                 "_prompt_id": pid,
                 "messages": [
-                    {"role": "developer", "content": _DEVELOPER_PROMPT},
+                    {"role": "system", "content": _DEVELOPER_PROMPT},
                     {"role": "user", "content": f"Write a TLA+ specification for the following:\n\n{best.prompt_text}"},
-                    {"role": "assistant", "channel": "analysis", "content": "I'll write a well-formed TLA+ specification with proper Init, Next, and invariants."},
-                    {"role": "assistant", "channel": "final", "content": best.spec.strip()},
+                    {"role": "assistant", "content": best.spec.strip()},
                 ],
             })
 
@@ -1212,15 +1208,14 @@ def build_training_data(results: list[SpecResult]) -> tuple[list[dict], list[dic
                             "_tier": "bugfix",
                             "_prompt_id": f"{pid}_bugfix",
                             "messages": [
-                                {"role": "developer", "content": _DEVELOPER_PROMPT},
+                                {"role": "system", "content": _DEVELOPER_PROMPT},
                                 {"role": "user", "content": (
                                     f"This TLA+ spec has TLC model-checking errors:\n\n"
                                     f"TLC feedback:\n{feedback[:500]}\n\n"
                                     f"Buggy spec:\n{r.spec.strip()[:2000]}\n\n"
                                     f"Fix ALL errors and produce a correct spec."
                                 )},
-                                {"role": "assistant", "channel": "analysis", "content": "I'll analyze the TLC errors and produce a corrected specification."},
-                                {"role": "assistant", "channel": "final", "content": best.spec.strip()},
+                                {"role": "assistant", "content": best.spec.strip()},
                             ],
                         })
                     break  # only one bug_fix per prompt
@@ -1245,17 +1240,13 @@ def build_training_data(results: list[SpecResult]) -> tuple[list[dict], list[dic
                     "_tier": "rlvr_repair",
                     "_prompt_id": f"{pid}_rlvr",
                     "messages": [
-                        {"role": "developer", "content": _DEVELOPER_PROMPT},
+                        {"role": "system", "content": _DEVELOPER_PROMPT},
                         {"role": "user", "content": (
                             f"Fix this TLA+ spec. TLC model-checker errors:\n\n"
                             f"{repair_feedback[:600]}\n\n"
                             f"Broken spec:\n{r.repair_from_spec.strip()[:2000]}"
                         )},
-                        {"role": "assistant", "channel": "analysis", "content": (
-                            "I'll fix the TLC errors by bounding the state space, "
-                            "adding UNCHANGED clauses, and declaring any missing CONSTANTS."
-                        )},
-                        {"role": "assistant", "channel": "final", "content": r.spec.strip()},
+                        {"role": "assistant", "content": r.spec.strip()},
                     ],
                 })
                 # DPO: repaired gold (chosen) vs original broken silver (rejected)
@@ -1677,6 +1668,7 @@ def run_benchmark(
     attempts: int = 3,
     timeout_s: int = 3600,
     suffix: str = "",
+    model: str = "chattla:8b",
 ) -> tuple[float, float]:
     """Run benchmark and return (sany_rate, tlc_rate)."""
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -1707,7 +1699,7 @@ def run_benchmark(
     try:
         cmd = [
             sys.executable, "-m", "src.inference.benchmark",
-            "--model", "deepseek-r1:8b",
+            "--model", model,
             "--self-correct",
             "--attempts", str(attempts),
             "--output", str(output_csv),
@@ -1817,6 +1809,7 @@ def run_cycle(
     full_benchmark_timeout_override: int = 0,
     quick_eval_limit: int = QUICK_EVAL_LIMIT,
     quick_eval_attempts: int = QUICK_EVAL_ATTEMPTS,
+    model: str = "chattla:8b",
 ) -> tuple[CycleStats, int, set[str]]:
     """
     Run one full RL cycle: generate → validate → build data → retrain → eval.
@@ -1880,7 +1873,7 @@ def run_cycle(
         log.info(f"[phase1] Generating and validating {len(prompts)} specs...")
         results = generate_and_validate(
             prompts,
-            model="deepseek-r1:8b",
+            model=model,
             max_attempts=2,
             prompt_cooldown_s=prompt_cooldown,
             phase1_max_workers=phase1_max_workers,
@@ -1993,6 +1986,7 @@ def run_cycle(
                 attempts=full_benchmark_attempts,
                 timeout_s=fb_to,
                 suffix="full",
+                model=model,
             )
         else:
             stats.benchmark_full_suite = False
@@ -2003,6 +1997,7 @@ def run_cycle(
                 attempts=quick_eval_attempts,
                 timeout_s=q_to,
                 suffix="quick",
+                model=model,
             )
         stats.benchmark_sany_rate = full_sany
         stats.benchmark_tlc_rate = full_tlc
@@ -2094,7 +2089,7 @@ def main():
                         help="Minimum merged train.jsonl rows before SFT (default: from env or 300)")
     parser.add_argument("--allow-daytime-retrain", action="store_true",
                         help="Retrain during daytime when threshold met (default: defer to night)")
-    parser.add_argument("--model", default="deepseek-r1:8b")
+    parser.add_argument("--model", default="chattla:8b")
     parser.add_argument("--no-publish-hf", action="store_true",
                         help="Skip Hugging Face Hub upload after retrain (requires HF_TOKEN when enabled)")
     parser.add_argument(
@@ -2198,6 +2193,7 @@ def main():
             full_benchmark_timeout_override=args.full_benchmark_timeout,
             quick_eval_limit=args.quick_eval_limit,
             quick_eval_attempts=args.quick_eval_attempts,
+            model=args.model,
         )
         accumulated_new = diagnose_and_fix(stats, accumulated_new)
         save_accumulated_new(accumulated_new, gold_prompt_ids)

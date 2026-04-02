@@ -94,7 +94,7 @@ _EVAL_JSONL   = _REPO_ROOT / "data" / "processed" / "eval.jsonl"
 _CHECKPOINT_DIR = _REPO_ROOT / "outputs" / "checkpoints"
 _LORA_CFG_PATH  = Path(__file__).parent / "lora_config.yaml"
 
-MODEL_ID = "deepseek-ai/DeepSeek-R1-Distill-Qwen-8B"
+MODEL_ID = "deepseek-ai/DeepSeek-R1-0528-Qwen3-8B"
 
 
 def load_lora_config() -> LoraConfig:
@@ -114,7 +114,7 @@ def load_lora_config() -> LoraConfig:
 
 def load_model_and_tokenizer(device_map: str = "auto", max_gpu_memory_mb: int | None = None):
     """
-    Load DeepSeek-R1-Distill-Qwen-8B for fine-tuning with BF16.
+    Load DeepSeek-R1-0528-Qwen3-8B for fine-tuning with BF16.
 
     DeepSeek R1 8B is a dense Qwen2.5-based model (~8B params, ~16GB BF16).
     Fits comfortably on a single 48GB GPU for LoRA fine-tuning.
