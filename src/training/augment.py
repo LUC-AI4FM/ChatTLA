@@ -158,7 +158,7 @@ def augment_bug_fix(
         error_msg = f"SANY parse error after applying '{name}' mutation."
 
         messages = [
-            {"role": "system", "content": _DEVELOPER_PROMPT},
+            {"role": "developer", "content": _DEVELOPER_PROMPT},
             {
                 "role": "user",
                 "content": (
@@ -168,7 +168,8 @@ def augment_bug_fix(
                     f"Fix the spec and output only the corrected TLA+ module."
                 ),
             },
-            {"role": "assistant", "content": tla},
+            {"role": "assistant", "channel": "analysis", "content": "Correcting TLA+ syntax errors and module structure."},
+            {"role": "assistant", "channel": "final", "content": tla},
         ]
         examples.append({"messages": messages})
 
@@ -196,9 +197,10 @@ def augment_decomposition(record: DatasetRecord) -> list[dict]:
     typeok_match = re.search(r"^(TypeOK\s*==.*?)(?=^\w+\s*==|\Z)", tla, re.MULTILINE | re.DOTALL)
     if typeok_match:
         examples.append({"messages": [
-            {"role": "system", "content": _DEVELOPER_PROMPT},
+            {"role": "developer", "content": _DEVELOPER_PROMPT},
             {"role": "user", "content": f"Write a TypeOK invariant for this system:\n\n{nl}"},
-            {"role": "assistant", "content": typeok_match.group(1).strip()},
+            {"role": "assistant", "channel": "analysis", "content": "I'll define the type-correctness invariant covering all state variables."},
+            {"role": "assistant", "channel": "final", "content": typeok_match.group(1).strip()},
         ]})
 
     # Sub-task: Write Init and Next given VARIABLES
@@ -208,9 +210,10 @@ def augment_decomposition(record: DatasetRecord) -> list[dict]:
     if vars_match and init_match and next_match:
         init_next = init_match.group(1).strip() + "\n\n" + next_match.group(1).strip()
         examples.append({"messages": [
-            {"role": "system", "content": _DEVELOPER_PROMPT},
+            {"role": "developer", "content": _DEVELOPER_PROMPT},
             {"role": "user", "content": f"Given VARIABLES {vars_match.group(1).strip()}, write Init and Next for:\n\n{nl}"},
-            {"role": "assistant", "content": init_next},
+            {"role": "assistant", "channel": "analysis", "content": "I'll define the initial state and transition relation."},
+            {"role": "assistant", "channel": "final", "content": init_next},
         ]})
 
     return examples

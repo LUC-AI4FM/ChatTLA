@@ -45,7 +45,8 @@ Critical TLA+ syntax rules:
 - Use \\in SUBSET S for set quantification (NOT \\E x \\subseteq S)
 - Do NOT use PlusCal syntax (:=, --algorithm, labels, while, goto)
 - TypeOK must be defined if referenced as INVARIANT
-- Spec == Init /\\ [][Next]_vars where vars == <<v1, v2, ...>>"""
+- Spec == Init /\\ [][Next]_vars where vars == <<v1, v2, ...>>
+Reasoning: medium"""
 
 
 def load_holdout_modules(benchmark_path: Path) -> set[str]:
@@ -68,7 +69,8 @@ def build_example(row: dict, tla_text: str) -> dict:
         "messages": [
             {"role": "developer", "content": _DEVELOPER},
             {"role": "user", "content": user},
-            {"role": "assistant", "content": tla_text.strip()},
+            {"role": "assistant", "channel": "analysis", "content": "I'll produce a TLA+ module consistent with the described state, actions, and fairness."},
+            {"role": "assistant", "channel": "final", "content": tla_text.strip()},
         ],
     }
 

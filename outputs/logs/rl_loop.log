@@ -1,812 +1,0 @@
-2026-04-01 14:31:55 INFO ============================================================
-2026-04-01 14:31:55 INFO   ChatTLA Autonomous RL Loop
-2026-04-01 14:31:55 INFO   Inter-cycle pause: 0.0h (none)
-2026-04-01 14:31:55 INFO   Eval: full benchmark every 3 cycles (2 attempts); quick eval (12×2) otherwise
-2026-04-01 14:31:55 INFO   Retrain threshold: 25 | Min training size: 300
-2026-04-01 14:31:55 INFO   Phase 1 workers: auto (3 night / 2 day)
-2026-04-01 14:31:55 INFO   Daytime retrain: ENABLED (--allow-daytime-retrain)
-2026-04-01 14:31:55 INFO   Hugging Face publish: ENABLED → EricSpencer00/chattla-8b (quality-gated: TLC must match/exceed best)
-2026-04-01 14:31:55 INFO   Max cycles: infinite
-2026-04-01 14:31:55 INFO   PID: 1592822
-2026-04-01 14:31:55 INFO ============================================================
-2026-04-01 14:31:55 INFO [startup] Loaded 11 gold prompts from benchmark results
-2026-04-01 14:31:55 INFO ============================================================
-2026-04-01 14:31:55 INFO CYCLE 1 | DAYTIME | difficulty_cap=3 | max_prompts=25
-2026-04-01 14:31:55 INFO Pacing: 3.0s between prompts
-2026-04-01 14:31:55 INFO ============================================================
-2026-04-01 14:31:55 INFO [phase1] Loading prompt bank...
-2026-04-01 14:31:55 INFO [prompt_bank] Injected condensed descriptions for 11 benchmark prompt(s)
-2026-04-01 14:31:55 INFO [phase1] Stratified: anchors=5 hard=0 random=13
-2026-04-01 14:31:55 INFO [phase1] Generating and validating 18 specs...
-2026-04-01 14:31:55 INFO [phase1] Parallel generation: 4 workers for 18 prompts
-2026-04-01 14:49:05 INFO   [BM009] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
-2026-04-01 14:50:01 INFO   [BM001] tier=bronze sany=False tlc=False struct=0.11 attempts=1 (best of 1)
-2026-04-01 14:50:39 INFO   [BM003] tier=bronze sany=False tlc=False struct=0.33 attempts=1 (best of 1)
-2026-04-01 14:50:47 INFO   [BM016] tier=bronze sany=False tlc=False struct=0.11 attempts=1 (best of 1)
-2026-04-01 15:02:10 INFO   [RL007] tier=bronze sany=False tlc=False struct=0.11 attempts=1 (best of 1)
-2026-04-01 15:07:20 INFO   [BM015] tier=bronze sany=False tlc=False struct=0.11 attempts=1 (best of 1)
-2026-04-01 15:07:34 INFO   [BM007] tier=bronze sany=False tlc=False struct=0.33 attempts=1 (best of 1)
-2026-04-01 15:11:02 INFO   [RL008] tier=bronze sany=False tlc=False struct=0.11 attempts=1 (best of 1)
-2026-04-01 15:16:35 INFO   [BM004] tier=bronze sany=False tlc=False struct=0.11 attempts=1 (best of 1)
-2026-04-01 15:24:29 INFO   [BM017] tier=bronze sany=False tlc=False struct=0.44 attempts=1 (best of 1)
-2026-04-01 15:26:18 INFO   [RL002] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
-2026-04-01 15:28:51 INFO   [RL004] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
-2026-04-01 15:37:07 INFO   [RL014] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
-2026-04-01 15:37:51 INFO   [SYN001] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
-2026-04-01 15:41:37 INFO Received signal 15. Will shut down after current phase completes.
-2026-04-01 15:41:59 INFO Received signal 2. Will shut down after current phase completes.
-2026-04-01 16:56:19 INFO ============================================================
-2026-04-01 16:56:19 INFO   Post-training deployment pipeline
-2026-04-01 16:56:19 INFO   Waiting for training PID 1702258 to finish...
-2026-04-01 16:56:19 INFO ============================================================
-2026-04-01 20:30:20 INFO [deploy] Training process 1702258 finished.
-2026-04-01 20:30:20 INFO [deploy] Using checkpoint: outputs/checkpoints/checkpoint-130
-2026-04-01 20:30:20 INFO [deploy] Step 1/3: Merging LoRA weights...
-`torch_dtype` is deprecated! Use `dtype` instead!
-Unrecognized keys in `rope_parameters` for 'rope_type'='yarn': {'attn_factor'}
-[merge_lora] Loading base model: deepseek-ai/DeepSeek-R1-0528-Qwen3-8B (device=auto)
-Loading weights:   0%|          | 0/399 [00:00<?, ?it/s]Loading weights:   0%|          | 1/399 [00:00<02:06,  3.14it/s]Loading weights:   4%|▍         | 17/399 [00:00<00:07, 48.16it/s]Loading weights:   7%|▋         | 28/399 [00:00<00:06, 61.51it/s]Loading weights:  10%|▉         | 39/399 [00:00<00:05, 69.81it/s]Loading weights:  12%|█▏        | 49/399 [00:00<00:04, 77.56it/s]Loading weights:  15%|█▌        | 60/399 [00:00<00:04, 79.45it/s]Loading weights:  18%|█▊        | 71/399 [00:01<00:03, 82.15it/s]Loading weights:  21%|██        | 82/399 [00:01<00:03, 82.68it/s]Loading weights:  23%|██▎       | 93/399 [00:01<00:03, 83.33it/s]Loading weights:  26%|██▌       | 104/399 [00:01<00:03, 85.21it/s]Loading weights:  29%|██▊       | 114/399 [00:01<00:03, 88.43it/s]Loading weights:  31%|███▏      | 125/399 [00:01<00:03, 86.93it/s]Loading weights:  34%|███▍      | 136/399 [00:01<00:03, 87.50it/s]Loading weights:  36%|███▋      | 145/399 [00:01<00:02, 87.29it/s]Loading weights:  39%|███▊      | 154/399 [00:02<00:02, 86.19it/s]Loading weights:  41%|████      | 163/399 [00:02<00:02, 83.57it/s]Loading weights:  43%|████▎     | 172/399 [00:02<00:02, 79.43it/s]Loading weights:  46%|████▌     | 182/399 [00:02<00:02, 82.58it/s]Loading weights:  48%|████▊     | 193/399 [00:02<00:02, 84.87it/s]Loading weights:  51%|█████     | 204/399 [00:02<00:02, 83.79it/s]Loading weights:  54%|█████▍    | 215/399 [00:02<00:02, 83.77it/s]Loading weights:  57%|█████▋    | 226/399 [00:02<00:02, 84.13it/s]Loading weights:  59%|█████▉    | 237/399 [00:03<00:01, 84.60it/s]Loading weights:  62%|██████▏   | 247/399 [00:03<00:01, 87.21it/s]Loading weights:  65%|██████▍   | 258/399 [00:03<00:01, 87.47it/s]Loading weights:  67%|██████▋   | 269/399 [00:03<00:01, 87.89it/s]Loading weights:  70%|███████   | 280/399 [00:03<00:01, 85.74it/s]Loading weights:  73%|███████▎  | 290/399 [00:03<00:01, 89.10it/s]Loading weights:  75%|███████▌  | 301/399 [00:03<00:01, 89.02it/s]Loading weights:  78%|███████▊  | 310/399 [00:03<00:01, 88.62it/s]Loading weights:  80%|███████▉  | 319/399 [00:03<00:00, 88.20it/s]Loading weights:  82%|████████▏ | 328/399 [00:04<00:00, 83.76it/s]Loading weights:  84%|████████▍ | 337/399 [00:04<00:00, 78.76it/s]Loading weights:  87%|████████▋ | 347/399 [00:04<00:00, 80.07it/s]Loading weights:  90%|████████▉ | 358/399 [00:04<00:00, 84.20it/s]Loading weights:  92%|█████████▏| 369/399 [00:04<00:00, 84.01it/s]Loading weights:  95%|█████████▌| 380/399 [00:04<00:00, 85.77it/s]Loading weights:  98%|█████████▊| 391/399 [00:04<00:00, 87.73it/s]Loading weights: 100%|██████████| 399/399 [00:04<00:00, 82.67it/s]
-Unrecognized keys in `rope_parameters` for 'rope_type'='yarn': {'attn_factor'}
-[merge_lora] Loading LoRA adapter from: outputs/checkpoints/checkpoint-130
-[merge_lora] Merging adapter weights into base model...
-[merge_lora] Saving merged model → /home/espencer2/ChatTLA/outputs/merged_model
-[merge_lora] Done. Merged model saved to /home/espencer2/ChatTLA/outputs/merged_model
-[merge_lora] Next step: run src/inference/convert_to_gguf.py to build GGUF for Ollama.
-2026-04-01 20:31:08 INFO [deploy] LoRA merge complete.
-2026-04-01 20:31:08 INFO [deploy] Step 2/3: Converting to GGUF (Q8_0) and deploying to Ollama...
-INFO:hf-to-gguf:Loading model: merged_model
-Unrecognized keys in `rope_parameters` for 'rope_type'='yarn': {'attn_factor'}
-INFO:hf-to-gguf:Model architecture: Qwen3ForCausalLM
-Unrecognized keys in `rope_parameters` for 'rope_type'='yarn': {'attn_factor'}
-INFO:hf-to-gguf:gguf: indexing model part 'pytorch_model.bin'
-INFO:gguf.gguf_writer:gguf: This GGUF file is for Little Endian only
-Unrecognized keys in `rope_parameters` for 'rope_type'='yarn': {'attn_factor'}
-INFO:hf-to-gguf:Exporting model...
-INFO:hf-to-gguf:token_embd.weight,         torch.bfloat16 --> Q8_0, shape = {4096, 151936}
-INFO:hf-to-gguf:blk.0.attn_q.weight,       torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.0.attn_k.weight,       torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.0.attn_v.weight,       torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.0.attn_output.weight,  torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.0.attn_q_norm.weight,  torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.0.attn_k_norm.weight,  torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.0.ffn_gate.weight,     torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.0.ffn_up.weight,       torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.0.ffn_down.weight,     torch.bfloat16 --> Q8_0, shape = {12288, 4096}
-INFO:hf-to-gguf:blk.0.attn_norm.weight,    torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.0.ffn_norm.weight,     torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.1.attn_q.weight,       torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.1.attn_k.weight,       torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.1.attn_v.weight,       torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.1.attn_output.weight,  torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.1.attn_q_norm.weight,  torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.1.attn_k_norm.weight,  torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.1.ffn_gate.weight,     torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.1.ffn_up.weight,       torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.1.ffn_down.weight,     torch.bfloat16 --> Q8_0, shape = {12288, 4096}
-INFO:hf-to-gguf:blk.1.attn_norm.weight,    torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.1.ffn_norm.weight,     torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.2.attn_q.weight,       torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.2.attn_k.weight,       torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.2.attn_v.weight,       torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.2.attn_output.weight,  torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.2.attn_q_norm.weight,  torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.2.attn_k_norm.weight,  torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.2.ffn_gate.weight,     torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.2.ffn_up.weight,       torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.2.ffn_down.weight,     torch.bfloat16 --> Q8_0, shape = {12288, 4096}
-INFO:hf-to-gguf:blk.2.attn_norm.weight,    torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.2.ffn_norm.weight,     torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.3.attn_q.weight,       torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.3.attn_k.weight,       torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.3.attn_v.weight,       torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.3.attn_output.weight,  torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.3.attn_q_norm.weight,  torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.3.attn_k_norm.weight,  torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.3.ffn_gate.weight,     torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.3.ffn_up.weight,       torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.3.ffn_down.weight,     torch.bfloat16 --> Q8_0, shape = {12288, 4096}
-INFO:hf-to-gguf:blk.3.attn_norm.weight,    torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.3.ffn_norm.weight,     torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.4.attn_q.weight,       torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.4.attn_k.weight,       torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.4.attn_v.weight,       torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.4.attn_output.weight,  torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.4.attn_q_norm.weight,  torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.4.attn_k_norm.weight,  torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.4.ffn_gate.weight,     torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.4.ffn_up.weight,       torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.4.ffn_down.weight,     torch.bfloat16 --> Q8_0, shape = {12288, 4096}
-INFO:hf-to-gguf:blk.4.attn_norm.weight,    torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.4.ffn_norm.weight,     torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.5.attn_q.weight,       torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.5.attn_k.weight,       torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.5.attn_v.weight,       torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.5.attn_output.weight,  torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.5.attn_q_norm.weight,  torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.5.attn_k_norm.weight,  torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.5.ffn_gate.weight,     torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.5.ffn_up.weight,       torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.5.ffn_down.weight,     torch.bfloat16 --> Q8_0, shape = {12288, 4096}
-INFO:hf-to-gguf:blk.5.attn_norm.weight,    torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.5.ffn_norm.weight,     torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.6.attn_q.weight,       torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.6.attn_k.weight,       torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.6.attn_v.weight,       torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.6.attn_output.weight,  torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.6.attn_q_norm.weight,  torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.6.attn_k_norm.weight,  torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.6.ffn_gate.weight,     torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.6.ffn_up.weight,       torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.6.ffn_down.weight,     torch.bfloat16 --> Q8_0, shape = {12288, 4096}
-INFO:hf-to-gguf:blk.6.attn_norm.weight,    torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.6.ffn_norm.weight,     torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.7.attn_q.weight,       torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.7.attn_k.weight,       torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.7.attn_v.weight,       torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.7.attn_output.weight,  torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.7.attn_q_norm.weight,  torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.7.attn_k_norm.weight,  torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.7.ffn_gate.weight,     torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.7.ffn_up.weight,       torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.7.ffn_down.weight,     torch.bfloat16 --> Q8_0, shape = {12288, 4096}
-INFO:hf-to-gguf:blk.7.attn_norm.weight,    torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.7.ffn_norm.weight,     torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.8.attn_q.weight,       torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.8.attn_k.weight,       torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.8.attn_v.weight,       torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.8.attn_output.weight,  torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.8.attn_q_norm.weight,  torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.8.attn_k_norm.weight,  torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.8.ffn_gate.weight,     torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.8.ffn_up.weight,       torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.8.ffn_down.weight,     torch.bfloat16 --> Q8_0, shape = {12288, 4096}
-INFO:hf-to-gguf:blk.8.attn_norm.weight,    torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.8.ffn_norm.weight,     torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.9.attn_q.weight,       torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.9.attn_k.weight,       torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.9.attn_v.weight,       torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.9.attn_output.weight,  torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.9.attn_q_norm.weight,  torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.9.attn_k_norm.weight,  torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.9.ffn_gate.weight,     torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.9.ffn_up.weight,       torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.9.ffn_down.weight,     torch.bfloat16 --> Q8_0, shape = {12288, 4096}
-INFO:hf-to-gguf:blk.9.attn_norm.weight,    torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.9.ffn_norm.weight,     torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.10.attn_q.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.10.attn_k.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.10.attn_v.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.10.attn_output.weight, torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.10.attn_q_norm.weight, torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.10.attn_k_norm.weight, torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.10.ffn_gate.weight,    torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.10.ffn_up.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.10.ffn_down.weight,    torch.bfloat16 --> Q8_0, shape = {12288, 4096}
-INFO:hf-to-gguf:blk.10.attn_norm.weight,   torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.10.ffn_norm.weight,    torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.11.attn_q.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.11.attn_k.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.11.attn_v.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.11.attn_output.weight, torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.11.attn_q_norm.weight, torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.11.attn_k_norm.weight, torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.11.ffn_gate.weight,    torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.11.ffn_up.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.11.ffn_down.weight,    torch.bfloat16 --> Q8_0, shape = {12288, 4096}
-INFO:hf-to-gguf:blk.11.attn_norm.weight,   torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.11.ffn_norm.weight,    torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.12.attn_q.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.12.attn_k.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.12.attn_v.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.12.attn_output.weight, torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.12.attn_q_norm.weight, torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.12.attn_k_norm.weight, torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.12.ffn_gate.weight,    torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.12.ffn_up.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.12.ffn_down.weight,    torch.bfloat16 --> Q8_0, shape = {12288, 4096}
-INFO:hf-to-gguf:blk.12.attn_norm.weight,   torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.12.ffn_norm.weight,    torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.13.attn_q.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.13.attn_k.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.13.attn_v.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.13.attn_output.weight, torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.13.attn_q_norm.weight, torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.13.attn_k_norm.weight, torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.13.ffn_gate.weight,    torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.13.ffn_up.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.13.ffn_down.weight,    torch.bfloat16 --> Q8_0, shape = {12288, 4096}
-INFO:hf-to-gguf:blk.13.attn_norm.weight,   torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.13.ffn_norm.weight,    torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.14.attn_q.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.14.attn_k.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.14.attn_v.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.14.attn_output.weight, torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.14.attn_q_norm.weight, torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.14.attn_k_norm.weight, torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.14.ffn_gate.weight,    torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.14.ffn_up.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.14.ffn_down.weight,    torch.bfloat16 --> Q8_0, shape = {12288, 4096}
-INFO:hf-to-gguf:blk.14.attn_norm.weight,   torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.14.ffn_norm.weight,    torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.15.attn_q.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.15.attn_k.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.15.attn_v.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.15.attn_output.weight, torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.15.attn_q_norm.weight, torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.15.attn_k_norm.weight, torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.15.ffn_gate.weight,    torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.15.ffn_up.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.15.ffn_down.weight,    torch.bfloat16 --> Q8_0, shape = {12288, 4096}
-INFO:hf-to-gguf:blk.15.attn_norm.weight,   torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.15.ffn_norm.weight,    torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.16.attn_q.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.16.attn_k.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.16.attn_v.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.16.attn_output.weight, torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.16.attn_q_norm.weight, torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.16.attn_k_norm.weight, torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.16.ffn_gate.weight,    torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.16.ffn_up.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.16.ffn_down.weight,    torch.bfloat16 --> Q8_0, shape = {12288, 4096}
-INFO:hf-to-gguf:blk.16.attn_norm.weight,   torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.16.ffn_norm.weight,    torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.17.attn_q.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.17.attn_k.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.17.attn_v.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.17.attn_output.weight, torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.17.attn_q_norm.weight, torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.17.attn_k_norm.weight, torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.17.ffn_gate.weight,    torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.17.ffn_up.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.17.ffn_down.weight,    torch.bfloat16 --> Q8_0, shape = {12288, 4096}
-INFO:hf-to-gguf:blk.17.attn_norm.weight,   torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.17.ffn_norm.weight,    torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.18.attn_q.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.18.attn_k.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.18.attn_v.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.18.attn_output.weight, torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.18.attn_q_norm.weight, torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.18.attn_k_norm.weight, torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.18.ffn_gate.weight,    torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.18.ffn_up.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.18.ffn_down.weight,    torch.bfloat16 --> Q8_0, shape = {12288, 4096}
-INFO:hf-to-gguf:blk.18.attn_norm.weight,   torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.18.ffn_norm.weight,    torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.19.attn_q.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.19.attn_k.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.19.attn_v.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.19.attn_output.weight, torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.19.attn_q_norm.weight, torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.19.attn_k_norm.weight, torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.19.ffn_gate.weight,    torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.19.ffn_up.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.19.ffn_down.weight,    torch.bfloat16 --> Q8_0, shape = {12288, 4096}
-INFO:hf-to-gguf:blk.19.attn_norm.weight,   torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.19.ffn_norm.weight,    torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.20.attn_q.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.20.attn_k.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.20.attn_v.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.20.attn_output.weight, torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.20.attn_q_norm.weight, torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.20.attn_k_norm.weight, torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.20.ffn_gate.weight,    torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.20.ffn_up.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.20.ffn_down.weight,    torch.bfloat16 --> Q8_0, shape = {12288, 4096}
-INFO:hf-to-gguf:blk.20.attn_norm.weight,   torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.20.ffn_norm.weight,    torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.21.attn_q.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.21.attn_k.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.21.attn_v.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.21.attn_output.weight, torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.21.attn_q_norm.weight, torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.21.attn_k_norm.weight, torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.21.ffn_gate.weight,    torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.21.ffn_up.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.21.ffn_down.weight,    torch.bfloat16 --> Q8_0, shape = {12288, 4096}
-INFO:hf-to-gguf:blk.21.attn_norm.weight,   torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.21.ffn_norm.weight,    torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.22.attn_q.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.22.attn_k.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.22.attn_v.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.22.attn_output.weight, torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.22.attn_q_norm.weight, torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.22.attn_k_norm.weight, torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.22.ffn_gate.weight,    torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.22.ffn_up.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.22.ffn_down.weight,    torch.bfloat16 --> Q8_0, shape = {12288, 4096}
-INFO:hf-to-gguf:blk.22.attn_norm.weight,   torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.22.ffn_norm.weight,    torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.23.attn_q.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.23.attn_k.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.23.attn_v.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.23.attn_output.weight, torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.23.attn_q_norm.weight, torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.23.attn_k_norm.weight, torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.23.ffn_gate.weight,    torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.23.ffn_up.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.23.ffn_down.weight,    torch.bfloat16 --> Q8_0, shape = {12288, 4096}
-INFO:hf-to-gguf:blk.23.attn_norm.weight,   torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.23.ffn_norm.weight,    torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.24.attn_q.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.24.attn_k.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.24.attn_v.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.24.attn_output.weight, torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.24.attn_q_norm.weight, torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.24.attn_k_norm.weight, torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.24.ffn_gate.weight,    torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.24.ffn_up.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.24.ffn_down.weight,    torch.bfloat16 --> Q8_0, shape = {12288, 4096}
-INFO:hf-to-gguf:blk.24.attn_norm.weight,   torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.24.ffn_norm.weight,    torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.25.attn_q.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.25.attn_k.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.25.attn_v.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.25.attn_output.weight, torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.25.attn_q_norm.weight, torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.25.attn_k_norm.weight, torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.25.ffn_gate.weight,    torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.25.ffn_up.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.25.ffn_down.weight,    torch.bfloat16 --> Q8_0, shape = {12288, 4096}
-INFO:hf-to-gguf:blk.25.attn_norm.weight,   torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.25.ffn_norm.weight,    torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.26.attn_q.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.26.attn_k.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.26.attn_v.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.26.attn_output.weight, torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.26.attn_q_norm.weight, torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.26.attn_k_norm.weight, torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.26.ffn_gate.weight,    torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.26.ffn_up.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.26.ffn_down.weight,    torch.bfloat16 --> Q8_0, shape = {12288, 4096}
-INFO:hf-to-gguf:blk.26.attn_norm.weight,   torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.26.ffn_norm.weight,    torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.27.attn_q.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.27.attn_k.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.27.attn_v.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.27.attn_output.weight, torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.27.attn_q_norm.weight, torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.27.attn_k_norm.weight, torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.27.ffn_gate.weight,    torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.27.ffn_up.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.27.ffn_down.weight,    torch.bfloat16 --> Q8_0, shape = {12288, 4096}
-INFO:hf-to-gguf:blk.27.attn_norm.weight,   torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.27.ffn_norm.weight,    torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.28.attn_q.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.28.attn_k.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.28.attn_v.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.28.attn_output.weight, torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.28.attn_q_norm.weight, torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.28.attn_k_norm.weight, torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.28.ffn_gate.weight,    torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.28.ffn_up.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.28.ffn_down.weight,    torch.bfloat16 --> Q8_0, shape = {12288, 4096}
-INFO:hf-to-gguf:blk.28.attn_norm.weight,   torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.28.ffn_norm.weight,    torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.29.attn_q.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.29.attn_k.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.29.attn_v.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.29.attn_output.weight, torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.29.attn_q_norm.weight, torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.29.attn_k_norm.weight, torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.29.ffn_gate.weight,    torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.29.ffn_up.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.29.ffn_down.weight,    torch.bfloat16 --> Q8_0, shape = {12288, 4096}
-INFO:hf-to-gguf:blk.29.attn_norm.weight,   torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.29.ffn_norm.weight,    torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.30.attn_q.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.30.attn_k.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.30.attn_v.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.30.attn_output.weight, torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.30.attn_q_norm.weight, torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.30.attn_k_norm.weight, torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.30.ffn_gate.weight,    torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.30.ffn_up.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.30.ffn_down.weight,    torch.bfloat16 --> Q8_0, shape = {12288, 4096}
-INFO:hf-to-gguf:blk.30.attn_norm.weight,   torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.30.ffn_norm.weight,    torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.31.attn_q.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.31.attn_k.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.31.attn_v.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.31.attn_output.weight, torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.31.attn_q_norm.weight, torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.31.attn_k_norm.weight, torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.31.ffn_gate.weight,    torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.31.ffn_up.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.31.ffn_down.weight,    torch.bfloat16 --> Q8_0, shape = {12288, 4096}
-INFO:hf-to-gguf:blk.31.attn_norm.weight,   torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.31.ffn_norm.weight,    torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.32.attn_q.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.32.attn_k.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.32.attn_v.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.32.attn_output.weight, torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.32.attn_q_norm.weight, torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.32.attn_k_norm.weight, torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.32.ffn_gate.weight,    torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.32.ffn_up.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.32.ffn_down.weight,    torch.bfloat16 --> Q8_0, shape = {12288, 4096}
-INFO:hf-to-gguf:blk.32.attn_norm.weight,   torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.32.ffn_norm.weight,    torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.33.attn_q.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.33.attn_k.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.33.attn_v.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.33.attn_output.weight, torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.33.attn_q_norm.weight, torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.33.attn_k_norm.weight, torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.33.ffn_gate.weight,    torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.33.ffn_up.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.33.ffn_down.weight,    torch.bfloat16 --> Q8_0, shape = {12288, 4096}
-INFO:hf-to-gguf:blk.33.attn_norm.weight,   torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.33.ffn_norm.weight,    torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.34.attn_q.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.34.attn_k.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.34.attn_v.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.34.attn_output.weight, torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.34.attn_q_norm.weight, torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.34.attn_k_norm.weight, torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.34.ffn_gate.weight,    torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.34.ffn_up.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.34.ffn_down.weight,    torch.bfloat16 --> Q8_0, shape = {12288, 4096}
-INFO:hf-to-gguf:blk.34.attn_norm.weight,   torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.34.ffn_norm.weight,    torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.35.attn_q.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.35.attn_k.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.35.attn_v.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 1024}
-INFO:hf-to-gguf:blk.35.attn_output.weight, torch.bfloat16 --> Q8_0, shape = {4096, 4096}
-INFO:hf-to-gguf:blk.35.attn_q_norm.weight, torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.35.attn_k_norm.weight, torch.bfloat16 --> F32, shape = {128}
-INFO:hf-to-gguf:blk.35.ffn_gate.weight,    torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.35.ffn_up.weight,      torch.bfloat16 --> Q8_0, shape = {4096, 12288}
-INFO:hf-to-gguf:blk.35.ffn_down.weight,    torch.bfloat16 --> Q8_0, shape = {12288, 4096}
-INFO:hf-to-gguf:blk.35.attn_norm.weight,   torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:blk.35.ffn_norm.weight,    torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:output_norm.weight,        torch.bfloat16 --> F32, shape = {4096}
-INFO:hf-to-gguf:output.weight,             torch.bfloat16 --> Q8_0, shape = {4096, 151936}
-INFO:hf-to-gguf:Set meta model
-INFO:hf-to-gguf:Set model parameters
-INFO:hf-to-gguf:gguf: context length = 131072
-INFO:hf-to-gguf:gguf: embedding length = 4096
-INFO:hf-to-gguf:gguf: feed forward length = 12288
-INFO:hf-to-gguf:gguf: head count = 32
-INFO:hf-to-gguf:gguf: key-value head count = 8
-INFO:hf-to-gguf:gguf: rope scaling type = YARN
-INFO:hf-to-gguf:gguf: rope theta = 1000000
-INFO:hf-to-gguf:gguf: rms norm epsilon = 1e-06
-INFO:hf-to-gguf:gguf: file type = 7
-INFO:hf-to-gguf:Set model quantization version
-INFO:hf-to-gguf:Set model tokenizer
-Unrecognized keys in `rope_parameters` for 'rope_type'='yarn': {'attn_factor'}
-INFO:gguf.vocab:Adding 151387 merge(s).
-INFO:gguf.vocab:Setting special token type bos to 151643
-INFO:gguf.vocab:Setting special token type eos to 151645
-INFO:gguf.vocab:Setting special token type pad to 151645
-INFO:gguf.vocab:Setting chat_template to {% if not add_generation_prompt is defined %}{% set add_generation_prompt = false %}{% endif %}{% set ns = namespace(is_first=false, is_tool=false, is_output_first=true, system_prompt='', is_first_sp=true, is_last_user=false) %}{%- for message in messages %}{%- if message['role'] == 'system' %}{%- if ns.is_first_sp %}{% set ns.system_prompt = ns.system_prompt + message['content'] %}{% set ns.is_first_sp = false %}{%- else %}{% set ns.system_prompt = ns.system_prompt + '
-
-' + message['content'] %}{%- endif %}{%- endif %}{%- endfor %}{{ bos_token }}{{ ns.system_prompt }}{%- for message in messages %}{% set content = message['content'] %}{%- if message['role'] == 'user' %}{%- set ns.is_tool = false -%}{%- set ns.is_first = false -%}{%- set ns.is_last_user = true -%}{{'<｜User｜>' + content + '<｜Assistant｜>'}}{%- endif %}{%- if message['role'] == 'assistant' %}{% if '</think>' in content %}{% set content = content.split('</think>')[-1] %}{% endif %}{% endif %}{%- if message['role'] == 'assistant' and message['tool_calls'] is defined and message['tool_calls'] is not none %}{%- set ns.is_last_user = false -%}{%- if ns.is_tool %}{{'<｜tool▁outputs▁end｜>'}}{%- endif %}{%- set ns.is_first = false %}{%- set ns.is_tool = false -%}{%- set ns.is_output_first = true %}{%- for tool in message['tool_calls'] %}{%- if not ns.is_first %}{%- if content is none %}{{'<｜tool▁calls▁begin｜><｜tool▁call▁begin｜>' + tool['type'] + '<｜tool▁sep｜>' + tool['function']['name'] + '
-' + '```json' + '
-' + tool['function']['arguments'] + '
-' + '```' + '<｜tool▁call▁end｜>'}}{%- else %}{{content + '<｜tool▁calls▁begin｜><｜tool▁call▁begin｜>' + tool['type'] + '<｜tool▁sep｜>' + tool['function']['name'] + '
-' + '```json' + '
-' + tool['function']['arguments'] + '
-' + '```' + '<｜tool▁call▁end｜>'}}{%- endif %}{%- set ns.is_first = true -%}{%- else %}{{'
-' + '<｜tool▁call▁begin｜>' + tool['type'] + '<｜tool▁sep｜>' + tool['function']['name'] + '
-' + '```json' + '
-' + tool['function']['arguments'] + '
-' + '```' + '<｜tool▁call▁end｜>'}}{%- endif %}{%- endfor %}{{'<｜tool▁calls▁end｜><｜end▁of▁sentence｜>'}}{%- endif %}{%- if message['role'] == 'assistant' and (message['tool_calls'] is not defined or message['tool_calls'] is none)%}{%- set ns.is_last_user = false -%}{%- if ns.is_tool %}{{'<｜tool▁outputs▁end｜>' + content + '<｜end▁of▁sentence｜>'}}{%- set ns.is_tool = false -%}{%- else %}{{content + '<｜end▁of▁sentence｜>'}}{%- endif %}{%- endif %}{%- if message['role'] == 'tool' %}{%- set ns.is_last_user = false -%}{%- set ns.is_tool = true -%}{%- if ns.is_output_first %}{{'<｜tool▁outputs▁begin｜><｜tool▁output▁begin｜>' + content + '<｜tool▁output▁end｜>'}}{%- set ns.is_output_first = false %}{%- else %}{{'
-<｜tool▁output▁begin｜>' + content + '<｜tool▁output▁end｜>'}}{%- endif %}{%- endif %}{%- endfor -%}{% if ns.is_tool %}{{'<｜tool▁outputs▁end｜>'}}{% endif %}{% if add_generation_prompt and not ns.is_last_user and not ns.is_tool %}{{'<｜Assistant｜>'}}{% endif %}
-INFO:gguf.gguf_writer:Writing the following files:
-INFO:gguf.gguf_writer:/home/espencer2/ChatTLA/outputs/gguf/chattla-8b-Q8_0.gguf: n_tensors = 399, total_size = 8.7G
-Writing:   0%|          | 0.00/8.70G [00:00<?, ?byte/s]Writing:   8%|▊         | 661M/8.70G [00:06<01:17, 104Mbyte/s]Writing:   8%|▊         | 679M/8.70G [00:06<01:20, 100Mbyte/s]Writing:   8%|▊         | 706M/8.70G [00:06<01:19, 101Mbyte/s]Writing:   9%|▊         | 759M/8.70G [00:07<01:18, 101Mbyte/s]Writing:   9%|▉         | 813M/8.70G [00:07<01:17, 102Mbyte/s]Writing:  10%|▉         | 866M/8.70G [00:08<01:17, 102Mbyte/s]Writing:  10%|█         | 884M/8.70G [00:08<01:17, 101Mbyte/s]Writing:  10%|█         | 911M/8.70G [00:08<01:16, 102Mbyte/s]Writing:  11%|█         | 964M/8.70G [00:09<01:16, 101Mbyte/s]Writing:  12%|█▏        | 1.02G/8.70G [00:10<01:17, 99.1Mbyte/s]Writing:  12%|█▏        | 1.07G/8.70G [00:10<01:16, 99.4Mbyte/s]Writing:  13%|█▎        | 1.09G/8.70G [00:10<01:16, 99.5Mbyte/s]Writing:  13%|█▎        | 1.12G/8.70G [00:11<01:15, 100Mbyte/s] Writing:  13%|█▎        | 1.17G/8.70G [00:11<01:16, 98.8Mbyte/s]Writing:  14%|█▍        | 1.22G/8.70G [00:12<01:17, 97.0Mbyte/s]Writing:  15%|█▍        | 1.28G/8.70G [00:12<01:15, 98.1Mbyte/s]Writing:  15%|█▍        | 1.29G/8.70G [00:12<01:15, 98.3Mbyte/s]Writing:  15%|█▌        | 1.32G/8.70G [00:13<01:13, 100Mbyte/s] Writing:  16%|█▌        | 1.37G/8.70G [00:13<01:13, 99.4Mbyte/s]Writing:  16%|█▋        | 1.43G/8.70G [00:14<01:14, 98.1Mbyte/s]Writing:  17%|█▋        | 1.48G/8.70G [00:14<01:13, 98.9Mbyte/s]Writing:  17%|█▋        | 1.50G/8.70G [00:14<01:12, 99.1Mbyte/s]Writing:  18%|█▊        | 1.53G/8.70G [00:15<01:11, 101Mbyte/s] Writing:  18%|█▊        | 1.58G/8.70G [00:15<01:09, 102Mbyte/s]Writing:  19%|█▉        | 1.63G/8.70G [00:16<01:09, 102Mbyte/s]Writing:  19%|█▉        | 1.69G/8.70G [00:16<01:09, 102Mbyte/s]Writing:  20%|█▉        | 1.70G/8.70G [00:16<01:09, 101Mbyte/s]Writing:  20%|█▉        | 1.73G/8.70G [00:17<01:08, 102Mbyte/s]Writing:  21%|██        | 1.78G/8.70G [00:17<01:06, 103Mbyte/s]Writing:  21%|██        | 1.84G/8.70G [00:18<01:06, 103Mbyte/s]Writing:  22%|██▏       | 1.89G/8.70G [00:18<01:06, 102Mbyte/s]Writing:  22%|██▏       | 1.91G/8.70G [00:18<01:06, 102Mbyte/s]Writing:  22%|██▏       | 1.94G/8.70G [00:19<01:05, 103Mbyte/s]Writing:  23%|██▎       | 1.99G/8.70G [00:19<01:04, 104Mbyte/s]Writing:  23%|██▎       | 2.04G/8.70G [00:20<01:04, 104Mbyte/s]Writing:  24%|██▍       | 2.10G/8.70G [00:20<01:04, 103Mbyte/s]Writing:  24%|██▍       | 2.11G/8.70G [00:20<01:04, 102Mbyte/s]Writing:  25%|██▍       | 2.14G/8.70G [00:21<01:03, 104Mbyte/s]Writing:  25%|██▌       | 2.19G/8.70G [00:21<01:02, 104Mbyte/s]Writing:  26%|██▌       | 2.25G/8.70G [00:22<01:02, 104Mbyte/s]Writing:  26%|██▋       | 2.30G/8.70G [00:22<01:02, 103Mbyte/s]Writing:  27%|██▋       | 2.32G/8.70G [00:22<01:02, 102Mbyte/s]Writing:  27%|██▋       | 2.35G/8.70G [00:23<01:01, 104Mbyte/s]Writing:  28%|██▊       | 2.40G/8.70G [00:23<01:00, 104Mbyte/s]Writing:  28%|██▊       | 2.45G/8.70G [00:24<01:00, 104Mbyte/s]Writing:  29%|██▉       | 2.51G/8.70G [00:24<01:00, 103Mbyte/s]Writing:  29%|██▉       | 2.52G/8.70G [00:24<01:00, 102Mbyte/s]Writing:  29%|██▉       | 2.55G/8.70G [00:25<00:59, 104Mbyte/s]Writing:  30%|██▉       | 2.60G/8.70G [00:25<00:58, 104Mbyte/s]Writing:  31%|███       | 2.66G/8.70G [00:26<00:58, 103Mbyte/s]Writing:  31%|███       | 2.71G/8.70G [00:26<00:58, 102Mbyte/s]Writing:  31%|███▏      | 2.73G/8.70G [00:26<00:58, 101Mbyte/s]Writing:  32%|███▏      | 2.76G/8.70G [00:27<00:57, 103Mbyte/s]Writing:  32%|███▏      | 2.81G/8.70G [00:27<00:56, 103Mbyte/s]Writing:  33%|███▎      | 2.86G/8.70G [00:28<00:57, 102Mbyte/s]Writing:  34%|███▎      | 2.92G/8.70G [00:28<00:56, 102Mbyte/s]Writing:  34%|███▎      | 2.93G/8.70G [00:28<00:57, 101Mbyte/s]Writing:  34%|███▍      | 2.96G/8.70G [00:29<00:56, 102Mbyte/s]Writing:  35%|███▍      | 3.01G/8.70G [00:29<00:54, 104Mbyte/s]Writing:  35%|███▌      | 3.07G/8.70G [00:30<00:55, 102Mbyte/s]Writing:  36%|███▌      | 3.12G/8.70G [00:30<00:54, 102Mbyte/s]Writing:  36%|███▌      | 3.14G/8.70G [00:30<00:54, 101Mbyte/s]Writing:  36%|███▋      | 3.17G/8.70G [00:31<00:53, 103Mbyte/s]Writing:  37%|███▋      | 3.22G/8.70G [00:31<00:53, 102Mbyte/s]Writing:  38%|███▊      | 3.27G/8.70G [00:32<00:54, 100Mbyte/s]Writing:  38%|███▊      | 3.33G/8.70G [00:32<00:55, 97.3Mbyte/s]Writing:  38%|███▊      | 3.34G/8.70G [00:32<00:55, 97.3Mbyte/s]Writing:  39%|███▊      | 3.37G/8.70G [00:33<00:53, 99.6Mbyte/s]Writing:  39%|███▉      | 3.42G/8.70G [00:33<00:51, 102Mbyte/s] Writing:  40%|███▉      | 3.48G/8.70G [00:34<00:51, 101Mbyte/s]Writing:  41%|████      | 3.53G/8.70G [00:34<00:51, 101Mbyte/s]Writing:  41%|████      | 3.55G/8.70G [00:34<00:51, 101Mbyte/s]Writing:  41%|████      | 3.58G/8.70G [00:35<00:50, 102Mbyte/s]Writing:  42%|████▏     | 3.63G/8.70G [00:35<00:49, 103Mbyte/s]Writing:  42%|████▏     | 3.68G/8.70G [00:36<00:48, 103Mbyte/s]Writing:  43%|████▎     | 3.74G/8.70G [00:36<00:48, 102Mbyte/s]Writing:  43%|████▎     | 3.75G/8.70G [00:36<00:48, 102Mbyte/s]Writing:  43%|████▎     | 3.78G/8.70G [00:37<00:47, 103Mbyte/s]Writing:  44%|████▍     | 3.83G/8.70G [00:37<00:46, 104Mbyte/s]Writing:  45%|████▍     | 3.89G/8.70G [00:38<00:46, 103Mbyte/s]Writing:  45%|████▌     | 3.94G/8.70G [00:38<00:46, 103Mbyte/s]Writing:  45%|████▌     | 3.96G/8.70G [00:38<00:46, 102Mbyte/s]Writing:  46%|████▌     | 3.99G/8.70G [00:39<00:46, 102Mbyte/s]Writing:  46%|████▋     | 4.04G/8.70G [00:39<00:46, 101Mbyte/s]Writing:  47%|████▋     | 4.09G/8.70G [00:40<00:45, 102Mbyte/s]Writing:  48%|████▊     | 4.15G/8.70G [00:40<00:45, 101Mbyte/s]Writing:  48%|████▊     | 4.16G/8.70G [00:40<00:45, 100Mbyte/s]Writing:  48%|████▊     | 4.19G/8.70G [00:41<00:44, 102Mbyte/s]Writing:  49%|████▉     | 4.24G/8.70G [00:41<00:43, 103Mbyte/s]Writing:  49%|████▉     | 4.30G/8.70G [00:42<00:43, 102Mbyte/s]Writing:  50%|████▉     | 4.35G/8.70G [00:42<00:42, 102Mbyte/s]Writing:  50%|█████     | 4.37G/8.70G [00:42<00:42, 102Mbyte/s]Writing:  51%|█████     | 4.40G/8.70G [00:43<00:41, 103Mbyte/s]Writing:  51%|█████     | 4.45G/8.70G [00:43<00:41, 103Mbyte/s]Writing:  52%|█████▏    | 4.50G/8.70G [00:44<00:40, 102Mbyte/s]Writing:  52%|█████▏    | 4.56G/8.70G [00:44<00:40, 102Mbyte/s]Writing:  53%|█████▎    | 4.57G/8.70G [00:44<00:40, 102Mbyte/s]Writing:  53%|█████▎    | 4.60G/8.70G [00:45<00:39, 103Mbyte/s]Writing:  53%|█████▎    | 4.65G/8.70G [00:45<00:39, 103Mbyte/s]Writing:  54%|█████▍    | 4.71G/8.70G [00:46<00:38, 103Mbyte/s]Writing:  55%|█████▍    | 4.76G/8.70G [00:46<00:38, 102Mbyte/s]Writing:  55%|█████▍    | 4.78G/8.70G [00:46<00:38, 102Mbyte/s]Writing:  55%|█████▌    | 4.81G/8.70G [00:47<00:37, 103Mbyte/s]Writing:  56%|█████▌    | 4.86G/8.70G [00:47<00:37, 103Mbyte/s]Writing:  56%|█████▋    | 4.91G/8.70G [00:48<00:36, 103Mbyte/s]Writing:  57%|█████▋    | 4.97G/8.70G [00:48<00:36, 102Mbyte/s]Writing:  57%|█████▋    | 4.98G/8.70G [00:48<00:36, 102Mbyte/s]Writing:  58%|█████▊    | 5.01G/8.70G [00:49<00:35, 103Mbyte/s]Writing:  58%|█████▊    | 5.06G/8.70G [00:49<00:35, 103Mbyte/s]Writing:  59%|█████▉    | 5.12G/8.70G [00:50<00:34, 103Mbyte/s]Writing:  59%|█████▉    | 5.17G/8.70G [00:50<00:34, 102Mbyte/s]Writing:  60%|█████▉    | 5.19G/8.70G [00:51<00:34, 102Mbyte/s]Writing:  60%|█████▉    | 5.22G/8.70G [00:51<00:33, 103Mbyte/s]Writing:  61%|██████    | 5.27G/8.70G [00:51<00:33, 104Mbyte/s]Writing:  61%|██████    | 5.32G/8.70G [00:52<00:32, 103Mbyte/s]Writing:  62%|██████▏   | 5.38G/8.70G [00:52<00:32, 102Mbyte/s]Writing:  62%|██████▏   | 5.39G/8.70G [00:53<00:32, 102Mbyte/s]Writing:  62%|██████▏   | 5.42G/8.70G [00:53<00:31, 103Mbyte/s]Writing:  63%|██████▎   | 5.47G/8.70G [00:53<00:31, 104Mbyte/s]Writing:  64%|██████▎   | 5.53G/8.70G [00:54<00:30, 104Mbyte/s]Writing:  64%|██████▍   | 5.58G/8.70G [00:54<00:30, 103Mbyte/s]Writing:  64%|██████▍   | 5.60G/8.70G [00:54<00:30, 102Mbyte/s]Writing:  65%|██████▍   | 5.63G/8.70G [00:55<00:29, 104Mbyte/s]Writing:  65%|██████▌   | 5.68G/8.70G [00:55<00:29, 103Mbyte/s]Writing:  66%|██████▌   | 5.73G/8.70G [00:56<00:29, 102Mbyte/s]Writing:  66%|██████▋   | 5.79G/8.70G [00:56<00:28, 101Mbyte/s]Writing:  67%|██████▋   | 5.80G/8.70G [00:57<00:28, 101Mbyte/s]Writing:  67%|██████▋   | 5.83G/8.70G [00:57<00:28, 101Mbyte/s]Writing:  68%|██████▊   | 5.89G/8.70G [00:57<00:27, 102Mbyte/s]Writing:  68%|██████▊   | 5.94G/8.70G [00:58<00:27, 102Mbyte/s]Writing:  69%|██████▉   | 5.99G/8.70G [00:58<00:26, 101Mbyte/s]Writing:  69%|██████▉   | 6.01G/8.70G [00:59<00:26, 100Mbyte/s]Writing:  69%|██████▉   | 6.04G/8.70G [00:59<00:26, 102Mbyte/s]Writing:  70%|██████▉   | 6.09G/8.70G [00:59<00:25, 103Mbyte/s]Writing:  71%|███████   | 6.14G/8.70G [01:00<00:24, 103Mbyte/s]Writing:  71%|███████   | 6.20G/8.70G [01:00<00:24, 102Mbyte/s]Writing:  71%|███████▏  | 6.21G/8.70G [01:01<00:24, 101Mbyte/s]Writing:  72%|███████▏  | 6.24G/8.70G [01:01<00:24, 102Mbyte/s]Writing:  72%|███████▏  | 6.30G/8.70G [01:01<00:23, 103Mbyte/s]Writing:  73%|███████▎  | 6.35G/8.70G [01:02<00:22, 103Mbyte/s]Writing:  74%|███████▎  | 6.40G/8.70G [01:02<00:22, 102Mbyte/s]Writing:  74%|███████▍  | 6.42G/8.70G [01:03<00:22, 99.7Mbyte/s]Writing:  74%|███████▍  | 6.45G/8.70G [01:03<00:22, 101Mbyte/s] Writing:  75%|███████▍  | 6.50G/8.70G [01:03<00:22, 99.3Mbyte/s]Writing:  75%|███████▌  | 6.55G/8.70G [01:04<00:22, 97.0Mbyte/s]Writing:  76%|███████▌  | 6.61G/8.70G [01:04<00:21, 97.4Mbyte/s]Writing:  76%|███████▌  | 6.62G/8.70G [01:05<00:21, 96.8Mbyte/s]Writing:  76%|███████▋  | 6.65G/8.70G [01:05<00:20, 99.0Mbyte/s]Writing:  77%|███████▋  | 6.71G/8.70G [01:05<00:19, 101Mbyte/s] Writing:  78%|███████▊  | 6.76G/8.70G [01:06<00:19, 101Mbyte/s]Writing:  78%|███████▊  | 6.81G/8.70G [01:07<00:19, 99.3Mbyte/s]Writing:  78%|███████▊  | 6.83G/8.70G [01:07<00:19, 98.3Mbyte/s]Writing:  79%|███████▉  | 6.86G/8.70G [01:07<00:18, 100Mbyte/s] Writing:  79%|███████▉  | 6.91G/8.70G [01:07<00:17, 102Mbyte/s]Writing:  80%|████████  | 6.96G/8.70G [01:08<00:17, 102Mbyte/s]Writing:  81%|████████  | 7.02G/8.70G [01:09<00:16, 101Mbyte/s]Writing:  81%|████████  | 7.03G/8.70G [01:09<00:16, 100Mbyte/s]Writing:  81%|████████  | 7.06G/8.70G [01:09<00:16, 102Mbyte/s]Writing:  82%|████████▏ | 7.12G/8.70G [01:09<00:15, 102Mbyte/s]Writing:  82%|████████▏ | 7.17G/8.70G [01:10<00:14, 102Mbyte/s]Writing:  83%|████████▎ | 7.22G/8.70G [01:11<00:14, 101Mbyte/s]Writing:  83%|████████▎ | 7.24G/8.70G [01:11<00:14, 100Mbyte/s]Writing:  83%|████████▎ | 7.27G/8.70G [01:11<00:14, 102Mbyte/s]Writing:  84%|████████▍ | 7.32G/8.70G [01:12<00:13, 103Mbyte/s]Writing:  85%|████████▍ | 7.37G/8.70G [01:12<00:13, 102Mbyte/s]Writing:  85%|████████▌ | 7.43G/8.70G [01:13<00:12, 101Mbyte/s]Writing:  86%|████████▌ | 7.45G/8.70G [01:13<00:12, 100Mbyte/s]Writing:  86%|████████▌ | 7.47G/8.70G [01:13<00:12, 102Mbyte/s]Writing:  86%|████████▋ | 7.53G/8.70G [01:14<00:11, 103Mbyte/s]Writing:  87%|████████▋ | 7.58G/8.70G [01:14<00:10, 103Mbyte/s]Writing:  88%|████████▊ | 7.63G/8.70G [01:15<00:10, 100Mbyte/s]Writing:  88%|████████▊ | 7.65G/8.70G [01:15<00:10, 100Mbyte/s]Writing:  88%|████████▊ | 7.68G/8.70G [01:15<00:10, 102Mbyte/s]Writing:  89%|████████▉ | 7.73G/8.70G [01:16<00:09, 102Mbyte/s]Writing:  89%|████████▉ | 7.78G/8.70G [01:16<00:08, 102Mbyte/s]Writing:  90%|█████████ | 7.84G/8.70G [01:17<00:08, 101Mbyte/s]Writing:  90%|█████████ | 7.86G/8.70G [01:17<00:08, 101Mbyte/s]Writing:  91%|█████████ | 7.88G/8.70G [01:17<00:08, 102Mbyte/s]Writing:  91%|█████████ | 7.94G/8.70G [01:18<00:07, 103Mbyte/s]Writing:  92%|█████████▏| 7.99G/8.70G [01:18<00:06, 103Mbyte/s]Writing:  92%|█████████▏| 8.04G/8.70G [01:19<00:06, 102Mbyte/s]Writing: 100%|██████████| 8.70G/8.70G [01:25<00:00, 105Mbyte/s]Writing: 100%|██████████| 8.70G/8.70G [01:25<00:00, 102Mbyte/s]
-INFO:hf-to-gguf:Model successfully exported to /home/espencer2/ChatTLA/outputs/gguf/chattla-8b-Q8_0.gguf
-[?2026h[?25l[1Ggathering model components ⠋ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠙ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠹ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠸ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠴ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠴ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠧ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠇ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠇ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠋ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠙ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠙ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠸ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠸ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠴ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠦ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠦ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠇ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠇ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠋ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠋ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠙ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠸ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠸ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠴ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠴ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠦ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠇ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠇ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠋ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠙ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠙ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠸ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠼ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠼ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠦ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠦ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠧ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠏ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠏ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠙ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠹ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠹ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠼ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠼ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠴ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠧ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠧ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠏ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠋ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠋ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠹ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠹ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠸ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠴ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠴ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠦ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠇ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠇ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠋ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠋ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠙ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠸ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠸ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠴ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠦ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠦ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠇ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠇ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠋ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠋ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠹ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠹ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠼ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠼ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠦ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠦ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠇ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠇ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠋ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠋ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠹ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠹ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠼ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠼ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠴ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠧ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠧ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠏ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠋ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠋ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠹ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠹ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠼ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠴ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠴ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠧ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠧ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠇ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠋ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠋ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠹ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠹ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠼ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠴ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠴ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠧ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠧ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠇ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠋ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠋ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠹ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠸ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠸ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠴ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠴ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠧ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠧ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠏ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠋ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠋ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠹ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠹ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠼ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠼ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠴ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠧ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠧ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠇ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠏ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠋ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠙ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠹ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠸ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠴ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠴ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠦ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠇ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠇ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠏ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠙ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠙ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠹ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠸ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠼ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠴ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠧ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠧ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠏ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠋ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠋ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠹ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠹ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠸ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠴ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠴ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠦ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠧ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠇ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠏ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠋ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠙ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠹ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠸ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠼ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠦ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠦ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠧ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠇ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠏ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠋ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠙ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠹ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠸ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠼ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠴ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠦ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠧ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠇ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠏ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠋ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠹ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠹ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠸ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠼ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠴ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠧ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠧ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠇ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠋ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠋ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠙ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠹ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠸ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠼ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠴ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠦ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠧ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠇ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠏ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠋ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠙ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠹ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠸ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠼ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠴ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠦ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠧ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠇ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠋ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠋ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components ⠙ [K[?25h[?2026l[?2026h[?25l[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 0% ⠋ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 0% ⠙ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 0% ⠹ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 1% ⠸ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 1% ⠼ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 1% ⠴ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 2% ⠦ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 2% ⠧ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 2% ⠇ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 3% ⠏ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 3% ⠋ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 3% ⠙ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 4% ⠹ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 4% ⠸ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 5% ⠼ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 5% ⠴ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 5% ⠦ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 6% ⠧ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 6% ⠇ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 7% ⠏ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 7% ⠋ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 7% ⠙ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 8% ⠹ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 8% ⠸ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 8% ⠼ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 9% ⠴ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 9% ⠦ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 9% ⠧ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 10% ⠇ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 10% ⠏ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 10% ⠋ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 11% ⠙ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 11% ⠹ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 12% ⠸ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 12% ⠼ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 12% ⠴ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 13% ⠦ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 13% ⠧ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 13% ⠇ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 14% ⠏ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 14% ⠋ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 14% ⠙ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 15% ⠹ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 15% ⠸ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 16% ⠼ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 16% ⠴ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 16% ⠦ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 17% ⠧ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 17% ⠇ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 18% ⠏ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 18% ⠋ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 18% ⠙ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 19% ⠹ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 19% ⠸ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 19% ⠼ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 20% ⠴ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 20% ⠦ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 20% ⠧ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 21% ⠇ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 21% ⠏ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 22% ⠋ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 22% ⠙ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 22% ⠹ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 23% ⠸ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 23% ⠼ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 23% ⠴ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 24% ⠦ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 24% ⠧ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 24% ⠇ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 25% ⠏ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 25% ⠋ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 26% ⠙ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 26% ⠹ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 26% ⠸ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 27% ⠼ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 27% ⠴ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 28% ⠦ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 28% ⠧ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 28% ⠇ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 29% ⠏ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 29% ⠋ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 29% ⠙ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 30% ⠹ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 30% ⠸ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 31% ⠼ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 31% ⠴ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 31% ⠦ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 32% ⠧ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 32% ⠇ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 32% ⠏ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 33% ⠋ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 33% ⠙ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 33% ⠹ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 34% ⠸ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 34% ⠼ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 34% ⠴ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 35% ⠦ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 35% ⠧ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 36% ⠇ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 36% ⠏ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 36% ⠋ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 37% ⠙ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 37% ⠹ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 38% ⠸ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 38% ⠼ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 38% ⠴ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 39% ⠦ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 39% ⠧ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 39% ⠇ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 40% ⠏ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 40% ⠋ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 40% ⠙ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 41% ⠹ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 41% ⠸ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 41% ⠼ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 42% ⠴ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 42% ⠦ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 42% ⠧ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 43% ⠇ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 43% ⠏ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 44% ⠋ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 44% ⠙ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 44% ⠹ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 45% ⠸ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 45% ⠼ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 45% ⠴ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 46% ⠦ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 46% ⠧ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 46% ⠇ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 47% ⠏ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 47% ⠋ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 47% ⠙ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 48% ⠹ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 48% ⠸ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 48% ⠼ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 49% ⠴ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 49% ⠦ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 50% ⠧ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 50% ⠇ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 50% ⠏ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 51% ⠋ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 51% ⠙ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 51% ⠹ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 52% ⠸ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 52% ⠼ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 53% ⠴ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 53% ⠦ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 53% ⠧ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 54% ⠇ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 54% ⠏ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 54% ⠋ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 54% ⠙ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 55% ⠹ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 55% ⠸ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 55% ⠼ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 56% ⠴ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 56% ⠦ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 57% ⠧ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 57% ⠇ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 57% ⠏ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 58% ⠋ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 58% ⠙ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 58% ⠹ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 59% ⠸ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 59% ⠼ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 59% ⠴ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 60% ⠦ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 60% ⠧ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 60% ⠇ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 61% ⠏ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 61% ⠋ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 62% ⠙ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 62% ⠹ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 62% ⠸ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 63% ⠼ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 63% ⠴ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 63% ⠦ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 64% ⠧ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 64% ⠇ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 64% ⠏ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 65% ⠋ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 65% ⠙ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 65% ⠹ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 66% ⠸ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 66% ⠼ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 67% ⠴ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 67% ⠦ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 67% ⠧ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 68% ⠇ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 68% ⠏ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 68% ⠋ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 69% ⠙ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 69% ⠹ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 70% ⠸ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 70% ⠼ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 70% ⠴ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 71% ⠦ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 71% ⠧ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 71% ⠇ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 72% ⠏ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 72% ⠋ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 72% ⠙ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 73% ⠹ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 73% ⠸ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 73% ⠼ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 74% ⠴ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 74% ⠦ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 74% ⠧ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 75% ⠇ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 75% ⠏ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 75% ⠋ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 76% ⠙ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 76% ⠹ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 76% ⠸ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 77% ⠼ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 77% ⠴ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 77% ⠦ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 78% ⠧ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 78% ⠇ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 79% ⠏ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 79% ⠋ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 79% ⠙ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 80% ⠹ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 80% ⠸ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 80% ⠼ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 81% ⠴ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 81% ⠦ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 81% ⠧ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 82% ⠇ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 82% ⠏ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 82% ⠋ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 83% ⠙ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 83% ⠹ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 84% ⠸ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 84% ⠼ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 84% ⠴ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 85% ⠦ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 85% ⠧ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 86% ⠇ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 86% ⠏ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 86% ⠋ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 87% ⠙ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 87% ⠹ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 87% ⠸ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 88% ⠼ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 88% ⠴ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 88% ⠦ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 89% ⠧ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 89% ⠇ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 89% ⠏ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 90% ⠋ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 90% ⠙ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 90% ⠹ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 91% ⠸ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 91% ⠼ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 91% ⠴ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 92% ⠦ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 92% ⠧ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 93% ⠇ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 93% ⠏ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 93% ⠋ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 94% ⠙ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 94% ⠹ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 94% ⠸ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 95% ⠼ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 95% ⠴ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 95% ⠦ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 96% ⠧ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 96% ⠇ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 96% ⠏ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 97% ⠋ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 97% ⠙ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 98% ⠹ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 98% ⠸ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 98% ⠼ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 99% ⠴ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 99% ⠦ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 99% ⠧ [K[?25h[?2026l[?2026h[?25l[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 100% [K
-parsing GGUF ⠋ [K[?25h[?2026l[?2026h[?25l[A[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 100% [K
-parsing GGUF ⠙ [K[?25h[?2026l[?2026h[?25l[A[A[1Ggathering model components [K
-copying file sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad 100% [K
-parsing GGUF [K
-using existing layer sha256:abf131c7f7ccd5b1cc1b7a814ca3e3218fe48615ac13c9638a3817c9c9cd39ad [K
-creating new layer sha256:0fdd2774635fbf5fc67457e9334c9dbc0f3a6ccacf53ba542424df953fb79242 [K
-creating new layer sha256:bc4a8d64e8212878592cdb577bf7f6e5f6961ca923945858d1b765688f6513fb [K
-writing manifest [K
-success [K[?25h[?2026l
-[convert_gguf] Updating llama.cpp...
-[convert_gguf] Converting to GGUF (Q8_0)...
-[convert_gguf] GGUF written → /home/espencer2/ChatTLA/outputs/gguf/chattla-8b-Q8_0.gguf  (8.7 GB)
-[convert_gguf] Modelfile written → /home/espencer2/ChatTLA/outputs/gguf/Modelfile
-[convert_gguf] Registering with Ollama as 'chattla:8b'...
-[convert_gguf] Success! Test with: ollama run chattla:8b
-2026-04-01 20:33:34 INFO [deploy] GGUF deployed to Ollama as chattla:8b.
-2026-04-01 20:33:34 INFO [deploy] Step 3/3: Smoke test — generating a simple spec...
-SANY valid: False
-Spec preview: Create a Verilog module with the following ports:
-  input  clk,
-  input  reset,
-  output reg [1:0] count
-
-Create a Verilog module with the following ports:
-  input  clk,
-  input  reset,
-  output reg [
-SMOKE TEST FAILED: ['***Parse Error***', '*** Errors: 1']
-2026-04-01 20:36:07 INFO ============================================================
-2026-04-01 20:36:07 INFO   Deployment complete. chattla:8b is ready.
-2026-04-01 20:36:07 INFO   Restart RL loop when ready.
-2026-04-01 20:36:07 INFO ============================================================
