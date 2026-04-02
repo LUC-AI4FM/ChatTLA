@@ -17,7 +17,6 @@ import json
 import sys
 from pathlib import Path
 
-import torch
 from datasets import Dataset
 
 from src.training.dataset_builder import _DEVELOPER_PROMPT
@@ -60,7 +59,7 @@ def _build_dpo_dataset(tokenizer, max_samples: int | None = None) -> Dataset | N
     formatted: list[dict] = []
     for row in raw:
         messages = [
-            {"role": "system", "content": _DEVELOPER_PROMPT},
+            {"role": "developer", "content": _DEVELOPER_PROMPT},
             {"role": "user", "content": row["prompt"]},
         ]
         try:
@@ -180,13 +179,14 @@ def main() -> int:
         return 1
 
     model = AutoModelForCausalLM.from_pretrained(
-        "deepseek-ai/DeepSeek-R1-0528-Qwen3-8B",
-        torch_dtype=torch.bfloat16,
+        "openai/gpt-oss-20b",
+        attn_implementation="eager",
         use_cache=False,
         device_map="auto",
+        trust_remote_code=True,
     )
     model = PeftModel.from_pretrained(model, str(ckpt))
-    tokenizer = AutoTokenizer.from_pretrained("deepseek-ai/DeepSeek-R1-0528-Qwen3-8B")
+    tokenizer = AutoTokenizer.from_pretrained("openai/gpt-oss-20b")
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
 

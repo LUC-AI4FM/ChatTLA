@@ -63,27 +63,19 @@ _TRAIN_OUT      = _REPO_ROOT / "data" / "processed" / "train.jsonl"
 _EVAL_OUT       = _REPO_ROOT / "data" / "processed" / "eval.jsonl"
 _DESCRIPTION_SFT_JSONL = _REPO_ROOT / "data" / "processed" / "description_sft.jsonl"
 
-# System prompt for DeepSeek R1 (standard ChatML system role).
+# System prompt goes into the harmony 'developer' role so it's developer-
+# authored context, not the auto-injected system message.
 _DEVELOPER_PROMPT = """\
 You are ChatTLA, an expert at writing verified TLA+ formal specifications.
-Respond only with the TLA+ module, no commentary or explanation.
+When asked to write a TLA+ spec, follow these rules exactly:
 1. Start the module with ---- MODULE <ModuleName> ----
 2. End with ====
 3. Include EXTENDS, VARIABLES, Init, Next, and Spec operators
 4. After the TLA+ module, append a TLC configuration block:
    SPECIFICATION Spec
    INVARIANT TypeOK   (if TypeOK is defined)
-
-Critical TLA+ syntax rules:
-- EXTENDS Integers for Int, +, -, *, \\div; EXTENDS Sequences for Seq, Append, Len, Head, Tail; EXTENDS FiniteSets for Cardinality, IsFiniteSet
-- Declare ALL state variables in a VARIABLES line (every primed variable x' must appear in VARIABLES)
-- Use = (not ==) inside Init and Next action conjuncts: /\\ x = value
-- Function construction: [x \\in S |-> expr] (NOT [x \\in S : expr])
-- Use \\in SUBSET S for set quantification (NOT \\E x \\subseteq S)
-- Do NOT use PlusCal syntax (:=, --algorithm, labels, while, goto)
-- TypeOK must be defined if referenced as INVARIANT
-- Spec == Init /\\ [][Next]_vars where vars == <<v1, v2, ...>>
-\
+5. Output only valid TLA+ code. No markdown fences, no explanation outside the spec.
+Reasoning: medium\
 """
 
 
@@ -95,9 +87,10 @@ def build_messages_spec_generation(record: DatasetRecord) -> list[dict] | None:
     if not nl:
         return None
     return [
-        {"role": "system",    "content": _DEVELOPER_PROMPT},
+        {"role": "developer", "content": _DEVELOPER_PROMPT},
         {"role": "user",      "content": f"Write a TLA+ specification for the following:\n\n{nl}"},
-        {"role": "assistant", "content": record.tla_content.strip()},
+        {"role": "assistant", "channel": "analysis",  "content": "I'll write a well-formed TLA+ specification with proper Init, Next, and invariants."},
+        {"role": "assistant", "channel": "final",     "content": record.tla_content.strip()},
     ]
 
 
@@ -114,9 +107,10 @@ def build_messages_spec_completion(record: DatasetRecord) -> list[dict] | None:
             break
     prefix = "\n".join(lines[:split_idx])
     return [
-        {"role": "system",    "content": _DEVELOPER_PROMPT},
+        {"role": "developer", "content": _DEVELOPER_PROMPT},
         {"role": "user",      "content": f"Complete this TLA+ specification:\n\n{prefix}"},
-        {"role": "assistant", "content": record.tla_content.strip()},
+        {"role": "assistant", "channel": "analysis",  "content": "I'll complete the specification with proper Next, Spec, and invariant definitions."},
+        {"role": "assistant", "channel": "final",     "content": record.tla_content.strip()},
     ]
 
 
@@ -136,9 +130,10 @@ def build_messages_invariant_gen(record: DatasetRecord) -> list[dict] | None:
     if gap:
         user_body = f"{gap}\n\n---\n\n{user_body}"
     return [
-        {"role": "system",    "content": _DEVELOPER_PROMPT},
+        {"role": "developer", "content": _DEVELOPER_PROMPT},
         {"role": "user",      "content": user_body},
-        {"role": "assistant", "content": "\n\n".join(invs)},
+        {"role": "assistant", "channel": "analysis",  "content": "I'll identify the key safety properties and express them as TLA+ invariant operators."},
+        {"role": "assistant", "channel": "final",     "content": "\n\n".join(invs)},
     ]
 
 
@@ -156,9 +151,13 @@ def build_messages_bug_fix(record: DatasetRecord, error_msg: str, buggy_tla: str
     )
     user_content = f"{gap}\n\n---\n\n{core}" if gap else core
     return [
-        {"role": "system",    "content": _DEVELOPER_PROMPT},
-        {"role": "user",      "content": user_content},
-        {"role": "assistant", "content": record.tla_content.strip()},
+        {"role": "developer", "content": _DEVELOPER_PROMPT},
+        {
+            "role": "user",
+            "content": user_content,
+        },
+        {"role": "assistant", "channel": "analysis",  "content": "I'll analyse the TLC error and produce a corrected specification."},
+        {"role": "assistant", "channel": "final",     "content": record.tla_content.strip()},
     ]
 
 
@@ -253,16 +252,8 @@ def _sany_filter(records: list[DatasetRecord]) -> list[DatasetRecord]:
 
 def _extract_final_spec_from_messages(ex: dict) -> str:
     msgs = ex.get("messages", [])
-    # Support both old harmony format (channel="final") and new ChatML format
-    final = next(
-        (m["content"] for m in msgs if m.get("role") == "assistant" and m.get("channel") == "final"),
-        None,
-    )
-    if final is not None:
-        return final
-    # New format: last assistant message is the spec
     return next(
-        (m["content"] for m in reversed(msgs) if m.get("role") == "assistant"),
+        (m["content"] for m in msgs if m.get("role") == "assistant" and m.get("channel") == "final"),
         "",
     )
 

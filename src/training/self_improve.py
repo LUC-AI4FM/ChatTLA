@@ -587,22 +587,23 @@ def validate_with_sany(spec: str) -> tuple[bool, str]:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Training example builders (ChatML format for DeepSeek R1)
+# Training example builders (harmony format)
 # ─────────────────────────────────────────────────────────────────────────────
 
 def build_spec_gen_example(prompt: str, spec: str) -> dict:
-    """Build a spec_generation training example in ChatML format."""
+    """Build a spec_generation training example in harmony format."""
     return {"messages": [
-        {"role": "system",    "content": _DEVELOPER_PROMPT},
+        {"role": "developer", "content": _DEVELOPER_PROMPT},
         {"role": "user",      "content": f"Write a TLA+ specification for the following:\n\n{prompt}"},
-        {"role": "assistant", "content": spec.strip()},
+        {"role": "assistant", "channel": "analysis",  "content": "I'll write a well-formed TLA+ specification with proper Init, Next, and invariants."},
+        {"role": "assistant", "channel": "final",     "content": spec.strip()},
     ]}
 
 
 def build_bug_fix_example(prompt: str, buggy_spec: str, sany_errors: str, fixed_spec: str) -> dict:
-    """Build a bug_fix training example in ChatML format."""
+    """Build a bug_fix training example in harmony format."""
     return {"messages": [
-        {"role": "system", "content": _DEVELOPER_PROMPT},
+        {"role": "developer", "content": _DEVELOPER_PROMPT},
         {
             "role": "user",
             "content": (
@@ -612,7 +613,8 @@ def build_bug_fix_example(prompt: str, buggy_spec: str, sany_errors: str, fixed_
                 f"Fix the spec."
             ),
         },
-        {"role": "assistant", "content": fixed_spec.strip()},
+        {"role": "assistant", "channel": "analysis",  "content": "I'll analyse the SANY errors and produce a corrected specification."},
+        {"role": "assistant", "channel": "final",     "content": fixed_spec.strip()},
     ]}
 
 
@@ -672,7 +674,7 @@ def load_prompts(limit: Optional[int] = None) -> list[dict]:
 # ─────────────────────────────────────────────────────────────────────────────
 
 def run_iteration(
-    model: str = "deepseek-r1:8b",
+    model: str = "chattla:20b",
     num_prompts: Optional[int] = None,
     temperature: float = 0.4,
 ) -> IterationStats:
@@ -915,7 +917,7 @@ def main():
                         help="Limit number of prompts per iteration (default: all)")
     parser.add_argument("--retrain-threshold", type=int, default=15,
                         help="Retrain after accumulating this many new examples (default: 15)")
-    parser.add_argument("--model", default="deepseek-r1:8b",
+    parser.add_argument("--model", default="chattla:20b",
                         help="Ollama model tag to use for generation")
     parser.add_argument("--temperature", type=float, default=0.4,
                         help="Sampling temperature for generation")

@@ -66,7 +66,7 @@ def build_example(row: dict, tla_text: str) -> dict:
         "_source": "tla_descriptions.json",
         "_module_name": row.get("module_name"),
         "messages": [
-            {"role": "system", "content": _DEVELOPER},
+            {"role": "developer", "content": _DEVELOPER},
             {"role": "user", "content": user},
             {"role": "assistant", "content": tla_text.strip()},
         ],
