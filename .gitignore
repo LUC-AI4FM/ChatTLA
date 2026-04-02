@@ -21,6 +21,7 @@ env/
 
 # Training artefacts (large — don't commit to repo)
 outputs/checkpoints/
+outputs/checkpoints_8b_archive/
 outputs/merged_model/
 outputs/gguf/
 outputs/llama.cpp/
