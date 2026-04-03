@@ -211,6 +211,8 @@ def build_training_args(
     max_length: int = 4096,
     per_device_batch_size: int | None = None,
     gradient_accumulation_steps_override: int | None = None,
+    max_steps: int | None = None,
+    learning_rate: float | None = None,
 ) -> SFTConfig:
     """Return an SFTConfig tuned for smoke or full runs.
 
@@ -237,7 +239,7 @@ def build_training_args(
         per_device_train_batch_size=batch_size,
         gradient_accumulation_steps=accum_steps,
         # --- Optimizer / schedule ------------------------------------------
-        learning_rate=1e-4,
+        learning_rate=learning_rate or 1e-4,
         lr_scheduler_type="cosine",
         warmup_steps=5 if smoke_test else 5,
         # --- Precision & memory --------------------------------------------
@@ -250,7 +252,7 @@ def build_training_args(
         # Scale epochs based on dataset size to avoid overfitting.
         # When called from self_improve.py, num_epochs is set dynamically.
         num_train_epochs=1 if smoke_test else (num_epochs or 10),
-        max_steps=5 if smoke_test else -1,
+        max_steps=5 if smoke_test else (max_steps if max_steps is not None else -1),
         # Eval is DISABLED for full runs — the model is split across 2 GPUs
         # via pipeline parallelism and eval mode (no gradient checkpointing)
         # keeps all layer activations in VRAM, causing OOM on the 200K-vocab
@@ -262,7 +264,7 @@ def build_training_args(
         save_strategy="steps",
         save_steps=5 if smoke_test else 20,
         save_total_limit=5,
-        logging_steps=1 if smoke_test else 5,
+        logging_steps=1 if (smoke_test or max_steps) else 5,
         # --- MLflow --------------------------------------------------------
         report_to="mlflow",
         run_name="chattla-gpt-oss-20b",
@@ -285,6 +287,8 @@ def main(
     run_dpo_after: bool = False,
     per_device_batch_size: int | None = None,
     gradient_accumulation_steps: int | None = None,
+    max_steps: int | None = None,
+    learning_rate: float | None = None,
 ) -> None:
     mlflow.set_experiment("ChatTLA-gpt-oss-20b")
 
@@ -489,6 +493,8 @@ def main(
         max_length=max_length,
         per_device_batch_size=per_device_batch_size,
         gradient_accumulation_steps_override=gradient_accumulation_steps,
+        max_steps=max_steps,
+        learning_rate=learning_rate,
     )
 
     trainer = SFTTrainer(
@@ -556,6 +562,10 @@ if __name__ == "__main__":
                         help="Override per_device_train_batch_size (default: 1; use 1 for tight memory)")
     parser.add_argument("--gradient-accumulation-steps", type=int, default=None,
                         help="Override gradient_accumulation_steps (default: 2 smoke / 8 full; lower for tight memory)")
+    parser.add_argument("--max-steps", type=int, default=None,
+                        help="Override max training steps (default: -1 = train full epochs)")
+    parser.add_argument("--lr", type=float, default=None,
+                        help="Override learning rate (default: 1e-4)")
     parser.add_argument("--dpo-after", action="store_true",
                         help="After SFT, run DPO on gold pairs in data/processed/rl/dpo_pairs.jsonl (if >=2 rows)")
     args = parser.parse_args()
@@ -577,4 +587,6 @@ if __name__ == "__main__":
         run_dpo_after=args.dpo_after,
         per_device_batch_size=args.per_device_batch_size,
         gradient_accumulation_steps=args.gradient_accumulation_steps,
+        max_steps=args.max_steps,
+        learning_rate=args.lr,
     )
