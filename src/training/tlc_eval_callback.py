@@ -107,7 +107,11 @@ class TLCEvalCallback(TrainerCallback):
                     continue
 
                 n_total += 1
-                result = self._run_tlc(generated)
+                try:
+                    result = self._run_tlc(generated)
+                except Exception as exc:
+                    print(f"[TLCEvalCallback] TLC error: {exc}")
+                    result = "bronze"
 
                 if result in ("silver", "gold"):
                     n_sany_pass += 1
@@ -166,9 +170,21 @@ class TLCEvalCallback(TrainerCallback):
 
     def _generate(self, model, user_content: str) -> str:
         """Generate a TLA+ spec from a user prompt."""
-        # Build a minimal input — just the user turn, let model complete
-        # We bypass full harmony tokenization here to keep the callback simple.
-        prompt = f"Write a TLA+ specification for:\n{user_content}\n\n"
+        # Use the same harmony chat template that SFT training uses, so eval
+        # measures performance on the actual input distribution (not a bare prompt).
+        from src.training.dataset_builder import _DEVELOPER_PROMPT
+
+        messages = [
+            {"role": "developer", "content": _DEVELOPER_PROMPT},
+            {"role": "user", "content": user_content},
+        ]
+        try:
+            prompt = self.tokenizer.apply_chat_template(
+                messages, tokenize=False, add_generation_prompt=True,
+            )
+        except Exception:
+            # Fallback if chat template not available on this tokenizer
+            prompt = f"Write a TLA+ specification for:\n{user_content}\n\n"
         inputs = self.tokenizer(prompt, return_tensors="pt").to(model.device)
         try:
             outputs = model.generate(

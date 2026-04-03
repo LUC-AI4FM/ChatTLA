@@ -93,6 +93,7 @@ def merge(
         MODEL_ID,
         torch_dtype=torch.bfloat16,
         device_map=device,
+        trust_remote_code=True,    # gpt-oss requires custom modeling code
     )
     tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
 
@@ -104,12 +105,17 @@ def merge(
 
     output_path.mkdir(parents=True, exist_ok=True)
     print(f"[merge_lora] Saving merged model → {output_path}")
-    # transformers.save_pretrained sometimes fails converting certain weights
-    # (see NotImplementedError above).  Work around by writing the state_dict
-    # directly and saving the config/tokenizer ourselves.
-    state_dict = model.state_dict()
-    torch.save(state_dict, output_path / "pytorch_model.bin")
-    model.config.save_pretrained(output_path)
+    # Use save_pretrained to write proper safetensors + index files that
+    # llama.cpp's convert_hf_to_gguf.py expects.  Fall back to torch.save
+    # only if save_pretrained fails (e.g. unsupported weight dtypes).
+    try:
+        model.save_pretrained(output_path, safe_serialization=True)
+        print("[merge_lora] Saved via save_pretrained (safetensors)")
+    except Exception as exc:
+        print(f"[merge_lora] save_pretrained failed ({exc}), falling back to torch.save")
+        state_dict = model.state_dict()
+        torch.save(state_dict, output_path / "pytorch_model.bin")
+        model.config.save_pretrained(output_path)
     tokenizer.save_pretrained(output_path)
 
     print(f"[merge_lora] Done. Merged model saved to {output_path}")

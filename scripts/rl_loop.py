@@ -337,19 +337,39 @@ def load_gold_prompt_ids_from_benchmarks() -> set[str]:
     return gold_ids
 
 
+def _atomic_write_json(path: Path, data: object) -> None:
+    """Write JSON atomically: write to temp file, then rename.
+
+    Prevents corruption if the process is killed mid-write.
+    """
+    import tempfile
+    tmp_fd, tmp_path = tempfile.mkstemp(
+        dir=path.parent, suffix=".tmp", prefix=path.stem + "_",
+    )
+    try:
+        with os.fdopen(tmp_fd, "w", encoding="utf-8") as f:
+            json.dump(data, f)
+        os.replace(tmp_path, path)          # atomic on POSIX
+    except BaseException:
+        try:
+            os.unlink(tmp_path)
+        except OSError:
+            pass
+        raise
+
+
 def save_accumulated_new(accumulated_new: int, gold_prompt_ids: set[str] | None = None) -> None:
     """Persist accumulated_new and gold_prompt_ids so they survive restarts."""
     _RL_DATA_DIR.mkdir(parents=True, exist_ok=True)
-    
+
     # Load existing gold_prompt_ids if not provided
     if gold_prompt_ids is None:
         gold_prompt_ids = load_gold_prompt_ids()
-    
-    with open(_RL_STATE_FILE, "w") as f:
-        json.dump({
-            "accumulated_new": accumulated_new,
-            "gold_prompt_ids": sorted(gold_prompt_ids),
-        }, f)
+
+    _atomic_write_json(_RL_STATE_FILE, {
+        "accumulated_new": accumulated_new,
+        "gold_prompt_ids": sorted(gold_prompt_ids),
+    })
 
 
 def add_gold_prompts(results: list, gold_prompt_ids: set[str]) -> set[str]:
@@ -1058,43 +1078,13 @@ def generate_and_validate(
 # ─────────────────────────────────────────────────────────────────────────────
 # Phase 2: Build training data from results
 # ─────────────────────────────────────────────────────────────────────────────
-_DEVELOPER_PROMPT = """\
-You are ChatTLA, an expert at writing verified TLA+ formal specifications.
-When asked to write a TLA+ spec, follow these rules exactly:
 
-1. Start the module with ---- MODULE <ModuleName> ----
-2. End with ====
-3. Include EXTENDS Integers, VARIABLES, Init, Next, Spec, and TypeOK operators.
-
-4. BOUNDED STATE SPACE (critical — TLC will fail without this):
-   - NEVER use Nat, Int, or SUBSET without a bound. TLC cannot enumerate them.
-   - Always declare numeric limits as CONSTANTS (e.g., CONSTANTS N, MAX).
-   - Use ranges like 0..MAX or 1..N everywhere a number appears.
-   - TypeOK must constrain EVERY variable to a finite set, e.g.:
-       TypeOK == /\\ x \in 0..MAX /\\ state \in {"idle", "busy"}
-
-5. NEXT MUST BE TOTAL — every state must have a successor:
-   - Every action in Next must either change something OR explicitly list
-     UNCHANGED <<var1, var2, ...>> for all unchanged variables.
-   - If no action applies from a state, TLC reports Deadlock. Prevent this by
-     ensuring the disjunction of all actions covers all reachable states, or
-     add a terminal "Done" action with UNCHANGED <<all vars>>.
-
-6. OVERFLOW PREVENTION:
-   - For variables that increment (counters, indices), guard with:
-       /\\ x < MAX  (precondition)  or  x' = x + 1 (bounded by TypeOK)
-   - Never let a variable grow without bound.
-
-7. TLC CONFIG BLOCK (after ====, on a new line):
-   \\* TLC configuration
-   SPECIFICATION Spec
-   INVARIANT TypeOK
-   CONSTANTS N = 3
-   (adjust constant values to keep state space under ~10^6 states)
-
-8. Output only valid TLA+ code. No markdown fences, no explanation outside the spec.
-Reasoning: medium\
-"""
+# Use the canonical developer prompt from dataset_builder — same prompt the
+# model is trained on.  The extended TLC-specific guidance (bounded state
+# space, NEXT totality, overflow prevention) is applied as a user-message
+# addendum during generation, not baked into the developer prompt, to avoid
+# train/inference distribution mismatch.
+from src.training.dataset_builder import _DEVELOPER_PROMPT
 
 
 def build_training_data(results: list[SpecResult]) -> tuple[list[dict], list[dict]]:
@@ -1151,22 +1141,9 @@ def build_training_data(results: list[SpecResult]) -> tuple[list[dict], list[dic
                 ],
             })
 
-            # Check for bug_fix potential: if model-corrected (multiple attempts)
-            # save the failure-to-success transition.
-            if len(group) > 1:
-                # Find a SANY failure that was fixed to a SANY pass
-                failed = next((r for r in group if not r.sany_pass), None)
-                if failed:
-                    sft_examples.append({
-                        "_tier": "bugfix",
-                        "_prompt_id": pid,
-                        "messages": [
-                            {"role": "developer", "content": _DEVELOPER_PROMPT},
-                            {"role": "user", "content": f"Fix the SANY errors in this spec:\n\n{failed.spec.strip()}"},
-                            {"role": "assistant", "channel": "analysis", "content": "Correcting TLA+ syntax errors and module structure."},
-                            {"role": "assistant", "channel": "final", "content": best.spec.strip()},
-                        ]
-                    })
+            # NOTE: Bugfix pairs where the "fix" target is silver (TLC-failing) were
+            # removed. Only gold specs should be used as correction targets — otherwise
+            # we teach the model that semantically broken specs are valid fixes.
 
         # DPO: Gold (chosen) vs worse — teaches model to prefer TLC-passing specs
         if best.tier == "gold" and len(group) > 1:
@@ -1188,19 +1165,10 @@ def build_training_data(results: list[SpecResult]) -> tuple[list[dict], list[dic
                     "rejected_tier": worst.tier,
                     "feedback": feedback,
                 })
-        elif best.tier == "silver" and not best.tlc_timeout:
-            # Cumulative curriculum: keep SANY-valid specs even when TLC fails (benchmark 30–50% regime).
-            # Exclude timeout silvers — they represent unbounded state spaces, not TLC-checkable specs.
-            sft_examples.append({
-                "_tier": "silver",
-                "_prompt_id": pid,
-                "messages": [
-                    {"role": "developer", "content": _DEVELOPER_PROMPT},
-                    {"role": "user", "content": f"Write a TLA+ specification for the following:\n\n{best.prompt_text}"},
-                    {"role": "assistant", "channel": "analysis", "content": "I'll write a well-formed TLA+ specification with proper Init, Next, and invariants."},
-                    {"role": "assistant", "channel": "final", "content": best.spec.strip()},
-                ],
-            })
+        # NOTE: Silver specs are ONLY added as SFT via the gated path above
+        # (structural_score > 0.85). An unconditional silver SFT path was removed
+        # here because it duplicated silver examples and trained on TLC-failing
+        # specs as if they were correct.
 
         # Error-conditioned training: for silver specs with TLC violations,
         # create bug_fix examples if we also have the gold version
@@ -1340,9 +1308,22 @@ def persist_training_data(sft_examples: list[dict], dpo_pairs: list[dict]) -> tu
                 existing[key] = pair
                 n_dpo += 1
 
-        with open(_DPO_JSONL, "w", encoding="utf-8") as f:
-            for p in existing.values():
-                f.write(json.dumps(p, ensure_ascii=False) + "\n")
+        # Atomic write: build content, write to temp, rename.
+        import tempfile
+        tmp_fd, tmp_path = tempfile.mkstemp(
+            dir=_DPO_JSONL.parent, suffix=".tmp", prefix="dpo_",
+        )
+        try:
+            with os.fdopen(tmp_fd, "w", encoding="utf-8") as f:
+                for p in existing.values():
+                    f.write(json.dumps(p, ensure_ascii=False) + "\n")
+            os.replace(tmp_path, _DPO_JSONL)
+        except BaseException:
+            try:
+                os.unlink(tmp_path)
+            except OSError:
+                pass
+            raise
 
     return n_sft, n_dpo
 
