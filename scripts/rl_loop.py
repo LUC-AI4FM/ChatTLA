@@ -93,13 +93,14 @@ _EVAL_JSONL      = _REPO_ROOT / "data" / "processed" / "eval.jsonl"
 # Config
 # ─────────────────────────────────────────────────────────────────────────────
 CYCLE_HOURS        = 0.0          # 0 = no sleep between cycles; >0 pads to target hours
-RETRAIN_THRESHOLD  = 25           # new gold examples before retrain (was 50; accelerated for better signal)
+RETRAIN_THRESHOLD  = 10           # retrain after 10 new examples (was 25; train more, generate less)
 NIGHTTIME_START    = 22           # 10 PM
 NIGHTTIME_END      = 6            # 6 AM
 GPU_VRAM_CAP_DAY   = 0.75         # 75% VRAM cap during daytime (leave 25%)
 GPU_VRAM_CAP_NIGHT = 0.90         # 90% VRAM cap at night
-MAX_PROMPTS_DAY    = 25           # fewer prompts during daytime
-MAX_PROMPTS_NIGHT  = 40           # full speed at night
+MAX_PROMPTS_DAY    = 10           # fewer prompts during daytime (was 25; spend more time training)
+MAX_PROMPTS_NIGHT  = 15           # lighter at night too (was 40; quality over quantity)
+SFT_EPOCHS         = 15           # training epochs per retrain (toy showed 20 epochs → 80% gold)
 BENCHMARK_EVERY_N  = 3            # run full benchmark every N cycles
 TEMPERATURE_BASE   = 0.3
 TEMPERATURE_RANGE  = (0.1, 0.6)   # diversity range for multi-attempt
@@ -1410,8 +1411,8 @@ def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT
             "Skipping retrain to avoid damaging the base model. Accumulate more data first."
         )
         return "skipped_min_train"
-    num_epochs = 1
-    log.info(f"[retrain] {n_train} training examples, {num_epochs} epochs")
+    num_epochs = SFT_EPOCHS
+    log.info(f"[retrain] {n_train} training examples, {num_epochs} epochs (SFT_EPOCHS={SFT_EPOCHS})")
 
     # Clean up GPU memory from previous phases (inference, benchmarks, etc.)
     # This is critical on shared machines where 35+ GiB may be in use
@@ -1488,6 +1489,7 @@ def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT
     train_cmd = [
         sys.executable, "-m", "src.training.train",
         "--epochs", str(num_epochs),
+        "--lr", "3e-4",                          # higher LR for faster convergence (toy validated)
         "--max-gpu-memory-mb", str(max_gpu_memory_mb),
         "--max-length", str(max_length),
         "--per-device-train-batch-size", "1",   # minimise activation memory on shared GPUs
@@ -2074,7 +2076,7 @@ def run_cycle(
 
 
 def main():
-    global RETRAIN_THRESHOLD, MIN_TRAIN_EXAMPLES
+    global RETRAIN_THRESHOLD, MIN_TRAIN_EXAMPLES, SFT_EPOCHS
 
     import argparse
 
@@ -2091,7 +2093,9 @@ def main():
     parser.add_argument("--retrain-threshold", type=int, default=RETRAIN_THRESHOLD,
                         help=f"SFT examples before retrain (default: {RETRAIN_THRESHOLD})")
     parser.add_argument("--min-train-examples", type=int, default=_default_min_train,
-                        help="Minimum merged train.jsonl rows before SFT (default: from env or 300)")
+                        help="Minimum merged train.jsonl rows before SFT (default: from env or 250)")
+    parser.add_argument("--sft-epochs", type=int, default=SFT_EPOCHS,
+                        help=f"Training epochs per retrain cycle (default: {SFT_EPOCHS})")
     parser.add_argument("--allow-daytime-retrain", action="store_true",
                         help="Retrain during daytime when threshold met (default: defer to night)")
     parser.add_argument("--model", default="chattla:20b")
@@ -2129,6 +2133,7 @@ def main():
 
     RETRAIN_THRESHOLD = args.retrain_threshold
     MIN_TRAIN_EXAMPLES = args.min_train_examples
+    SFT_EPOCHS = args.sft_epochs
 
     cycle_seconds = max(0.0, args.cycle_hours * 3600)
 
