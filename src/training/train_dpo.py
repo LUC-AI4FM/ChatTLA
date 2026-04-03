@@ -100,6 +100,8 @@ def run_after_sft(
         print(f"[train_dpo] SKIP: could not import TRL DPO ({e}). Upgrade trl/rich: pip install -U trl 'rich>=14'")
         return False
 
+    model.enable_input_require_grads()
+
     ds = _build_dpo_dataset(tokenizer, max_samples=8 if smoke_test else None)
     if ds is None:
         return False
@@ -110,19 +112,18 @@ def run_after_sft(
         output_dir=str(_CHECKPOINT_DIR),
         per_device_train_batch_size=1,
         gradient_accumulation_steps=4 if not smoke_test else 1,
-        learning_rate=1e-5,              # slightly higher for faster DPO convergence (was 5e-6)
+        learning_rate=5e-6,              # conservative LR to avoid DPO collapse
         lr_scheduler_type="cosine",
         warmup_ratio=0.1,
-        num_train_epochs=3,              # 3 DPO epochs (was 1; more passes for preference signal)
+        num_train_epochs=1,              # single DPO epoch — preference signal is strong enough
         max_steps=4 if smoke_test else -1,
         logging_steps=1,
         save_steps=50 if not smoke_test else 4,
         save_total_limit=2,
-        beta=0.1,                        # stronger preference signal (was 0.05)
+        beta=0.05,                       # gentle preference signal to avoid over-optimization
         max_length=min(max_length, 4096),
-        max_prompt_length=min(max_length // 2, 2048),
         bf16=True,
-        gradient_checkpointing=True,
+        gradient_checkpointing=False,
         report_to="none",
     )
     try:
@@ -186,6 +187,7 @@ def main() -> int:
         trust_remote_code=True,
     )
     model = PeftModel.from_pretrained(model, str(ckpt))
+    model.enable_input_require_grads()
     tokenizer = AutoTokenizer.from_pretrained("openai/gpt-oss-20b")
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token

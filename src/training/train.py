@@ -251,7 +251,9 @@ def build_training_args(
         # --- Logging & checkpointing ----------------------------------------
         # Scale epochs based on dataset size to avoid overfitting.
         # When called from self_improve.py, num_epochs is set dynamically.
-        num_train_epochs=1 if smoke_test else (num_epochs or 10),
+        # Default reduced from 10 to 5: with small datasets (200-300 examples),
+        # 10+ epochs causes severe memorization and SANY regression.
+        num_train_epochs=1 if smoke_test else (num_epochs or 5),
         max_steps=5 if smoke_test else (max_steps if max_steps is not None else -1),
         # Eval is DISABLED for full runs — the model is split across 2 GPUs
         # via pipeline parallelism and eval mode (no gradient checkpointing)

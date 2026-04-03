@@ -229,6 +229,7 @@ def augment(
     sany_validate: bool = False,
     dry_run: bool = False,
     seed: int = 42,
+    exclude_ids: set[str] | None = None,
 ) -> int:
     """
     Generate augmented training data from combined.jsonl.
@@ -237,18 +238,26 @@ def augment(
     ----------
     sany_validate : bool   If True, run SANY on generated variants and discard failures.
     dry_run       : bool   If True, count but don't write.
+    exclude_ids   : set    Record IDs to skip (e.g. eval-split records to prevent
+                           data leakage from augmented variants into training).
 
     Returns the total number of augmented examples generated.
     """
     rng = random.Random(seed)
+    exclude_ids = exclude_ids or set()
 
     records: list[DatasetRecord] = []
+    n_excluded = 0
     for line in combined_path.open(encoding="utf-8"):
         line = line.strip()
         if line:
-            records.append(DatasetRecord.from_dict(json.loads(line)))
+            rec = DatasetRecord.from_dict(json.loads(line))
+            if rec.id in exclude_ids:
+                n_excluded += 1
+                continue
+            records.append(rec)
 
-    print(f"[augment] Loaded {len(records)} base records")
+    print(f"[augment] Loaded {len(records)} base records (excluded {n_excluded} eval-split records)")
 
     all_examples: list[dict] = []
 

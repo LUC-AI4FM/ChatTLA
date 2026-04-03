@@ -40,27 +40,9 @@ from typing import Optional
 _OLLAMA_HOST   = os.getenv("OLLAMA_HOST",   "http://localhost:11434")
 _DEFAULT_MODEL = os.getenv("CHATTLA_MODEL", "chattla:20b")
 
-_DEVELOPER_PROMPT = """\
-You are ChatTLA, an expert at writing verified TLA+ formal specifications.
-Respond only with the TLA+ module, no commentary or explanation.
-1. Start the module with ---- MODULE <ModuleName> ----
-2. End with ====
-3. Include EXTENDS, VARIABLES, Init, Next, and Spec operators
-4. After the TLA+ module, append a TLC configuration block:
-   SPECIFICATION Spec
-   INVARIANT TypeOK   (if TypeOK is defined)
-
-Critical TLA+ syntax rules:
-- EXTENDS Integers for Int, +, -, *, \\div; EXTENDS Sequences for Seq, Append, Len, Head, Tail; EXTENDS FiniteSets for Cardinality, IsFiniteSet
-- Declare ALL state variables in a VARIABLES line (every primed variable x' must appear in VARIABLES)
-- Use = (not ==) inside Init and Next action conjuncts: /\\ x = value
-- Function construction: [x \\in S |-> expr] (NOT [x \\in S : expr])
-- Use \\in SUBSET S for set quantification (NOT \\E x \\subseteq S)
-- Do NOT use PlusCal syntax (:=, --algorithm, labels, while, goto)
-- TypeOK must be defined if referenced as INVARIANT
-- Spec == Init /\\ [][Next]_vars where vars == <<v1, v2, ...>>
-\
-"""
+# Import the canonical developer prompt from dataset_builder to ensure
+# inference sees the same prompt as training (no distribution shift).
+from src.training.dataset_builder import _DEVELOPER_PROMPT
 
 
 def _build_harmony_prompt(developer_content: str, user_content: str) -> str:
@@ -141,7 +123,7 @@ class ChatTLAClient:
                 "num_predict": 4096,
                 "top_k": 40,
                 "top_p": 0.9,
-                "stop": ["<|return|>", "<|end|>", "<|start|>", "\n===="],
+                "stop": ["<|return|>", "<|end|>", "<|start|>"],
             },
         )
         # Reconstruct: prompt seeded "---- MODULE", model continues from there
@@ -299,7 +281,7 @@ class ChatTLAClient:
                 "temperature": 0.05,
                 "repeat_penalty": 1.3,
                 "num_predict": 4096,
-                "stop": ["<|return|>", "<|end|>", "<|start|>", "\n===="],
+                "stop": ["<|return|>", "<|end|>", "<|start|>"],
             },
         )
         raw = "---- MODULE" + response["response"]
@@ -324,7 +306,7 @@ class ChatTLAClient:
                 "temperature": 0.05,
                 "repeat_penalty": 1.3,
                 "num_predict": 4096,
-                "stop": ["<|return|>", "<|end|>", "<|start|>", "\n===="],
+                "stop": ["<|return|>", "<|end|>", "<|start|>"],
             },
         )
         raw = "---- MODULE" + response["response"]

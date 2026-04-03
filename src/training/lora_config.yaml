@@ -29,7 +29,11 @@ lora_alpha: 16                 # scaling factor; effective scale = alpha/r = 2.0
 lora_dropout: 0.05             # reduced dropout: more data (121 examples) reduces overfitting risk
 bias: none
 
-# Target all standard linear layers (attention + FFN + MoE gate/expert projections)
+# Target all nn.Linear layers (attention q/k/v/o projections).
+# NOTE: gpt-oss-20b MoE expert weights are 3D packed tensors [32, 2880, D]
+# stored in a custom GptOssExperts module — standard LoRA cannot decompose
+# 3D tensors.  The router (GptOssTopKRouter) is also non-Linear.
+# Therefore only attention layers are LoRA-trainable on this architecture.
 target_modules: "all-linear"
 
 # --- Inference / merge settings -------------------------------------------

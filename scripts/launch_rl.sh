@@ -127,6 +127,7 @@ do_start() {
     tmux new-session -d -s "$SESSION_NAME" -c "$REPO_ROOT" bash -lc "
         cd \"$REPO_ROOT\" || exit 1
         export PATH=\"$REPO_ROOT/.venv/bin:\$PATH\"
+        export PYTHONNOUSERSITE=1
         export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
         set -a
         [[ -f .env ]] && source .env

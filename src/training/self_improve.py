@@ -68,19 +68,8 @@ _BENCHMARK_JSON  = _REPO_ROOT / "data" / "benchmarks" / "benchmark_suite.json"
 _TRAIN_JSONL     = _REPO_ROOT / "data" / "processed" / "train.jsonl"
 _EVAL_JSONL      = _REPO_ROOT / "data" / "processed" / "eval.jsonl"
 
-# Developer prompt matching dataset_builder.py format
-_DEVELOPER_PROMPT = """\
-You are ChatTLA, an expert at writing verified TLA+ formal specifications.
-When asked to write a TLA+ spec, follow these rules exactly:
-1. Start the module with ---- MODULE <ModuleName> ----
-2. End with ====
-3. Include EXTENDS, VARIABLES, Init, Next, and Spec operators
-4. After the TLA+ module, append a TLC configuration block:
-   SPECIFICATION Spec
-   INVARIANT TypeOK   (if TypeOK is defined)
-5. Output only valid TLA+ code. No markdown fences, no explanation outside the spec.
-Reasoning: medium\
-"""
+# Import the canonical developer prompt — single source of truth.
+from src.training.dataset_builder import _DEVELOPER_PROMPT
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -340,11 +329,28 @@ def fix_tla_syntax(spec: str, sany_errors: str = "") -> FixResult:
     # ── Fix 11: (merged into Fix 15 — unconditional alignment) ─────────── 
 
     # ── Fix 12: Remove trailing garbage after ==== ────────────────────────
-    m = re.search(r"(----\s*MODULE\b.*?====)", fixed, re.DOTALL)
+    # Preserve TLC config lines (SPECIFICATION, INVARIANT, CONSTANTS) that
+    # appear after ==== — these are essential for model checking and the
+    # developer prompt explicitly asks for them.
+    m = re.search(r"(----\s*MODULE\b.*?====)(.*)", fixed, re.DOTALL)
     if m:
-        fixed = m.group(1)
-        if fixed != result.fixed_spec:
-            result.fixes_applied.append("truncated after ====")
+        module_part = m.group(1)
+        after_module = m.group(2)
+        # Keep lines that look like TLC config, drop everything else
+        config_lines = []
+        for line in after_module.splitlines():
+            stripped = line.strip()
+            if not stripped or stripped.startswith("\\*"):
+                config_lines.append(line)
+            elif any(stripped.upper().startswith(kw) for kw in
+                     ("SPECIFICATION", "INVARIANT", "INVARIANTS",
+                      "PROPERTY", "PROPERTIES", "CONSTANTS", "CONSTANT",
+                      "CONSTRAINT", "SYMMETRY", "VIEW")):
+                config_lines.append(line)
+            # else: discard (garbage after module)
+        fixed = module_part + "\n".join(config_lines)
+        if fixed.rstrip() != result.fixed_spec.rstrip():
+            result.fixes_applied.append("cleaned after ==== (preserved TLC config)")
 
     # ── Fix 13: Fix empty-line-separated conjunctions ─────────────────────
     # Some models put blank lines between /\ conjuncts, which breaks SANY
