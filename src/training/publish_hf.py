@@ -183,8 +183,13 @@ def publish(
     # Modelfile: relative GGUF name for Hub users (same folder as Modelfile)
     from src.inference.convert_to_gguf import MODELFILE_TEMPLATE
 
+    import datetime as _dt
+
     rel_gguf = f"./chattla-20b-v{new_ver}-{quant}.gguf"
-    modelfile_body = MODELFILE_TEMPLATE.format(gguf_path=rel_gguf)
+    modelfile_body = MODELFILE_TEMPLATE.format(
+        gguf_path=rel_gguf,
+        current_date=_dt.date.today().isoformat(),
+    )
 
     print(f"[publish_hf] Repo={repo_id} version=v{new_ver} file={path_in_repo}")
 

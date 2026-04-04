@@ -119,11 +119,11 @@ def run_after_sft(
     cfg_kw = dict(
         output_dir=str(_DPO_CHECKPOINT_DIR),
         per_device_train_batch_size=1,
-        gradient_accumulation_steps=2 if not smoke_test else 1,
+        gradient_accumulation_steps=1,
         learning_rate=5e-6,
         lr_scheduler_type="constant",    # no decay — too few steps for cosine to be useful
         warmup_ratio=0.0,                # no warmup — can't waste steps with tiny dataset
-        num_train_epochs=3,              # 3 passes over ~17 samples ≈ 25 gradient updates
+        num_train_epochs=1,              # 1 pass over ~17 samples ≈ 9 gradient updates (prevents overfitting)
         max_steps=4 if smoke_test else -1,
         logging_steps=1,
         save_steps=50 if not smoke_test else 4,

@@ -23,8 +23,9 @@
 
 ## DPO / bugfix
 
-- DPO pairs (gold vs worse) live in `data/processed/rl/dpo_pairs.jsonl` when training supports them.
+- DPO pairs (gold vs worse) live in `data/processed/rl/dpo_pairs.jsonl`.
 - Bugfix rows teach recovery from **real TLC feedback** strings.
+- **v13 (2026-04-03)**: SFT checkpoint-155 + DPO checkpoint-17 (17 gold pairs, beta=0.1, lr=5e-6, 1 epoch). Results: **9/20 SANY (45%), 5/20 TLC (25%)** — up from 6/20 SANY (30%), 2/20 TLC (10%) in v11. DPO loss reached 0.6106 (below random ln(2)=0.693) with 100% reward accuracy and +0.1726 margins.
 
 ## Hugging Face Hub
 
