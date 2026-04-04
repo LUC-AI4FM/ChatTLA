@@ -284,3 +284,62 @@ NFO   [BM005] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
 2026-04-04 11:08:05 INFO [phase1] Stratified: anchors=2 hard=0 random=5
 2026-04-04 11:08:05 INFO [phase1] Generating and validating 7 specs...
 2026-04-04 11:08:05 INFO [phase1] Parallel generation: 4 workers for 7 prompts
+2026-04-04 11:09:25 INFO   [RL007] tier=gold sany=True tlc=True struct=0.78 attempts=3 (best of 3)
+2026-04-04 11:09:25 INFO   [SYN005] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-04-04 11:09:27 INFO   [RL008] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-04-04 11:09:35 INFO   [RL006] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-04-04 11:09:43 INFO   [RL013] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-04-04 11:09:49 INFO   [BM007] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-04-04 11:10:14 INFO   [RL016] tier=bronze sany=False tlc=False struct=0.44 attempts=1 (best of 1)
+2026-04-04 11:10:14 INFO [phase1] Results: gold=1 silver=2 bronze=6 sany=3/9 tlc=1/9
+2026-04-04 11:10:14 INFO [phase2] Building training data from results...
+2026-04-04 11:10:14 INFO [phase2] Built 2 SFT examples, 1 DPO pairs (from 9 results, 7 prompts)
+2026-04-04 11:10:14 INFO [phase2] Tracking 34 prompts with gold results (skip in future cycles)
+2026-04-04 11:10:14 INFO [phase2] Persisted 1 SFT examples, 1 DPO pairs. Accumulated: 168
+2026-04-04 11:10:14 INFO [phase3] Retrain threshold reached (daytime (--allow-daytime-retrain)) (168 >= 25)
+2026-04-04 11:10:14 INFO [retrain] Rebuilding training dataset...
+2026-04-04 11:10:21 INFO [retrain] Dataset rebuilt. [dataset_builder] eval =4  examples → /home/espencer2/ChatTLA/data/processed/eval.jsonl
+2026-04-04 11:10:21 WARNING [retrain] Only 234 training examples (need >= 250). Skipping retrain to avoid damaging the base model. Accumulate more data first.
+2026-04-04 11:10:21 WARNING [phase3] Retrain skipped or failed. Will retry next cycle.
+2026-04-04 11:10:21 INFO [benchmark] Full suite timeout 14400s (20 problems × 2 attempts; override with --full-benchmark-timeout)
+2026-04-04 11:10:21 INFO [benchmark] Running full benchmark suite (cycle 27, attempts=2)...
+2026-04-04 11:27:47 INFO [prompt_bank] Injected condensed descriptions for 13 benchmark prompt(s)
+2026-04-04 11:28:06 INFO [benchmark] Results: sany=65% (13/20) tlc=25% (5/20)
+2026-04-04 11:28:06 INFO [benchmark] Full suite: prioritize TLC rate for model comparison (SANY is the funnel).
+2026-04-04 11:28:06 INFO 
+────────────────────────────────────────────────────────────
+2026-04-04 11:28:06 INFO CYCLE 27 SUMMARY (20.0 min)
+2026-04-04 11:28:06 INFO   Specs: 9 | SANY: 3 | TLC: 1
+2026-04-04 11:28:06 INFO   Gold: 1 | Silver: 2 | Bronze: 6
+2026-04-04 11:28:06 INFO   New SFT: 1 | New DPO: 1
+2026-04-04 11:28:06 INFO   Retrained: False | Deployed: False
+2026-04-04 11:28:06 INFO   Benchmark (FULL): SANY=65% TLC=25%
+2026-04-04 11:28:06 INFO ────────────────────────────────────────────────────────────
+
+2026-04-04 11:28:06 INFO ============================================================
+2026-04-04 11:28:06 INFO CYCLE 28 | DAYTIME | difficulty_cap=3 | max_prompts=10
+2026-04-04 11:28:06 INFO Pacing: 3.0s between prompts
+2026-04-04 11:28:06 INFO ============================================================
+2026-04-04 11:28:06 INFO [phase1] Loading prompt bank...
+2026-04-04 11:28:06 INFO [prompt_bank] Injected condensed descriptions for 11 benchmark prompt(s)
+2026-04-04 11:28:06 INFO [phase1] Stratified: anchors=2 hard=0 random=5
+2026-04-04 11:28:06 INFO [phase1] Generating and validating 7 specs...
+2026-04-04 11:28:06 INFO [phase1] Parallel generation: 4 workers for 7 prompts
+2026-04-04 11:28:09 INFO   [RL005] tier=gold sany=True tlc=True struct=0.89 attempts=1 (best of 1)
+2026-04-04 11:29:06 INFO   [BM010] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-04-04 11:29:08 INFO   [SYN013] tier=silver sany=True tlc=False struct=0.78 attempts=3 (best of 3)
+2026-04-04 11:29:09 INFO   [SYN001] tier=silver sany=True tlc=False struct=0.78 attempts=3 (best of 3)
+2026-04-04 11:29:12 INFO   [RL013] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-04-04 11:29:19 INFO   [RL006] tier=bronze sany=False tlc=False struct=0.78 attempts=1 (best of 1)
+2026-04-04 11:29:30 INFO   [BM007] tier=bronze sany=False tlc=False struct=0.89 attempts=1 (best of 1)
+2026-04-04 11:29:30 INFO [phase1] Results: gold=1 silver=4 bronze=6 sany=5/11 tlc=1/11
+2026-04-04 11:29:30 INFO [phase2] Building training data from results...
+2026-04-04 11:29:30 INFO [phase2] Built 1 SFT examples, 0 DPO pairs (from 11 results, 7 prompts)
+2026-04-04 11:29:30 INFO [phase2] Tracking 35 prompts with gold results (skip in future cycles)
+2026-04-04 11:29:30 INFO [phase2] Persisted 1 SFT examples, 0 DPO pairs. Accumulated: 169
+2026-04-04 11:29:30 INFO [phase3] Retrain threshold reached (daytime (--allow-daytime-retrain)) (169 >= 25)
+2026-04-04 11:29:30 INFO [retrain] Rebuilding training dataset...
+2026-04-04 11:29:37 INFO [retrain] Dataset rebuilt. [dataset_builder] eval =4  examples → /home/espencer2/ChatTLA/data/processed/eval.jsonl
+2026-04-04 11:29:37 WARNING [retrain] Only 234 training examples (need >= 250). Skipping retrain to avoid damaging the base model. Accumulate more data first.
+2026-04-04 11:29:37 WARNING [phase3] Retrain skipped or failed. Will retry next cycle.
+2026-04-04 11:29:37 INFO [benchmark] Running 12-problem quick eval (cycle 28, attempts=2)...
