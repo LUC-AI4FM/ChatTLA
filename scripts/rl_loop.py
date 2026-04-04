@@ -1815,6 +1815,16 @@ def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT
         log.warning(f"[retrain] Could not clean GPU memory: {e}")
 
     # 2. Train — use both GPUs (20B model needs ~40GB + activations; single 48GB GPU OOMs)
+    # Unload Ollama model to free GPU 0 VRAM (chattla:20b uses ~22GB).
+    try:
+        import requests as _req
+        _req.post("http://localhost:11434/api/generate",
+                  json={"model": "chattla:20b", "keep_alive": 0}, timeout=10)
+        import time; time.sleep(3)
+        log.info("[retrain] Unloaded Ollama model to free GPU VRAM")
+    except Exception as e:
+        log.warning(f"[retrain] Could not unload Ollama model: {e}")
+
     env = os.environ.copy()
     env["CUDA_VISIBLE_DEVICES"] = "0,1"
     night = is_nighttime()
