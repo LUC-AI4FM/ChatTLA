@@ -260,3 +260,27 @@ NFO   [BM005] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
 2026-04-02 18:15:49 INFO [benchmark] Full suite timeout 14400s (20 problems × 2 attempts; override with --full-benchmark-timeout)
 2026-04-02 18:15:49 INFO [benchmark] Running full benchmark suite (cycle 27, attempts=2)...
 2026-04-02 18:23:00 INFO Received signal 15. Will shut down after current phase completes.
+2026-04-04 11:08:05 INFO ============================================================
+2026-04-04 11:08:05 INFO   ChatTLA Autonomous RL Loop
+2026-04-04 11:08:05 INFO   Inter-cycle pause: 0.0h (none)
+2026-04-04 11:08:05 INFO   Eval: full benchmark every 3 cycles (2 attempts); quick eval (12×2) otherwise
+2026-04-04 11:08:05 INFO   Retrain threshold: 25 | Min training size: 250
+2026-04-04 11:08:05 INFO   Phase 1 workers: auto (3 night / 2 day)
+2026-04-04 11:08:05 INFO   Daytime retrain: ENABLED (--allow-daytime-retrain)
+2026-04-04 11:08:05 INFO   Hugging Face publish: ENABLED → EricSpencer00/chattla-20b (quality-gated: TLC must match/exceed best)
+2026-04-04 11:08:05 INFO   Max cycles: infinite
+2026-04-04 11:08:05 INFO   PID: 861123
+2026-04-04 11:08:05 INFO ============================================================
+2026-04-04 11:08:05 INFO [startup] Loaded 11 gold prompts from benchmark results
+2026-04-04 11:08:05 INFO [startup] Total 34 gold prompts (including state cache)
+2026-04-04 11:08:05 INFO Resuming with accumulated_new=167 (from state)
+2026-04-04 11:08:05 INFO Resuming from cycle 27
+2026-04-04 11:08:05 INFO ============================================================
+2026-04-04 11:08:05 INFO CYCLE 27 | DAYTIME | difficulty_cap=3 | max_prompts=10
+2026-04-04 11:08:05 INFO Pacing: 3.0s between prompts
+2026-04-04 11:08:05 INFO ============================================================
+2026-04-04 11:08:05 INFO [phase1] Loading prompt bank...
+2026-04-04 11:08:05 INFO [prompt_bank] Injected condensed descriptions for 11 benchmark prompt(s)
+2026-04-04 11:08:05 INFO [phase1] Stratified: anchors=2 hard=0 random=5
+2026-04-04 11:08:05 INFO [phase1] Generating and validating 7 specs...
+2026-04-04 11:08:05 INFO [phase1] Parallel generation: 4 workers for 7 prompts
