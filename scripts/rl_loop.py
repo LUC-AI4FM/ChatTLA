@@ -105,6 +105,7 @@ BENCHMARK_EVERY_N  = 3            # run full benchmark every N cycles
 TEMPERATURE_BASE   = 0.3
 TEMPERATURE_RANGE  = (0.1, 0.6)   # diversity range for multi-attempt
 MAX_REPAIR_ROUNDS  = 1             # RLVR: verifier-guided repair attempts per silver spec
+MAX_SANY_REPAIR_ROUNDS = 2        # SANY: error-guided repair attempts for bronze specs
 DAY_PROMPT_COOLDOWN_S = 3.0       # pause between prompts during daytime
 NIGHT_PROMPT_COOLDOWN_S = 0.5     # lighter pause at night
 QUICK_EVAL_LIMIT = 12             # mini-eval every cycle (trend signal; full suite = ground truth)
@@ -163,9 +164,12 @@ class SpecResult:
     attempts: int = 1
     temperature: float = 0.3
     tlc_timeout: bool = False
-    # RLVR: set when this result was produced by verifier-guided repair
+    # RLVR/SANY repair: set when this result was produced by verifier-guided repair
     repair_from_spec: str = ""
     repair_from_violations: list[str] = field(default_factory=list)
+    repair_type: str = ""            # "sany" or "tlc" — which verifier drove the repair
+    error_class: str = ""            # classified error: syntax|invariant_violation|deadlock|unbounded_state|undefined_op|timeout|other
+    critique_applied: bool = False   # whether self-critique was applied before validation
 
 
 @dataclass
@@ -191,6 +195,21 @@ class CycleStats:
     benchmark_full_suite: bool = False
     benchmark_sany_rate: float = 0.0
     benchmark_tlc_rate: float = 0.0
+    # Error taxonomy — counts by category
+    errors_syntax: int = 0
+    errors_invariant_violation: int = 0
+    errors_deadlock: int = 0
+    errors_unbounded_state: int = 0
+    errors_undefined_op: int = 0
+    errors_timeout: int = 0
+    errors_other: int = 0
+    # Per-prompt regression tracking across retrains
+    prompt_regressions: int = 0
+    prompt_improvements: int = 0
+    # Repair stats
+    sany_repairs_attempted: int = 0
+    sany_repairs_succeeded: int = 0
+    critiques_applied: int = 0
     cycle_duration_s: float = 0.0
     error: str = ""
     full_traceback: str = ""
@@ -370,6 +389,100 @@ def save_accumulated_new(accumulated_new: int, gold_prompt_ids: set[str] | None 
         "accumulated_new": accumulated_new,
         "gold_prompt_ids": sorted(gold_prompt_ids),
     })
+
+
+# ── Per-prompt tier tracking (regression detection across retrains) ──────────
+_PROMPT_TIER_FILE = _RL_DATA_DIR / "prompt_tiers.json"
+
+
+def load_prompt_tiers() -> dict[str, str]:
+    """Load previous cycle's prompt→tier mapping for regression detection."""
+    if _PROMPT_TIER_FILE.exists():
+        try:
+            with open(_PROMPT_TIER_FILE) as f:
+                return json.load(f)
+        except (json.JSONDecodeError, OSError):
+            pass
+    return {}
+
+
+def save_prompt_tiers(tiers: dict[str, str]) -> None:
+    """Persist per-prompt tier mapping for next cycle."""
+    _RL_DATA_DIR.mkdir(parents=True, exist_ok=True)
+    _atomic_write_json(_PROMPT_TIER_FILE, tiers)
+
+
+def compute_prompt_deltas(
+    results: list["SpecResult"], previous_tiers: dict[str, str]
+) -> tuple[int, int, list[str]]:
+    """
+    Compare current per-prompt best tiers with previous cycle.
+
+    Returns (regressions, improvements, regression_details).
+    """
+    tier_rank = {"gold": 3, "silver": 2, "bronze": 1}
+    regressions = 0
+    improvements = 0
+    details: list[str] = []
+
+    # Get current best tier per prompt
+    current: dict[str, str] = {}
+    for r in results:
+        prev_best = current.get(r.prompt_id)
+        if prev_best is None or tier_rank.get(r.tier, 0) > tier_rank.get(prev_best, 0):
+            current[r.prompt_id] = r.tier
+
+    for pid, cur_tier in current.items():
+        prev_tier = previous_tiers.get(pid)
+        if prev_tier is None:
+            continue  # first time seeing this prompt
+        cur_rank = tier_rank.get(cur_tier, 0)
+        prev_rank = tier_rank.get(prev_tier, 0)
+        if cur_rank < prev_rank:
+            regressions += 1
+            details.append(f"{pid}: {prev_tier}→{cur_tier}")
+        elif cur_rank > prev_rank:
+            improvements += 1
+
+    return regressions, improvements, details
+
+
+# ── Gold spec cache (cross-cycle training pair mining) ───────────────────────
+_GOLD_SPEC_CACHE = _RL_DATA_DIR / "gold_spec_cache.jsonl"
+
+
+def load_gold_spec_cache() -> dict[str, str]:
+    """Load prompt_id → gold spec mapping from cache (for cross-cycle bugfix pairs)."""
+    cache: dict[str, str] = {}
+    if _GOLD_SPEC_CACHE.exists():
+        try:
+            with open(_GOLD_SPEC_CACHE, encoding="utf-8") as f:
+                for line in f:
+                    if line.strip():
+                        try:
+                            entry = json.loads(line)
+                            cache[entry["prompt_id"]] = entry["spec"]
+                        except (json.JSONDecodeError, KeyError):
+                            pass
+        except OSError:
+            pass
+    return cache
+
+
+def update_gold_spec_cache(results: list["SpecResult"]) -> None:
+    """Append new gold specs to the cache file. One entry per prompt_id (latest wins)."""
+    existing = load_gold_spec_cache()
+    new_golds = {}
+    for r in results:
+        if r.tier == "gold" and r.prompt_id not in existing:
+            new_golds[r.prompt_id] = r.spec
+
+    if new_golds:
+        _GOLD_SPEC_CACHE.parent.mkdir(parents=True, exist_ok=True)
+        with open(_GOLD_SPEC_CACHE, "a", encoding="utf-8") as f:
+            for pid, spec in new_golds.items():
+                f.write(json.dumps({"prompt_id": pid, "spec": spec}, ensure_ascii=False) + "\n")
+        log.info(f"[gold_cache] Added {len(new_golds)} new gold specs to cross-cycle cache")
 
 
 def add_gold_prompts(results: list, gold_prompt_ids: set[str]) -> set[str]:
@@ -709,6 +822,37 @@ def extract_tlc_feedback(spec_result: SpecResult) -> str:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Error taxonomy — classify failures for targeted training
+# ─────────────────────────────────────────────────────────────────────────────
+def classify_error(spec_result: SpecResult) -> str:
+    """
+    Classify a non-gold SpecResult into an error category.
+
+    Categories: syntax, invariant_violation, deadlock, unbounded_state,
+    undefined_op, timeout, other.  Used for tracking failure distributions
+    and targeting training data generation at the weakest failure mode.
+    """
+    if not spec_result.sany_pass:
+        return "syntax"
+    if spec_result.tlc_timeout:
+        return "timeout"
+
+    raw = (spec_result.tlc_raw_output or "").lower()
+    violations = " ".join(spec_result.tlc_violations).lower()
+    combined = raw + " " + violations
+
+    if "deadlock" in combined:
+        return "deadlock"
+    if "invariant" in combined and "violated" in combined:
+        return "invariant_violation"
+    if "not enumerable" in combined or "cannot enumerate" in combined or "overflow" in combined:
+        return "unbounded_state"
+    if "undefined" in combined or "unknown operator" in combined:
+        return "undefined_op"
+    return "other"
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # RLVR — Verifier-guided repair
 # ─────────────────────────────────────────────────────────────────────────────
 _REPAIR_PROMPT_TEMPLATE = """\
@@ -833,6 +977,7 @@ def _attempt_tlc_repair(
             tlc_timeout=rep_timeout,
             repair_from_spec=current_broken,
             repair_from_violations=current_violations,
+            repair_type="tlc",
         )
         repair_results.append(result)
 
@@ -849,6 +994,179 @@ def _attempt_tlc_repair(
             current_raw = rep_raw
 
     return repair_results
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# SANY repair — error-guided repair for bronze (syntax-failing) specs
+# ─────────────────────────────────────────────────────────────────────────────
+_SANY_REPAIR_PROMPT_TEMPLATE = """\
+This TLA+ specification has SANY parse errors (it does not parse):
+
+--- SANY ERRORS ---
+{sany_errors}
+--- END ERRORS ---
+
+{hints}Broken spec:
+{broken_spec}
+
+Fix ALL parse errors. Common causes:
+1. PlusCal syntax mixed in — use only pure TLA+ (Init ==, Next ==, primed vars)
+2. CONSTANT declarations with values — use 'CONSTANT N' then define 'N == 5' separately
+3. Missing ==== closing delimiter
+4. Double prime (x'') instead of single prime (x')
+5. vars defined as set {{...}} instead of tuple <<...>>
+6. UNCHANGED with bare variable instead of tuple <<var>>
+
+Output ONLY the corrected TLA+ spec. No explanation.\
+"""
+
+
+def _attempt_sany_repair(
+    client,
+    p: dict,
+    broken_spec: str,
+    sany_errors: list[str],
+    sany_raw: str,
+    module_name: str,
+    max_rounds: int = MAX_SANY_REPAIR_ROUNDS,
+) -> list["SpecResult"]:
+    """
+    SANY repair core: feed SANY parse errors back to the model and attempt repair.
+
+    Mirror of _attempt_tlc_repair but for syntax errors (bronze specs).
+    Each successful repair (SANY pass) that reaches gold becomes strong training signal.
+    Returns a list of SpecResult objects produced by repair rounds.
+    """
+    from src.inference.benchmark import score_structural
+    from src.validators.sany_validator import validate_string as sany_validate
+    from src.validators.tlc_validator import validate_string as tlc_validate
+    from src.training.self_improve import fix_tla_syntax
+    from src.inference.ollama_client import _diagnose_sany_errors
+
+    pid = p["id"]
+    prompt_text = p["prompt"]
+    module_hint = p.get("module_hint", "Spec")
+    repair_results: list[SpecResult] = []
+
+    current_broken = broken_spec
+    current_errors = sany_errors
+    current_raw = sany_raw
+
+    for round_i in range(max_rounds):
+        if _SHUTDOWN:
+            break
+
+        # Build error feedback with targeted hints
+        error_str = "\n".join(current_errors[:8]) if current_errors else current_raw[-500:]
+        hints = _diagnose_sany_errors(current_broken, error_str)
+        hints_block = f"Known issues to fix:\n{hints}\n" if hints else ""
+
+        repair_prompt = _SANY_REPAIR_PROMPT_TEMPLATE.format(
+            sany_errors=error_str[:800],
+            hints=hints_block,
+            broken_spec=current_broken[:2500],
+        )
+
+        try:
+            repaired = client.generate_spec(repair_prompt, module_name=module_hint, temperature=0.15)
+        except Exception as e:
+            log.warning(f"[{pid}] SANY repair round {round_i + 1} failed: {e}")
+            break
+
+        m = re.search(r"----\s*MODULE\s+(\w+)", repaired)
+        rep_module = m.group(1) if m else module_name
+
+        # Apply deterministic fixes between rounds
+        fix_result = fix_tla_syntax(repaired)
+        if fix_result.fixes_applied:
+            repaired = fix_result.fixed_spec
+
+        sany_result = sany_validate(repaired, module_name=rep_module)
+        if not sany_result.valid:
+            log.debug(f"[{pid}] SANY repair round {round_i + 1}: still failing — retrying")
+            current_broken = repaired
+            current_errors = sany_result.errors
+            current_raw = sany_result.raw_output
+            continue  # keep trying (unlike TLC repair, SANY errors are more fixable)
+
+        # SANY passes — run TLC
+        tlc_result = tlc_validate(repaired, module_name=rep_module)
+        tier = tlc_result.tier
+        tlc_ok = (tier == "gold")
+        rep_violations = list(tlc_result.tlc_violations)
+        rep_raw = tlc_result.raw_output
+        rep_timeout = "timed out" in rep_raw.lower()
+        if rep_timeout and "TLC_TIMEOUT" not in rep_violations:
+            rep_violations.append("TLC_TIMEOUT: state space too large — add CONSTANTS bounds")
+
+        struct_score = score_structural(repaired, [])
+
+        result = SpecResult(
+            prompt_id=pid,
+            prompt_text=prompt_text,
+            spec=repaired,
+            tier=tier,
+            sany_pass=True,
+            tlc_pass=tlc_ok,
+            tlc_violations=rep_violations,
+            tlc_raw_output=rep_raw,
+            fixes_applied=fix_result.fixes_applied or [],
+            structural_score=struct_score,
+            attempts=round_i + 1,
+            temperature=0.15,
+            tlc_timeout=rep_timeout,
+            repair_from_spec=broken_spec,
+            repair_from_violations=sany_errors[:6],
+            repair_type="sany",
+        )
+        repair_results.append(result)
+
+        if tlc_ok:
+            log.info(f"  [{pid}] SANY repair round {round_i + 1}: GOLD — syntax fix → gold")
+            break
+        else:
+            log.info(f"  [{pid}] SANY repair round {round_i + 1}: {tier} — SANY fixed, TLC {tier}")
+            break  # SANY fixed; further repair is TLC territory (handled by main loop)
+
+    return repair_results
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Self-critique — model reviews its own spec before validation
+# ─────────────────────────────────────────────────────────────────────────────
+_CRITIQUE_PROMPT_TEMPLATE = """\
+Review this TLA+ specification for correctness BEFORE we run the model checker.
+Check for these common issues:
+1. Unbounded sets (\\IN Nat or \\IN Int instead of bounded ranges like 0..N)
+2. Missing UNCHANGED clauses (every action must specify unchanged variables)
+3. Deadlock potential (can the system get stuck with no valid next state?)
+4. Undefined operators or constants not declared
+5. Non-finite initial states (Init must assign concrete finite values)
+
+Spec:
+{spec}
+
+If you find issues, output the CORRECTED spec. If the spec looks correct, output it unchanged.
+Output ONLY the TLA+ spec, no explanation.\
+"""
+
+
+def _critique_spec(client, spec: str, module_hint: str) -> tuple[str, bool]:
+    """
+    Self-critique: ask the model to review its own spec before validation.
+
+    Returns (possibly_improved_spec, was_changed).
+    """
+    prompt = _CRITIQUE_PROMPT_TEMPLATE.format(spec=spec[:3000])
+    try:
+        revised = client.generate_spec(prompt, module_name=module_hint, temperature=0.1)
+        # Sanity check: revised should still be a valid TLA+ module shape
+        if "MODULE" in revised and len(revised) > 50:
+            changed = revised.strip() != spec.strip()
+            return revised, changed
+    except Exception as e:
+        log.debug(f"[critique] Self-critique failed: {e}")
+    return spec, False  # fallback to original
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -917,6 +1235,20 @@ def _generate_for_prompt(
         if fix_result.fixes_applied:
             spec = fix_result.fixed_spec
 
+        # ── Self-critique: model reviews its own spec (first attempt only) ──
+        critique_changed = False
+        if attempt == 0:
+            spec, critique_changed = _critique_spec(client, spec, module_hint)
+            if critique_changed:
+                # Re-extract module name and re-apply syntax fixes after critique
+                m = re.search(r"----\s*MODULE\s+(\w+)", spec)
+                module_name = m.group(1) if m else module_hint
+                fix_result2 = fix_tla_syntax(spec)
+                if fix_result2.fixes_applied:
+                    spec = fix_result2.fixed_spec
+                    fix_result = fix_result2
+                log.debug(f"[{pid}] Self-critique revised the spec")
+
         sany_result = sany_validate(spec, module_name=module_name)
         sany_ok = sany_result.valid
 
@@ -953,7 +1285,11 @@ def _generate_for_prompt(
             attempts=attempt + 1,
             temperature=temp,
             tlc_timeout=tlc_timeout,
+            critique_applied=critique_changed,
         )
+        # Classify error for taxonomy tracking
+        if tier != "gold":
+            result.error_class = classify_error(result)
         attempt_results.append(result)
 
         if tier in ("silver", "bronze") and (tlc_violations or tlc_raw):
@@ -976,36 +1312,28 @@ def _generate_for_prompt(
             if any(r.tier == "gold" for r in repair_results):
                 break
 
-        if not sany_ok and attempt < max_attempts - 1:
-            try:
-                corrected_spec, _corrected_tier = client.validate_and_generate(
-                    prompt_text, max_retries=2
+        # ── SANY repair: error-guided repair for bronze specs ──────────
+        # Feed SANY parse errors back to the model with targeted hints.
+        # Creates (broken_spec + sany_errors → fixed_spec) training pairs.
+        if not sany_ok:
+            sany_repair_results = _attempt_sany_repair(
+                client, p, spec,
+                sany_result.errors, sany_result.raw_output, module_name,
+                max_rounds=MAX_SANY_REPAIR_ROUNDS,
+            )
+            attempt_results.extend(sany_repair_results)
+            if any(r.tier == "gold" for r in sany_repair_results):
+                break
+            # If SANY repair produced a silver, try TLC repair on it
+            silver_repairs = [r for r in sany_repair_results if r.tier == "silver" and r.tlc_violations and not r.tlc_timeout]
+            for sr in silver_repairs[:1]:
+                tlc_repair_results = _attempt_tlc_repair(
+                    client, p, sr.spec, sr.tlc_violations, sr.tlc_raw_output, module_name,
+                    max_rounds=MAX_REPAIR_ROUNDS,
                 )
-                c_sany = sany_validate(corrected_spec, module_name=module_name)
-                if c_sany.valid:
-                    c_m = re.search(r"----\s*MODULE\s+(\w+)", corrected_spec)
-                    c_mod = c_m.group(1) if c_m else module_name
-                    c_tlc = tlc_validate(corrected_spec, module_name=c_mod)
-                    corrected_result = SpecResult(
-                        prompt_id=pid,
-                        prompt_text=prompt_text,
-                        spec=corrected_spec,
-                        tier=c_tlc.tier,
-                        sany_pass=True,
-                        tlc_pass=(c_tlc.tier == "gold"),
-                        tlc_violations=c_tlc.tlc_violations,
-                        tlc_raw_output=c_tlc.raw_output,
-                        fixes_applied=[],
-                        structural_score=score_structural(corrected_spec, []),
-                        attempts=attempt + 1,
-                        temperature=temp,
-                    )
-                    attempt_results.append(corrected_result)
-                    if c_tlc.tier == "gold":
-                        break
-            except Exception:
-                pass
-            break
+                attempt_results.extend(tlc_repair_results)
+                if any(r.tier == "gold" for r in tlc_repair_results):
+                    break
 
     if attempt_results:
         tier_rank = {"gold": 3, "silver": 2, "bronze": 1}
@@ -1194,11 +1522,11 @@ def build_training_data(results: list[SpecResult]) -> tuple[list[dict], list[dic
                         })
                     break  # only one bug_fix per prompt
 
-        # ── RLVR training pairs ───────────────────────────────────────────
+        # ── Repair training pairs (TLC + SANY) ────────────────────────────
         # For specs produced by verifier-guided repair, create two signals:
-        # 1. SFT: (broken_spec + tlc_error → fixed_spec) — teaches the model
+        # 1. SFT: (broken_spec + error → fixed_spec) — teaches the model
         #    how to respond to verifier feedback, not just what good specs look like.
-        # 2. DPO: prefer the repaired gold over the original broken silver —
+        # 2. DPO: prefer the repaired gold over the original broken —
         #    teaches preference in the repair context.
         for r in group:
             if not r.repair_from_spec or not r.repair_from_violations:
@@ -1207,38 +1535,116 @@ def build_training_data(results: list[SpecResult]) -> tuple[list[dict], list[dic
             repair_feedback = "\n".join(
                 v for v in r.repair_from_violations[:6] if "TLC_TIMEOUT" not in v
             )
+            is_sany_repair = (r.repair_type == "sany")
 
             if r.tier == "gold":
-                # Strongest signal: repair succeeded — teach the exact fix
-                sft_examples.append({
-                    "_tier": "rlvr_repair",
-                    "_prompt_id": f"{pid}_rlvr",
-                    "messages": [
-                        {"role": "developer", "content": _DEVELOPER_PROMPT},
-                        {"role": "user", "content": (
-                            f"Fix this TLA+ spec. TLC model-checker errors:\n\n"
-                            f"{repair_feedback[:600]}\n\n"
-                            f"Broken spec:\n{r.repair_from_spec.strip()[:2000]}"
-                        )},
-                        {"role": "assistant", "channel": "analysis", "content": (
-                            "I'll fix the TLC errors by bounding the state space, "
-                            "adding UNCHANGED clauses, and declaring any missing CONSTANTS."
-                        )},
-                        {"role": "assistant", "channel": "final", "content": r.spec.strip()},
-                    ],
-                })
-                # DPO: repaired gold (chosen) vs original broken silver (rejected)
-                dpo_pairs.append({
-                    "prompt": (
-                        f"Fix this TLA+ spec. TLC errors:\n{repair_feedback[:500]}\n\n"
-                        f"Broken spec:\n{r.repair_from_spec.strip()[:1500]}"
-                    ),
-                    "chosen": r.spec.strip(),
-                    "rejected": r.repair_from_spec.strip(),
-                    "chosen_tier": "gold",
-                    "rejected_tier": "silver",
-                    "feedback": repair_feedback,
-                })
+                if is_sany_repair:
+                    # SANY repair: syntax fix succeeded → gold
+                    sft_examples.append({
+                        "_tier": "sany_repair",
+                        "_prompt_id": f"{pid}_sany_repair",
+                        "messages": [
+                            {"role": "developer", "content": _DEVELOPER_PROMPT},
+                            {"role": "user", "content": (
+                                f"This TLA+ spec has SANY parse errors (syntax errors):\n\n"
+                                f"SANY errors:\n{repair_feedback[:600]}\n\n"
+                                f"Broken spec:\n{r.repair_from_spec.strip()[:2000]}\n\n"
+                                f"Fix ALL syntax errors and produce a correct spec."
+                            )},
+                            {"role": "assistant", "channel": "analysis", "content": (
+                                "I'll fix the SANY parse errors by correcting syntax issues."
+                            )},
+                            {"role": "assistant", "channel": "final", "content": r.spec.strip()},
+                        ],
+                    })
+                    dpo_pairs.append({
+                        "prompt": (
+                            f"Fix this TLA+ spec. SANY parse errors:\n{repair_feedback[:500]}\n\n"
+                            f"Broken spec:\n{r.repair_from_spec.strip()[:1500]}"
+                        ),
+                        "chosen": r.spec.strip(),
+                        "rejected": r.repair_from_spec.strip(),
+                        "chosen_tier": "gold",
+                        "rejected_tier": "bronze",
+                        "feedback": repair_feedback,
+                    })
+                else:
+                    # TLC repair: semantic fix succeeded → gold
+                    sft_examples.append({
+                        "_tier": "rlvr_repair",
+                        "_prompt_id": f"{pid}_rlvr",
+                        "messages": [
+                            {"role": "developer", "content": _DEVELOPER_PROMPT},
+                            {"role": "user", "content": (
+                                f"Fix this TLA+ spec. TLC model-checker errors:\n\n"
+                                f"{repair_feedback[:600]}\n\n"
+                                f"Broken spec:\n{r.repair_from_spec.strip()[:2000]}"
+                            )},
+                            {"role": "assistant", "channel": "analysis", "content": (
+                                "I'll fix the TLC errors by bounding the state space, "
+                                "adding UNCHANGED clauses, and declaring any missing CONSTANTS."
+                            )},
+                            {"role": "assistant", "channel": "final", "content": r.spec.strip()},
+                        ],
+                    })
+                    dpo_pairs.append({
+                        "prompt": (
+                            f"Fix this TLA+ spec. TLC errors:\n{repair_feedback[:500]}\n\n"
+                            f"Broken spec:\n{r.repair_from_spec.strip()[:1500]}"
+                        ),
+                        "chosen": r.spec.strip(),
+                        "rejected": r.repair_from_spec.strip(),
+                        "chosen_tier": "gold",
+                        "rejected_tier": "silver",
+                        "feedback": repair_feedback,
+                    })
+
+    # ── Cross-cycle training pairs ────────────────────────────────────────
+    # Mine gold specs from previous cycles to create bugfix pairs with
+    # current cycle's failures (bronze/silver that didn't reach gold).
+    gold_cache = load_gold_spec_cache()
+    if gold_cache:
+        for pid, group in by_prompt.items():
+            tier_rank = {"gold": 3, "silver": 2, "bronze": 1}
+            best = max(group, key=lambda x: tier_rank.get(x.tier, 0))
+            if best.tier == "gold":
+                continue  # already have gold this cycle
+            cached_gold = gold_cache.get(pid)
+            if not cached_gold:
+                continue
+            # Use best non-gold spec from this cycle + cached gold
+            for r in group:
+                if r.tier == "silver" and r.tlc_violations:
+                    feedback = extract_tlc_feedback(r)
+                    if feedback:
+                        sft_examples.append({
+                            "_tier": "cross_cycle_bugfix",
+                            "_prompt_id": f"{pid}_xcycle",
+                            "messages": [
+                                {"role": "developer", "content": _DEVELOPER_PROMPT},
+                                {"role": "user", "content": (
+                                    f"This TLA+ spec has TLC model-checking errors:\n\n"
+                                    f"TLC feedback:\n{feedback[:500]}\n\n"
+                                    f"Buggy spec:\n{r.spec.strip()[:2000]}\n\n"
+                                    f"Fix ALL errors and produce a correct spec."
+                                )},
+                                {"role": "assistant", "channel": "analysis", "content": "I'll analyze the TLC errors and produce a corrected specification."},
+                                {"role": "assistant", "channel": "final", "content": cached_gold.strip()},
+                            ],
+                        })
+                    break
+                elif r.tier == "bronze" and not r.sany_pass:
+                    sft_examples.append({
+                        "_tier": "cross_cycle_syntax",
+                        "_prompt_id": f"{pid}_xcycle_syn",
+                        "messages": [
+                            {"role": "developer", "content": _DEVELOPER_PROMPT},
+                            {"role": "user", "content": f"Write a TLA+ specification for the following:\n\n{r.prompt_text}"},
+                            {"role": "assistant", "channel": "analysis", "content": "I'll write a well-formed TLA+ specification with proper Init, Next, and invariants."},
+                            {"role": "assistant", "channel": "final", "content": cached_gold.strip()},
+                        ],
+                    })
+                    break
 
     return sft_examples, dpo_pairs
 
@@ -1353,11 +1759,11 @@ def _count_dpo_gold_pairs() -> int:
     return n
 
 
-# 250 is the safe floor — the cycle-14 collapse was a data quality issue (silver
-# poisoning), not a size issue.  With gold-only augmented + gold benchmark data +
-# structurally-filtered description_sft, quality is high enough at 250+.
+# Lowered from 250 → 200: the best-per-prompt dedup caps augmented rows at ~86
+# (one per unique prompt), so the dataset plateaus at ~234.  Quality is high
+# enough at 200+ (gold-only augmented + gold benchmark + description_sft).
 # Override with --min-train-examples or CHATTLA_MIN_TRAIN_EXAMPLES.
-MIN_TRAIN_EXAMPLES = int(os.environ.get("CHATTLA_MIN_TRAIN_EXAMPLES", "250"))
+MIN_TRAIN_EXAMPLES = int(os.environ.get("CHATTLA_MIN_TRAIN_EXAMPLES", "200"))
 
 
 def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT) -> RetrainOutcome:
@@ -1879,9 +2285,58 @@ def run_cycle(
         stats.silver_count = sum(1 for r in results if r.tier == "silver")
         stats.bronze_count = sum(1 for r in results if r.tier == "bronze")
 
+        # ── Error taxonomy ────────────────────────────────────────────────
+        error_counts: dict[str, int] = {}
+        for r in results:
+            if r.error_class:
+                error_counts[r.error_class] = error_counts.get(r.error_class, 0) + 1
+        stats.errors_syntax = error_counts.get("syntax", 0)
+        stats.errors_invariant_violation = error_counts.get("invariant_violation", 0)
+        stats.errors_deadlock = error_counts.get("deadlock", 0)
+        stats.errors_unbounded_state = error_counts.get("unbounded_state", 0)
+        stats.errors_undefined_op = error_counts.get("undefined_op", 0)
+        stats.errors_timeout = error_counts.get("timeout", 0)
+        stats.errors_other = error_counts.get("other", 0)
+
+        # ── Repair + critique stats ───────────────────────────────────────
+        stats.sany_repairs_attempted = sum(1 for r in results if r.repair_type == "sany")
+        stats.sany_repairs_succeeded = sum(1 for r in results if r.repair_type == "sany" and r.sany_pass)
+        stats.critiques_applied = sum(1 for r in results if r.critique_applied)
+
+        # ── Per-prompt regression tracking ────────────────────────────────
+        previous_tiers = load_prompt_tiers()
+        regressions, improvements, regr_details = compute_prompt_deltas(results, previous_tiers)
+        stats.prompt_regressions = regressions
+        stats.prompt_improvements = improvements
+        if regressions > 0:
+            log.warning(f"[phase1] PROMPT REGRESSIONS: {regressions} prompts degraded: {', '.join(regr_details[:5])}")
+        if improvements > 0:
+            log.info(f"[phase1] Prompt improvements: {improvements} prompts upgraded tier")
+
+        # Save current per-prompt tiers for next cycle
+        current_tiers: dict[str, str] = {}
+        tier_rank_map = {"gold": 3, "silver": 2, "bronze": 1}
+        for r in results:
+            prev = current_tiers.get(r.prompt_id)
+            if prev is None or tier_rank_map.get(r.tier, 0) > tier_rank_map.get(prev, 0):
+                current_tiers[r.prompt_id] = r.tier
+        # Merge with previous (don't lose prompts we didn't evaluate this cycle)
+        merged_tiers = {**previous_tiers, **current_tiers}
+        save_prompt_tiers(merged_tiers)
+
+        # ── Update gold spec cache for cross-cycle mining ─────────────────
+        update_gold_spec_cache(results)
+
+        if error_counts:
+            log.info(f"[phase1] Error taxonomy: {error_counts}")
+
         log.info(f"[phase1] Results: gold={stats.gold_count} silver={stats.silver_count} "
                  f"bronze={stats.bronze_count} sany={stats.sany_pass}/{stats.specs_generated} "
                  f"tlc={stats.tlc_pass}/{stats.specs_generated}")
+        if stats.sany_repairs_attempted:
+            log.info(f"[phase1] SANY repairs: {stats.sany_repairs_succeeded}/{stats.sany_repairs_attempted} succeeded")
+        if stats.critiques_applied:
+            log.info(f"[phase1] Self-critiques applied: {stats.critiques_applied}")
 
         if _SHUTDOWN:
             stats.cycle_duration_s = time.time() - t0
@@ -2063,7 +2518,7 @@ def main():
 
     _check_training_deps()
 
-    _default_min_train = int(os.environ.get("CHATTLA_MIN_TRAIN_EXAMPLES", "250"))
+    _default_min_train = int(os.environ.get("CHATTLA_MIN_TRAIN_EXAMPLES", "200"))
 
     parser = argparse.ArgumentParser(description="ChatTLA autonomous RL loop")
     parser.add_argument("--cycle-hours", type=float, default=CYCLE_HOURS,
@@ -2198,6 +2653,22 @@ def main():
         log.info(f"  Gold: {stats.gold_count} | Silver: {stats.silver_count} | Bronze: {stats.bronze_count}")
         log.info(f"  New SFT: {stats.new_train_examples} | New DPO: {stats.new_dpo_pairs}")
         log.info(f"  Retrained: {stats.retrained} | Deployed: {stats.deployed}")
+        # Error taxonomy
+        err_parts = []
+        for cat in ("syntax", "invariant_violation", "deadlock", "unbounded_state", "undefined_op", "timeout", "other"):
+            n = getattr(stats, f"errors_{cat}", 0)
+            if n > 0:
+                err_parts.append(f"{cat}={n}")
+        if err_parts:
+            log.info(f"  Errors: {' | '.join(err_parts)}")
+        # Repair + critique stats
+        if stats.sany_repairs_attempted > 0:
+            log.info(f"  SANY repairs: {stats.sany_repairs_succeeded}/{stats.sany_repairs_attempted} succeeded")
+        if stats.critiques_applied > 0:
+            log.info(f"  Self-critiques applied: {stats.critiques_applied}")
+        # Prompt regressions
+        if stats.prompt_regressions > 0 or stats.prompt_improvements > 0:
+            log.info(f"  Prompt deltas: +{stats.prompt_improvements} improved, -{stats.prompt_regressions} regressed")
         if stats.benchmark_run:
             _tag = "FULL" if getattr(stats, "benchmark_full_suite", False) else "quick"
             log.info(
