@@ -1879,8 +1879,7 @@ def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT
         "--lr", "3e-4",                          # higher LR for faster convergence (toy validated)
         "--max-gpu-memory-mb", str(max_gpu_memory_mb),
         "--max-length", str(max_length),
-        "--per-device-train-batch-size", "1",   # minimise activation memory on shared GPUs
-        "--gradient-checkpointing",              # trade compute for ~30% less VRAM
+        "--per-device-batch-size", "1",          # minimise activation memory on shared GPUs
         "--gradient-accumulation-steps", str(grad_accum_steps),
     ]
     dpo_n = _count_dpo_gold_pairs()
