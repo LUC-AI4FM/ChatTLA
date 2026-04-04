@@ -74,10 +74,14 @@ def find_latest_checkpoint(checkpoint_dir: Path) -> Path | None:
     return valid[-1][1] if valid else None
 
 
+_DPO_CHECKPOINT_DIR = _REPO_ROOT / "outputs" / "checkpoints_dpo"
+
+
 def merge(
     checkpoint_path: Path | None = None,
     output_path: Path = _MERGED_OUT,
     device: str = "auto",
+    dpo_checkpoint_path: Path | None = None,
 ) -> None:
     if checkpoint_path is None:
         checkpoint_path = find_latest_checkpoint(_CHECKPOINT_DIR)
@@ -97,11 +101,18 @@ def merge(
     )
     tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
 
-    print(f"[merge_lora] Loading LoRA adapter from: {checkpoint_path}")
+    print(f"[merge_lora] Loading SFT LoRA adapter from: {checkpoint_path}")
     model = PeftModel.from_pretrained(model, str(checkpoint_path))
 
-    print("[merge_lora] Merging adapter weights into base model...")
+    print("[merge_lora] Merging SFT adapter weights into base model...")
     model = model.merge_and_unload()
+
+    # Optional second-stage DPO merge
+    if dpo_checkpoint_path is not None:
+        print(f"[merge_lora] Loading DPO LoRA adapter from: {dpo_checkpoint_path}")
+        model = PeftModel.from_pretrained(model, str(dpo_checkpoint_path))
+        print("[merge_lora] Merging DPO adapter weights into SFT-merged model...")
+        model = model.merge_and_unload()
 
     output_path.mkdir(parents=True, exist_ok=True)
     print(f"[merge_lora] Saving merged model → {output_path}")
@@ -118,7 +129,8 @@ def merge(
         model.config.save_pretrained(output_path)
     tokenizer.save_pretrained(output_path)
 
-    print(f"[merge_lora] Done. Merged model saved to {output_path}")
+    stage = "SFT+DPO" if dpo_checkpoint_path else "SFT"
+    print(f"[merge_lora] Done. Merged model ({stage}) saved to {output_path}")
     print("[merge_lora] Next step: run src/inference/convert_to_gguf.py to build GGUF for Ollama.")
 
 
@@ -132,13 +144,24 @@ if __name__ == "__main__":
     os.environ.setdefault("CUDA_VISIBLE_DEVICES", "0,1")
 
     parser = argparse.ArgumentParser(description="Merge LoRA adapter into gpt-oss-20b base weights")
-    parser.add_argument("--checkpoint", default=None, help="Checkpoint dir (default: latest in outputs/checkpoints)")
+    parser.add_argument("--checkpoint", default=None, help="SFT checkpoint dir (default: latest in outputs/checkpoints)")
+    parser.add_argument("--dpo-checkpoint", default=None, help="DPO checkpoint dir for two-stage merge (default: latest in outputs/checkpoints_dpo if it exists)")
     parser.add_argument("--output",     default=str(_MERGED_OUT), help="Output directory for merged model")
     parser.add_argument("--device",     default="auto", help="Device map: 'auto', 'cuda', or 'cpu'")
     args = parser.parse_args()
+
+    # Auto-detect DPO checkpoint if not specified and checkpoints_dpo/ exists
+    dpo_ckpt = None
+    if args.dpo_checkpoint:
+        dpo_ckpt = Path(args.dpo_checkpoint)
+    elif _DPO_CHECKPOINT_DIR.is_dir():
+        dpo_ckpt = find_latest_checkpoint(_DPO_CHECKPOINT_DIR)
+        if dpo_ckpt:
+            print(f"[merge_lora] Auto-detected DPO checkpoint: {dpo_ckpt}")
 
     merge(
         checkpoint_path=Path(args.checkpoint) if args.checkpoint else None,
         output_path=Path(args.output),
         device=args.device,
+        dpo_checkpoint_path=dpo_ckpt,
     )

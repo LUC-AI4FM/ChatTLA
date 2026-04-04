@@ -22,8 +22,10 @@ GitHub scrape ────┼─→ validated/combined.jsonl (gold/silver/bronze
 
     ↓ Training ↓
 
-outputs/checkpoints/ (LoRA adapter)
-          ↓ merge_lora.py ↓
+outputs/checkpoints/ (SFT LoRA adapter)
+          ↓ train_dpo.py (optional) ↓
+outputs/checkpoints_dpo/ (DPO LoRA adapter)
+          ↓ merge_lora.py (SFT + DPO) ↓
 outputs/merged_model/ (merged BF16)
           ↓ convert_to_gguf.py ↓
 outputs/gguf/chattla-20b-Q8_0.gguf (21 GB)
@@ -65,7 +67,9 @@ ChatTLA/
 │   │   ├── lora_config.yaml
 │   │   ├── train.py           ← run this
 │   │   ├── tlc_eval_callback.py
-│   │   └── merge_lora.py
+│   │   ├── train_dpo.py
+│   │   ├── merge_lora.py
+│   │   └── publish_hf.py
 │   ├── inference/       ← Phase 3: deployment & eval
 │   │   ├── ollama_client.py
 │   │   ├── benchmark.py
@@ -142,11 +146,14 @@ CUDA_VISIBLE_DEVICES=1 python -m src.training.train
 # Monitor with MLflow:
 mlflow ui --port 5000
 
-# After training — merge LoRA into base:
-CUDA_VISIBLE_DEVICES=1 python -m src.training.merge_lora
+# Optional DPO refinement (requires gold preference pairs):
+python -m src.training.train_dpo --checkpoint outputs/checkpoints/checkpoint-155
+
+# After training — merge LoRA into base (auto-detects DPO checkpoint):
+CUDA_VISIBLE_DEVICES=0,1 python -m src.training.merge_lora
 ```
 
-**Hardware**: Quadro RTX 8000 (49 GB), device index 1.
+**Hardware**: Quadro RTX 8000 (49 GB), device index 1. Merge uses both GPUs.
 **Primary metric**: `tlc/tlc_clean_rate` > 0.70 on eval set.
 
 ### Phase 3 — Inference & Evaluation

@@ -18,7 +18,7 @@ datasets:
 pipeline_tag: text-generation
 ---
 
-# ChatTLA-20b (v11)
+# ChatTLA-20b (v13)
 
 ChatTLA is a fine-tuned version of [openai/gpt-oss-20b](https://huggingface.co/openai/gpt-oss-20b) specialised in generating **TLA+ formal specifications** — the language used by AWS, Microsoft, and Intel to mathematically verify distributed systems.
 
@@ -26,7 +26,7 @@ Given a plain-English description of a concurrent or distributed system, ChatTLA
 
 ---
 
-## Benchmark Results (v11, single-shot)
+## Benchmark Results (v13, single-shot)
 
 Evaluated on a handcrafted 20-problem suite covering distributed algorithms, concurrency primitives, and protocol specs. Three tiers:
 
@@ -40,28 +40,28 @@ Evaluated on a handcrafted 20-problem suite covering distributed algorithms, con
 
 | ID | Problem | Tier | SANY | TLC | Struct | Time |
 |----|---------|------|------|-----|--------|------|
-| BM001 | Mutual Exclusion | Bronze | — | — | 1.00 | 3.7s |
-| BM002 | Two-Phase Commit | Bronze | — | — | 1.00 | 10.8s |
-| BM003 | Dining Philosophers | Bronze | — | — | 1.00 | 6.2s |
-| BM004 | Lamport's Bakery Algorithm | 🥈 Silver | ✓ | — | 1.00 | 4.5s |
-| BM005 | Producer-Consumer Queue | Bronze | — | — | 0.78 | 3.2s |
-| BM006 | Raft Leader Election | Bronze | — | — | 1.00 | 4.1s |
-| BM007 | Read-Write Lock | 🥈 Silver | ✓ | — | 1.00 | 3.8s |
-| BM008 | Distributed Snapshot (Chandy-Lamport) | Bronze | — | — | 1.00 | 7.5s |
-| BM009 | Token Ring | 🥇 **Gold** | ✓ | ✓ | 0.89 | 1.9s |
-| BM010 | Simple Key-Value Store | Bronze | — | — | 1.00 | 1.7s |
-| BM011 | Paxos Single-Decree | 🥈 Silver | ✓ | — | 0.44 | 44.6s |
-| BM012 | Bounded Retransmission Protocol | Bronze | — | — | 0.78 | 8.1s |
-| BM013 | Transaction Isolation (Snapshot) | Bronze | — | — | 1.00 | 8.4s |
-| BM014 | Clock Synchronisation | Bronze | — | — | 0.44 | 44.7s |
-| BM015 | Peterson's Algorithm | Bronze | — | — | 0.78 | 3.0s |
-| BM016 | Gossip Protocol | Bronze | — | — | 1.00 | 1.7s |
-| BM017 | Simple Allocator | Bronze | — | — | 0.89 | 4.0s |
-| BM018 | Publish-Subscribe Broker | Bronze | — | — | 1.00 | 3.9s |
-| BM019 | Dekker's Algorithm | 🥇 **Gold** | ✓ | ✓ | 1.00 | 3.9s |
-| BM020 | Eventually Consistent Counter | 🥈 Silver | ✓ | — | 0.44 | 44.8s |
+| BM001 | Mutual Exclusion | Bronze | — | — | 1.00 | 26.2s |
+| BM002 | Two-Phase Commit | Bronze | — | — | 1.00 | 6.6s |
+| BM003 | Dining Philosophers | 🥇 **Gold** | ✓ | ✓ | 0.78 | 4.8s |
+| BM004 | Lamport's Bakery Algorithm | Bronze | — | — | 0.78 | 2.0s |
+| BM005 | Producer-Consumer Queue | 🥈 Silver | ✓ | — | 1.00 | 3.9s |
+| BM006 | Raft Leader Election | 🥇 **Gold** | ✓ | ✓ | 0.78 | 3.6s |
+| BM007 | Read-Write Lock | 🥈 Silver | ✓ | — | 0.78 | 62.7s |
+| BM008 | Distributed Snapshot (Chandy-Lamport) | 🥈 Silver | ✓ | — | 0.33 | 43.7s |
+| BM009 | Token Ring | 🥇 **Gold** | ✓ | ✓ | 0.67 | 1.8s |
+| BM010 | Simple Key-Value Store | Bronze | — | — | 1.00 | 1.6s |
+| BM011 | Paxos Single-Decree | Bronze | — | — | 1.00 | 5.0s |
+| BM012 | Bounded Retransmission Protocol | Bronze | — | — | 0.89 | 9.1s |
+| BM013 | Transaction Isolation (Snapshot) | Bronze | — | — | 1.00 | 11.7s |
+| BM014 | Clock Synchronisation | Bronze | — | — | 1.00 | 4.2s |
+| BM015 | Peterson's Algorithm | 🥇 **Gold** | ✓ | ✓ | 0.78 | 3.3s |
+| BM016 | Gossip Protocol | 🥇 **Gold** | ✓ | ✓ | 0.78 | 3.0s |
+| BM017 | Simple Allocator | Bronze | — | — | 0.89 | 2.9s |
+| BM018 | Publish-Subscribe Broker | Bronze | — | — | 0.44 | 44.2s |
+| BM019 | Dekker's Algorithm | Bronze | — | — | 1.00 | 2.8s |
+| BM020 | Eventually Consistent Counter | 🥈 Silver | ✓ | — | 1.00 | 62.5s |
 
-**SANY pass: 6/20 (30%) · TLC pass: 2/20 (10%) · Avg structural: 0.87**
+**SANY pass: 9/20 (45%) · TLC pass: 5/20 (25%) · Avg structural: 0.84**
 
 ### Version history (single-shot, 20 problems)
 
@@ -73,7 +73,8 @@ Evaluated on a handcrafted 20-problem suite covering distributed algorithms, con
 | v9 | 6/20 (30%) | 3/20 (15%) | 0.86 |
 | v9 best-of-5 + self-correct | 16/20 (80%) | 5/20 (25%) | 0.88 |
 | v10 | 6/20 (30%) | 2/20 (10%) | 0.87 |
-| **v11** | **6/20 (30%)** | **2/20 (10%)** | **0.87** |
+| v11 | 6/20 (30%) | 2/20 (10%) | 0.87 |
+| **v13 (SFT+DPO)** | **9/20 (45%)** | **5/20 (25%)** | **0.84** |
 
 > Single-shot scores are conservative. With `--attempts 5 --self-correct` v9 reaches 80% SANY / 25% TLC.
 
@@ -117,11 +118,11 @@ print(result[0]["generated_text"])
 ```bash
 # Download GGUF
 huggingface-cli download EricSpencer00/chattla-20b \
-    gguf/chattla-20b-v11-Q8_0.gguf \
+    gguf/chattla-20b-v13-Q8_0.gguf \
     --local-dir ./chattla
 
 # Run with llama.cpp
-./llama-cli -m chattla/gguf/chattla-20b-v11-Q8_0.gguf \
+./llama-cli -m chattla/gguf/chattla-20b-v13-Q8_0.gguf \
     -n 1024 --temp 0.4 \
     -p "Write a TLA+ spec for mutual exclusion with N processes."
 ```
@@ -135,10 +136,10 @@ huggingface-cli download EricSpencer00/chattla-20b \
 | Base model | openai/gpt-oss-20b |
 | Parameters | 20.9B |
 | Architecture | GptOss (sliding + full attention) |
-| Fine-tuning method | SFT (LoRA → merged) |
+| Fine-tuning method | SFT + DPO (LoRA → merged) |
 | Context length | 4096 (trained) / 131072 (base) |
 | GGUF quantisation | Q8_0 (~21 GB) |
-| Training date | March 2026 |
+| Training date | April 2026 |
 
 ### System prompt
 
@@ -160,7 +161,7 @@ When asked to write a TLA+ spec, follow these rules exactly:
 
 ## Training
 
-Fine-tuned with SFT on a curated dataset of TLA+ specifications scraped from GitHub, augmented with handcrafted examples covering distributed algorithms, concurrency primitives, and protocol verification.
+Fine-tuned with SFT + DPO on a curated dataset of TLA+ specifications scraped from GitHub, augmented with handcrafted examples covering distributed algorithms, concurrency primitives, and protocol verification. DPO refinement uses 17 gold preference pairs (chosen vs rejected specs) to align the model toward TLC-checkable outputs.
 
 ### Training configuration
 
@@ -187,7 +188,7 @@ EricSpencer00/chattla-20b
 ├── pytorch_model.bin        # Full BF16 weights (39 GB)
 ├── generation_config.json
 └── gguf/
-    ├── chattla-20b-v11-Q8_0.gguf   # Quantised GGUF for Ollama / llama.cpp
+    ├── chattla-20b-v13-Q8_0.gguf   # Quantised GGUF for Ollama / llama.cpp
     └── Modelfile                    # Ollama Modelfile
 ```
 
