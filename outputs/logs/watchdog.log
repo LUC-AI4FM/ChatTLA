@@ -33,3 +33,89 @@
 2026-04-05 15:30:01 INFO Disk OK: 56.8 GB free
 2026-04-05 15:30:01 INFO Watchdog check complete: HEALTHY
 2026-04-05 15:30:01 INFO ========================================
+2026-04-05 15:45:02 INFO ========================================
+2026-04-05 15:45:02 INFO Watchdog check starting
+2026-04-05 15:45:02 INFO Heartbeat OK: log modified 1.8 min ago
+2026-04-05 15:45:02 INFO Process alive: PIDs 2405115, 2405116
+2026-04-05 15:45:02 INFO Disk OK: 56.8 GB free
+2026-04-05 15:45:02 INFO Watchdog check complete: HEALTHY
+2026-04-05 15:45:02 INFO ========================================
+2026-04-05 16:00:01 INFO ========================================
+2026-04-05 16:00:01 INFO Watchdog check starting
+2026-04-05 16:00:01 INFO Heartbeat OK: log modified 3.7 min ago
+2026-04-05 16:00:01 INFO Process alive: PIDs 2405115, 2405116
+2026-04-05 16:00:01 INFO Disk OK: 44.9 GB free
+2026-04-05 16:00:01 INFO Watchdog check complete: HEALTHY
+2026-04-05 16:00:01 INFO ========================================
+2026-04-05 16:15:01 INFO ========================================
+2026-04-05 16:15:01 INFO Watchdog check starting
+2026-04-05 16:15:01 INFO Heartbeat OK: log modified 7.4 min ago
+2026-04-05 16:15:01 INFO Process alive: PIDs 2405115, 2405116
+2026-04-05 16:15:01 INFO Disk OK: 55.3 GB free
+2026-04-05 16:15:01 INFO Watchdog check complete: HEALTHY
+2026-04-05 16:15:01 INFO ========================================
+2026-04-05 16:30:01 INFO ========================================
+2026-04-05 16:30:01 INFO Watchdog check starting
+2026-04-05 16:30:01 INFO Heartbeat OK: log modified 13.9 min ago
+2026-04-05 16:30:01 INFO Process alive: PIDs 2405115, 2405116
+2026-04-05 16:30:01 INFO Disk OK: 55.3 GB free
+2026-04-05 16:30:01 INFO Watchdog check complete: HEALTHY
+2026-04-05 16:30:01 INFO ========================================
+2026-04-05 16:45:01 INFO ========================================
+2026-04-05 16:45:01 INFO Watchdog check starting
+2026-04-05 16:45:01 INFO Heartbeat OK: log modified 5.4 min ago
+2026-04-05 16:45:01 INFO Process alive: PIDs 2470393, 2470394
+2026-04-05 16:45:01 INFO Disk OK: 55.3 GB free
+2026-04-05 16:45:01 INFO Watchdog check complete: HEALTHY
+2026-04-05 16:45:01 INFO ========================================
+2026-04-05 17:00:01 INFO ========================================
+2026-04-05 17:00:01 INFO Watchdog check starting
+2026-04-05 17:00:01 INFO Heartbeat OK: log modified 7.6 min ago
+2026-04-05 17:00:01 WARNING No rl_loop.py process found
+2026-04-05 17:00:01 INFO Disk OK: 55.4 GB free
+2026-04-05 17:00:01 INFO Watchdog check complete: ISSUES DETECTED
+2026-04-05 17:00:01 INFO ========================================
+2026-04-05 17:15:01 INFO ========================================
+2026-04-05 17:15:01 INFO Watchdog check starting
+2026-04-05 17:15:01 INFO Heartbeat OK: log modified 22.6 min ago
+2026-04-05 17:15:01 WARNING No rl_loop.py process found
+2026-04-05 17:15:01 INFO Disk OK: 55.4 GB free
+2026-04-05 17:15:01 INFO Watchdog check complete: ISSUES DETECTED
+2026-04-05 17:15:01 INFO ========================================
+2026-04-05 17:30:01 INFO ========================================
+2026-04-05 17:30:01 INFO Watchdog check starting
+2026-04-05 17:30:01 WARNING Heartbeat DEAD: log file last modified 38 min ago
+2026-04-05 17:30:01 WARNING [alert] No SMTP password found. Set CHATTLA_SMTP_PASSWORD env var or create /home/espencer2/.chattla_smtp_password
+2026-04-05 17:30:01 WARNING No rl_loop.py process found
+2026-04-05 17:30:01 INFO Disk OK: 55.2 GB free
+2026-04-05 17:30:01 WARNING [alert] No SMTP password found. Set CHATTLA_SMTP_PASSWORD env var or create /home/espencer2/.chattla_smtp_password
+2026-04-05 17:30:01 INFO Watchdog check complete: ISSUES DETECTED
+2026-04-05 17:30:01 INFO ========================================
+2026-04-05 17:45:01 INFO ========================================
+2026-04-05 17:45:01 INFO Watchdog check starting
+2026-04-05 17:45:01 INFO Heartbeat OK: log modified 0.5 min ago
+2026-04-05 17:45:01 INFO Process alive: PIDs 2516558, 2516559
+2026-04-05 17:45:01 INFO Disk OK: 55.2 GB free
+2026-04-05 17:45:01 INFO Watchdog check complete: HEALTHY
+2026-04-05 17:45:01 INFO ========================================
+2026-04-05 18:00:01 INFO ========================================
+2026-04-05 18:00:01 INFO Watchdog check starting
+2026-04-05 18:00:01 INFO Heartbeat OK: log modified 11.0 min ago
+2026-04-05 18:00:01 INFO Process alive: PIDs 2516558, 2516559
+2026-04-05 18:00:01 INFO Disk OK: 55.4 GB free
+2026-04-05 18:00:01 INFO Watchdog check complete: HEALTHY
+2026-04-05 18:00:01 INFO ========================================
+2026-04-05 18:15:01 INFO ========================================
+2026-04-05 18:15:01 INFO Watchdog check starting
+2026-04-05 18:15:01 INFO Heartbeat OK: log modified 5.6 min ago
+2026-04-05 18:15:01 INFO Process alive: PIDs 2516558, 2516559
+2026-04-05 18:15:01 INFO Disk OK: 36.4 GB free
+2026-04-05 18:15:01 INFO Watchdog check complete: HEALTHY
+2026-04-05 18:15:01 INFO ========================================
+2026-04-05 18:30:01 INFO ========================================
+2026-04-05 18:30:01 INFO Watchdog check starting
+2026-04-05 18:30:01 INFO Heartbeat OK: log modified 0.7 min ago
+2026-04-05 18:30:01 INFO Process alive: PIDs 2516558, 2516559
+2026-04-05 18:30:01 INFO Disk OK: 55.2 GB free
+2026-04-05 18:30:01 INFO Watchdog check complete: HEALTHY
+2026-04-05 18:30:01 INFO ========================================

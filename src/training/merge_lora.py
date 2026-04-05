@@ -75,6 +75,7 @@ def find_latest_checkpoint(checkpoint_dir: Path) -> Path | None:
 
 
 _DPO_CHECKPOINT_DIR = _REPO_ROOT / "outputs" / "checkpoints_dpo"
+_KTO_CHECKPOINT_DIR = _REPO_ROOT / "outputs" / "checkpoints_kto"
 
 
 def merge(
@@ -86,8 +87,13 @@ def merge(
 ) -> None:
     if checkpoint_path is None:
         checkpoint_path = find_latest_checkpoint(_CHECKPOINT_DIR)
+    # Fallback: check KTO checkpoint dir (KTO trains standalone, not SFT+DPO)
     if checkpoint_path is None:
-        print(f"[merge_lora] ERROR: No checkpoint found in {_CHECKPOINT_DIR}")
+        checkpoint_path = find_latest_checkpoint(_KTO_CHECKPOINT_DIR)
+        if checkpoint_path:
+            print(f"[merge_lora] Using KTO checkpoint: {checkpoint_path}")
+    if checkpoint_path is None:
+        print(f"[merge_lora] ERROR: No checkpoint found in {_CHECKPOINT_DIR} or {_KTO_CHECKPOINT_DIR}")
         sys.exit(1)
 
     if device != "cpu" and torch.cuda.is_available():
