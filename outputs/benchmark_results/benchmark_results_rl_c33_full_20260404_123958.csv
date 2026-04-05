@@ -1,0 +1,1143 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,0,0,0.444,bronze,102.92,"---- MODULE MutualExclusionN ----
+EXTENDS Integers, Sequences
+
+VARIABLES proc, state
+
+
+variables proc = 1..N, state = [proc \in proc |-> idle]
+label start: state[proc] := trying
+label try: state[proc] := critical
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label end: state[proc] := idle
+label "
+chattla:20b,BM002,Two-Phase Commit,transaction,3,1,0,1.0,silver,96.86,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets, TLC
+
+CONSTANTS N, Participants
+
+VARIABLES state, votes, coordinator, decision
+
+(* State can be ""Init"", ""Prepared"", ""Committed"", ""Aborted"" *)
+TypeOK == /\ state \in {""Init"", ""Prepared"", ""Committed"", ""Aborted""}
+          /\ votes \in [Participants -> {""Yes"", ""No"", ""Pending""}]
+          /\ coordinator \in Participants
+          /\ decision \in {""Commit"", ""Abort"", ""Pending""}
+
+Init == /\ state = ""Init""
+        /\ votes = [p \in Participants |-> ""Pending""]
+        /\ coordinator \in Participants
+        /\ decision = ""Pending""
+
+Prepare == /\ state = ""Init""
+           /\ state' = ""Prepared""
+           /\ votes' = [votes EXCEPT ![coordinator] = ""Yes""]
+           /\ UNCHANGED <<coordinator, decision>>
+
+VoteYes == /\ state = ""Prepared""
+           /\ votes[coordinator] = ""Pending""
+           /\ votes' = [votes EXCEPT ![coordinator] = ""Yes""]
+           /\ UNCHANGED <<state, coordinator, decision>>
+
+VoteNo == /\ state = ""Prepared""
+          /\ votes[coordinator] = ""Pending""
+          /\ votes' = [votes EXCEPT ![coordinator] = ""No""]
+          /\ UNCHANGED <<state, coordinator, decision>>
+
+Commit == /\ state = ""Prepared""
+          /\ decision = ""Pending""
+          /\ decision' = ""Commit""
+          /\ state' = ""Committed""
+          /\ UNCHANGED <<votes, coordinator>>
+
+Abort == /\ state = ""Prepared""
+          /\ decision = ""Pending""
+          /\ decision' = ""Abort""
+          /\ state' = ""Aborted""
+          /\ UNCHANGED <<votes, coordinator>>
+
+Next == \/ Prepare
+        \/ VoteYes
+        \/ VoteNo
+        \/ Commit
+        \/ Abort
+
+Spec == Init /\ [][Next]_<<state, votes, coordinator, decision>>
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,0,0,0.778,bronze,34.37,"---- MODULE DiningPhilosophers ----
+EXTENDS Naturals, Sequences
+
+CONSTANT N
+
+VARIABLES forks, state
+
+(* Forks are represented as a sequence of booleans: TRUE if fork is free, FALSE if taken *)
+Init == 
+  /\ forks \in [1..N |-> TRUE]
+  /\ state \in [1..N |-> ""thinking""]
+
+(* Helper to determine if a philosopher can eat: both adjacent forks are free *)
+CanEat(i) == forks[i] /\ forks[If(i = N, 1, i + 1)]
+
+Next == 
+  \E i \in 1..N :
+    \/ (* Philosopher i starts eating *)
+       /\ state[i] = ""hungry""
+       /\ CanEat(i)
+       /\ state' = [state EXCEPT ![i] = ""eating""]
+       /\ forks' = [forks EXCEPT ![i] = FALSE, ![If(i = N, 1, i + 1)] = FALSE]
+    \/ (* Philosopher i stops eating *)
+       /\ state[i] = ""eating""
+       /\ state' = [state EXCEPT ![i] = ""thinking""]
+       /\ forks' = [forks EXCEPT ![i] = TRUE, ![If(i = N, 1, i + 1)] = TRUE]
+    \/ (* Philosopher i becomes hungry *)
+       /\ state[i] = ""thinking""
+       /\ state' = [state EXCEPT ![i] = ""hungry""]
+       /\ forks' = forks
+
+Spec == Init /\ [][Next]_<<forks, state>>
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,0,0,0.778,bronze,18.07,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+
+VARIABLES num, flag
+
+Init == /\ num = [i \in 1..N |-> 0]
+        /\ flag = [i \in 1..N |-> FALSE]
+
+Next == \E i \in 1..N :
+          /\ flag' = [flag EXCEPT ![i] = TRUE]
+          /\ num' = [num EXCEPT ![i] = 1 + Max(num)]
+          /\ flag' = [flag EXCEPT ![i] = FALSE]
+          /\ UNCHANGED <<num, flag>>
+
+Spec == Init /\ [][Next]_<<num, flag>>
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,0,1.0,silver,7.88,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences
+
+CONSTANT K
+
+VARIABLES q, head, tail, size
+
+Init == /\ q = [i \in 1..K |-> 0]
+        /\ head = 1
+        /\ tail = 1
+        /\ size = 0
+
+TypeOK == /\ head \in 1..K
+          /\ tail \in 1..K
+          /\ size \in 0..K
+
+Producer == /\ size < K
+           /\ head' = IF head = K THEN 1 ELSE head + 1
+           /\ q' = [q EXCEPT ![head] = 1]
+           /\ size' = size + 1
+           /\ tail' = tail
+
+Consumer == /\ size > 0
+           /\ tail' = IF tail = K THEN 1 ELSE tail + 1
+           /\ q' = [q EXCEPT ![tail] = 0]
+           /\ size' = size - 1
+           /\ head' = head
+
+Next == \/ Producer
+        \/ Consumer
+
+Spec == Init /\ [][Next]_<<q, head, tail, size>>
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,1,0,0.778,silver,18.86,"---- MODULE RaftElection ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS Server, Follower, Candidate, Leader, NULL
+
+VARIABLES currentTerm, votedFor, state
+
+Init == /\ currentTerm = 0
+        /\ votedFor = [s \in Server |-> NULL]
+        /\ state = [s \in Server |-> Follower]
+
+Next == \/ \E s \in Server : state[s] = Follower /\ currentTerm' = currentTerm + 1
+        \/ \E s \in Server : state[s] = Candidate /\ currentTerm' = currentTerm + 1
+        \/ \E s \in Server : state[s] = Leader /\ currentTerm' = currentTerm
+        \/ \E s \in Server : state[s] = Follower /\ currentTerm' = currentTerm
+        \/ \E s \in Server : state[s] = Candidate /\ currentTerm' = currentTerm
+        \/ \E s \in Server : state[s] = Leader /\ currentTerm' = currentTerm
+
+Spec == Init /\ [][Next]_<<currentTerm, votedFor, state>>
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,1,0,0.778,silver,125.28,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences
+
+VARIABLES readers, writer_active
+
+Init == 
+  /\ readers = 0
+  /\ writer_active = FALSE
+
+Next == 
+  \/ /\ readers' = readers + 1
+     /\ writer_active' = writer_active
+  \/ /\ readers' = readers - 1
+     /\ writer_active' = writer_active
+  \/ /\ readers' = readers
+     /\ writer_active' = TRUE
+  \/ /\ readers' = readers
+     /\ writer_active' = FALSE
+
+Spec == Init /\ [][Next]_<<readers, writer_active>>
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,0,0,0.778,bronze,36.78,"---- MODULE ChandyLamportSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS Process
+
+VARIABLES state, channel, snapshot, recorded, markerSent
+
+Init == /\ state = [p \in Process |-> ""active""]
+        /\ channel = [p \in Process |-> [q \in Process \ {p} |-> <<>>]]
+        /\ snapshot = [p \in Process |-> [q \in Process \ {p} |-> <<>>]]
+        /\ recorded = [p \in Process |-> FALSE]
+        /\ markerSent = [p \in Process |-> FALSE]
+
+Next == \/ /\ \E p \in Process :
+          /\ recorded[p] = FALSE
+          /\ state' = [state EXCEPT ![p] = ""recording""]
+          /\ snapshot' = [snapshot EXCEPT ![p] = channel[p]]
+          /\ recorded' = [recorded EXCEPT ![p] = TRUE]
+          /\ markerSent' = [markerSent EXCEPT ![p] = TRUE]
+          /\ channel' = [channel EXCEPT ![p][q] = <<>> \o <<marker>> \o channel[p][q] : q \in Process \ {p}]
+        \/ /\ \E p \in Process : \E q \in Process \ {p} :
+          /\ channel[p][q] = <<marker>> \o rest
+          /\ channel' = [channel EXCEPT ![p][q] = rest]
+          /\ state' = state
+          /\ snapshot' = snapshot
+          /\ recorded' = recorded
+          /\ markerSent' = markerSent
+        \/ /\ \E p \in Process : \E q \in Process \ {p} :
+          /\ channel[p][q] = <<msg>> \o rest
+          /\ channel' = [channel EXCEPT ![p][q] = rest]
+          /\ state' = state
+          /\ snapshot' = snapshot
+          /\ recorded' = recorded
+          /\ markerSent' = markerSent
+
+Spec == Init /\ [][Next]_<<state, channel, snapshot, recorded, markerSent>>
+
+===="
+chattla:20b,BM009,Token Ring,networking,2,0,0,0.778,bronze,11.31,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences
+
+VARIABLES token, message
+
+Init == 
+  /\ token \in 1..N
+  /\ message = <<>>
+
+Next == 
+  /\ token' = IF token = N THEN 1 ELSE token + 1
+  /\ message' = message
+
+Spec == Init /\ [][Next]_<<token, message>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,1.0,silver,9.59,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets, TLC
+
+CONSTANTS Keys, Values, NULL
+
+VARIABLES store
+
+Init == store = [k \in Keys |-> NULL]
+
+Next == \/ \E k \in Keys : \E v \in Values : store' = [store EXCEPT ![k] = v]
+        \/ store' = store
+
+Spec == Init /\ [][Next]_store
+
+TypeOK == /\ store \in [Keys -> Values \cup {NULL}]
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,0,0,0.667,bronze,376.11,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES acceptors, proposers, chosen, ballot, value
+
+CONSTANT N, M, V
+
+Init == 
+  /\ acceptors = [i \in 1..N |-> [ballot -> 0, value -> NULL]]
+  /\ proposers = [i \in 1..M |-> [ballot -> 0, value -> NULL]]
+  /\ chosen = NULL
+
+Next == 
+  /\ \E i \in 1..M :
+        /\ proposers[i].ballot = 0
+        /\ proposers[i].value = NULL
+        /\ \E v \in V :
+              /\ proposers[i].ballot' = 1
+              /\ proposers[i].value' = v
+              /\ acceptors' = acceptors
+              /\ chosen' = chosen
+        \/ \E v \in V :
+              /\ proposers[i].ballot' = 1
+              /\ proposers[i].value' = v
+              /\ acceptors' = [acceptors EXCEPT ![i] = [ballot -> 1, value -> v]]
+              /\ chosen' = chosen
+        \/ /\ proposers[i].ballot' = 1
+           /\ proposers[i].value' = NULL
+           /\ acceptors' = acceptors
+           /\ chosen' = chosen
+  \/ \E i \in 1..N :
+        /\ acceptors[i].ballot = 0
+        /\ acceptors[i].value = NULL
+        /\ \E v \in V :
+              /\ proposers[i].ballot' = 1
+              /\ proposers[i].value' = v
+              /\ acceptors' = acceptors
+              /\ chosen' = chosen
+        \/ \E v \in V :
+              /\ proposers[i].ballot' = 1
+              /\ proposers[i].value' = v
+              /\ acceptors' = [acceptors EXCEPT ![i] = [ballot -> 1, value -> v]]
+              /\ chosen' = chosen
+        \/ /\ proposers[i].ballot' = 1
+           /\ proposers[i].value' = NULL
+           /\ acceptors' = acceptors
+           /\ chosen' = chosen
+  \/ \E i \in 1..N :
+        /\ acceptors[i].ballot = 1
+        /\ acceptors[i].value = NULL
+        /\ \E v \in V :
+              /\ proposers[i].ballot' = 1
+              /\ proposers[i].value' = v
+              /\ acceptors' = acceptors
+              /\ chosen' = chosen
+        \/ \E v \in V :
+              /\ proposers[i].ballot' = 1
+              /\ proposers[i].value' = v
+              /\ acceptors' = [acceptors EXCEPT ![i] = [ballot -> 1, value -> v]]
+              /\ chosen' = chosen
+        \/ /\ proposers[i].ballot' = 1
+           /\ proposers[i].value' = NULL
+           /\ acceptors' = acceptors
+           /\ chosen' = chosen
+  \/ \E i \in 1..N :
+        /\ acceptors[i].ballot = 1
+        /\ acceptors[i].value = v \in V
+        /\ \E v \in V :
+              /\ proposers[i].ballot' = 1
+              /\ proposers[i].value' = v
+              /\ acceptors' = acceptors
+              /\ chosen' = chosen
+        \/ \E v \in V :
+              /\ proposers[i].ballot' = 1
+              /\ proposers[i].value' = v
+              /\ acceptors' = [acceptors EXCEPT ![i] = [ballot -> 1, value -> v]]
+              /\ chosen' = chosen
+        \/ /\ proposers[i].ballot' = 1
+           /\ proposers[i].value' = NULL
+           /\ acceptors' = acceptors
+           /\ chosen' = chosen
+  \/ \E i \in 1..N :
+        /\ acceptors[i].ballot = 1
+        /\ acceptors[i].value = v \in V
+        /\ \E v \in V :
+              /\ proposers[i].ballot' = 1
+              /\ proposers[i].value' = v
+              /\ acceptors' = acceptors
+              /\ chosen' = chosen
+        \/ \E v \in V :
+              /\ proposers[i].ballot' = 1
+              /\ proposers[i].value' = v
+              /\ acceptors' = [acceptors EXCEPT ![i] = [ballot -> 1, value -> v]]
+              /\ chosen' = chosen
+        \/ /\ proposers[i].ballot' = 1
+           /\ proposers[i].value' = NULL
+           /\ acceptors' = acceptors
+           /\ chosen' = chosen
+  \/ \E i \in 1..N :
+        /\ acceptors[i].ballot = 1
+        /\ acceptors[i].value = v \in V
+        /\ \E v \in V :
+              /\ proposers[i].ballot' = 1
+              /\ proposers[i].value' = v
+              /\ acceptors' = acceptors
+              /\ chosen' = chosen
+        \/ \E v \in V :
+              /\ proposers[i].ballot' = 1
+              /\ proposers[i].value' = v
+              /\ acceptors' = [acceptors EXCEPT ![i] = [ballot -> 1, value -> v]]
+              /\ chosen' = chosen
+        \/ /\ proposers[i].ballot' = 1
+           /\ proposers[i].value' = NULL
+           /\ acceptors' = acceptors
+           /\ chosen' = chosen
+  \/ \E i \in 1..N :
+        /\ acceptors[i].ballot = 1
+        /\ acceptors[i].value = v \in V
+        /\ \E v \in V :
+              /\ proposers[i].ballot' = 1
+              /\ proposers[i].value' = v
+              /\ acceptors' = acceptors
+              /\ chosen' = chosen
+        \/ \E v \in V :
+              /\ proposers[i].ballot' = 1
+              /\ proposers[i].value' = v
+              /\ acceptors' = [acceptors EXCEPT ![i] = [ballot -> 1, value -> v]]
+              /\ chosen' = chosen
+        \/ /\ proposers[i].ballot' = 1
+           /\ proposers[i].value' = NULL
+           /\ acceptors' = acceptors
+           /\ chosen' = chosen
+  \/ \E i \in 1..N :
+        /\ acceptors[i].ballot = 1
+        /\ acceptors[i].value = v \in V
+        /\ \E v \in V :
+              /\ proposers[i].ballot' = 1
+              /\ proposers[i].value' = v
+              /\ acceptors' = acceptors
+              /\ chosen' = chosen
+        \/ \E v \in V :
+              /\ proposers[i].ballot' = 1
+              /\ proposers[i].value' = v
+              /\ acceptors' = [acceptors EXCEPT ![i] = [ballot -> 1, value -> v]]
+              /\ chosen' = chosen
+        \/ /\ proposers[i].ballot' = 1
+           /\ proposers[i].value' = NULL
+           /\ acceptors' = acceptors
+           /\ chosen' = chosen
+  \/ \E i \in 1..N :
+        /\ acceptors[i].ballot = 1
+        /\ acceptors[i].value = v \in V
+        /\ \E v \in V :
+              /\ proposers[i].ballot' = 1
+              /\ proposers[i].value' = v
+              /\ acceptors' = acceptors
+              /\ chosen' = chosen
+        \/ \E v \in V :
+              /\ proposers[i].ballot' = 1
+              /\ proposers[i].value' = v
+              /\ acceptors' = [acceptors EXCEPT ![i] = [ballot -> 1, value -> v]]
+              /\ chosen' = chosen
+        \/ /\ proposers[i].ballot' = 1
+           /\ proposers[i].value' = NULL
+           /\ acceptors' = acceptors
+           /\ chosen' = chosen
+  \/ \E i \in 1..N :
+        /\ acceptors[i].ballot = 1
+        /\ acceptors[i].value = v \in V
+        /\ \E v \in V :
+              /\ proposers[i].ballot' = 1
+              /\ proposers[i].value' = v
+              /\ acceptors' = acceptors
+              /\ chosen' = chosen
+        \/ \E v \in V :
+              /\ proposers[i].ballot' = 1
+              /\ proposers[i].value' = v
+              /\ acceptors' = [acceptors EXCEPT ![i] = [ballot -> 1, value -> v]]
+              /\ chosen' = chosen
+        \/ /\ proposers[i].ballot' = 1
+           /\ proposers[i].value' = NULL
+           /\ acceptors' = acceptors
+           /\ chosen' = chosen
+  \/ \E i \in 1..N :
+        /\ acceptors[i].ballot = 1
+        /\ acceptors[i].value = v \in V
+        /\ \E v \in V :
+              /\ proposers[i].ballot' = 1
+              /\ proposers[i].value' = v
+              /\ acceptors' = acceptors
+              /\ chosen' = chosen
+        \/ \E v \in V :
+              /\ proposers[i].ballot' = 1
+              /\ proposers[i].value' = v
+              /\ acceptors' = [acceptors EXCEPT ![i] = [ballot -> 1, value -> v]]
+              /\ chosen' = chosen
+        \/ /\ proposers[i].ballot' = 1
+           /\ proposers[i].value' = NULL
+           /\ acceptors' = acceptors
+           /\ chosen' = chosen
+  \/ \E i \in 1..N :
+        /\ acceptors[i].ballot = 1
+        /\ acceptors[i].value = v \in V
+        /\ \E v \in V :
+              /\ proposers[i].ballot' = 1
+              /\ proposers[i].value' = v
+              /\ acceptors' = acceptors
+              /\ chosen' = chosen
+        \/ \E v \in V :
+              /\ proposers[i].ballot' = 1
+              /\ proposers[i].value' = v
+              /\ acceptors' = [acceptors EXCEPT ![i] = [ballot -> 1, value -> v]]
+              /\ chosen' = chosen
+        \/ /\ proposers[i].ballot' = 1
+           /\ proposers[i].value' = NULL
+"
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,0,0,0.778,bronze,48.43,"---- MODULE FileSender ----
+EXTENDS Integers, Sequences, FiniteSets, TLC
+
+CONSTANTS File, ChunkSize, MaxRetries, Timeout
+VARIABLES acked, chunks, nextChunk, retransmits, sent, state, timer
+
+    /\ chunks \in Seq(Seq(File))
+    /\ sent \in SUBSET 1..Len(chunks)
+    /\ acked \in SUBSET 1..Len(chunks)
+    /\ retransmits \in Seq(0..MaxRetries)
+    /\ timer \in 0..Timeout
+    /\ state \in {""Idle"", ""Sending"", ""WaitingAck""}
+    /\ nextChunk \in 1..Len(chunks) \/ nextChunk = Len(chunks) + 1
+
+Init ==
+    /\ chunks = ChunkSequence(File, ChunkSize)
+    /\ sent = {}
+    /\ acked = {}
+    /\ retransmits = Rep(0, Len(chunks))
+    /\ timer = Timeout
+    /\ state = ""Idle""
+    /\ nextChunk = 1
+
+SendChunk ==
+    /\ state = ""Idle""
+    /\ nextChunk <= Len(chunks)
+    /\ sent' = sent \cup {nextChunk}
+    /\ retransmits' = Subst(retransmits, nextChunk, 0)
+    /\ timer' = Timeout
+    /\ state' = ""Sending""
+    /\ nextChunk' = nextChunk
+    /\ UNCHANGED <<chunks, acked>>
+
+WaitAck ==
+    /\ state = ""Sending""
+    /\ timer' = Timeout
+    /\ state' = ""WaitingAck""
+    /\ nextChunk' = nextChunk
+    /\ UNCHANGED <<chunks, sent, acked, retransmits>>
+
+AckReceived ==
+    /\ state = ""WaitingAck""
+    /\ acked' = acked \cup {nextChunk}
+    /\ state' = ""Idle""
+    /\ nextChunk' = nextChunk + 1
+    /\ timer' = Timeout
+    /\ retransmits' = Subst(retransmits, nextChunk, 0)
+    /\ UNCHANGED <<chunks, sent>>
+
+Retransmit ==
+    /\ state = ""WaitingAck""
+    /\ timer' = 0
+    /\ state' = ""Sending""
+    /\ retransmits' = Subst(retransmits, nextChunk, Retransmits[nextChunk] + 1)
+    /\ UNCHANGED <<chunks, sent, acked>>
+
+TimeoutTick ==
+    /\ state = ""WaitingAck""
+    /\ timer > 0
+    /\ timer' = timer - 1
+    /\ state' = ""WaitingAck""
+    /\ UNCHANGED <<chunks, sent, acked, retransmits, nextChunk>>
+
+Done ==
+    /\ nextChunk > Len(chunks)
+    /\ state = ""Idle""
+
+Next ==
+    \/ SendChunk
+    \/ WaitAck
+    \/ AckReceived
+    \/ Retransmit
+    \/ TimeoutTick
+    \/ Done
+
+Spec ==
+    Init /\ [][Next]_<<chunks, sent, acked, retransmits, timer, state, nextChunk>>
+
+---- MODULE FileSender ----
+===="
+chattla:20b,BM013,Transaction Isolation (Snapshot Isolation),transaction,4,1,0,0.444,silver,74.55,"---- MODULE SnapshotIsolationDB ----
+EXTENDS Integers, Sequences, FiniteSets, TLC
+
+VARIABLES data, txns, nextTxId
+
+
+
+  \* Transaction record: [id: Nat, status: {""active"", ""committed"", ""aborted""}, readSet: Seq, writeSet: Seq]
+  \* Record: [id: Nat, value: Int]
+  \* ReadSet: Seq of [id: Nat, readVersion: Nat]
+  \* WriteSet: Seq of [id: Nat, newValue: Int]
+  \* Record: [id: Nat, value: Int]
+  \* ReadSet: Seq of [id: Nat, readVersion: Nat]
+  \* WriteSet: Seq of [id: Nat, newValue: Int]
+  \* Record: [id: Nat, value: Int]
+  \* ReadSet: Seq of [id: Nat, readVersion: Nat]
+  \* WriteSet: Seq of [id: Nat, newValue: Int]
+  \* Record: [id: Nat, value: Int]
+  \* ReadSet: Seq of [id: Nat, readVersion: Nat]
+  \* WriteSet: Seq of [id: Nat, newValue: Int]
+  \* Record: [id: Nat, value: Int]
+  \* ReadSet: Seq of [id: Nat, readVersion: Nat]
+  \* WriteSet: Seq of [id: Nat, newValue: Int]
+  \* Record: [id: Nat, value: Int]
+  \* ReadSet: Seq of [id: Nat, readVersion: Nat]
+  \* WriteSet: Seq of [id: Nat, newValue: Int]
+  \* Record: [id: Nat, value: Int]
+  \* ReadSet: Seq of [id: Nat, readVersion: Nat]
+  \* WriteSet: Seq of [id: Nat, newValue: Int]
+  \* Record: [id: Nat, value: Int]
+  \* ReadSet: Seq of [id: Nat, readVersion: Nat]
+  \* WriteSet: Seq of [id: Nat, newValue: Int]
+  \* Record: [id: Nat, value: Int]
+  \* ReadSet: Seq of [id: Nat, readVersion: Nat]
+  \* WriteSet: Seq of [id: Nat, newValue: Int]
+  \* Record: [id: Nat, value: Int]
+  \* ReadSet: Seq of [id: Nat, readVersion: Nat]
+  \* WriteSet: Seq of [id: Nat, newValue: Int]
+  \* Record: [id: Nat, value: Int]
+  \* ReadSet: Seq of [id: Nat, readVersion: Nat]
+  \* WriteSet: Seq of [id: Nat, newValue: Int]
+  \* Record: [id: Nat, value: Int]
+  \* ReadSet: Seq of [id: Nat, readVersion: Nat]
+  \* WriteSet: Seq of [id: Nat, newValue: Int]
+  \* Record: [id: Nat, value: Int]
+  \* ReadSet: Seq of [id: Nat, readVersion: Nat]
+  \* WriteSet: Seq of [id: Nat, newValue: Int]
+  \* Record: [id: Nat, value: Int]
+  \* ReadSet: Seq of [id: Nat, readVersion: Nat]
+  \* WriteSet: Seq of [id: Nat, newValue: Int]
+  \* Record: [id: Nat, value: Int]
+  \* ReadSet: Seq of [id: Nat, readVersion: Nat]
+  \* WriteSet: Seq of [id: Nat, newValue: Int]
+  \* Record: [id: Nat, value: Int]
+  \* ReadSet: Seq of [id: Nat, readVersion: Nat]
+  \* WriteSet: Seq of [id: Nat, newValue: Int]
+  \* Record: [id: Nat, value: Int]
+  \* ReadSet: Seq of [id: Nat, readVersion: Nat]
+  \* WriteSet: Seq of [id: Nat, newValue: Int]
+  \* Record: [id: Nat, value: Int]
+  \* ReadSet: Seq of [id: Nat, readVersion: Nat]
+  \* WriteSet: Seq of [id: Nat, newValue: Int]
+  \* Record: [id: Nat, value: Int]
+  \* ReadSet: Seq of [id: Nat, readVersion: Nat]
+  \* WriteSet: Seq of [id: Nat, newValue: Int]
+  \* Record: [id: Nat, value: Int]
+  \* ReadSet: Seq of [id: Nat, readVersion: Nat]
+  \* WriteSet: Seq of [id: Nat, newValue: Int]
+  \* Record: [id: Nat, value: Int]
+  \* ReadSet: Seq of [id: Nat, readVersion: Nat]
+  \* WriteSet: Seq of [id: Nat, newValue: Int]
+  \* Record: [id: Nat, value: Int]
+  \* ReadSet: Seq of [id: Nat, readVersion: Nat]
+  \* WriteSet: Seq of [id: Nat, newValue: Int]
+  \* Record: [id: Nat, value: Int]
+  \* ReadSet: Seq of [id: Nat, readVersion: Nat]
+  \* WriteSet: Seq of [id: Nat, newValue: Int]
+  \* Record: [id: Nat, value: Int]
+  \* ReadSet: Seq of [id: Nat, readVersion: Nat]
+  \* WriteSet: Seq of [id: Nat, newValue: Int]
+  \* Record: [id: Nat, value: Int]
+  \* ReadSet: Seq of [id: Nat, readVersion: Nat]
+  \* WriteSet: Seq of [id: Nat, newValue: Int]
+  \* Record: [id: Nat, value: Int]
+  \* ReadSet: Seq of [id: Nat, readVersion: Nat]
+  \* WriteSet: Seq of [id: Nat, newValue: Int]
+  \* Record: [id: Nat, value: Int]
+  \* ReadSet: Seq of [id: Nat, readVersion: Nat]
+  \* WriteSet: Seq of [id: Nat, newValue: Int]
+  \* Record: [id: Nat, value: Int]
+  \* ReadSet: Seq of [id: Nat, readVersion: Nat]
+  \* WriteSet: Seq of [id: Nat, newValue: Int]
+  \* Record: [id: Nat, value: Int]
+  \* ReadSet: Seq of [id: Nat, readVersion: Nat]
+  \* WriteSet: Seq of [id: Nat, newValue: Int]
+  \* Record: [id: Nat, value: Int]
+  \* ReadSet: Seq of [id: Nat, readVersion: Nat]
+  \* WriteSet: Seq of [id: Nat, newValue: Int]
+  \* Record: [id: Nat, value: Int]
+  \* ReadSet: Seq of [id: Nat, readVersion: Nat]
+  \* WriteSet: Seq of [id: Nat, newValue: Int]
+  \* Record: [id: Nat, value: Int]
+  \* ReadSet: Seq of [id: Nat, readVersion: Nat]
+  \* WriteSet: Seq of [id: Nat, newValue: Int]
+  \* Record: [id: Nat, value: Int]
+  \* ReadSet: Seq of [id: Nat, readVersion: Nat]
+  \* WriteSet: Seq of [id: Nat, newValue: Int]
+  \* Record: [id: Nat, value: Int]
+  \* ReadSet: Seq of [id: Nat, readVersion: Nat]
+  \* WriteSet: Seq of [id: Nat, newValue: Int]
+  \* Record: [id: Nat, value: Int]
+  \* ReadSet: Seq of [id: Nat, readVersion: Nat]
+  \* WriteSet: Seq of [id: Nat, newValue: Int]
+  \* Record: [id: Nat, value: Int]
+  \* ReadSet: Seq of [id: Nat, readVersion: Nat]
+  \* WriteSet: Seq of [id: Nat, newValue: Int]
+  \* Record: [id: Nat, value: Int]
+  \* ReadSet: Seq of [id: Nat, readVersion: Nat]
+  \* WriteSet: Seq of [id: Nat, newValue: Int]
+  \* Record: [id: Nat, value: Int]
+  \* ReadSet: Seq of [id: Nat, readVersion: Nat]
+  \* WriteSet: Seq of [id: Nat, newValue: Int]
+  \* Record: [id: Nat, value: Int]
+  \* ReadSet: Seq of [id: Nat, readVersion: Nat]
+  \* WriteSet: Seq of [id: Nat, newValue: Int]
+  \* Record: [id: Nat, value: Int]
+  \* ReadSet: Seq of [id: Nat, readVersion: Nat]
+  \* WriteSet: Seq of [id: Nat, newValue: Int]
+  \* Record: [id: Nat, value: Int]
+  \* ReadSet: Seq of [id: Nat, readVersion: Nat]
+  \* WriteSet: Seq of [id: Nat, newValue: Int]
+  \* Record: [id: Nat, value: Int]
+  \* ReadSet: Seq of [id: Nat, readVersion: Nat]
+  \* WriteSet: Seq of [id: Nat, newValue: Int]
+  \* Record: [id: Nat, value: Int]
+  \* ReadSet: Seq of [id: Nat, readVersion: Nat]
+  \* WriteSet: Seq of [id: Nat, newValue: Int]
+  \* Record: [id: Nat, value: Int]
+  \* ReadSet: Seq of [id: Nat, readVersion: Nat]
+  \* WriteSet: Seq of [id: Nat, newValue: Int]
+  \* Record: [id: Nat, value: Int]
+  \* ReadSet: Seq of [id: Nat, readVersion: Nat]
+  \* WriteSet: Seq of [id: Nat, newValue: Int]
+  \* Record: [id: Nat, value: Int]
+  \* ReadSet: Seq of [id: Nat, readVersion: Nat]
+  \* WriteSet: Seq of [id: Nat, newValue: Int]
+  \* Record: [id: Nat, value: Int]
+  \* ReadSet: Seq of [id: Nat, readVersion: Nat]
+  \* WriteSet: Seq of [id: Nat, newValue: Int]
+  \* Record: [id: Nat, value: Int]
+  \* ReadSet: Seq of [id: Nat, readVersion: Nat]
+  \* WriteSet: Seq of [id: Nat, newValue: Int]
+  \* Record: [id: Nat, value: Int]
+  \* ReadSet: Seq of [id: Nat, readVersion: Nat]
+  \* WriteSet: Seq of [id: Nat, newValue: Int]
+  \* Record: [id: Nat, value: Int]
+  \* ReadSet: Seq of [id: Nat, readVersion: Nat]
+  \* WriteSet: Seq of [id: Nat, newValue: Int]
+  \* Record: [id: Nat, value: Int]
+  \* ReadSet: Seq of [id: Nat, readVersion: Nat]
+  \* WriteSet: Seq of [id: Nat, newValue: Int]
+  \* Record: [id: Nat, value: Int]
+  \* ReadSet: Seq of [id: Nat, readVersion: Nat]
+  \* WriteSet: Seq of [id: Nat, newValue: Int]
+  \* Record: [id: Nat, value: Int]
+  \* ReadSet: Seq of [id: Nat, readVersion: Nat]
+  \* WriteSet: Seq of [id: Nat, newValue: Int]
+  \* Record: [id: Nat, value: Int]
+  \* ReadSet: Seq of [id: Nat, readVersion: Nat]
+  \* WriteSet: Seq of [id: Nat, newValue: Int]
+  \* Record: [id: Nat, value: Int]
+  \* ReadSet: Seq of [id: Nat, readVersion: Nat]
+  \* WriteSet: Seq of [id: Nat, newValue: Int]
+  \* Record: [id: Nat, value: Int]
+  \* ReadSet: Seq of [id: Nat, readVersion: Nat]
+  \* WriteSet: Seq of [id: Nat, newValue: Int]
+  \* Record: [id: Nat, value: Int]
+  \* ReadSet: Seq of [id: Nat, readVersion: Nat]
+  \* WriteSet: Seq of [id: Nat, newValue: Int]
+  \* Record: [id: Nat, value: Int]
+  \* ReadSet: Seq of [id: Nat, readVersion: Nat]
+  \* WriteSet: Seq of [id: Nat, newValue: Int]
+  \* Record: [id: Nat, value: Int]
+  \* ReadSet: Seq of [id: Nat, readVersion: Nat]
+  \* WriteSet: Seq of [id: Nat, newValue: Int]
+  \* Record: [id: Nat, value: Int]
+  \* ReadSe"
+chattla:20b,BM014,Clock Synchronisation,networking,3,1,0,0.444,silver,62.35,"---- MODULE ClockSync ----
+EXTENDS Integers, Sequences, FiniteSets, TLC
+
+VARIABLES clocks, offsets
+
+
+
+===="
+chattla:20b,BM015,Peterson's Algorithm,scheduling,2,1,1,0.667,gold,6.45,"---- MODULE Peterson2 ----
+EXTENDS Integers, Sequences
+
+VARIABLE flag, turn
+
+Init == /\ flag = [i \in 1..2 |-> FALSE]
+        /\ turn = 1
+
+Next == \/ /\ flag' = [flag EXCEPT ![1] = TRUE]
+          /\ turn' = 2
+          /\ flag' = [flag EXCEPT ![2] = FALSE]
+        \/ /\ flag' = [flag EXCEPT ![2] = TRUE]
+          /\ turn' = 1
+          /\ flag' = [flag EXCEPT ![1] = FALSE]
+        \/ /\ flag' = flag
+          /\ turn' = turn
+
+Spec == Init /\ [][Next]_<<flag, turn>>
+
+===="
+chattla:20b,BM016,Gossip Protocol,networking,3,0,0,1.0,bronze,199.09,"---- MODULE Gossip ----
+EXTENDS Integers, FiniteSets, Sequences
+
+CONSTANTS N, K
+
+VARIABLES known, infected
+
+Init == /\ known = [i \in 1..N |-> {}]
+        /\ infected = [i \in 1..N |-> FALSE]
+
+Next == /\ \E i \in 1..N :
+          /\ known' = [known EXCEPT ![i] = known[i] \cup {j \in 1..N : infected[j]}]
+          /\ infected' = [infected EXCEPT ![i] = TRUE]
+        /\ \A j \in 1..N : j # i => known'[j] = known[j] /\ infected'[j] = infected[j]
+
+Spec == Init /\ [][Next]_<<known, infected>>
+
+TypeOK == /\ known \in [1..N -> SUBSET 1..N]
+          /\ infected \in [1..N -> BOOLEAN]
+
+===="
+chattla:20b,BM017,Simple Allocator,storage,2,1,0,0.889,silver,16.83,"---- MODULE Allocator ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, Pages, Clients
+
+VARIABLE free, allocated
+
+Init == 
+  /\ free = Pages
+  /\ allocated = [c \in Clients |-> {}]
+
+Next == 
+  \/ \E c \in Clients : \E p \in free :
+        /\ allocated' = [allocated EXCEPT ![c] = @ \cup {p}]
+        /\ free' = free \ {p}
+  \/ \E c \in Clients : \E p \in allocated[c] :
+        /\ allocated' = [allocated EXCEPT ![c] = @ \ {p}]
+        /\ free' = free \cup {p}
+  \/ free' = free
+      /\ allocated' = allocated
+
+Spec == Init /\ [][Next]_<<free, allocated>>
+
+TypeOK == 
+  /\ free \subseteq Pages
+  /\ \A c \in Clients : allocated[c] \subseteq Pages
+  /\ \A c1, c2 \in Clients : c1 /= c2 => allocated[c1] # allocated[c2]
+
+===="
+chattla:20b,BM018,Publish-Subscribe Broker,networking,3,1,1,0.778,gold,51.38,"---- MODULE Broker ----
+EXTENDS Integers, Sequences, FiniteSets, TLC
+
+VARIABLES subscribers, publishers, messages, state
+
+
+
+Init == 
+   /\ subscribers = << >>
+   /\ publishers = << >>
+   /\ messages = << >>
+   /\ state = << >>
+
+Next == 
+   /\ subscribers' = subscribers
+   /\ publishers' = publishers
+   /\ messages' = messages
+   /\ state' = state
+
+Spec == Init /\ [][Next]_<<subscribers, publishers, messages, state>>
+
+===="
+chattla:20b,BM019,Dekker's Algorithm,scheduling,3,1,1,1.0,gold,10.48,"---- MODULE Dekker2 ----
+EXTENDS Integers, Sequences, FiniteSets, TLC
+
+VARIABLES turn, wants
+
+Init == /\ turn \in {0,1}
+        /\ wants = [i \in {0,1} |-> FALSE]
+
+Next == \/ /\ wants[0] = FALSE
+           /\ wants[1] = FALSE
+           /\ turn' = turn
+           /\ wants' = wants
+        \/ /\ wants[0] = FALSE
+           /\ wants[1] = TRUE
+           /\ turn' = 1
+           /\ wants' = [wants EXCEPT ![0] = TRUE]
+        \/ /\ wants[0] = TRUE
+           /\ wants[1] = FALSE
+           /\ turn' = 0
+           /\ wants' = [wants EXCEPT ![1] = TRUE]
+        \/ /\ wants[0] = TRUE
+           /\ wants[1] = TRUE
+           /\ turn' = turn
+           /\ wants' = wants
+
+Spec == Init /\ [][Next]_<<turn, wants>>
+
+TypeOK == /\ turn \in {0,1}
+          /\ wants \in [ {0,1} -> BOOLEAN ]
+
+===="
+chattla:20b,BM020,Eventually Consistent Counter,storage,3,1,0,0.778,silver,11.91,"---- MODULE GCounter ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS Node
+
+VARIABLES counts
+
+Init == /\ counts = [n \in Node |-> [m \in Node |-> 0]]
+
+Next == /\ \E n \in Node : \E delta \in Nat :
+          /\ counts' = [counts EXCEPT ![n][n] = counts[n][n] + delta]
+          /\ \A m \in Node \ {n} : counts'[n][m] = counts[n][m]
+
+Spec == Init /\ [][Next]_counts
+
+===="

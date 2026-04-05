@@ -1,0 +1,802 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,0,0.444,silver,50.75,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,1,0,0.444,silver,59.91,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES participants, votes, commitDecided, commitSent, abortSent
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,1,1,0.778,gold,6.6,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES forks, states
+
+(* Constants *)
+N == 5
+
+(* Helper functions *)
+LEFT(i) == IF i = 1 THEN N ELSE i - 1
+RIGHT(i) == IF i = N THEN 1 ELSE i + 1
+
+(* State predicates *)
+IsThinking(i) == states[i] = ""thinking""
+IsHungry(i) == states[i] = ""hungry""
+IsEating(i) == states[i] = ""eating""
+
+(* Initial state *)
+Init == /\ forks = [i \in 1..N |-> ""free""]
+        /\ states = [i \in 1..N |-> ""thinking""]
+
+(* Next-state relation *)
+Next == \/ \E i \in 1..N :
+          /\ IsThinking(i)
+          /\ forks[LEFT(i)] = ""free""
+          /\ forks[RIGHT(i)] = ""free""
+          /\ states' = [states EXCEPT ![i] = ""hungry""]
+          /\ forks' = forks
+        \/ \E i \in 1..N :
+          /\ IsHungry(i)
+          /\ forks[LEFT(i)] = ""free""
+          /\ forks[RIGHT(i)] = ""free""
+          /\ states' = [states EXCEPT ![i] = ""eating""]
+          /\ forks' = [forks EXCEPT ![LEFT(i)] = ""occupied"", ![RIGHT(i)] = ""occupied""]
+        \/ \E i \in 1..N :
+          /\ IsEating(i)
+          /\ forks[LEFT(i)] = ""occupied""
+          /\ forks[RIGHT(i)] = ""occupied""
+          /\ states' = [states EXCEPT ![i] = ""thinking""]
+          /\ forks' = [forks EXCEPT ![LEFT(i)] = ""free"", ![RIGHT(i)] = ""free""]
+
+(* Invariant: No two adjacent philosophers are eating simultaneously *)
+NoAdjacentEating == \A i \in 1..N :
+                    /\ IsEating(i)
+                    => forks[LEFT(i)] = ""free"" /\ forks[RIGHT(i)] = ""free""
+
+Spec == Init /\ [][Next]_<<forks, states>>
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,0,0,0.444,bronze,440.11,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES num, flag, maxNum
+
+
+define
+  maxNum == MAX_{i \in 1..N} num[i]
+  maxNum' == MAX_{i \in 1..N} num'[i]
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum = 0 THEN 0 ELSE maxNum + 1
+  maxNum' == IF maxNum ="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,0,0.444,silver,195.9,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES queue, producerBlocked, consumerBlocked
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,0,0,0.778,bronze,29.31,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+Init == /\ currentTerm = 0
+        /\ votedFor = <<>>
+        /\ state = ""Follower""
+
+Next == \/ /\ state = ""Follower""
+        /\ currentTerm' = currentTerm
+        /\ votedFor' = votedFor
+        /\ state' = ""Follower""
+        \/ /\ state = ""Candidate""
+        /\ currentTerm' = currentTerm + 1
+        /\ votedFor' = <<>>
+        /\ state' = ""Candidate""
+        \/ /\ state = ""Leader""
+        /\ currentTerm' = currentTerm
+        /\ votedFor' = votedFor
+        /\ state' = ""Leader""
+
+Spec == Init /\ [][Next]_<<currentTerm, votedFor, state>>
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,1,0,0.778,silver,206.88,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES readers, writer_active
+
+Init == /\ readers = <<>>
+       /\ writer_active = FALSE
+
+Next == \/ /\ writer_active' = FALSE
+          /\ readers' = Append(readers, 1)
+        \/ /\ writer_active' = TRUE
+          /\ readers' = <<>>
+        \/ /\ writer_active' = FALSE
+          /\ readers' = Tail(readers)
+
+Spec == Init /\ [][Next]_<<readers, writer_active>>
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,1,0,0.444,silver,98.33,"---- MODULE DistributedSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, channel, marker, snapshot, recorded, finished
+===="
+chattla:20b,BM009,Token Ring,networking,2,0,0,0.778,bronze,22.71,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS N
+
+VARIABLES token, messages
+
+Init == /\ token \in 1..N
+        /\ messages \in 1..N -> 1..N
+
+Next == /\ token' \in 1..N
+        /\ messages' \in 1..N -> 1..N
+        /\ token' = IF token = N THEN 1 ELSE token + 1
+           /\ messages' = [i \in 1..N |-> IF i = token THEN token' ELSE messages[i]]
+
+Spec == Init /\ [][Next]_<<token, messages>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,1.0,silver,18.83,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, Values
+
+VARIABLES store
+
+Init == /\ store \in [Keys -> Values]
+Next == \/ /\ \E k \in Keys : \E v \in Values : /\ store' = [store EXCEPT ![k] = v]
+          \/ /\ \E k \in Keys: /\ store' = [store EXCEPT ![k] = store[k]]
+TypeOK == /\ store \in [Keys -> Values]
+Spec == Init /\ [][Next]_<<store>>
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,1,0,0.667,silver,114.56,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES acceptors, proposers, promises, accepted, chosen, chosenBallot, chosenBy, chosenByBallot, chosenByValue, chosenByValueBallot
+
+Init == /\ acceptors = <<>>
+       /\ proposers = <<>>
+       /\ promises = <<>>
+       /\ accepted = <<>>
+       /\ chosen = <<>>
+       /\ chosenBallot = <<>>
+       /\ chosenBy = <<>>
+       /\ chosenByBallot = <<>>
+       /\ chosenByValue = <<>>
+       /\ chosenByValueBallot = <<>>
+
+Next == \/ /\ acceptors' = acceptors
+        /\ proposers' = proposers
+        /\ promises' = promises
+        /\ accepted' = accepted
+        /\ chosen' = chosen
+        /\ chosenBallot' = chosenBallot
+        /\ chosenBy' = chosenBy
+        /\ chosenByBallot' = chosenByBallot
+        /\ chosenByValue' = chosenByValue
+        /\ chosenByValueBallot' = chosenByValueBallot
+        /\ acceptors' = acceptors
+           /\ proposers' = proposers
+           /\ promises' = promises
+           /\ accepted' = accepted
+           /\ chosen' = chosen
+           /\ chosenBallot' = chosenBallot
+           /\ chosenBy' = chosenBy
+           /\ chosenByBallot' = chosenByBallot
+           /\ chosenByValue' = chosenByValue
+           /\ chosenByValueBallot' = chosenByValueBallot
+           /\ acceptors' = acceptors
+              /\ proposers' = proposers
+              /\ promises' = promises
+              /\ accepted' = accepted
+              /\ chosen' = chosen
+              /\ chosenBallot' = chosenBallot
+              /\ chosenBy' = chosenBy
+              /\ chosenByBallot' = chosenByBallot
+              /\ chosenByValue' = chosenByValue
+              /\ chosenByValueBallot' = chosenByValueBallot
+              /\ acceptors' = acceptors
+                 /\ proposers' = proposers
+                 /\ promises' = promises
+                 /\ accepted' = accepted
+                 /\ chosen' = chosen
+                 /\ chosenBallot' = chosenBallot
+                 /\ chosenBy' = chosenBy
+                 /\ chosenByBallot' = chosenByBallot
+                 /\ chosenByValue' = chosenByValue
+                 /\ chosenByValueBallot' = chosenByValueBallot
+                 /\ acceptors' = acceptors
+                    /\ proposers' = proposers
+                    /\ promises' = promises
+                    /\ accepted' = accepted
+                    /\ chosen' = chosen
+                    /\ chosenBallot' = chosenBallot
+                    /\ chosenBy' = chosenBy
+                    /\ chosenByBallot' = chosenByBallot
+                    /\ chosenByValue' = chosenByValue
+                    /\ chosenByValueBallot' = chosenByValueBallot
+                    /\ acceptors' = acceptors
+                       /\ proposers' = proposers
+                       /\ promises' = promises
+                       /\ accepted' = accepted
+                       /\ chosen' = chosen
+                       /\ chosenBallot' = chosenBallot
+                       /\ chosenBy' = chosenBy
+                       /\ chosenByBallot' = chosenByBallot
+                       /\ chosenByValue' = chosenByValue
+                       /\ chosenByValueBallot' = chosenByValueBallot
+                       /\ acceptors' = acceptors
+                          /\ proposers' = proposers
+                          /\ promises' = promises
+                          /\ accepted' = accepted
+                          /\ chosen' = chosen
+                          /\ chosenBallot' = chosenBallot
+                          /\ chosenBy' = chosenBy
+                          /\ chosenByBallot' = chosenByBallot
+                          /\ chosenByValue' = chosenByValue
+                          /\ chosenByValueBallot' = chosenByValueBallot
+                          /\ acceptors' = acceptors
+                             /\ proposers' = proposers
+                             /\ promises' = promises
+                             /\ accepted' = accepted
+                             /\ chosen' = chosen
+                             /\ chosenBallot' = chosenBallot
+                             /\ chosenBy' = chosenBy
+                             /\ chosenByBallot' = chosenByBallot
+                             /\ chosenByValue' = chosenByValue
+                             /\ chosenByValueBallot' = chosenByValueBallot
+                             /\ acceptors' = acceptors
+                                /\ proposers' = proposers
+                                /\ promises' = promises
+                                /\ accepted' = accepted
+                                /\ chosen' = chosen
+                                /\ chosenBallot' = chosenBallot
+                                /\ chosenBy' = chosenBy
+                                /\ chosenByBallot' = chosenByBallot
+                                /\ chosenByValue' = chosenByValue
+                                /\ chosenByValueBallot' = chosenByValueBallot
+                                /\ acceptors' = acceptors
+                                   /\ proposers' = proposers
+                                   /\ promises' = promises
+                                   /\ accepted' = accepted
+                                   /\ chosen' = chosen
+                                   /\ chosenBallot' = chosenBallot
+                                   /\ chosenBy' = chosenBy
+                                   /\ chosenByBallot' = chosenByBallot
+                                   /\ chosenByValue' = chosenByValue
+                                   /\ chosenByValueBallot' = chosenByValueBallot
+                                   /\ acceptors' = acceptors
+                                      /\ proposers' = proposers
+                                      /\ promises' = promises
+                                      /\ accepted' = accepted
+                                      /\ chosen' = chosen
+                                      /\ chosenBallot' = chosenBallot
+                                      /\ chosenBy' = chosenBy
+                                      /\ chosenByBallot' = chosenByBallot
+                                      /\ chosenByValue' = chosenByValue
+                                      /\ chosenByValueBallot' = chosenByValueBallot
+                                      /\ acceptors' = acceptors
+                                         /\ proposers' = proposers
+                                         /\ promises' = promises
+                                         /\ accepted' = accepted
+                                         /\ chosen' = chosen
+                                         /\ chosenBallot' = chosenBallot
+                                         /\ chosenBy' = chosenBy
+                                         /\ chosenByBallot' = chosenByBallot
+                                         /\ chosenByValue' = chosenByValue
+                                         /\ chosenByValueBallot' = chosenByValueBallot
+                                         /\ acceptors' = acceptors
+                                            /\ proposers' = proposers
+                                            /\ promises' = promises
+                                            /\ accepted' = accepted
+                                            /\ chosen' = chosen
+                                            /\ chosenBallot' = chosenBallot
+                                            /\ chosenBy' = chosenBy
+                                            /\ chosenByBallot' = chosenByBallot
+                                            /\ chosenByValue' = chosenByValue
+                                            /\ chosenByValueBallot' = chosenByValueBallot
+                                            /\ acceptors' = acceptors
+                                               /\ proposers' = proposers
+                                               /\ promises' = promises
+                                               /\ accepted' = accepted
+                                               /\ chosen' = chosen
+                 "
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,1,0,0.444,silver,261.34,"---- MODULE FileTransfer ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES file, chunks, sent, received, retransmitCount, MAX_RETRIES, channel, timeout
+
+===="
+chattla:20b,BM013,Transaction Isolation (Snapshot Isolation),transaction,4,1,0,0.444,silver,108.55,"---- MODULE SnapshotIsolation ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES db, txns, nextTxId, snapshot, writes, aborts, commits
+
+===="
+chattla:20b,BM014,Clock Synchronisation,networking,3,0,0,0.778,bronze,393.82,"---- MODULE ClockSync ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES clocks, offsets
+
+Init == /\ clocks = [i \in 1..N |-> 0]
+        /\ offsets = [i \in 1..N |-> 0]
+
+Next == /\ \A i \in 1..N : clocks[i] = clocks[i] + offsets[i]
+        /\ \A i \in 1..N : offsets[i] = offsets[i] + (RandomDrift(i))
+        /\ \A i \in 1..N : clocks[i] = clocks[i] + (SyncAdjustment(i))
+
+RandomDrift(i) == CHOOSE d \in -1..1 : TRUE
+
+SyncAdjustment(i) == (1 \div N) * \Sum j \in 1..N : (clocks[j] - clocks[i])
+
+Spec == Init /\ [][Next]_<<clocks, offsets>>
+
+===="
+chattla:20b,BM015,Peterson's Algorithm,scheduling,2,0,0,0.667,bronze,574.17,"---- MODULE Peterson2 ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES flag, turn
+
+Init == /\ flag = [i \in 1..2 |-> FALSE]
+        /\ turn = 1
+
+Next == \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag[1] = TRUE
+          /\ turn' = 2
+          /\ flag' = [flag EXCEPT ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag[2] = TRUE
+          /\ turn' = 1
+          /\ flag' = [flag EXCEPT ![1] = FALSE]
+        \/ /\ flag[1] = TRUE
+          /\ flag[2] = TRUE
+          /\ turn = 1
+          /\ flag' = [flag EXCEPT ![1] = FALSE]
+        \/ /\ flag[1] = TRUE
+          /\ flag[2] = TRUE
+          /\ turn = 2
+          /\ flag' = [flag EXCEPT ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = FALSE, ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = FALSE, ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = FALSE, ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = FALSE, ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = FALSE, ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = FALSE, ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = FALSE, ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = FALSE, ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = FALSE, ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = FALSE, ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = FALSE, ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = FALSE, ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = FALSE, ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = FALSE, ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = FALSE, ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = FALSE, ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = FALSE, ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = FALSE, ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = FALSE, ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = FALSE, ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = FALSE, ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = FALSE, ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = FALSE, ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = FALSE, ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = FALSE, ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = FALSE, ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = FALSE, ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = FALSE, ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = FALSE, ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = FALSE, ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = FALSE, ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = FALSE, ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = FALSE, ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = FALSE, ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = FALSE, ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = FALSE, ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = FALSE, ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = FALSE, ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = FALSE, ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = FALSE, ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = FALSE, ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = FALSE, ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = FALSE, ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = FALSE, ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = FALSE, ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = FALSE, ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = FALSE, ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = FALSE, ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = FALSE, ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = FALSE, ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = FALSE, ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = FALSE, ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = FALSE, ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = FALSE, ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = FALSE, ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = FALSE, ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = FALSE, ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = FALSE, ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = FALSE, ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = FALSE, ![2] = FALSE]
+        \/ /\ flag"
+chattla:20b,BM016,Gossip Protocol,networking,3,1,0,0.778,silver,301.1,"---- MODULE Gossip ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES known, infected
+
+Init == /\ known = <<>> /\ infected = <<>> /\ Len(known) = Len(infected)
+
+Next == /\ known' = known
+        /\ infected' = Append(infected, known)
+
+Spec == Init /\ [][Next]_<<known, infected>>
+
+===="
+chattla:20b,BM017,Simple Allocator,storage,2,0,0,0.889,bronze,215.82,"---- MODULE MemoryAllocator ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, Pages, Client
+
+VARIABLE free, allocated, p
+
+Init == /\ free = Pages
+        /\ allocated = [c \in Client |-> {}]
+
+Next == /\ \E c \in Client:
+          /\ c \notin DOMAIN allocated
+          /\ \E p \in free:
+              /\ allocated' = [allocated EXCEPT ![c] = \E p' \in free: p']
+              /\ free' = free \ {p}
+        \/ \E c \in DOMAIN allocated:
+          /\ \E p \in allocated[c]:
+              /\ allocated' = [allocated EXCEPT ![c] = \E p' \in allocated[c]: p']
+              /\ free' = free \cup {p}
+
+TypeOK == /\ free \subseteq Pages
+          /\ \A c \in Client: allocated[c] \subseteq Pages
+          /\ \A c \in Client: allocated[c] \subseteq free
+          /\ \A c1, c2 \in Client: c1 # c2 => allocated[c1] \cap allocated[c2] = {}
+
+Spec == Init /\ [][Next]_<<free, allocated>> ==
+
+===="
+chattla:20b,BM018,Publish-Subscribe Broker,networking,3,1,0,0.444,silver,13.1,"---- MODULE Broker ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES subscribers, messages, nextMsgId, nextSubId
+
+===="
+chattla:20b,BM019,Dekker's Algorithm,scheduling,3,1,0,0.778,silver,26.72,"---- MODULE Dekker ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES turn, wants
+
+Init == /\ turn \in {0,1}
+        /\ wants \in {0,1}^2
+        /\ wants = [i \in {0,1} |-> 0]
+
+Next == 
+  \/ /\ turn = 0
+      /\ wants[0] = 0
+      /\ wants' = [wants EXCEPT ![0] = 1]
+      /\ turn' = 1
+      /\ UNCHANGED <<wants[1]>>
+  \/ /\ turn = 1
+      /\ wants[1] = 0
+      /\ wants' = [wants EXCEPT ![1] = 1]
+      /\ turn' = 0
+      /\ UNCHANGED <<wants[0]>>
+  \/ /\ turn = 0
+      /\ wants[0] = 1
+      /\ UNCHANGED <<turn, wants>>
+  \/ /\ turn = 1
+      /\ wants[1] = 1
+      /\ UNCHANGED <<turn, wants>>
+
+Spec == Init /\ [][Next]_<<turn, wants>>
+
+===="
+chattla:20b,BM020,Eventually Consistent Counter,storage,3,1,0,1.0,silver,205.28,"---- MODULE GCounter ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS Node
+
+VARIABLES counts
+
+Init == /\ counts \in [Node -> [Node -> Nat]]
+       /\ \A n \in Node: counts[n][n] = 0
+       /\ \A n1, n2 \in Node: n1 # n2 => counts[n1][n2] = 0
+
+Next == \E n \in Node:
+          /\ counts' = [counts EXCEPT ![n][n] = counts[n][n] + 1]
+          /\ \A n1, n2 \in Node: n1 # n2 => counts'[n1][n2] = counts[n1][n2]
+
+Spec == Init /\ [][Next]_<<counts>>
+
+TypeOK == /\ counts \in [Node -> [Node -> Nat]]
+          /\ \A n \in Node: counts[n][n] \in Nat
+          /\ \A n1, n2 \in Node: n1 # n2 => counts[n1][n2] \in Nat
+
+===="

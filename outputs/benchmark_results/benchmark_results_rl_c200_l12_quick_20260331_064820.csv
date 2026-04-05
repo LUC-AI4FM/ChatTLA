@@ -1,0 +1,512 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,0,0,0.778,bronze,25.11,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS N
+
+VARIABLES state
+
+
+
+Init == /\ state \in [1..N -> {idle, trying, critical}]
+        /\ \A i \in 1..N: state[i] = idle
+
+Next == \/ \E i \in 1..N: /\ state[i] = idle
+                     /\ state[i] = trying
+          \/ \E i \in 1..N: /\ state[i] = trying
+                     /\ state[i] = critical
+          \/ \E i \in 1..N: /\ state[i] = critical
+                     /\ state[i] = idle
+
+Spec == Init /\ [][Next]_<<state>>
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,1,0,0.444,silver,35.96,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, Participants
+
+VARIABLES state, votes, coordinator, messages, log
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,0,0,1.0,bronze,36.17,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLES forks, states
+
+(* Fork ownership: forks[i] = j means fork i is held by philosopher j; forks[i] = -1 means fork i is free *)
+Init == /\ forks = [i \in 1..N |-> -> -1]
+        /\ states = [i \in 1..N |-> -> ""thinking""]
+
+Next == \/ (* Philosopher i becomes hungry *)
+          /\ states' = [states EXCEPT ![i] = ""hungry""]
+        \/ (* Philosopher i picks up forks if both are free *)
+          /\ states[i] = ""hungry""
+          /\ forks[i] = -1
+          /\ forks[%(i, N) + 1] = -1
+          /\ forks' = [forks EXCEPT ![i] = i, ![%(i, N) + 1] = i]
+          /\ states' = [states EXCEPT ![i] = ""eating""]
+        \/ (* Philosopher i puts down forks after eating *)
+          /\ states[i] = ""eating""
+          /\ forks' = [forks EXCEPT ![i] = -1, ![%(i, N) + 1] = -1]
+          /\ states' = [states EXCEPT ![i] = ""thinking""]
+
+TypeOK == /\ forks \in [1..N -> 1..N \cup {-1}]
+          /\ states \in [1..N -> {""thinking"", ""hungry"", ""eating""}]
+
+Spec == Init /\ [][Next]_<<forks, states>>
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,1,0,0.778,silver,105.88,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+VARIABLES num, flag, maxFlag, maxNum
+
+Init == /\ num = 0
+       /\ flag = 0
+       /\ maxFlag = 0
+       /\ maxNum = 0
+
+Next == /\ num' = IF flag' THEN num ELSE num' + 1
+       /\ flag' = IF flag THEN flag ELSE flag' + 1
+       /\ maxNum' = IF maxFlag' THEN maxNum ELSE maxNum' + 1
+       /\ maxFlag' = IF maxFlag THEN maxFlag ELSE maxFlag' + 1
+
+Spec == Init /\ [][Next]_<<num, flag, maxFlag, maxNum>>
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,0,0.444,silver,57.61,"---- MODULE BoundedFIFO ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail, size
+
+(* The queue is represented as a sequence of length K. *)
+(* head and tail are indices into the sequence. *)
+(* size is the number of elements in the queue. *)
+
+(* The queue is empty when size = 0. *)
+(* The queue is full when size = K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], "
+chattla:20b,BM006,Raft Leader Election,consensus,4,1,0,0.444,silver,90.21,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,0,0,0.778,bronze,199.51,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES readers, writer_active
+
+Init == /\ readers = <<>>
+       /\ writer_active = FALSE
+
+Next == \/ /\ writer_active = FALSE
+          /\ \E r \in 1..10 : /\ r \notin readers
+              /\ readers' = Append(readers, r)
+          \/ /\ writer_active = FALSE
+              /\ \E r \in readers : /\ r \in readers
+              /\ writer_active' = TRUE
+          \/ /\ writer_active = TRUE
+              /\ \E r \in readers : /\ r \in readers
+              /\ writer_active' = FALSE
+              /\ readers' = <<>>
+
+Spec == Init /\ [][Next]_<<readers, writer_active>>
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,1,0,0.444,silver,74.74,"---- MODULE DistributedSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, channel, markerSent, snapshotTaken, channelState
+===="
+chattla:20b,BM009,Token Ring,networking,2,1,1,0.667,gold,2.25,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLE token
+
+Init == /\ token \in 1..N
+
+Next == /\ token' \in 1..N
+        /\ token' = IF token = N THEN 1 ELSE token + 1
+
+Spec == Init /\ [][Next]_<<token>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,1.0,silver,5.02,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, Values, NULL
+
+VARIABLES store
+
+Init == store = [k \in Keys |-> NULL]
+
+Next == \E k \in Keys : \E v \in Values :
+          /\ store' = [store EXCEPT ![k] = v]
+          /\ UNCHANGED <<>>
+
+Spec == Init /\ [][Next]_<<store>>
+
+TypeOK == /\ store \in [Keys -> Values]
+          /\ \A k \in Keys : store[k] \in Values
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,1,0,0.444,silver,235.37,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES acceptors, proposers, promises, accepts, chosen, chosenBy
+===="
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,0,0,0.778,bronze,43.07,"---- MODULE FileTransfer ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS MAX_RETRIES, CHUNK_SIZE, FILE_SIZE, CHANNEL_LOSS_PROBABILITY, FiniteSet, Subset
+VARIABLES channel, chunks, file, retransmit_count, sent_chunks
+
+    /\ file \in Seq
+    /\ chunks \in Seq
+    /\ sent_chunks \in FiniteSet
+    /\ retransmit_count \in FiniteSet
+    /\ channel \in FiniteSet
+
+Init ==
+    /\ file = <<>>
+    /\ chunks = <<>>
+    /\ sent_chunks = <<>>
+    /\ retransmit_count = <<>>
+    /\ channel = <<>>
+
+Next ==
+    /\ \E chunk \in Seq :
+        /\ chunk \in Subset(CHUNK_SIZE)
+        /\ chunk \notin sent_chunks
+        /\ \E loss \in {TRUE, FALSE}
+            /\ loss = (Random < CHANNEL_LOSS_PROBABILITY)
+            /\ IF loss
+                THEN /\ sent_chunks' = sent_chunks \cup {chunk}
+                     /\ retransmit_count' = retransmit_count \cup {chunk}
+                     /\ channel' = channel \cup {chunk}
+
+                     /\ retransmit_count' = retransmit_count
+                     /\ channel' = channel
+    /\ \E chunk \in sent_chunks :
+        /\ \E loss \in {TRUE, FALSE}
+            /\ loss = (Random < CHANNEL_LOSS_PROBABILITY)
+            /\ IF loss
+                THEN /\ sent_chunks' = sent_chunks
+                     /\ retransmit_count' = retransmit_count
+                     /\ channel' = channel \cup {chunk}
+
+                     /\ retransmit_count' = retransmit_count \cup {chunk}
+                     /\ channel' = channel
+    /\ \E chunk \in retransmit_count :
+        /\ \E loss \in {TRUE, FALSE}
+            /\ loss = (Random < CHANNEL_LOSS_PROBABILITY)
+            /\ IF loss
+                THEN /\ sent_chunks' = sent_chunks
+                     /\ retransmit_count' = retransmit_count
+                     /\ channel' = channel \cup {chunk}
+
+                     /\ retransmit_count' = retransmit_count \cup {chunk}
+                     /\ channel' = channel
+
+Spec ==
+    Init /\ [][Next]_<<file, chunks, sent_chunks, retransmit_count, channel>>
+
+===="

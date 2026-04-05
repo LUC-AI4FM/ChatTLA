@@ -1,0 +1,631 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,0,0.444,silver,14.51,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,1,1,0.778,gold,50.24,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, Participants, Coordinator, PrepareMsg, VoteYesMsg, VoteNoMsg, CommitMsg, AbortMsg, AllMsgs, AllParticipants, AllCoordinators, AllMsgTypes
+
+VARIABLES participants, coordinator, prepareMsg, voteYesMsg, voteNoMsg, commitMsg, abortMsg, allMsgs, allParticipants, allCoordinators, allMsgTypes
+
+Init == /\ participants = Participants
+        /\ coordinator = Coordinator
+        /\ prepareMsg = PrepareMsg
+        /\ voteYesMsg = VoteYesMsg
+        /\ voteNoMsg = VoteNoMsg
+        /\ commitMsg = CommitMsg
+        /\ abortMsg = AbortMsg
+        /\ allMsgs = AllMsgs
+        /\ allParticipants = AllParticipants
+        /\ allCoordinators = AllCoordinators
+        /\ allMsgTypes = AllMsgTypes
+
+Next == /\ participants' = participants
+        /\ coordinator' = coordinator
+        /\ prepareMsg' = prepareMsg
+        /\ voteYesMsg' = voteYesMsg
+        /\ voteNoMsg' = voteNoMsg
+        /\ commitMsg' = commitMsg
+        /\ abortMsg' = abortMsg
+        /\ allMsgs' = allMsgs
+        /\ allParticipants' = allParticipants
+        /\ allCoordinators' = allCoordinators
+        /\ allMsgTypes' = allMsgTypes
+
+Spec == Init /\ [][Next]_<<participants, coordinator, prepareMsg, voteYesMsg, voteNoMsg, commitMsg, abortMsg, allMsgs, allParticipants, allCoordinators, allMsgTypes>>
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,0,0,1.0,bronze,75.08,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N
+
+VARIABLES forks, state
+
+
+  state = [i \in 1..N |-> -> ""thinking""];  (* ""thinking"", ""hungry"", ""eating"" *)
+
+  for i \in 1..N do
+    fork[i] == FALSE;
+    state[i] == ""thinking"";
+  end for;
+
+    for i \in 1..N do
+
+        state[i] == ""hungry"";
+
+          forks[Left(i)] == TRUE;
+          forks[Right(i)] == TRUE;
+          state[i] == ""eating"";
+
+        forks[Left(i)] == FALSE;
+        forks[Right(i)] == FALSE;
+        state[i] == ""thinking"";
+
+    end for;
+
+
+*)
+
+(* Helper functions *)
+Left(i) == IF i = 1 THEN N ELSE i - 1
+Right(i) == IF i = N THEN 1 ELSE i + 1
+
+(* Initial state *)
+Init == /\ forks = [i \in 1..N |-> -> FALSE]
+        /\ state = [i \in 1..N |-> -> ""thinking""]
+
+(* Next-state relation *)
+Next == \/ /\ state' = [i \in 1..N |-> -> IF state[i] = ""thinking"" THEN ""hungry"" ELSE state[i]]
+        /\ forks' = [i \in 1..N |-> -> IF state[i] = ""thinking"" THEN forks[i]
+
+
+        /\ state' = [i \in 1..N |-> -> IF state[i] = ""hungry"" /\ forks[Left(i)] = TRUE /\ forks[Right(i)] = TRUE THEN ""eating"" ELSE state[i]]
+        /\ forks' = [i \in 1..N |-> -> IF state[i] = ""eating"" THEN FALSE ELSE forks[i]]
+        /\ state' = [i \in 1..N |-> -> IF state[i] = ""eating"" THEN ""thinking"" ELSE state[i]]
+
+(* Specification *)
+Spec == Init /\ [][Next]_<<forks, state>>
+
+(* Type invariant *)
+TypeOK == /\ forks \in [i \in 1..N |-> -> BOOLEAN]
+          /\ state \in [i \in 1..N |-> -> {""thinking"", ""hungry"", ""eating""}]
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,1,0,1.0,silver,63.34,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N
+
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+VARIABLES num, flag
+
+Init == /\ num = [i \in 1..N |-> 0]
+        /\ flag = [i \in 1..N |-> FALSE]
+        /\ \A i \in 1..N : 
+              /\ flag[i] = FALSE
+              /\ num[i] = 0
+
+choose(i) == 
+  /\ flag[i] = TRUE
+  /\ num[i] = 0
+  /\ LET maxNum == Max(Seq(1..N))
+     IN num[i] = maxNum + 1
+
+enter(i) == 
+  /\ flag[i] = FALSE
+  /\ \A j \in 1..N \ {i} : 
+       (num[j] = 0) \/ (num[j] > num[i]) \/ (num[j] = num[i] /\ j > i)
+
+exit(i) == 
+  /\ num[i] = 0
+
+Next == \E i \in 1..N : 
+         (choose(i) \/ enter(i) \/ exit(i))
+
+Spec == Init /\ [][Next]_<<num, flag>>
+
+TypeOK == /\ num \in [1..N -> Nat]
+          /\ flag \in [1..N -> BOOLEAN]
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,0,1.0,silver,23.39,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail, count
+
+(* The queue is represented as a sequence of length K, with head and tail indices *)
+(* head points to the next element to be dequeued *)
+(* tail points to the next position to enqueue *)
+(* count tracks the number of elements in the queue *)
+
+Init == /\ q \in Seq(K)
+        /\ head \in 1..K
+        /\ tail \in 1..K
+        /\ count \in 0..K
+        /\ head = 1
+        /\ tail = 1
+        /\ count = 0
+        /\ q = [i \in 1..K |-> 0]  (* initialize all slots to 0 *)
+
+Producer == /\ count < K
+            /\ q' = [q EXCEPT ![tail] = 1]
+            /\ tail' = IF tail = K THEN 1 ELSE tail + 1
+            /\ count' = count + 1
+            /\ head' = head
+
+Consumer == /\ count > 0
+            /\ q' = [q EXCEPT ![head] = 0]
+            /\ head' = IF head = K THEN 1 ELSE head + 1
+            /\ count' = count - 1
+            /\ tail' = tail
+
+Next == Producer \/ Consumer
+
+Spec == Init /\ [][Next]_<<q, head, tail, count>>
+
+TypeOK == /\ q \in Seq(K)
+          /\ head \in 1..K
+          /\ tail \in 1..K
+          /\ count \in 0..K
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,1,0,0.444,silver,61.81,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,0,0,0.778,bronze,200.62,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES readers, writer_active
+
+Init == /\ readers = <<>>
+       /\ writer_active = FALSE
+
+Next == \/ /\ writer_active = FALSE
+          /\ \E r \in 1..10 : /\ r \notin readers
+              /\ writer_active' = FALSE
+                 /\ readers' = Append(readers, r)
+          \/ /\ writer_active = FALSE
+              /\ \E r \in 1..10 : /\ r \in readers
+                 /\ writer_active' = TRUE
+                    /\ readers' = <<>>
+          \/ /\ writer_active = TRUE
+              /\ writer_active' = FALSE
+                 /\ readers' = <<>>
+          \/ /\ writer_active = TRUE
+              /\ \E r \in 1..10 : /\ r \notin readers
+                 /\ writer_active' = TRUE
+                    /\ readers' = Append(readers, r)
+
+Spec == Init /\ [][Next]_<<readers, writer_active>>
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,1,0,0.444,silver,11.36,"---- MODULE ChandyLamportSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, channel, snapshot, marker, recorded, finished
+===="
+chattla:20b,BM009,Token Ring,networking,2,1,1,0.667,gold,2.15,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLE token
+
+Init == /\ token \in 1..N
+
+Next == /\ token' \in 1..N
+        /\ token' = IF token = N THEN 1 ELSE token + 1
+
+Spec == Init /\ [][Next]_<<token>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,0.778,silver,6.81,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, Values, NULL
+
+VARIABLES store
+
+Init == store = [k \in Keys |-> NULL]
+
+Next == \/ /\ \E k \in Keys : \E v \in Values : /\ store' = [store EXCEPT ![k] = v]
+      \/ /\ \E k \in Keys : /\ store' = [store EXCEPT ![k] = NULL]
+
+Spec == Init /\ [][Next]_<<store>>
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,1,0,0.444,silver,198.4,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES acceptors, proposers, promises, accepts, chosen
+
+===="
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,1,0,0.778,silver,127.85,"---- MODULE FileTransfer ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS MAX_RETRIES, CHUNK_SIZE, FILE_SIZE, CHANNEL_CAPACITY
+VARIABLES channel, chunks, file, retransmitCount, sentChunks
+
+Init ==
+    /\ file = <<>>
+    /\ chunks = <<>>
+    /\ sentChunks = <<>>
+    /\ retransmitCount = <<>>
+    /\ channel = <<>>
+
+Next ==
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ channel' = channel
+    \/ /\ file' = Append(file, <<>>)
+       /\ chunks' = Append(chunks, <<>>)
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = Append(sentChunks, <<>>)
+       /\ retransmitCount' = Append(retransmitCount, 0)
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = Append(retransmitCount, 0)
+       /\ channel' = Append(channel, <<>>)
+
+Spec == Init /\ [][Next]_<<channel, chunks, file, retransmitCount, sentChunks>>
+
+===="
+chattla:20b,BM013,Transaction Isolation (Snapshot Isolation),transaction,4,1,0,0.444,silver,57.98,"---- MODULE SnapshotIsolation ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES db, txns, snapshot, writes, aborts, commitTs, nextTs
+
+===="
+chattla:20b,BM014,Clock Synchronisation,networking,3,0,0,0.667,bronze,68.89,"---- MODULE ClockSync ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES clocks, offsets
+
+Init == /\ clocks = [i \in 1..N |-> 0]
+        /\ offsets = [i \in 1..N |-> 0]
+
+Next == /\ \E i \in 1..N : /\ clocks[i] = clocks[i] + offsets[i]
+        /\ offsets' = [j \in 1..N |-> IF j = i THEN offsets[j] + delta ELSE offsets[j]]
+        /\ clocks' = [k \in 1..N |-> IF k = i THEN clocks[k] + offsets[k] ELSE clocks[k]]
+        /\ offsets' = [j \in 1..N |-> IF j = i THEN offsets[j] + delta ELSE offsets[j]]
+        /\ clocks' = [k \in 1..N |-> IF k = i THEN clocks[k] + offsets[k] ELSE clocks[k]]
+        /\ offsets' = [j \in 1..N |-> IF j = i THEN offsets[j] + delta ELSE offsets[j]]
+        /\ clocks' = [k \in 1..N |-> IF k = i THEN clocks[k] + offsets[k] ELSE clocks[k]]
+        /\ offsets' = [j \in 1..N |-> IF j = i THEN offsets[j] + delta ELSE offsets[j]]
+        /\ clocks' = [k \in 1..N |-> IF k = i THEN clocks[k] + offsets[k] ELSE clocks[k]]
+        /\ offsets' = [j \in 1..N |-> IF j = i THEN offsets[j] + delta ELSE offsets[j]]
+        /\ clocks' = [k \in 1..N |-> IF k = i THEN clocks[k] + offsets[k] ELSE clocks[k]]
+        /\ offsets' = [j \in 1..N |-> IF j = i THEN offsets[j] + delta ELSE offsets[j]]
+        /\ clocks' = [k \in 1..N |-> IF k = i THEN clocks[k] + offsets[k] ELSE clocks[k]]
+        /\ offsets' = [j \in 1..N |-> IF j = i THEN offsets[j] + delta ELSE offsets[j]]
+        /\ clocks' = [k \in 1..N |-> IF k = i THEN clocks[k] + offsets[k] ELSE clocks[k]]
+        /\ offsets' = [j \in 1..N |-> IF j = i THEN offsets[j] + delta ELSE offsets[j]]
+        /\ clocks' = [k \in 1..N |-> IF k = i THEN clocks[k] + offsets[k] ELSE clocks[k]]
+        /\ offsets' = [j \in 1..N |-> IF j = i THEN offsets[j] + delta ELSE offsets[j]]
+        /\ clocks' = [k \in 1..N |-> IF k = i THEN clocks[k] + offsets[k] ELSE clocks[k]]
+        /\ offsets' = [j \in 1..N |-> IF j = i THEN offsets[j] + delta ELSE offsets[j]]
+        /\ clocks' = [k \in 1..N |-> IF k = i THEN clocks[k] + offsets[k] ELSE clocks[k]]
+        /\ offsets' = [j \in 1..N |-> IF j = i THEN offsets[j] + delta ELSE offsets[j]]
+        /\ clocks' = [k \in 1..N |-> IF k = i THEN clocks[k] + offsets[k] ELSE clocks[k]]
+        /\ offsets' = [j \in 1..N |-> IF j = i THEN offsets[j] + delta ELSE offsets[j]]
+        /\ clocks' = [k \in 1..N |-> IF k = i THEN clocks[k] + offsets[k] ELSE clocks[k]]
+        /\ offsets' = [j \in 1..N |-> IF j = i THEN offsets[j] + delta ELSE offsets[j]]
+        /\ clocks' = [k \in 1..N |-> IF k = i THEN clocks[k] + offsets[k] ELSE clocks[k]]
+        /\ offsets' = [j \in 1..N |-> IF j = i THEN offsets[j] + delta ELSE offsets[j]]
+        /\ clocks' = [k \in 1..N |-> IF k = i THEN clocks[k] + offsets[k] ELSE clocks[k]]
+        /\ offsets' = [j \in 1..N |-> IF j = i THEN offsets[j] + delta ELSE offsets[j]]
+        /\ clocks' = [k \in 1..N |-> IF k = i THEN clocks[k] + offsets[k] ELSE clocks[k]]
+        /\ offsets' = [j \in 1..N |-> IF j = i THEN offsets[j] + delta ELSE offsets[j]]
+        /\ clocks' = [k \in 1..N |-> IF k = i THEN clocks[k] + offsets[k] ELSE clocks[k]]
+        /\ offsets' = [j \in 1..N |-> IF j = i THEN offsets[j] + delta ELSE offsets[j]]
+        /\ clocks' = [k \in 1..N |-> IF k = i THEN clocks[k] + offsets[k] ELSE clocks[k]]
+        /\ offsets' = [j \in 1..N |-> IF j = i THEN offsets[j] + delta ELSE offsets[j]]
+        /\ clocks' = [k \in 1..N |-> IF k = i THEN clocks[k] + offsets[k] ELSE clocks[k]]
+        /\ offsets' = [j \in 1..N |-> IF j = i THEN offsets[j] + delta ELSE offsets[j]]
+        /\ clocks' = [k \in 1..N |-> IF k = i THEN clocks[k] + offsets[k] ELSE clocks[k]]
+        /\ offsets' = [j \in 1..N |-> IF j = i THEN offsets[j] + delta ELSE offsets[j]]
+        /\ clocks' = [k \in 1..N |-> IF k = i THEN clocks[k] + offsets[k] ELSE clocks[k]]
+        /\ offsets' = [j \in 1..N |-> IF j = i THEN offsets[j] + delta ELSE offsets[j]]
+        /\ clocks' = [k \in 1..N |-> IF k = i THEN clocks[k] + offsets[k] ELSE clocks[k]]
+        /\ offsets' = [j \in 1..N |-> IF j = i THEN offsets[j] + delta ELSE offsets[j]]
+        /\ clocks' = [k \in 1..N |-> IF k = i THEN clocks[k] + offsets[k] ELSE clocks[k]]
+        /\ offsets' = [j \in 1..N |-> IF j = i THEN offsets[j] + delta ELSE offsets[j]]
+        /\ clocks' = [k \in 1..N |-> IF k = i THEN clocks[k] + offsets[k] ELSE clocks[k]]
+        /\ offsets' = [j \in 1..N |-> IF j = i THEN offsets[j] + delta ELSE offsets[j]]
+        /\ clocks' = [k \in 1..N |-> IF k = i THEN clocks[k] + offsets[k] ELSE clocks[k]]
+        /\ offsets' = [j \in 1..N |-> IF j = i THEN offsets[j] + delta ELSE offsets[j]]
+        /\ clocks' = [k \in 1..N |-> IF k = i THEN clocks[k] + offsets[k] ELSE clocks[k]]
+        /\ offsets' = [j \in 1..N |-> IF j = i THEN offsets[j] + delta ELSE offsets[j]]
+        /\ clocks' = [k \in 1..N |-> IF k = i THEN clocks[k] + offsets[k] ELSE clocks[k]]
+        /\ offsets' = [j \in 1..N |-> IF j = i THEN offsets[j] + delta ELSE offsets[j]]
+        /\ clocks' = [k \in 1..N |-> IF k = i THEN clocks[k] + offsets[k] ELSE clocks[k]]
+        /\ offsets' = [j \in 1..N |-> IF j = i THEN offsets[j] + delta ELSE offsets[j]]
+        /\ clocks' = [k \in 1..N |-> IF k = i THEN clocks[k] + offsets[k] ELSE clocks[k]]
+        /\ offsets' = [j \in 1..N |-> IF j = i THEN offsets[j] + delta ELSE offsets[j]]
+        /\ clocks' = [k \in 1..N |-> IF k = i THEN clocks[k] + offsets[k] ELSE clocks[k]]
+        /\ offsets' = [j \in 1..N |-> IF j = i THEN offsets[j] + delta ELSE offsets[j]]
+        /\ clocks' = [k \in 1..N |-> IF k = i THEN clocks[k] + offsets[k] ELSE clocks[k]]
+        /\ offsets' = [j \in 1..N |-> IF j = i THEN offsets[j] + delta ELSE offsets[j]]
+        /\ clocks' = [k \in 1..N |-> IF k = i THEN clocks[k] + offsets[k] ELSE clocks[k]]
+        /\ offsets' = [j \in 1..N |-> IF j = i THEN offsets[j] + delta ELSE offsets[j]]
+        /\ clocks' = [k \in 1..N |-> IF k = i THEN clocks[k] + offsets[k] ELSE clocks[k]]
+        /\ offsets' = [j \in 1..N |-> IF j = i THEN offsets[j] + delta ELSE offsets[j]]
+        /\ clocks' = [k \in 1..N |-> IF k = i THEN clocks[k] + offsets[k] ELSE clocks[k]]
+        /\ offsets' = [j \in 1..N |-> IF j = i THEN offsets[j] + delta ELSE offsets[j]]
+        /\ clocks' = [k \in 1..N |-> IF k = i THEN clocks[k] + offsets[k] ELSE clocks[k]]
+        /\ offsets' = [j \in 1..N |-> IF j = i THEN offsets[j] + delta ELSE offsets[j]]
+        /\ clocks' = [k \in 1..N |-> IF k = i THEN clocks[k] + offsets[k] ELSE clocks[k]]
+        /\ offsets' = [j \in 1..N |-> IF j = i THEN offsets[j] + delta ELSE offsets[j]]
+        /\ clocks' = [k \in 1..N |-> IF k = i THEN clocks[k] + offsets[k] ELSE clocks[k]]
+        /\ offsets' = [j \in 1..N |-> IF j = i THEN offsets[j] + delta ELSE offsets[j]]
+        /\ clocks' = [k \in 1..N |-> IF k = i THEN clocks[k] + offsets[k] ELSE clocks[k]]
+        /\ offsets' = [j \in 1..N |-> IF j = i THEN offsets[j] + delta ELSE offsets[j]]
+        /\ clocks' = [k \in 1..N |-> IF k = i THEN clocks[k] + offsets[k] ELSE clocks[k]]
+        /\ offsets' = [j \in 1..N |-> IF j = i THEN offsets[j] + delta ELSE offsets[j]]
+        /\ clocks' = [k \in 1..N |-> IF k = i THEN clocks[k] + offsets[k] ELSE clocks[k]]
+        /\ offsets' = [j \in 1..N |-> IF j = i THEN offsets[j] + delta ELSE offsets[j]]
+        /\ clocks' = [k \in 1..N |-> IF k = i THEN clocks[k] + offsets[k] ELSE clocks[k]]
+        /\ offsets' = [j \in 1..N |-> IF j = i THEN offsets[j] + delta ELSE offsets[j]]
+        /\ clocks' = [k \in 1..N |-> IF k = i THEN clocks[k] + offsets[k] ELSE clocks[k]]
+        /\ offsets' = [j \in 1..N |-> IF j = i THEN offsets[j] + delta ELSE offsets[j]]
+        /\ clocks' = [k \in 1..N |-> IF k = i THEN clocks[k] + offsets[k] ELSE clocks[k]]
+        /\ offsets' = [j \in 1..N |-> IF j = i THEN offsets[j] + delta ELSE offsets[j]]
+        /\ clocks' = [k \in 1..N |-> IF k = i THEN clocks[k] + offsets[k] ELSE clocks[k]]
+        /\ offsets' = [j \in 1..N |-> IF j = i THEN offsets[j] + delta ELSE offsets[j]]
+        /\ clocks'"
+chattla:20b,BM015,Peterson's Algorithm,scheduling,2,1,1,0.778,gold,191.14,"---- MODULE Peterson2 ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES flag, turn
+
+Init == /\ flag = [i \in 1..2 |-> FALSE]
+        /\ turn = 1
+
+Next == \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ turn' = turn
+          /\ flag' = flag
+        \/ /\ flag[1] = TRUE
+          /\ turn' = 2
+          /\ flag' = [flag EXCEPT ![2] = FALSE]
+        \/ /\ flag[2] = TRUE
+          /\ turn' = 1
+          /\ flag' = [flag EXCEPT ![1] = FALSE]
+
+Spec == Init /\ [][Next]_<<flag, turn>>
+
+===="
+chattla:20b,BM016,Gossip Protocol,networking,3,1,0,0.778,silver,184.05,"---- MODULE GossipProtocol ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES known, infected
+
+Init == /\ known = <<>> 
+        /\ infected = <<>> 
+
+Next == /\ known' = known
+        /\ infected' = infected \cup known
+
+Spec == Init /\ [][Next]_<<known, infected>> 
+
+===="
+chattla:20b,BM017,Simple Allocator,storage,2,0,0,1.0,bronze,27.83,"---- MODULE MemoryAllocator ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, Pages, Client
+
+VARIABLES free, allocated
+
+Init == /\ free = Pages
+        /\ allocated = [c \in Client |-> {}]
+
+Next == \/ /\ free # {}
+          /\ free' = free \ {p}
+             /\ allocated' = [c \in Client |-> IF c = client THEN allocated[c] \cup {p}
+
+          /\ client \in Client
+             /\ p \in free
+          \/ /\ allocated[client] # {}
+             /\ free' = free \cup {p}
+                /\ allocated' = [c \in Client |-> IF c = client THEN allocated[c] \setminus {p}
+
+             /\ client \in Client
+                /\ p \in allocated[client]
+
+TypeOK == /\ free \subseteq Pages
+          /\ allocated \in [Client -> SUBSET Pages]
+          /\ \A c \in Client: allocated[c] \subseteq Pages
+          /\ \A c1, c2 \in Client: c1 # c2 => allocated[c1] \cap allocated[c2] = {}
+
+Spec == Init /\ [][Next]_<<free, allocated>>
+
+===="
+chattla:20b,BM018,Publish-Subscribe Broker,networking,3,1,0,0.444,silver,8.61,"---- MODULE Broker ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES subscribers, messages, nextMsgId, nextSubId
+
+===="
+chattla:20b,BM019,Dekker's Algorithm,scheduling,3,1,1,0.778,gold,7.1,"---- MODULE Dekker ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES turn, wants
+
+Init == /\ turn \in {0, 1}
+        /\ wants \in SUBSET {0, 1}
+        /\ turn \in {0, 1}
+        /\ wants \subseteq {0, 1}
+
+Next == \/ /\ turn' = 0
+          /\ wants' = {0}
+        \/ /\ turn' = 1
+          /\ wants' = {1}
+        \/ /\ turn' = turn
+          /\ wants' = wants
+
+Spec == Init /\ [][Next]_<<turn, wants>>
+
+===="
+chattla:20b,BM020,Eventually Consistent Counter,storage,3,0,0,0.778,bronze,67.31,"---- MODULE GCounter ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS Node
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+
+VARIABLES counts
+
+
+  (* --state Increment
+
+  *)
+  (* --state Merge
+
+  *)
+end
+*)
+
+(* --state Init
+counts = [n \in Node |-> [m \in Node |-> 0]]
+*)
+
+(* --state Increment
+counts[n][n] := counts[n][n] + 1
+*)
+
+(* --state Merge
+counts[n][m] := Max(counts[n][m], counts[m][n])
+*)
+
+(* --state Next
+counts' = [n \in Node |-> [m \in Node |-> IF n = m THEN counts[n][n] + 1
+
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_<<counts>>
+*)
+
+(* --state TypeOK
+TypeOK == /\ counts \in [Node -> [Node -> Nat]]
+*)
+
+===="

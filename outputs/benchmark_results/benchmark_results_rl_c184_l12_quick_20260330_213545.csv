@@ -1,0 +1,511 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,0,0.444,silver,59.08,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, turn, flag
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,0,0,1.0,bronze,73.27,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, participants
+VARIABLES coordinatorState, messages, participantStates
+
+
+(* Types *)
+TypeOK == /\ coordinatorState \in {""Init"", ""Prepare"", ""Commit"", ""Abort""}
+          /\ participantStates \in [participants -> {""Init"", ""Prepare"", ""VoteYes"", ""VoteNo"", ""Commit"", ""Abort""}]
+          /\ messages \in [participants -> {""Prepare"", ""VoteYes"", ""VoteNo"", ""Commit"", ""Abort""}]
+
+(* Initial state *)
+Init == /\ coordinatorState = ""Init""
+        /\ participantStates = [p \in participants |-> ""Init""]
+        /\ messages = [p \in participants |-> ""Prepare""]
+
+(* Next-state relation *)
+Next == /\ coordinatorState' = NextCoordinatorState
+        /\ participantStates' = NextParticipantStates
+        /\ messages' = NextMessages
+
+NextCoordinatorState == 
+    /\ coordinatorState = ""Init"" /\ messages = [p \in participants |-> ""Prepare""]
+    /\ coordinatorState' = ""Prepare""
+    \/ coordinatorState = ""Prepare"" /\ messages = [p \in participants |-> ""VoteYes""]
+    /\ coordinatorState' = ""Commit""
+    \/ coordinatorState = ""Prepare"" /\ messages = [p \in participants |-> ""VoteNo""]
+    /\ coordinatorState' = ""Abort""
+    \/ coordinatorState = ""Commit"" /\ messages = [p \in participants |-> ""Commit""]
+    /\ coordinatorState' = ""Commit""
+    \/ coordinatorState = ""Abort"" /\ messages = [p \in participants |-> ""Abort""]
+    /\ coordinatorState' = ""Abort""
+
+NextParticipantStates == 
+    /\ \A p \in participants : 
+        /\ participantStates[p] = ""Init"" /\ messages[p] = ""Prepare""
+        /\ participantStates'[p] = ""Prepare""
+        \/ participantStates[p] = ""Prepare"" /\ messages[p] = ""VoteYes""
+        /\ participantStates'[p] = ""VoteYes""
+        \/ participantStates[p] = ""Prepare"" /\ messages[p] = ""VoteNo""
+        /\ participantStates'[p] = ""VoteNo""
+        \/ participantStates[p] = ""VoteYes"" /\ messages[p] = ""Commit""
+        /\ participantStates'[p] = ""Commit""
+        \/ participantStates[p] = ""VoteNo"" /\ messages[p] = ""Abort""
+        /\ participantStates'[p] = ""Abort""
+
+NextMessages == 
+    /\ \A p \in participants : 
+        /\ coordinatorState = ""Init"" /\ messages[p] = ""Prepare""
+        /\ messages'[p] = ""Prepare""
+        \/ coordinatorState = ""Prepare"" /\ messages[p] = ""VoteYes""
+        /\ messages'[p] = ""VoteYes""
+        \/ coordinatorState = ""Prepare"" /\ messages[p] = ""VoteNo""
+        /\ messages'[p] = ""VoteNo""
+        \/ coordinatorState = ""Commit"" /\ messages[p] = ""Commit""
+        /\ messages'[p] = ""Commit""
+        \/ coordinatorState = ""Abort"" /\ messages[p] = ""Abort""
+        /\ messages'[p] = ""Abort""
+
+Spec == Init /\ [][Next]_<<coordinatorState, participantStates, messages>>
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,0,0,1.0,bronze,44.62,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES forks, states
+
+(* Constants *)
+N == 5
+
+(* Helper functions *)
+LEFT(i) == IF i = 1 THEN N ELSE i - 1
+RIGHT(i) == IF i = N THEN 1 ELSE i + 1
+
+(* Initial state *)
+Init == /\ forks = [i \in 1..N |-> 0]
+        /\ states = [i \in 1..N |-> ""thinking""]
+
+(* Next-state relation *)
+Next == \/ /\ states[i] = ""thinking""
+        /\ forks[i] = 0
+        /\ forks[RIGHT(i)] = 0
+        /\ states' = [states EXCEPT ![i] = ""hungry""]
+        /\ forks' = forks
+   \/ /\ states[i] = ""hungry""
+        /\ forks[i] = 0
+        /\ forks[RIGHT(i)] = 0
+        /\ states' = [states EXCEPT ![i] = ""eating""]
+        /\ forks' = [forks EXCEPT ![i] = i, ![RIGHT(i)] = i]
+   \/ /\ states[i] = ""eating""
+        /\ forks[i] = i
+        /\ forks[RIGHT(i)] = i
+        /\ states' = [states EXCEPT ![i] = ""thinking""]
+        /\ forks' = [forks EXCEPT ![i] = 0, ![RIGHT(i)] = 0]
+   \/ /\ states[i] = ""hungry""
+        /\ forks[i] = i
+        /\ forks[RIGHT(i)] = i
+        /\ states' = [states EXCEPT ![i] = ""eating""]
+        /\ forks' = forks
+
+(* Invariant: fork ownership *)
+TypeOK == /\ \A i \in 1..N : forks[i] \in 0..N
+          /\ \A i \in 1..N : forks[i] = 0 \/ forks[i] = i
+
+Spec == Init /\ [][Next]_<<forks, states>>
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,1,0,0.778,silver,241.05,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES num, flag, maxFlag, maxNum
+
+Init == /\ num = 0
+       /\ flag = 0
+       /\ maxFlag = 0
+       /\ maxNum = 0
+
+Next == /\ num' = IF flag = 0 THEN 0 ELSE num + 1
+       /\ flag' = IF flag = 0 THEN 0 ELSE flag + 1
+       /\ maxFlag' = IF flag = 0 THEN 0 ELSE maxFlag + 1
+       /\ maxNum' = IF flag = 0 THEN 0 ELSE maxNum + 1
+
+Spec == Init /\ [][Next]_<<num, flag, maxFlag, maxNum>>
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,1,0.778,gold,6.12,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES queue, size
+
+Init == /\ queue = <<>>
+        /\ size = 0
+
+Next == \/ /\ size < K
+          /\ queue' = Append(queue, 1)
+          /\ size' = size + 1
+        \/ /\ size > 0
+          /\ queue' = Tail(queue)
+          /\ size' = size - 1
+
+Spec == Init /\ [][Next]_<<queue, size>>
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,0,0,0.778,bronze,20.09,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+Init == /\ currentTerm = 0
+        /\ votedFor = NULL
+        /\ state = ""Follower""
+
+Next == \/ /\ state = ""Follower""
+        /\ currentTerm' = currentTerm
+        /\ votedFor' = votedFor
+        /\ state' = ""Follower""
+        \/ /\ state = ""Candidate""
+        /\ currentTerm' = currentTerm + 1
+        /\ votedFor' = NULL
+        /\ state' = ""Candidate""
+        \/ /\ state = ""Leader""
+        /\ currentTerm' = currentTerm
+        /\ votedFor' = votedFor
+        /\ state' = ""Leader""
+
+Spec == Init /\ [][Next]_<<currentTerm, votedFor, state>>
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,0,0,0.778,bronze,22.24,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS Readers
+
+VARIABLES readers, writer_active
+
+Init == /\ readers = <<>>
+        /\ writer_active = FALSE
+
+Next == \/ /\ writer_active = FALSE
+          /\ \E r \in Readers :
+              /\ r \in readers
+              /\ readers' = Remove(r, readers)
+          \/ /\ writer_active = FALSE
+              /\ \E r \in Readers :
+                  /\ r \notin readers
+                  /\ writer_active' = TRUE
+          \/ /\ writer_active = TRUE
+              /\ writer_active' = FALSE
+
+Spec == Init /\ [][Next]_<<readers, writer_active>>
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,1,0,0.444,silver,20.39,"---- MODULE DistributedSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, channel, marker, snapshot, recorded, finished
+
+===="
+chattla:20b,BM009,Token Ring,networking,2,1,1,0.667,gold,7.87,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLE token
+
+Init == /\ token \in 1..N
+
+Next == /\ token' \in 1..N
+        /\ token' = IF token = N THEN 1 ELSE token + 1
+
+Spec == Init /\ [][Next]_<<token>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,0.667,silver,11.65,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, Values
+VARIABLE store
+
+Init == /\ store \in [Keys -> Values]
+
+Next == /\ \E k \in Keys : \E v \in Values : store' = [store EXCEPT ![k] = v]
+
+Spec == Init /\ [][Next]_<<store>>
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,0,0,0.444,bronze,226.84,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES acceptors, proposers, promises, accepts, chosen, chosenBallot, chosenValue, chosenBallotValue, chosenBallotValueValue, chosenBallotValueValueValue, chosenBallotValueValueValueValue, chosenBallotValueValueValueValueValue, chosenBallotValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue
+===="
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,0,0,0.556,bronze,206.18,"---- MODULE Sender ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS MAX_RETRIES, CHUNK_SIZE, FILE_SIZE
+VARIABLES retransmitCount, sentChunks
+
+    /\ file \in Seq
+    /\ Len(file) = FILE_SIZE
+    /\ chunks \in Seq
+    /\ Len(chunks) = Ceil(FILE_SIZE \div CHUNK_SIZE)
+    /\ sentChunks \in Seq
+    /\ Len(sentChunks) = 0
+    /\ retransmitCount \in Seq
+    /\ Len(retransmitCount) = 0
+
+Next ==
+    /\ sentChunks' = Append(sentChunks, lastChunk)
+    /\ retransmitCount' = Append(retransmitCount, 0)
+    /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = Append(retransmitCount, lastCount + 1)
+       /\ UNCHANGED <<file, chunks>>
+       /\ lastCount < MAX_RETRIES
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ UNCHANGED <<file, chunks>>
+
+    \/ /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ "

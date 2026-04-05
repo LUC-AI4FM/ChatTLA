@@ -1,0 +1,822 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,0,0,1.0,bronze,17.43,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state
+
+
+
+Init == \A i \in 1..N: state[i] = idle
+
+Next == \E i \in 1..N:
+    /\ state[i] = idle
+    /\ state[i] := trying
+    \/ state[i] = trying
+    /\ state[i] := critical
+    \/ state[i] = critical
+    /\ state[i] := idle
+
+Spec == Init /\ [][Next]_state
+
+TypeOK == \A i \in 1..N: state[i] \in {idle, trying, critical}
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,0,0,1.0,bronze,47.79,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, Participants, Coordinator
+VARIABLES coordinator, participants, state, votes
+
+
+vars == <<participants, coordinator>>
+
+Init == /\ participants = [p \in Participants |-> ""idle""]
+        /\ coordinator = [state |-> ""idle"", votes |-> <<>>]
+
+Prepare == /\ coordinator.state = ""idle""
+           /\ coordinator.votes = <<>>
+           /\ coordinator.state' = ""waiting""
+           /\ \A p \in Participants: participants[p] = ""idle""
+
+VoteYes == /\ coordinator.state = ""waiting""
+           /\ \E p \in Participants: participants[p] = ""idle""
+           /\ participants' = [participants EXCEPT ![p] = ""votedYes""]
+           /\ coordinator.votes' = Append(coordinator.votes, ""yes"")
+
+VoteNo == /\ coordinator.state = ""waiting""
+          /\ \E p \in Participants: participants[p] = ""idle""
+          /\ participants' = [participants EXCEPT ![p] = ""votedNo""]
+          /\ coordinator.votes' = Append(coordinator.votes, ""no"")
+
+Commit == /\ coordinator.state = ""waiting""
+          /\ coordinator.votes = Replicate(N, ""yes"")
+          /\ coordinator.state' = ""committed""
+          /\ \A p \in Participants: participants[p] = ""committed""
+
+Abort == /\ coordinator.state = ""waiting""
+         /\ \E v \in coordinator.votes: v = ""no""
+         /\ coordinator.state' = ""aborted""
+         /\ \A p \in Participants: participants[p] = ""aborted""
+
+Next == Prepare \/ VoteYes \/ VoteNo \/ Commit \/ Abort
+
+Spec == Init /\ [][Next]_vars
+
+TypeOK == /\ coordinator \in [state : {""idle"", ""waiting"", ""committed"", ""aborted""}, votes : Seq({""yes"")]
+          /\ participants \in [p \in Participants |-> {""idle"", ""votedYes"", ""votedNo"", ""committed"", ""aborted""}]
+          /\ Len(coordinator.votes) <= N
+          /\ \A p \in Participants: participants[p] \in {""idle"", ""votedYes"", ""votedNo"", ""committed"", ""aborted""}
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,0,0,1.0,bronze,59.19,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+VARIABLES forkOwner, hasn, philosopherState
+
+
+\* Philosopher states
+States == {""thinking"", ""hungry"", ""eating""}
+
+\* Each philosopher is identified by an integer 0..N-1
+Philosophers == 0 .. N-1
+
+\* Each fork is identified by an integer 0..N-1
+Forks == 0 .. N-1
+
+\* Helper to get the left and right fork indices for a philosopher
+LeftFork == [p \in Philosophers |-> p]
+RightFork == [p \in Philosophers |-> (p + 1) % N]
+
+\* State of each philosopher
+\*  - ""thinking"": philosopher is thinking
+\*  - ""hungry"": philosopher wants to eat but hasn't acquired forks yet
+\*  - ""eating"": philosopher has acquired both forks and is eating
+philosopherState == [p \in Philosophers |-> ""thinking""]
+
+\* Ownership of each fork
+\*  - If fork f is owned by philosopher p, forkOwner[f] = p
+\*  - If fork f is free, forkOwner[f] = -1
+forkOwner == [f \in Forks |-> -1]
+
+\* Helper to check if a philosopher can eat
+CanEat(p) == philosopherState[p] = ""hungry"" /\ forkOwner[LeftFork[p]] = -1 /\ forkOwner[RightFork[p]] = -1
+
+\* Action: philosopher p becomes hungry
+BecomeHungry(p) == philosopherState' = [philosopherState EXCEPT ![p] = ""hungry""]
+
+\* Action: philosopher p starts eating (acquires both forks)
+StartEating(p) == philosopherState' = [philosopherState EXCEPT ![p] = ""eating""] /\ forkOwner' = [forkOwner EXCEPT ![LeftFork[p]] = p, ![RightFork[p]] = p]
+
+\* Action: philosopher p stops eating (releases both forks)
+StopEating(p) == philosopherState' = [philosopherState EXCEPT ![p] = ""thinking""] /\ forkOwner' = [forkOwner EXCEPT ![LeftFork[p]] = -1, ![RightFork[p]] = -1]
+
+\* Next-state relation
+Next == \/ \E p \in Philosophers: philosopherState[p] = ""thinking"" /\ BecomeHungry(p)
+      \/ \E p \in Philosophers: CanEat(p) /\ StartEating(p)
+      \/ \E p \in Philosophers: philosopherState[p] = ""eating"" /\ StopEating(p)
+
+\* Initial state
+Init == philosopherState = [p \in Philosophers |-> ""thinking""] /\ forkOwner = [f \in Forks |-> -1]
+
+\* Specification
+Spec == Init /\ [][Next]_<<philosopherState, forkOwner>>
+
+\* Type correctness invariant
+TypeOK == /\ philosopherState \in [Philosophers -> States]
+          /\ forkOwner \in [Forks -> {p \in Philosophers} \cup {-1}]
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,1,0,1.0,silver,62.9,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+
+CONSTANT N
+VARIABLES flag, num
+
+
+vars == <<num, flag>>
+
+Init == /\ num = [i \in 1..N |-> 0]
+        /\ flag = [i \in 1..N |-> FALSE]
+
+Next == \E i \in 1..N :
+          /\ flag' = [flag EXCEPT ![i] = TRUE]
+          /\ num' = [num EXCEPT ![i] = Max(num) + 1]
+          /\ flag' = [flag EXCEPT ![i] = FALSE]
+          /\ \A j \in 1..N : j # i => flag'[j] = FALSE
+          /\ \A j \in 1..N : j # i => num'[j] = 0
+
+Spec == Init /\ [][Next]_vars
+
+TypeOK == /\ num \in [1..N -> Nat]
+          /\ flag \in [1..N -> BOOLEAN]
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,0,1.0,silver,9.6,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail, size
+
+vars == <<q, head, tail, size>>
+
+Init == /\ q = [i \in 1..K |-> 0]
+        /\ head = 1
+        /\ tail = 1
+        /\ size = 0
+
+ProducerAction == /\ size < K
+                 /\ q[tail] = 0
+                 /\ q' = [q EXCEPT ![tail] = 1]
+                 /\ tail' = IF tail = K THEN 1 ELSE tail + 1
+                 /\ size' = size + 1
+                 /\ head' = head
+
+ConsumerAction == /\ size > 0
+                 /\ q[head] = 1
+                 /\ q' = [q EXCEPT ![head] = 0]
+                 /\ head' = IF head = K THEN 1 ELSE head + 1
+                 /\ size' = size - 1
+                 /\ tail' = tail
+
+Next == ProducerAction \/ ConsumerAction
+
+Spec == Init /\ [][Next]_vars
+
+TypeOK == /\ head \in 1..K
+          /\ tail \in 1..K
+          /\ size \in 0..K
+          /\ q \in [1..K -> {0,1}]
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,0,0,0.667,bronze,207.86,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, majority, NULL
+VARIABLES currentTerm, state, votedFor
+
+    /\ currentTerm = [i \in 1..N |-> 0]
+    /\ votedFor = [i \in 1..N |-> NULL]
+    /\ state = [i \in 1..N |-> ""Follower""]
+
+Next ==
+    \/ \E i \in 1..N:
+        /\ state[i] = ""Follower""
+        /\ currentTerm' = currentTerm
+        /\ votedFor' = votedFor
+        /\ state' = [state EXCEPT ![i] = ""Candidate""]
+        /\ currentTerm' = [currentTerm EXCEPT ![i] = currentTerm[i] + 1]
+        /\ votedFor' = [votedFor EXCEPT ![i] = i]
+    \/ \E i \in 1..N:
+        /\ state[i] = ""Candidate""
+        /\ currentTerm' = currentTerm
+        /\ votedFor' = votedFor
+        /\ state' = [state EXCEPT ![i] = ""Leader""]
+        /\ \E j \in 1..N: j # i => currentTerm[j] <= currentTerm[i]
+    \/ \E i \in 1..N:
+        /\ state[i] = ""Leader""
+        /\ currentTerm' = currentTerm
+        /\ votedFor' = votedFor
+        /\ state' = state
+
+Spec ==
+    Init /\ [][Next]_vars
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,0,0,0.778,bronze,23.36,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES readers, writer_active
+
+Init == 
+  /\ readers = <<>> 
+  /\ writer_active = FALSE
+
+Next == 
+  /\ \E r \in 1..Cardinality(readers) :
+        /\ readers[r] = TRUE
+        /\ readers' = Replace(readers, r, FALSE)
+        /\ writer_active' = writer_active
+  \/ \E r \in 1..Cardinality(readers) :
+        /\ readers[r] = FALSE
+        /\ readers' = Replace(readers, r, TRUE)
+        /\ writer_active' = writer_active
+  \/ /\ writer_active = FALSE
+     /\ \E r \in 1..Cardinality(readers) : readers[r] = FALSE
+     /\ writer_active' = TRUE
+     /\ readers' = readers
+
+Spec == Init /\ [][Next]_<<readers, writer_active>>
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,0,0,1.0,bronze,57.15,"---- MODULE DistributedSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets, TLC
+
+CONSTANT N
+CONSTANT Channels
+
+VARIABLES state, channel, recorded, markerSent
+
+(* Local state of each process: 0 = not recorded, 1 = recorded *)
+Init == 
+    /\ state = [i \in 1..N |-> 0]
+    /\ channel = [i \in 1..N, j \in 1..N |-> {}]
+    /\ recorded = [i \in 1..N |-> FALSE]
+    /\ markerSent = [i \in 1..N, j \in 1..N |-> FALSE]
+
+(* Sending a regular message from process i to process j *)
+SendMsg(i, j, msg) == 
+    /\ state[i] = 1
+    /\ channeli..j = channeli..j \cup {msg}
+    /\ UNCHANGED <<state, recorded, markerSent>>
+
+(* Receiving a regular message at process j from process i *)
+RecvMsg(i, j, msg) == 
+    /\ state[j] = 1
+    /\ msg \in channeli..j
+    /\ channeli..j = channeli..j \ {msg}
+    /\ UNCHANGED <<state, recorded, markerSent>>
+
+(* Sending a marker from process i to process j *)
+SendMarker(i, j) == 
+    /\ state[i] = 1
+    /\ markerSenti..j = FALSE
+    /\ channeli..j = channeli..j \cup {""marker""}
+    /\ markerSent' = [markerSent EXCEPT !i..j = TRUE]
+    /\ UNCHANGED <<state, recorded>>
+
+(* Receiving a marker at process j from process i *)
+RecvMarker(i, j) == 
+    /\ state[j] = 0
+    /\ ""marker"" \in channeli..j
+    /\ channeli..j = channeli..j \ {""marker""}
+    /\ state' = [state EXCEPT ![j] = 1]
+    /\ recorded' = [recorded EXCEPT ![j] = TRUE]
+    /\ UNCHANGED <<channel, markerSent>>
+
+(* Receiving a marker at process j from process i after recording *)
+RecvMarkerAfter(i, j) == 
+    /\ state[j] = 1
+    /\ ""marker"" \in channeli..j
+    /\ channeli..j = channeli..j \ {""marker""}
+    /\ UNCHANGED <<state, recorded, markerSent>>
+
+(* Transition relation *)
+Next == 
+    \E i, j \in 1..N :
+        \/ SendMsg(i, j, ""msg"")
+        \/ RecvMsg(i, j, ""msg"")
+        \/ SendMarker(i, j)
+        \/ RecvMarker(i, j)
+        \/ RecvMarkerAfter(i, j)
+
+Spec == Init /\ [][Next]_<<state, channel, recorded, markerSent>>
+
+(* Type correctness *)
+TypeOK == 
+    /\ state \in [1..N -> {0,1}]
+    /\ channel \in [1..N, 1..N -> SUBSET {""msg"", ""marker""}]
+    /\ recorded \in [1..N -> BOOLEAN]
+    /\ markerSent \in [1..N, 1..N -> BOOLEAN]
+
+===="
+chattla:20b,BM009,Token Ring,networking,2,0,0,0.889,bronze,12.56,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLE token \in 1..N  \* Current holder of the token, token
+
+Init == token = 1
+
+Next == \E holder \in 1..N :
+          /\ token' = %(token, N) + 1
+          /\ token = holder
+
+Spec == Init /\ [][Next]_token
+
+TypeOK == token \in 1..N
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,0,0,1.0,bronze,42.3,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets, TLC
+
+CONSTANTS Keys, Values, NULL
+VARIABLES store
+
+
+vars == <<store>>
+
+Init == 
+  /\ store = [k \in Keys |-> NULL]
+
+Next == 
+  \/ /\ op = ""Put""
+     /\ k \in Keys
+     /\ v \in Values
+     /\ store' = [store EXCEPT ![k] = v]
+  \/ /\ op = ""Get""
+     /\ k \in Keys
+     /\ store' = store
+
+Spec == Init /\ [][Next]_vars
+
+TypeOK == 
+  /\ Keys \subseteq Nat
+  /\ Values \subseteq Nat
+  /\ store \in [Keys -> Values \cup {NULL}]
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,1,0,1.0,silver,51.16,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, M, V
+
+VARIABLES acceptors, proposers, chosen, maxBallot, maxValue
+
+vars == <<acceptors, proposers, chosen>>
+
+TypeOK == 
+  /\ acceptors \in [1..N -> [maxBallot: Int, maxValue: V]]
+  /\ proposers \in [1..M -> [maxBallot: Int, maxValue: V]]
+  /\ chosen \in V
+
+Init == 
+  /\ acceptors = [i \in 1..N |-> [maxBallot |-> 0, maxValue |-> 0]]
+  /\ proposers = [i \in 1..M |-> [maxBallot |-> 0, maxValue |-> 0]]
+  /\ chosen = 0
+
+Prepare(a, p) == 
+  /\ proposers[p].maxBallot' = proposers[p].maxBallot + 1
+  /\ acceptors[a].maxBallot' = acceptors[a].maxBallot
+  /\ acceptors[a].maxValue' = acceptors[a].maxValue
+  /\ proposers[p].maxValue' = acceptors[a].maxValue
+
+Promise(a, p) == 
+  /\ proposers[p].maxBallot' = proposers[p].maxBallot
+  /\ proposers[p].maxValue' = proposers[p].maxValue
+  /\ acceptors[a].maxBallot' = proposers[p].maxBallot
+  /\ acceptors[a].maxValue' = acceptors[a].maxValue
+
+Accept(a, p) == 
+  /\ proposers[p].maxBallot' = proposers[p].maxBallot
+  /\ proposers[p].maxValue' = proposers[p].maxValue
+  /\ acceptors[a].maxBallot' = proposers[p].maxBallot
+  /\ acceptors[a].maxValue' = proposers[p].maxValue
+
+Accepted(a, p) == 
+  /\ proposers[p].maxBallot' = proposers[p].maxBallot
+  /\ proposers[p].maxValue' = proposers[p].maxValue
+  /\ acceptors[a].maxBallot' = proposers[p].maxBallot
+  /\ acceptors[a].maxValue' = proposers[p].maxValue
+  /\ chosen' = proposers[p].maxValue
+
+Next == 
+  /\ \E a \in 1..N : \E p \in 1..M : 
+        /\ proposers[p].maxBallot' = proposers[p].maxBallot
+        /\ proposers[p].maxValue' = proposers[p].maxValue
+        /\ acceptors[a].maxBallot' = proposers[p].maxBallot
+        /\ acceptors[a].maxValue' = proposers[p].maxValue
+        /\ chosen' = chosen
+        /\ \/ /\ proposers[p].maxBallot' = proposers[p].maxBallot + 1
+            /\ acceptors[a].maxBallot' = acceptors[a].maxBallot
+            /\ acceptors[a].maxValue' = acceptors[a].maxValue
+            /\ proposers[p].maxValue' = acceptors[a].maxValue
+          \/ /\ proposers[p].maxBallot' = proposers[p].maxBallot
+              /\ proposers[p].maxValue' = proposers[p].maxValue
+              /\ acceptors[a].maxBallot' = proposers[p].maxBallot
+              /\ acceptors[a].maxValue' = acceptors[a].maxValue
+          \/ /\ proposers[p].maxBallot' = proposers[p].maxBallot
+              /\ proposers[p].maxValue' = proposers[p].maxValue
+              /\ acceptors[a].maxBallot' = proposers[p].maxBallot
+              /\ acceptors[a].maxValue' = proposers[p].maxValue
+              /\ chosen' = proposers[p].maxValue
+  /\ acceptors' = acceptors
+  /\ proposers' = proposers
+  /\ chosen' = chosen
+
+Spec == Init /\ [][Next]_vars
+
+===="
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,0,0,1.0,bronze,70.68,"---- MODULE FileSender ----
+EXTENDS Integers, Sequences, FiniteSets
+Min(S) == CHOOSE x \in S : \A y \in S : x =< y
+
+
+CONSTANTS FileSize, ChunkSize, MaxRetries, Timeout, FileSize
+VARIABLES ackedChunks, currentChunk, retransmitCount, sentChunks, state, time, timer
+
+
+(* Helper definitions *)
+NumChunks == Ceil(FileSize \div ChunkSize)
+ChunkIndices == 1 .. NumChunks
+Chunk(i) == SubSeq(Seq(1 .. FileSize), (i - 1) * ChunkSize + 1, Min(i * ChunkSize, FileSize))
+
+(* Initial state *)
+Init ==
+    /\ sentChunks = {}
+    /\ ackedChunks = {}
+    /\ retransmitCount = [i \in ChunkIndices |-> 0]
+    /\ timer = 0
+    /\ currentChunk = 1
+    /\ state = ""Idle""
+    /\ time = 0
+
+(* Action: Transmit a chunk *)
+TransmitChunk ==
+    /\ state = ""Idle""
+    /\ currentChunk <= NumChunks
+    /\ sentChunks' = sentChunks \cup {currentChunk}
+    /\ retransmitCount' = [retransmitCount EXCEPT ![currentChunk] = 0]
+    /\ timer' = Timeout
+    /\ state' = ""WaitingAck""
+    /\ UNCHANGED <<ackedChunks, currentChunk, time>>
+
+(* Action: Receive an acknowledgment *)
+ReceiveAck ==
+    /\ state = ""WaitingAck""
+    /\ currentChunk \in ChunkIndices
+    /\ ackedChunks' = ackedChunks \cup {currentChunk}
+    /\ timer' = 0
+    /\ IF currentChunk = NumChunks THEN
+           /\ state' = ""Done""
+           /\ currentChunk' = currentChunk
+
+           /\ state' = ""Idle""
+           /\ currentChunk' = currentChunk + 1
+    /\ UNCHANGED <<sentChunks, retransmitCount, time>>
+
+(* Action: Timeout and retransmit *)
+TimeoutRetransmit ==
+    /\ state = ""WaitingAck""
+    /\ timer = 0
+    /\ retransmitCount[currentChunk] < MaxRetries
+    /\ retransmitCount' = [retransmitCount EXCEPT ![currentChunk] = retransmitCount[currentChunk] + 1]
+    /\ timer' = Timeout
+    /\ state' = ""WaitingAck""
+    /\ UNCHANGED <<sentChunks, ackedChunks, currentChunk, time>>
+
+(* Action: Timeout and fail *)
+TimeoutFail ==
+    /\ state = ""WaitingAck""
+    /\ timer = 0
+    /\ retransmitCount[currentChunk] >= MaxRetries
+    /\ state' = ""Failed""
+    /\ UNCHANGED <<sentChunks, ackedChunks, retransmitCount, currentChunk, time>>
+
+(* Action: Decrement timer *)
+DecrementTimer ==
+    /\ state = ""WaitingAck""
+    /\ timer > 0
+    /\ timer' = timer - 1
+    /\ UNCHANGED <<sentChunks, ackedChunks, retransmitCount, currentChunk, state, time>>
+
+(* Action: Idle (no operation) *)
+Idle ==
+    /\ state \in {""Done"", ""Failed""}
+    /\ UNCHANGED <<sentChunks, ackedChunks, retransmitCount, currentChunk, timer, time>>
+
+(* Next-state relation *)
+Next ==
+    \/ TransmitChunk
+    \/ ReceiveAck
+    \/ TimeoutRetransmit
+    \/ TimeoutFail
+    \/ DecrementTimer
+    \/ Idle
+
+Spec == Init /\ [][Next]_<<sentChunks, ackedChunks, retransmitCount, currentChunk, state, timer, time>>
+
+(* Type correctness invariant *)
+TypeOK ==
+    /\ sentChunks \subseteq ChunkIndices
+    /\ ackedChunks \subseteq ChunkIndices
+    /\ \A i \in ChunkIndices: 0 <= retransmitCount[i] <= MaxRetries
+    /\ timer \in Nat
+    /\ currentChunk \in ChunkIndices \cup {NumChunks + 1}
+    /\ state \in {""Idle"", ""WaitingAck"", ""Done"", ""Failed""}
+    /\ time \in Nat
+
+===="
+chattla:20b,BM013,Transaction Isolation (Snapshot Isolation),transaction,4,1,0,0.778,silver,55.62,"---- MODULE SnapshotIsolationDB ----
+EXTENDS Integers, Sequences, FiniteSets, TLC
+
+CONSTANTS DBKeys, DBValues, TxnIds, TxnOps, TxnStates, TxnSteps, TxnReadOps, TxnWriteOps
+VARIABLES db, txnReadSet, txnState, txnStep, txnWriteSet, txn
+
+vars == <<db, txnReadSet, txnState, txnStep, txnWriteSet, txn>>
+
+Init ==
+    /\ db = [k \in DBKeys |-> DBValues] \* Initial database state
+    /\ txn = [t \in TxnIds |-> [op \in TxnOps |-> [step \in TxnSteps |-> FALSE]]] \* Transaction operation steps
+    /\ txnState = [t \in TxnIds |-> TxnStates] \* Transaction states
+    /\ txnStep = [t \in TxnIds |-> TxnSteps] \* Transaction steps
+    /\ txnReadSet = [t \in TxnIds |-> [k \in DBKeys |-> DBValues]] \* Transaction read sets
+    /\ txnWriteSet = [t \in TxnIds |-> [k \in DBKeys |-> DBValues]] \* Transaction write sets
+
+Next ==
+    \E t \in TxnIds :
+        /\ txnState[t] = ""begin""
+        /\ txnStep[t] = ""begin""
+        /\ txnState' = [txnState EXCEPT ![t] = ""commit""]
+        /\ txnStep' = [txnStep EXCEPT ![t] = ""commit""]
+        /\ txnReadSet' = txnReadSet
+        /\ txnWriteSet' = txnWriteSet
+        /\ db' = db
+        \/ /\ txnState[t] = ""commit""
+           /\ txnStep[t] = ""commit""
+           /\ txnState' = [txnState EXCEPT ![t] = ""abort""]
+           /\ txnStep' = [txnStep EXCEPT ![t] = ""abort""]
+           /\ txnReadSet' = txnReadSet
+           /\ txnWriteSet' = txnWriteSet
+           /\ db' = db
+        \/ /\ txnState[t] = ""commit""
+           /\ txnStep[t] = ""commit""
+           /\ txnState' = [txnState EXCEPT ![t] = ""commit""]
+           /\ txnStep' = [txnStep EXCEPT ![t] = ""commit""]
+           /\ txnReadSet' = txnReadSet
+           /\ txnWriteSet' = txnWriteSet
+           /\ db' = [k \in DBKeys |-> IF k \in txnWriteSet[t] THEN txnWriteSet[t][k] ELSE db[k]]
+        \/ /\ txnState[t] = ""abort""
+           /\ txnStep[t] = ""abort""
+           /\ txnState' = [txnState EXCEPT ![t] = ""abort""]
+           /\ txnStep' = [txnStep EXCEPT ![t] = ""abort""]
+           /\ txnReadSet' = txnReadSet
+           /\ txnWriteSet' = txnWriteSet
+           /\ db' = db
+
+Spec ==
+    Init /\ [][Next]_vars
+
+===="
+chattla:20b,BM014,Clock Synchronisation,networking,3,0,0,1.0,bronze,21.89,"---- MODULE ClockSync ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, epsilon
+VARIABLES clocks, offsets
+
+
+vars == <<clocks, offsets>>
+
+Init == /\ clocks = [i \in 1..N |-> 0]
+        /\ offsets = [i \in 1..N |-> 0]
+
+Next == /\ \E i \in 1..N:
+          /\ clocks' = [clocks EXCEPT ![i] = clocks[i] + offsets[i]]
+          /\ offsets' = [offsets EXCEPT ![i] = offsets[i] + RandomOffset]
+        /\ UNCHANGED <<clocks, offsets>> \- except for i
+
+RandomOffset == CHOOSE o \in -5..5: TRUE
+
+Spec == Init /\ [][Next]_vars
+
+TypeOK == /\ clocks \in [1..N -> Int]
+          /\ offsets \in [1..N -> Int]   \- add bounds if needed
+
+===="
+chattla:20b,BM015,Peterson's Algorithm,scheduling,2,1,0,1.0,silver,7.98,"---- MODULE Peterson ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES flag, turn
+
+Init == /\ flag = [i \in 1..2 |-> FALSE]
+        /\ turn = 1
+
+Next == \/ /\ flag[1] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = TRUE]
+          /\ turn' = 1
+          /\ UNCHANGED turn
+        \/ /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![2] = TRUE]
+          /\ turn' = 2
+          /\ UNCHANGED turn
+        \/ /\ flag[1] = TRUE
+          /\ flag[2] = TRUE
+          /\ turn = 1
+          /\ flag' = [flag EXCEPT ![1] = FALSE]
+          /\ UNCHANGED turn
+        \/ /\ flag[1] = TRUE
+          /\ flag[2] = TRUE
+          /\ turn = 2
+          /\ flag' = [flag EXCEPT ![2] = FALSE]
+          /\ UNCHANGED turn
+        \/ /\ flag[1] = TRUE
+          /\ flag[2] = TRUE
+          /\ turn = 1
+          /\ flag' = [flag EXCEPT ![1] = FALSE]
+          /\ turn' = 2
+        \/ /\ flag[1] = TRUE
+          /\ flag[2] = TRUE
+          /\ turn = 2
+          /\ flag' = [flag EXCEPT ![2] = FALSE]
+          /\ turn' = 1
+
+Spec == Init /\ [][Next]_<<flag, turn>>
+
+TypeOK == /\ flag \in [1..2 -> BOOLEAN]
+          /\ turn \in 1..2
+
+===="
+chattla:20b,BM016,Gossip Protocol,networking,3,0,0,1.0,bronze,201.62,"---- MODULE Gossip ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, T
+VARIABLES infected, known
+
+
+vars == << known, infected >>
+
+Init == /\ known = [i \in 1..N |-> {i}]
+       /\ infected = [i \in 1..N |-> {i}]
+
+Next == /\ \E i, j \in 1..N : i # j
+       /\ known' = [k \in 1..N |-> known[k] \cup known[j]]
+       /\ infected' = [k \in 1..N |-> infected[k] \cup infected[j]]
+       /\ \A k \in 1..N : k # i => known'[k] = known[k]
+       /\ \A k \in 1..N : k # i => infected'[k] = infected[k]
+
+Spec == Init /\ [][Next]_vars
+
+TypeOK == /\ \A i \in 1..N : known[i] \subseteq 1..N
+          /\ \A i \in 1..N : infected[i] \subseteq 1..N
+
+===="
+chattla:20b,BM017,Simple Allocator,storage,2,0,0,1.0,bronze,201.33,"---- MODULE MemoryAllocator ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N, Client
+
+VARIABLES free, allocated
+
+Init == 
+  /\ free = {1, 2, .., N}
+  /\ allocated = [c \in Client |-> {}]
+
+Next == 
+  /\ \E c \in Client : \E p \in free :
+       /\ allocated' = [allocated EXCEPT ![c] = @ \cup {p}]
+       /\ free' = free \ {p}
+  \/ \E c \in Client : \E p \in allocated[c] :
+       /\ allocated' = [allocated EXCEPT ![c] = @ \ {p}]
+       /\ free' = free \cup {p}
+  \/ free' = free
+      /\ allocated' = allocated
+
+Spec == Init /\ [][Next]_<<free, allocated>>
+
+TypeOK == 
+  /\ free \subseteq {1, 2, .., N}
+  /\ \A c \in Client: allocated[c] \subseteq {1, 2, .., N}
+  /\ \A c \in Client: IsFiniteSet(allocated[c])
+  /\ \A c \in Client: IsFiniteSet(free \cup allocated[c])
+  /\ \A c \in Client: IsFiniteSet(free \cup allocated[c] \cup {1, 2, .., N})
+  /\ \A c \in Client: IsFiniteSet(free \cup allocated[c] \cup {1, 2, .., N} \cup {1, 2, .., N})
+  /\ \A c \in Client: IsFiniteSet(free \cup allocated[c] \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N})
+  /\ \A c \in Client: IsFiniteSet(free \cup allocated[c] \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N})
+  /\ \A c \in Client: IsFiniteSet(free \cup allocated[c] \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N})
+  /\ \A c \in Client: IsFiniteSet(free \cup allocated[c] \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N})
+  /\ \A c \in Client: IsFiniteSet(free \cup allocated[c] \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N})
+  /\ \A c \in Client: IsFiniteSet(free \cup allocated[c] \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N})
+  /\ \A c \in Client: IsFiniteSet(free \cup allocated[c] \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N})
+  /\ \A c \in Client: IsFiniteSet(free \cup allocated[c] \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N})
+  /\ \A c \in Client: IsFiniteSet(free \cup allocated[c] \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N})
+  /\ \A c \in Client: IsFiniteSet(free \cup allocated[c] \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N})
+  /\ \A c \in Client: IsFiniteSet(free \cup allocated[c] \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N})
+  /\ \A c \in Client: IsFiniteSet(free \cup allocated[c] \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N})
+  /\ \A c \in Client: IsFiniteSet(free \cup allocated[c] \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N})
+  /\ \A c \in Client: IsFiniteSet(free \cup allocated[c] \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N})
+  /\ \A c \in Client: IsFiniteSet(free \cup allocated[c] \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N})
+  /\ \A c \in Client: IsFiniteSet(free \cup allocated[c] \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N})
+  /\ \A c \in Client: IsFiniteSet(free \cup allocated[c] \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N})
+  /\ \A c \in Client: IsFiniteSet(free \cup allocated[c] \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N})
+  /\ \A c \in Client: IsFiniteSet(free \cup allocated[c] \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N})
+  /\ \A c \in Client: IsFiniteSet(free \cup allocated[c] \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N})
+  /\ \A c \in Client: IsFiniteSet(free \cup allocated[c] \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N})
+  /\ \A c \in Client: IsFiniteSet(free \cup allocated[c] \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, .., N} \cup {1, 2, ..,
+===="
+chattla:20b,BM018,Publish-Subscribe Broker,networking,3,1,0,0.778,silver,18.07,"---- MODULE Broker ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS Messages, Subscribers, Topics
+
+VARIABLES subscribers, messages
+
+(* State variables:
+   subscribers: mapping from topic to set of subscriber IDs
+   messages: mapping from topic to sequence of messages *)
+
+Init == 
+  /\ subscribers = [t \in Topics |-> {}]
+  /\ messages = [t \in Topics |-> <<>>]
+
+Next == 
+  \E t \in Topics : \E s \in Subscribers : \E m \in Messages :
+    \/ (* Subscriber registers interest in topic t *)
+       /\ subscribers' = [subscribers EXCEPT ![t] = subscribers[t] \cup {s}]
+       /\ messages' = messages
+    \/ (* Publisher posts message m on topic t *)
+       /\ subscribers' = subscribers
+       /\ messages' = [messages EXCEPT ![t] = Append(messages[t], m)]
+
+Spec == Init /\ [][Next]_<<subscribers, messages>>
+
+===="
+chattla:20b,BM019,Dekker's Algorithm,scheduling,3,1,0,1.0,silver,12.03,"---- MODULE Dekker ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES turn, wants
+
+Init == /\ turn = 0
+        /\ wants = [i \in 1..2 |-> FALSE]
+
+Next == \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+        \/ /\ wants[1] = FALSE
+          /\ wants[2] = TRUE
+          /\ turn' = 1
+          /\ wants' = wants
+        \/ /\ wants[1] = TRUE
+          /\ wants[2] = FALSE
+          /\ turn' = 2
+          /\ wants' = wants
+        \/ /\ wants[1] = TRUE
+          /\ wants[2] = TRUE
+          /\ turn' = turn
+          /\ wants' = [wants EXCEPT ![turn] = FALSE]
+
+Spec == Init /\ [][Next]_<<turn, wants>>
+
+TypeOK == /\ turn \in 1..2
+          /\ wants \in [1..2 -> BOOLEAN]
+
+Safety == TypeOK /\ ~(\E i \in 1..2 : wants[i] /\ wants[3-i])
+
+Liveness == TypeOK /\ []<>(\E i \in 1..2 : wants[i] /\ wants[3-i] /\ turn = i)
+
+===="
+chattla:20b,BM020,Eventually Consistent Counter,storage,3,1,0,1.0,silver,5.85,"---- MODULE GCounter ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, Node
+VARIABLES counts
+
+
+vars == <<counts>>
+
+Init == /\ counts = [n \in Node |-> [m \in Node |-> 0]]
+
+Next == /\ \E n \in Node : \E m \in Node :
+          /\ counts' = [counts EXCEPT ![n][m] = counts[n][m] + 1]
+          /\ UNCHANGED <<counts>>
+
+Spec == Init /\ [][Next]_vars
+
+TypeOK == /\ counts \in [Node -> [Node -> Nat]]
+          /\ \A n \in Node : counts[n] \in [Node -> Nat]
+          /\ \A n \in Node : \A m \in Node : counts[n][m] \in Nat
+
+===="

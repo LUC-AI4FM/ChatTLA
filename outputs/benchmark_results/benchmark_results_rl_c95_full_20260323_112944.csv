@@ -1,0 +1,644 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,0,0.444,silver,247.52,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, turn, flag
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,1,0,0.444,silver,127.63,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES participants, votes, state, log, pendingMsgs
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,1,0,0.778,silver,48.67,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES forks, states
+
+(* Constants *)
+N == 5
+
+(* Helper functions *)
+LEFT(i) == IF i = 1 THEN N ELSE i - 1
+RIGHT(i) == IF i = N THEN 1 ELSE i + 1
+
+(* State definitions *)
+THINKING == 0
+HUNGRY == 1
+EATING == 2
+
+(* Initial state *)
+Init == /\ forks = [i \in 1..N |-> 0]
+        /\ states = [i \in 1..N |-> THINKING]
+
+(* Next state *)
+Next == 
+  \E i \in 1..N :
+    \/ (states[i] = THINKING /\ states[LEFT(i)] = HUNGRY /\ states[RIGHT(i)] = HUNGRY /\ forks[i] = 0 /\ forks[LEFT(i)] = 0 /\ forks[RIGHT(i)] = 0) 
+        /\ states' = [states EXCEPT ![i] = EATING]
+        /\ forks' = [forks EXCEPT ![i] = 1, ![LEFT(i)] = 1, ![RIGHT(i)] = 1]
+    \/ (states[i] = HUNGRY /\ forks[i] = 0 /\ forks[LEFT(i)] = 0 /\ forks[RIGHT(i)] = 0) 
+        /\ states' = [states EXCEPT ![i] = EATING]
+        /\ forks' = [forks EXCEPT ![i] = 1, ![LEFT(i)] = 1, ![RIGHT(i)] = 1]
+    \/ (states[i] = EATING /\ forks[i] = 1 /\ forks[LEFT(i)] = 1 /\ forks[RIGHT(i)] = 1) 
+        /\ states' = [states EXCEPT ![i] = THINKING]
+        /\ forks' = [forks EXCEPT ![i] = 0, ![LEFT(i)] = 0, ![RIGHT(i)] = 0]
+    \/ (states[i] = HUNGRY /\ forks[i] = 0 /\ forks[LEFT(i)] = 0 /\ forks[RIGHT(i)] = 0) 
+        /\ states' = [states EXCEPT ![i] = THINKING]
+        /\ forks' = forks
+
+(* Specification *)
+Spec == Init /\ [][Next]_<<forks, states>>
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,1,0,0.444,silver,88.43,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES num, flag
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,0,1.0,silver,12.05,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES queue, head, tail, count
+
+Init == /\ queue \in Seq(K)
+       /\ head \in 1..K
+       /\ tail \in 1..K
+       /\ count \in 0..K
+       /\ head = 1
+       /\ tail = 1
+       /\ count = 0
+       /\ queue = [i \in 1..K |-> 0]
+
+ProducerAction == /\ count < K
+                 /\ queue' = [queue EXCEPT ![tail] = 1]
+                 /\ tail' = IF tail = K THEN 1 ELSE tail + 1
+                 /\ head' = head
+                 /\ count' = count + 1
+
+ConsumerAction == /\ count > 0
+                 /\ queue' = [queue EXCEPT ![head] = 0]
+                 /\ head' = IF head = K THEN 1 ELSE head + 1
+                 /\ tail' = tail
+                 /\ count' = count - 1
+
+Next == ProducerAction \/ ConsumerAction
+
+Spec == Init /\ [][Next]_<<queue, head, tail, count>>
+
+TypeOK == /\ queue \in Seq(K)
+          /\ head \in 1..K
+          /\ tail \in 1..K
+          /\ count \in 0..K
+          /\ head \in 1..K
+          /\ tail \in 1..K
+          /\ count \in 0..K
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,1,0,0.444,silver,65.41,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,1,0,0.778,silver,200.25,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES readers, writer_active
+
+Init == /\ readers = <<>>
+       /\ writer_active = FALSE
+
+Next == \/ /\ writer_active' = FALSE
+          /\ readers' = Append(readers, 1)
+        \/ /\ writer_active' = TRUE
+          /\ readers' = <<>>
+        \/ /\ writer_active' = FALSE
+          /\ readers' = Tail(readers)
+
+Spec == Init /\ [][Next]_<<readers, writer_active>>
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,1,0,0.444,silver,99.6,"---- MODULE DistributedSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, channel, markerSent, markerReceived, recorded, snapshot, channelState
+===="
+chattla:20b,BM009,Token Ring,networking,2,0,0,0.778,bronze,22.58,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS N
+
+VARIABLES token, messages
+
+Init == /\ token \in 1..N
+        /\ messages \in 1..N -> 1..N
+
+Next == /\ token' \in 1..N
+        /\ messages' \in 1..N -> 1..N
+        /\ token' = IF token = N THEN 1 ELSE token + 1
+           /\ messages' = [i \in 1..N |-> IF i = token THEN token' ELSE messages[i]]
+        \/ /\ token' = token
+           /\ messages' = [i \in 1..N |-> IF i = token THEN token' ELSE messages[i]]
+        \/ /\ token' = token
+           /\ messages' = [i \in 1..N |-> IF i = token THEN token' ELSE messages[i]]
+
+Spec == Init /\ [][Next]_<<token, messages>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,1.0,silver,16.2,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, Values
+
+VARIABLES store
+
+Init == /\ store \in [Keys -> Values]
+Next == \/ /\ \E k \in Keys : \E v \in Values : /\ store' = [store EXCEPT ![k] = v]
+          \/ /\ \E k \in Keys: /\ store' = [store EXCEPT ![k] = store[k]]
+TypeOK == /\ store \in [Keys -> Values]
+Spec == Init /\ [][Next]_<<store>>
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,1,1,0.778,gold,50.08,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES acceptors, proposers, promises, accepted, chosen, chosenBallot, chosenBy, chosenByBallot, chosenByValue, chosenByBallotValue
+
+Init == /\ acceptors = <<>>
+       /\ proposers = <<>>
+       /\ promises = <<>>
+       /\ accepted = <<>>
+       /\ chosen = <<>>
+       /\ chosenBallot = <<>>
+       /\ chosenBy = <<>>
+       /\ chosenByBallot = <<>>
+       /\ chosenByValue = <<>>
+       /\ chosenByBallotValue = <<>>
+
+Next == /\ acceptors' = acceptors
+       /\ proposers' = proposers
+       /\ promises' = promises
+       /\ accepted' = accepted
+       /\ chosen' = chosen
+       /\ chosenBallot' = chosenBallot
+       /\ chosenBy' = chosenBy
+       /\ chosenByBallot' = chosenByBallot
+       /\ chosenByValue' = chosenByValue
+       /\ chosenByBallotValue' = chosenByBallotValue
+
+Spec == Init /\ [][Next]_<<acceptors, proposers, promises, accepted, chosen, chosenBallot, chosenBy, chosenByBallot, chosenByValue, chosenByBallotValue>>
+
+===="
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,1,0,0.778,silver,90.93,"---- MODULE FileTransfer ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES file, fileSize, fileChunks, fileChunkCount, fileChunkIndex, fileChunk, fileChunkRetransmitCount, fileChunkRetransmitCountMax
+
+Init == 
+  /\ file = <<>>
+  /\ fileSize = 0
+  /\ fileChunks = <<>>
+  /\ fileChunkCount = 0
+  /\ fileChunkIndex = 0
+  /\ fileChunk = <<>>
+  /\ fileChunkRetransmitCount = 0
+  /\ fileChunkRetransmitCountMax = 0
+
+Next == 
+  /\ fileChunkIndex' = fileChunkIndex + 1
+  /\ fileChunkRetransmitCount' = fileChunkRetransmitCount + 1
+  /\ fileChunkRetransmitCountMax' = fileChunkRetransmitCountMax
+
+Spec == Init /\ [][Next]_<<file, fileSize, fileChunks, fileChunkCount, fileChunkIndex, fileChunk, fileChunkRetransmitCount, fileChunkRetransmitCountMax>>
+
+===="
+chattla:20b,BM013,Transaction Isolation (Snapshot Isolation),transaction,4,1,0,0.444,silver,29.99,"---- MODULE SnapshotIsolation ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES db, txns, nextTxId, committed, aborted, snapshot, writes, reads, status
+===="
+chattla:20b,BM014,Clock Synchronisation,networking,3,0,0,0.778,bronze,208.81,"---- MODULE ClockSync ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES clocks, offsets
+
+Init == /\ clocks = [i \in 1..N |-> 0]
+        /\ offsets = [i \in 1..N |-> 0]
+
+Next == /\ \E i \in 1..N : /\ clocks[i] = clocks[i] + offsets[i]
+          /\ offsets[i] = 0
+        /\ \E i \in 1..N : /\ offsets[i] = offsets[i] + \E j \in 1..N : (clocks[j] - clocks[i]) \div N
+          /\ offsets[i] = offsets[i] + \E j \in 1..N : (clocks[j] - clocks[i]) \div N
+        /\ \E i \in 1..N : /\ clocks[i] = clocks[i] + offsets[i]
+          /\ offsets[i] = 0
+
+Spec == Init /\ [][Next]_<<clocks, offsets>>
+
+===="
+chattla:20b,BM015,Peterson's Algorithm,scheduling,2,1,0,0.778,silver,199.98,"---- MODULE Peterson ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES flag, turn
+
+Init == /\ flag = [i \in 1..2 |-> FALSE]
+        /\ turn = 1
+
+Next == \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag[1] = TRUE
+          /\ turn' = 2
+          /\ flag' = [flag EXCEPT ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag[2] = TRUE
+          /\ turn' = 1
+          /\ flag' = [flag EXCEPT ![1] = FALSE]
+        \/ /\ flag[1] = TRUE
+          /\ flag[2] = FALSE
+          /\ turn' = 2
+          /\ flag' = [flag EXCEPT ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = TRUE
+          /\ turn' = 1
+          /\ flag' = [flag EXCEPT ![1] = FALSE]
+        \/ /\ flag[1] = TRUE
+          /\ flag[2] = TRUE
+          /\ turn' = turn
+          /\ flag' = flag
+
+Spec == Init /\ [][Next]_<<flag, turn>>
+
+===="
+chattla:20b,BM016,Gossip Protocol,networking,3,1,0,0.778,silver,255.35,"---- MODULE GossipProtocol ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES known, infected
+
+Init == /\ known = <<>> /\ infected = <<>> /\ Len(known) = Len(infected)
+
+Next == /\ known' = known
+      /\ infected' = Append(infected, known)
+
+Spec == Init /\ [][Next]_<<known, infected>>
+
+===="
+chattla:20b,BM017,Simple Allocator,storage,2,0,0,1.0,bronze,82.21,"---- MODULE MemoryAllocator ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, Pages, Client
+
+VARIABLES free, allocated
+
+Init == /\ free = Pages
+        /\ allocated = [c \in Client |-> {}]
+
+Next == /\ \E c \in Client:
+          /\ \E p \in free:
+            /\ allocated' = [allocated EXCEPT ![c] = @ \cup {p}]
+            /\ free' = free \ {p}
+        \/ \E c \in Client:
+          /\ \E p \in allocated[c]:
+            /\ allocated' = [allocated EXCEPT ![c] = @ \ {p}]
+            /\ free' = free \cup {p}
+        \/ free' = free
+        /\ allocated' = allocated
+
+Spec == Init /\ [][Next]_<<free, allocated>>
+
+TypeOK == /\ free \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: \A p \in allocated[c]: p \in Pages
+        /\ \A c1, c2 \in Client: c1 # c2 => allocated[c1] \cap allocated[c2] = {}
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \in Client: allocated[c] \subseteq Pages
+        /\ \A c \"
+chattla:20b,BM018,Publish-Subscribe Broker,networking,3,1,0,0.444,silver,120.93,"---- MODULE Broker ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES subscribers, messages, pending, nextMsgId, delivered
+===="
+chattla:20b,BM019,Dekker's Algorithm,scheduling,3,1,0,0.778,silver,19.97,"---- MODULE Dekker ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES turn, wants
+
+Init == /\ turn \in {0,1}
+        /\ wants \in {0,1}^2
+        /\ wants = [i \in {0,1} |-> 0]
+
+Next == 
+  \/ /\ turn = 0
+      /\ wants[0] = 0
+      /\ wants' = [wants EXCEPT ![0] = 1]
+      /\ turn' = 1
+      /\ UNCHANGED <<wants[1]>>
+  \/ /\ turn = 1
+      /\ wants[1] = 0
+      /\ wants' = [wants EXCEPT ![1] = 1]
+      /\ turn' = 0
+      /\ UNCHANGED <<wants[0]>>
+  \/ /\ turn = 0
+      /\ wants[0] = 1
+      /\ UNCHANGED <<turn, wants>>
+  \/ /\ turn = 1
+      /\ wants[1] = 1
+      /\ UNCHANGED <<turn, wants>>
+
+Spec == Init /\ [][Next]_<<turn, wants>>
+
+===="
+chattla:20b,BM020,Eventually Consistent Counter,storage,3,0,0,0.778,bronze,29.52,"---- MODULE GCounter ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS Node
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+
+VARIABLES counts
+
+Init == /\ counts \in [Node -> [Node -> Nat]]
+       /\ \A n \in Node: counts[n] = [m \in Node |-> 0]
+
+Next == /\ \A n \in Node: counts' = [counts EXCEPT ![n] = [m \in Node |-> counts[n][m] + 1]]
+       \/ \A n, m \in Node: counts' = [counts EXCEPT ![n][m] = Max(counts[n][m], counts[m][n])]
+
+Spec == Init /\ [][Next]_<<counts>>
+
+===="

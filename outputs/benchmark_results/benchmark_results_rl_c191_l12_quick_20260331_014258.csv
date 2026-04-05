@@ -1,0 +1,440 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,0,0.444,silver,23.9,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, turn, flag
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,1,0,0.444,silver,49.72,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES participants, votes, commit, abort, messages, state
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,1,0,1.0,silver,28.75,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES forks, states
+
+(* Constants *)
+N == 5
+
+(* Helper functions *)
+Left(i) == IF i = 1 THEN N ELSE i - 1
+Right(i) == IF i = N THEN 1 ELSE i + 1
+
+(* State definitions *)
+Thinking == 0
+Hungry == 1
+Eating == 2
+
+(* Initial state *)
+Init == /\ forks = [i \in 1..N |-> 0]  (* 0 indicates fork is free *)
+        /\ states = [i \in 1..N |-> Thinking]
+
+(* Next state *)
+Next == 
+  (* Philosopher i picks up forks *)
+  \/ \E i \in 1..N :
+       /\ states[i] = Hungry
+       /\ forks[Left(i)] = 0
+       /\ forks[Right(i)] = 0
+       /\ states' = [states EXCEPT ![i] = Eating]
+       /\ forks' = [forks EXCEPT ![Left(i)] = i, ![Right(i)] = i]
+  \/ \E i \in 1..N :
+       /\ states[i] = Eating
+       /\ forks[Left(i)] = i
+       /\ forks[Right(i)] = i
+       /\ states' = [states EXCEPT ![i] = Thinking]
+       /\ forks' = [forks EXCEPT ![Left(i)] = 0, ![Right(i)] = 0]
+  \/ \E i \in 1..N :
+       /\ states[i] = Thinking
+       /\ states' = [states EXCEPT ![i] = Hungry]
+       /\ forks' = forks
+
+(* Invariant: No two philosophers eat at the same time *)
+NoTwoEat == \A i, j \in 1..N : i # j => states[i] # Eating \/ states[j] # Eating
+
+(* Type invariant *)
+TypeOK == /\ forks \in [1..N -> 1..N]
+          /\ states \in [1..N -> {Thinking, Hungry, Eating}]
+
+Spec == Init /\ [][Next]_<<forks, states>> /\ NoTwoEat
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,0,0,0.444,bronze,65.81,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES num, flag, maxNum
+
+
+define
+  maxNum == MAX_{i \in 1..N} num[i]
+  maxNum' == MAX_{i \in 1..N} num'[i]
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' = 0 THEN 0 ELSE maxNum' + 1
+  maxNum' == IF maxNum' "
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,1,0.778,gold,185.51,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail, count
+
+Init == /\ q = <<>>
+        /\ head = 1
+        /\ tail = 1
+        /\ count = 0
+
+Next == 
+  \/ /\ count < K
+     /\ head' = head
+        /\ tail' = (tail % K) + 1
+        /\ count' = count + 1
+        /\ q' = Append(q, head)
+  \/ /\ count > 0
+     /\ head' = (head % K) + 1
+        /\ tail' = tail
+        /\ count' = count - 1
+        /\ q' = Tail(q)
+
+Spec == Init /\ [][Next]_<<q, head, tail, count>>
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,0,0,0.778,bronze,19.54,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+Init == /\ currentTerm = 0
+        /\ votedFor = NULL
+        /\ state = ""Follower""
+
+Next == \/ /\ state = ""Follower""
+        /\ currentTerm' = currentTerm
+        /\ votedFor' = votedFor
+        /\ state' = ""Follower""
+        \/ /\ state = ""Candidate""
+        /\ currentTerm' = currentTerm + 1
+        /\ votedFor' = NULL
+        /\ state' = ""Candidate""
+        \/ /\ state = ""Leader""
+        /\ currentTerm' = currentTerm
+        /\ votedFor' = votedFor
+        /\ state' = ""Leader""
+
+Spec == Init /\ [][Next]_<<currentTerm, votedFor, state>>
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,0,0,0.778,bronze,19.06,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS Readers
+
+VARIABLES readers, writer_active
+
+Init == /\ readers = <<>>
+        /\ writer_active = FALSE
+
+Next == \/ /\ writer_active = FALSE
+          /\ \E r \in Readers :
+              /\ r \in readers
+              /\ readers' = Remove(r, readers)
+          \/ /\ writer_active = FALSE
+              /\ \E r \in Readers :
+                  /\ r \notin readers
+                  /\ writer_active' = TRUE
+          \/ /\ writer_active = TRUE
+              /\ writer_active' = FALSE
+
+Spec == Init /\ [][Next]_<<readers, writer_active>>
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,1,0,0.444,silver,218.29,"---- MODULE DistributedSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, channel, markerSent, snapshotTaken, snapshotState, snapshotChannel
+
+===="
+chattla:20b,BM009,Token Ring,networking,2,1,1,0.667,gold,2.24,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLE token
+
+Init == /\ token \in 1..N
+
+Next == /\ token' \in 1..N
+        /\ token' = IF token = N THEN 1 ELSE token + 1
+
+Spec == Init /\ [][Next]_<<token>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,0.778,silver,11.51,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, Values
+
+VARIABLES store
+
+Init == /\ store \in [Keys -> Values]
+Next == /\ store' \in [Keys -> Values]
+      /\ \E k \in Keys : \E v \in Values : store' = [store EXCEPT ![k] = v]
+
+Spec == Init /\ [][Next]_<<store>>
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,0,0,1.0,bronze,163.47,"---- MODULE SingleDecreePaxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, M, V, Bool
+VARIABLES Acceptors, Proposer, acceptors, proposers
+
+
+\* Acceptors' state: [promise \in Nat, accepted \in [value \in V |-> Nat]]
+\* proposers' state: [proposal \in [value \in V |-> Nat], chosen \in [value \in V |-> Bool]]
+
+\* Helper definitions
+acceptorState == [promise \in Nat, accepted \in [value \in V |-> Nat]]
+proposerState == [proposal \in [value \in V |-> Nat], chosen \in [value \in V |-> Bool]]
+
+\* Initial state
+Init ==
+  /\ acceptors \in [id \in 1..N |-> acceptorState]
+  /\ proposers \in [id \in 1..M |-> proposerState]
+  /\ \A a \in 1..N : acceptors[a] = [promise |-> 0, accepted |-> [v \in V |-> 0]]
+  /\ \A p \in 1..M : proposers[p] = [proposal |-> [v \in V |-> 0], chosen |-> [v \in V |-> FALSE]]
+
+\* Proposer's Prepare phase
+Prepare(p, b) ==
+  /\ proposers[p] = [proposal |-> [v \in V |-> 0], chosen |-> [v \in V |-> FALSE]]
+  /\ b > 0
+  /\ \A a \in 1..N : acceptors[a] = [promise |-> b, accepted |-> [v \in V |-> 0]]
+  /\ proposers[p] = [proposal |-> [v \in V |-> b], chosen |-> [v \in V |-> FALSE]]
+
+\* Acceptors' Promise phase
+Promise(a, b, v) ==
+  /\ acceptors[a] = [promise |-> b, accepted |-> [v \in V |-> 0]]
+  /\ acceptors[a] = [promise |-> b, accepted |-> [v \in V |-> v]]
+  /\ \A p \in 1..M : proposers[p] = [proposal |-> [v \in V |-> b], chosen |-> [v \in V |-> FALSE]]
+
+\* Proposer's Accept phase
+Accept(p, b, v) ==
+  /\ proposers[p] = [proposal |-> [v \in V |-> b], chosen |-> [v \in V |-> FALSE]]
+  /\ \A a \in 1..N : acceptors[a] = [promise |-> b, accepted |-> [v \in V |-> v]]
+  /\ proposers[p] = [proposal |-> [v \in V |-> b], chosen |-> [v \in V |-> TRUE]]
+
+\* Acceptors' Accepted phase
+Accepted(a, b, v) ==
+  /\ acceptors[a] = [promise |-> b, accepted |-> [v \in V |-> v]]
+  /\ \A p \in 1..M : proposers[p] = [proposal |-> [v \in V |-> b], chosen |-> [v \in V |-> TRUE]]
+
+\* Next action: either a proposer initiates Prepare, or an acceptor promises, or a proposer accepts, or an acceptor accepts
+Next ==
+  \/ \E p \in 1..M : \E b \in Nat : Prepare(p, b)
+  \/ \E a \in 1..N : \E b \in Nat : \E v \in V : Promise(a, b, v)
+  \/ \E p \in 1..M : \E b \in Nat : \E v \in V : Accept(p, b, v)
+  \/ \E a \in 1..N : \E b \in Nat : \E v \in V : Accepted(a, b, v)
+
+\* Type invariant
+TypeOK ==
+  /\ acceptors \in [id \in 1..N |-> acceptorState]
+  /\ proposers \in [id \in 1..M |-> proposerState]
+  /\ \A a \in 1..N : acceptors[a] = [promise |-> Nat, accepted |-> [v \in V |-> Nat]]
+  /\ \A p \in 1..M : proposers[p] = [proposal |-> [v \in V |-> Nat], chosen |-> [v \in V |-> Bool]]
+
+\* Specification
+Spec ==
+  Init /\ [][Next]_<<acceptors, proposers>>
+
+===="
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,0,0,0.667,bronze,34.73,"---- MODULE FileTransfer ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS MAX_RETRIES, CHUNK_SIZE, FILE_SIZE
+VARIABLES ackedChunks, retransmitCount, sentChunks
+
+    /\ file \in Seq
+    /\ Len(file) = FILE_SIZE
+    /\ chunks \in Seq
+    /\ Len(chunks) = Ceiling(FILE_SIZE \div CHUNK_SIZE)
+    /\ sentChunks \in Seq
+    /\ Len(sentChunks) = 0
+    /\ retransmitCount \in Seq
+    /\ Len(retransmitCount) = 0
+    /\ ackedChunks \in Seq
+    /\ Len(ackedChunks) = 0
+
+Next ==
+    /\ \E chunk \in chunks :
+        /\ chunk \notin sentChunks
+        /\ chunk \notin ackedChunks
+        /\ sentChunks' = Append(sentChunks, chunk)
+        /\ retransmitCount' = Append(retransmitCount, 0)
+        /\ ackedChunks' = ackedChunks
+    \/ \E i \in 1..Len(sentChunks) :
+        /\ sentChunks[i] \notin ackedChunks
+        /\ retransmitCount[i] < MAX_RETRIES
+        /\ sentChunks' = sentChunks
+        /\ retransmitCount' = [j \in 1..Len(retransmitCount) |-> IF j = i THEN retransmitCount[j] + 1
+
+        /\ ackedChunks' = ackedChunks
+    \/ \E i \in 1..Len(sentChunks) :
+        /\ sentChunks[i] \notin ackedChunks
+        /\ retransmitCount[i] = MAX_RETRIES
+        /\ sentChunks' = sentChunks
+        /\ retransmitCount' = retransmitCount
+        /\ ackedChunks' = Append(ackedChunks, sentChunks[i])
+
+Spec ==
+    Init /\ [][Next]_<<file, chunks, sentChunks, retransmitCount, ackedChunks>>
+
+===="

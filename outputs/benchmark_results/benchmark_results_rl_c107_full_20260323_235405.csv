@@ -1,0 +1,1249 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,0,0.444,silver,94.14,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, turn, flag
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,1,0,0.444,silver,163.55,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES participants, votes, commitDecided, abortDecided, commitSent, abortSent
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,1,0,1.0,silver,49.27,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES forks, states
+
+(* Constants *)
+N == 5
+
+(* Helper functions *)
+Left(i) == IF i = 1 THEN N ELSE i - 1
+Right(i) == IF i = N THEN 1 ELSE i + 1
+
+(* State predicates *)
+IsThinking(i) == states[i] = ""thinking""
+IsHungry(i) == states[i] = ""hungry""
+IsEating(i) == states[i] = ""eating""
+
+(* Fork ownership *)
+ForkOwner(i) == forks[i]
+
+(* Next action *)
+Next == 
+  \/ \E i \in 1..N : 
+       /\ IsThinking(i)
+       /\ states' = [states EXCEPT ![i] = ""hungry""]
+       /\ forks' = forks
+  \/ \E i \in 1..N : 
+       /\ IsHungry(i)
+       /\ forks[Left(i)] = ""free"" /\ forks[Right(i)] = ""free""
+       /\ states' = [states EXCEPT ![i] = ""eating""]
+       /\ forks' = [forks EXCEPT ![Left(i)] = i, ![Right(i)] = i]
+  \/ \E i \in 1..N : 
+       /\ IsEating(i)
+       /\ forks[Left(i)] = i /\ forks[Right(i)] = i
+       /\ states' = [states EXCEPT ![i] = ""thinking""]
+       /\ forks' = [forks EXCEPT ![Left(i)] = ""free"", ![Right(i)] = ""free""]
+
+(* Initial state *)
+Init == 
+  /\ forks = [i \in 1..N |-> ""free""]
+  /\ states = [i \in 1..N |-> ""thinking""]
+
+(* Type invariant *)
+TypeOK == 
+  /\ forks \in [1..N -> {""free""} \cup 1..N]
+  /\ states \in [1..N -> {""thinking"", ""hungry"", ""eating""}]
+
+(* Specification *)
+Spec == Init /\ [][Next]_<<forks, states>>
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,1,0,0.778,silver,242.39,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+
+CONSTANTS N
+
+VARIABLES num, flag
+
+Init == /\ num = [i \in 1..N |-> 0]
+        /\ flag = [i \in 1..N |-> FALSE]
+
+Next == \E i \in 1..N :
+          /\ flag[i] = FALSE
+          /\ flag' = [flag EXCEPT ![i] = TRUE]
+          /\ num' = [num EXCEPT ![i] = 1 + Max({num[j] : j \in 1..N})]
+          /\ flag' = [flag EXCEPT ![i] = FALSE]
+
+Spec == Init /\ [][Next]_<<num, flag>>
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,1,0.778,gold,11.21,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail, count
+
+Init == /\ q = [i \in 1..K |-> 0]
+        /\ head = 1
+        /\ tail = 1
+        /\ count = 0
+
+Next == 
+  \/ /\ count < K
+     /\ head' = head
+        /\ tail' = (tail % K) + 1
+        /\ count' = count + 1
+        /\ q' = [q EXCEPT ![tail] = 1]
+  \/ /\ count > 0
+     /\ head' = (head % K) + 1
+        /\ tail' = tail
+        /\ count' = count - 1
+        /\ q' = [q EXCEPT ![head] = 0]
+  \/ /\ count = 0
+     /\ head' = head
+        /\ tail' = tail
+        /\ count' = count
+        /\ q' = q
+
+Spec == Init /\ [][Next]_<<q, head, tail, count>>
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,1,1,0.778,gold,13.16,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+Init ==
+  /\ currentTerm = 0
+  /\ votedFor = {}
+  /\ state = ""Follower""
+
+Next ==
+  \/ /\ state = ""Follower""
+     /\ currentTerm' = currentTerm
+     /\ votedFor' = votedFor
+     /\ state' = ""Follower""
+  \/ /\ state = ""Candidate""
+     /\ currentTerm' = currentTerm + 1
+     /\ votedFor' = {currentTerm'}
+     /\ state' = ""Candidate""
+  \/ /\ state = ""Leader""
+     /\ currentTerm' = currentTerm
+     /\ votedFor' = votedFor
+     /\ state' = ""Leader""
+
+Spec ==
+  Init /\ [][Next]_<<currentTerm, votedFor, state>>
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,1,0,0.778,silver,204.91,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS Readers
+
+VARIABLES readers, writer_active
+
+Init == /\ readers = <<>>
+        /\ writer_active = FALSE
+
+Next == \/ /\ writer_active = FALSE
+          /\ \E r \in Readers : /\ r \in readers
+          /\ ~(r \in readers)
+          /\ writer_active' = TRUE
+          /\ readers' = <<>>
+        \/ /\ writer_active = FALSE
+          /\ \E r \in Readers : /\ ~(r \in readers)
+          /\ r \in readers'
+          /\ writer_active' = FALSE
+        \/ /\ writer_active = TRUE
+          /\ \E r \in Readers : /\ ~(r \in readers)
+          /\ writer_active' = FALSE
+          /\ readers' = <<>>
+        \/ /\ writer_active = FALSE
+          /\ \E r \in Readers : /\ ~(r \in readers)
+          /\ writer_active' = FALSE
+          /\ readers' = <<>>
+
+Spec == Init /\ [][Next]_<<readers, writer_active>>
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,1,0,0.444,silver,98.93,"---- MODULE DistributedSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, channel, snapshot, marker, recorded, finished
+===="
+chattla:20b,BM009,Token Ring,networking,2,1,1,0.667,gold,2.57,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLE token
+
+Init == /\ token \in 1..N
+
+Next == /\ token' \in 1..N
+        /\ token' = IF token = N THEN 1 ELSE token + 1
+
+Spec == Init /\ [][Next]_<<token>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,0.778,silver,19.59,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, Values
+
+VARIABLES store
+
+Init == /\ store \in [Keys -> Values]
+Next == /\ store' \in [Keys -> Values]
+      /\ \E k \in Keys : \E v \in Values : store' = [store EXCEPT ![k] = v]
+
+Spec == Init /\ [][Next]_<<store>>
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,0,0,0.889,bronze,415.63,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES acceptors, proposers, promises, accepts, chosen, ballots, values
+Ballot == [p \in proposers |-> ballots[p]]
+Value == [p \in proposers |-> values[p]]
+Promise == [a \in acceptors |-> promises[a]]
+Accept == [a \in acceptors |-> accepts[a]]
+Chosen == chosen
+
+\* Type invariant
+TypeOK == 
+  /\ acceptors \subseteq Nat
+  /\ proposers \subseteq Nat
+  /\ promises \subseteq acceptors \X [ballot \in Nat, value \in Nat]
+  /\ accepts \subseteq acceptors \X [ballot \in Nat, value \in Nat]
+  /\ chosen \subseteq Nat
+  /\ ballots \subseteq proposers \X Nat
+  /\ values \subseteq proposers \X Nat
+
+\* Initial state
+Init == 
+  /\ acceptors \subseteq Nat
+  /\ proposers \subseteq Nat
+  /\ promises = [a \in acceptors |-> [ballot \in Nat, value \in Nat]]
+  /\ accepts = [a \in acceptors |-> [ballot \in Nat, value \in Nat]]
+  /\ chosen = {}
+  /\ ballots = [p \in proposers |-> 0]
+  /\ values = [p \in proposers |-> 0]
+
+\* Next-state relation
+Next == 
+  \/ \E a \in acceptors:
+       /\ promises[a] = [ballot \in Nat, value \in Nat]
+       /\ accepts[a] = [ballot \in Nat, value \in Nat]
+       /\ chosen = {}
+       /\ promises' = [promises EXCEPT ![a] = [ballot \in Nat, value \in Nat]]
+       /\ accepts' = accepts
+       /\ chosen' = chosen
+       /\ ballots' = ballots
+       /\ values' = values
+  \/ \E p \in proposers:
+       /\ promises = [a \in acceptors |-> [ballot \in Nat, value \in Nat]]
+       /\ accepts = [a \in acceptors |-> [ballot \in Nat, value \in Nat]]
+       /\ chosen = {}
+       /\ ballots' = [ballots EXCEPT ![p] = ballots[p] + 1]
+       /\ values' = values
+       /\ promises' = promises
+       /\ accepts' = accepts
+  \/ \E p \in proposers:
+       /\ promises = [a \in acceptors |-> [ballot \in Nat, value \in Nat]]
+       /\ accepts = [a \in acceptors |-> [ballot \in Nat, value \in Nat]]
+       /\ chosen = {}
+       /\ ballots' = ballots
+       /\ values' = values
+       /\ promises' = promises
+       /\ accepts' = accepts
+  \/ \E a \in acceptors:
+       /\ promises = [a \in acceptors |-> [ballot \in Nat, value \in Nat]]
+       /\ accepts = [a \in acceptors |-> [ballot \in Nat, value \in Nat]]
+       /\ chosen = {}
+       /\ ballots' = ballots
+       /\ values' = values
+       /\ promises' = promises
+       /\ accepts' = accepts
+  \/ \E a \in acceptors:
+       /\ promises = [a \in acceptors |-> [ballot \in Nat, value \in Nat]]
+       /\ accepts = [a \in acceptors |-> [ballot \in Nat, value \in Nat]]
+       /\ chosen = {}
+       /\ ballots' = ballots
+       /\ values' = values
+       /\ promises' = promises
+       /\ accepts' = accepts
+  \/ \E a \in acceptors:
+       /\ promises = [a \in acceptors |-> [ballot \in Nat, value \in Nat]]
+       /\ accepts = [a \in acceptors |-> [ballot \in Nat, value \in Nat]]
+       /\ chosen = {}
+       /\ ballots' = ballots
+       /\ values' = values
+       /\ promises' = promises
+       /\ accepts' = accepts
+  \/ \E a \in acceptors:
+       /\ promises = [a \in acceptors |-> [ballot \in Nat, value \in Nat]]
+       /\ accepts = [a \in acceptors |-> [ballot \in Nat, value \in Nat]]
+       /\ chosen = {}
+       /\ ballots' = ballots
+       /\ values' = values
+       /\ promises' = promises
+       /\ accepts' = accepts
+  \/ \E a \in acceptors:
+       /\ promises = [a \in acceptors |-> [ballot \in Nat, value \in Nat]]
+       /\ accepts = [a \in acceptors |-> [ballot \in Nat, value \in Nat]]
+       /\ chosen = {}
+       /\ ballots' = ballots
+       /\ values' = values
+       /\ promises' = promises
+       /\ accepts' = accepts
+  \/ \E a \in acceptors:
+       /\ promises = [a \in acceptors |-> [ballot \in Nat, value \in Nat]]
+       /\ accepts = [a \in acceptors |-> [ballot \in Nat, value \in Nat]]
+       /\ chosen = {}
+       /\ ballots' = ballots
+       /\ values' = values
+       /\ promises' = promises
+       /\ accepts' = accepts
+  \/ \E a \in acceptors:
+       /\ promises = [a \in acceptors |-> [ballot \in Nat, value \in Nat]]
+       /\ accepts = [a \in acceptors |-> [ballot \in Nat, value \in Nat]]
+       /\ chosen = {}
+       /\ ballots' = ballots
+       /\ values' = values
+       /\ promises' = promises
+       /\ accepts' = accepts
+  \/ \E a \in acceptors:
+       /\ promises = [a \in acceptors |-> [ballot \in Nat, value \in Nat]]
+       /\ accepts = [a \in acceptors |-> [ballot \in Nat, value \in Nat]]
+       /\ chosen = {}
+       /\ ballots' = ballots
+       /\ values' = values
+       /\ promises' = promises
+       /\ accepts' = accepts
+  \/ \E a \in acceptors:
+       /\ promises = [a \in acceptors |-> [ballot \in Nat, value \in Nat]]
+       /\ accepts = [a \in acceptors |-> [ballot \in Nat, value \in Nat]]
+       /\ chosen = {}
+       /\ ballots' = ballots
+       /\ values' = values
+       /\ promises' = promises
+       /\ accepts' = accepts
+  \/ \E a \in acceptors:
+       /\ promises = [a \in acceptors |-> [ballot \in Nat, value \in Nat]]
+       /\ accepts = [a \in acceptors |-> [ballot \in Nat, value \in Nat]]
+       /\ chosen = {}
+       /\ ballots' = ballots
+       /\ values' = values
+       /\ promises' = promises
+       /\ accepts' = accepts
+  \/ \E a \in acceptors:
+       /\ promises = [a \in acceptors |-> [ballot \in Nat, value \in Nat]]
+       /\ accepts = [a \in acceptors |-> [ballot \in Nat, value \in Nat]]
+       /\ chosen = {}
+       /\ ballots' = ballots
+       /\ values' = values
+       /\ promises' = promises
+       /\ accepts' = accepts
+  \/ \E a \in acceptors:
+       /\ promises = [a \in acceptors |-> [ballot \in Nat, value \in Nat]]
+       /\ accepts = [a \in acceptors |-> [ballot \in Nat, value \in Nat]]
+       /\ chosen = {}
+       /\ ballots' = ballots
+       /\ values' = values
+       /\ promises' = promises
+       /\ accepts' = accepts
+  \/ \E a \in acceptors:
+       /\ promises = [a \in acceptors |-> [ballot \in Nat, value \in Nat]]
+       /\ accepts = [a \in acceptors |-> [ballot \in Nat, value \in Nat]]
+       /\ chosen = {}
+       /\ ballots' = ballots
+       /\ values' = values
+       /\ promises' = promises
+       /\ accepts' = accepts
+  \/ \E a \in acceptors:
+       /\ promises = [a \in acceptors |-> [ballot \in Nat, value \in Nat]]
+       /\ accepts = [a \in acceptors |-> [ballot \in Nat, value \in Nat]]
+       /\ chosen = {}
+       /\ ballots' = ballots
+       /\ values' = values
+       /\ promises' = promises
+       /\ accepts' = accepts
+  \/ \E a \in acceptors:
+       /\ promises = [a \in acceptors |-> [ballot \in Nat, value \in Nat]]
+       /\ accepts = [a \in acceptors |-> [ballot \in Nat, value \in Nat]]
+       /\ chosen = {}
+       /\ ballots' = ballots
+       /\ values' = values
+       /\ promises' = promises
+       /\ accepts' = accepts
+  \/ \E a \in acceptors:
+       /\ promises = [a \in acceptors |-> [ballot \in Nat, value \in Nat]]
+       /\ accepts = [a \in acceptors |-> [ballot \in Nat, value \in Nat]]
+       /\ chosen = {}
+       /\ ballots' = ballots
+       /\ values' = values
+       /\ promises' = promises
+       /\ accepts' = accepts
+  \/ \E a \in acceptors:
+       /\ promises = [a \in acceptors |-> [ballot \in Nat, value \in Nat]]
+       /\ accepts = [a \in acceptors |-> [ballot \in Nat, value \in Nat]]
+       /\ chosen = {}
+       /\ ballots' = ballots
+       /\ values' = values
+       /\ promises' = promises
+       /\ accepts' = accepts
+  \/ \E a \in acceptors:
+       /\ promises = [a \in acceptors |-> [ballot \in Nat, value \in Nat]]
+       /\ accepts = [a \in acceptors |-> [ballot \in Nat, value \in Nat]]
+       /\ chosen = {}
+       /\ ballots' = ballots
+       /\ values' = values
+       /\ promises' = promises
+       /\ accepts' = accepts
+  \/ \E a \in acceptors:
+       /\ promises = [a \in acceptors |-> [ballot \in Nat, value \in Nat]]
+       /\ accepts = [a \in acceptors |-> [ballot \in Nat, value \in Nat]]
+       /\ chosen = {}
+       /\ ballots' = ballots
+       /\ values' = values
+       /\ promises' = promises
+       /\ accepts' = accepts
+  \/ \E a \in acceptors:
+       /\ promises = [a \in accept"
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,0,0,0.667,bronze,572.46,"---- MODULE FileTransfer ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS MAX_RETRIES, CHUNK_SIZE, FILE_SIZE, LOSS_PROB
+VARIABLES ackedChunks, chunks, file, lostChunks, retransmitCount, sentChunks
+
+    /\ file \in Seq(0..255)
+    /\ chunks \in Seq(Seq(0..255))
+    /\ sentChunks \in SUBSET 1..Len(chunks)
+    /\ ackedChunks \in SUBSET 1..Len(chunks)
+    /\ retransmitCount \in Nat
+    /\ lostChunks \in SUBSET 1..Len(chunks)
+
+Init ==
+    /\ file = <<>>
+    /\ chunks = <<>>
+    /\ sentChunks = <<>>
+    /\ ackedChunks = <<>>
+    /\ retransmitCount = 0
+    /\ lostChunks = <<>>
+
+Next ==
+    /\ \E i \in 1..Len(chunks) :
+        /\ i \notin sentChunks
+        /\ i \notin ackedChunks
+        /\ i \notin lostChunks
+        /\ sentChunks' = sentChunks \cup {i}
+        /\ retransmitCount' = retransmitCount
+        /\ lostChunks' = lostChunks
+    \/ \E i \in sentChunks \setminus ackedChunks :
+        /\ i \notin lostChunks
+        /\ retransmitCount' = retransmitCount + 1
+        /\ lostChunks' = lostChunks
+    \/ \E i \in lostChunks :
+        /\ i \notin ackedChunks
+        /\ sentChunks' = sentChunks \cup {i}
+        /\ retransmitCount' = retransmitCount
+        /\ lostChunks' = lostChunks \setminus {i}
+    \/ \E i \in ackedChunks :
+        /\ sentChunks' = sentChunks
+        /\ retransmitCount' = retransmitCount
+        /\ lostChunks' = lostChunks
+    \/ /\ Len(chunks) = 0
+        /\ file' = <<>>
+        /\ chunks' = <<>>
+        /\ sentChunks' = <<>>
+        /\ ackedChunks' = <<>>
+        /\ retransmitCount' = 0
+        /\ lostChunks' = <<>>
+    \/ /\ Len(chunks) > 0
+        /\ Len(chunks) = Len(chunks')
+        /\ sentChunks' = sentChunks
+        /\ ackedChunks' = ackedChunks
+        /\ retransmitCount' = retransmitCount
+        /\ lostChunks' = lostChunks
+        /\ \E i \in 1..Len(chunks) :
+            /\ i \in sentChunks
+            /\ i \notin ackedChunks
+            /\ i \notin lostChunks
+            /\ \E j \in 1..Len(chunks) :
+                /\ j \notin sentChunks
+                /\ j \notin ackedChunks
+                /\ j \notin lostChunks
+                /\ chunks' = Replace(chunks, j, chunks[j])
+                /\ sentChunks' = sentChunks \cup {j}
+                /\ retransmitCount' = retransmitCount
+                /\ lostChunks' = lostChunks
+    \/ /\ Len(chunks) > 0
+        /\ Len(chunks) = Len(chunks')
+        /\ sentChunks' = sentChunks
+        /\ ackedChunks' = ackedChunks
+        /\ retransmitCount' = retransmitCount
+        /\ lostChunks' = lostChunks
+        /\ \E i \in 1..Len(chunks) :
+            /\ i \in sentChunks
+            /\ i \notin ackedChunks
+            /\ i \notin lostChunks
+            /\ \E j \in 1..Len(chunks) :
+                /\ j \notin sentChunks
+                /\ j \notin ackedChunks
+                /\ j \notin lostChunks
+                /\ chunks' = Replace(chunks, j, chunks[j])
+                /\ sentChunks' = sentChunks \cup {j}
+                /\ retransmitCount' = retransmitCount
+                /\ lostChunks' = lostChunks \cup {i}
+    \/ /\ Len(chunks) > 0
+        /\ Len(chunks) = Len(chunks')
+        /\ sentChunks' = sentChunks
+        /\ ackedChunks' = ackedChunks
+        /\ retransmitCount' = retransmitCount
+        /\ lostChunks' = lostChunks
+        /\ \E i \in 1..Len(chunks) :
+            /\ i \in sentChunks
+            /\ i \notin ackedChunks
+            /\ i \notin lostChunks
+            /\ \E j \in 1..Len(chunks) :
+                /\ j \notin sentChunks
+                /\ j \notin ackedChunks
+                /\ j \notin lostChunks
+                /\ chunks' = Replace(chunks, j, chunks[j])
+                /\ sentChunks' = sentChunks \cup {j}
+                /\ retransmitCount' = retransmitCount
+                /\ lostChunks' = lostChunks
+    \/ /\ Len(chunks) > 0
+        /\ Len(chunks) = Len(chunks')
+        /\ sentChunks' = sentChunks
+        /\ ackedChunks' = ackedChunks
+        /\ retransmitCount' = retransmitCount
+        /\ lostChunks' = lostChunks
+        /\ \E i \in 1..Len(chunks) :
+            /\ i \in sentChunks
+            /\ i \notin ackedChunks
+            /\ i \notin lostChunks
+            /\ \E j \in 1..Len(chunks) :
+                /\ j \notin sentChunks
+                /\ j \notin ackedChunks
+                /\ j \notin lostChunks
+                /\ chunks' = Replace(chunks, j, chunks[j])
+                /\ sentChunks' = sentChunks \cup {j}
+                /\ retransmitCount' = retransmitCount
+                /\ lostChunks' = lostChunks
+    \/ /\ Len(chunks) > 0
+        /\ Len(chunks) = Len(chunks')
+        /\ sentChunks' = sentChunks
+        /\ ackedChunks' = ackedChunks
+        /\ retransmitCount' = retransmitCount
+        /\ lostChunks' = lostChunks
+        /\ \E i \in 1..Len(chunks) :
+            /\ i \in sentChunks
+            /\ i \notin ackedChunks
+            /\ i \notin lostChunks
+            /\ \E j \in 1..Len(chunks) :
+                /\ j \notin sentChunks
+                /\ j \notin ackedChunks
+                /\ j \notin lostChunks
+                /\ chunks' = Replace(chunks, j, chunks[j])
+                /\ sentChunks' = sentChunks \cup {j}
+                /\ retransmitCount' = retransmitCount
+                /\ lostChunks' = lostChunks
+    \/ /\ Len(chunks) > 0
+        /\ Len(chunks) = Len(chunks')
+        /\ sentChunks' = sentChunks
+        /\ ackedChunks' = ackedChunks
+        /\ retransmitCount' = retransmitCount
+        /\ lostChunks' = lostChunks
+        /\ \E i \in 1..Len(chunks) :
+            /\ i \in sentChunks
+            /\ i \notin ackedChunks
+            /\ i \notin lostChunks
+            /\ \E j \in 1..Len(chunks) :
+                /\ j \notin sentChunks
+                /\ j \notin ackedChunks
+                /\ j \notin lostChunks
+                /\ chunks' = Replace(chunks, j, chunks[j])
+                /\ sentChunks' = sentChunks \cup {j}
+                /\ retransmitCount' = retransmitCount
+                /\ lostChunks' = lostChunks
+    \/ /\ Len(chunks) > 0
+        /\ Len(chunks) = Len(chunks')
+        /\ sentChunks' = sentChunks
+        /\ ackedChunks' = ackedChunks
+        /\ retransmitCount' = retransmitCount
+        /\ lostChunks' = lostChunks
+        /\ \E i \in 1..Len(chunks) :
+            /\ i \in sentChunks
+            /\ i \notin ackedChunks
+            /\ i \notin lostChunks
+            /\ \E j \in 1..Len(chunks) :
+                /\ j \notin sentChunks
+                /\ j \notin ackedChunks
+                /\ j \notin lostChunks
+                /\ chunks' = Replace(chunks, j, chunks[j])
+                /\ sentChunks' = sentChunks \cup {j}
+                /\ retransmitCount' = retransmitCount
+                /\ lostChunks' = lostChunks
+    \/ /\ Len(chunks) > 0
+        /\ Len(chunks) = Len(chunks')
+        /\ sentChunks' = sentChunks
+        /\ ackedChunks' = ackedChunks
+        /\ retransmitCount' = retransmitCount
+        /\ lostChunks' = lostChunks
+        /\ \E i \in 1..Len(chunks) :
+            /\ i \in sentChunks
+            /\ i \notin ackedChunks
+            /\ i \notin lostChunks
+            /\ \E j \in 1..Len(chunks) :
+                /\ j \notin sentChunks
+                /\ j \notin ackedChunks
+                /\ j \notin lostChunks
+                /\ chunks' = Replace(chunks, j, chunks[j])
+                /\ sentChunks' = sentChunks \cup {j}
+                /\ retransmitCount' = retransmitCount
+                /\ lostChunks' = lostChunks
+    \/ /\ Len(chunks) > 0
+        /\ Len(chunks) = Len(chunks')
+        /\ sentChunks' = sentChunks
+        /\ ackedChunks' = ackedChunks
+        /\ retransmitCount' = retransmitCount
+        /\ lostChunks' = lostChunks
+        /\ \E i \in 1..Len(chunks) :
+            /\ i \in sentChunks
+            /\ i \notin ackedChunks
+            /\ i \notin lostChunks
+            /\ \E j \in 1..Len(chunks) :
+                /\ j \notin sentChunks
+                /\ j \notin ackedChunks
+                /\ j \notin lostChunks
+                /\ chunks' = Replace(chunks, j, chunks[j])
+                /"
+chattla:20b,BM013,Transaction Isolation (Snapshot Isolation),transaction,4,1,0,0.444,silver,85.7,"---- MODULE SnapshotIsolation ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES db, txns, snapshot, writes, aborts, commits, nextTxId, keys, values
+
+===="
+chattla:20b,BM014,Clock Synchronisation,networking,3,0,0,0.778,bronze,394.36,"---- MODULE ClockSync ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES clocks, offsets, epsilon
+
+Init == /\ clocks = [i \in 1..N |-> 0]
+        /\ offsets = [i \in 1..N |-> 0]
+        /\ epsilon \in Nat
+
+Next == /\ \E i \in 1..N:
+          /\ clocks' = [clocks EXCEPT ![i] = clocks[i] + offsets[i]]
+          /\ offsets' = [i \in 1..N |-> offsets[i] + (Avg(clocks) - clocks[i])]
+          /\ epsilon' = epsilon
+        /\ \E i \in 1..N:
+          /\ clocks' = [clocks EXCEPT ![i] = clocks[i] + offsets[i]]
+          /\ offsets' = [i \in 1..N |-> offsets[i]]
+          /\ epsilon' = epsilon
+
+Spec == Init /\ [][Next]_<<clocks, offsets, epsilon>>
+
+===="
+chattla:20b,BM015,Peterson's Algorithm,scheduling,2,1,0,0.778,silver,203.87,"---- MODULE Peterson2 ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES flag, turn
+
+Init == /\ flag = [i \in 1..2 |-> FALSE]
+        /\ turn = 1
+
+Next == \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag[1] = TRUE
+          /\ turn = 2
+          /\ flag[2] = FALSE
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag[2] = TRUE
+          /\ turn = 1
+          /\ flag[1] = FALSE
+
+Spec == Init /\ [][Next]_<<flag, turn>>
+
+===="
+chattla:20b,BM016,Gossip Protocol,networking,3,1,0,0.778,silver,313.82,"---- MODULE GossipProtocol ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES known, infected
+
+Init == /\ known = <<>> /\ infected = <<>> /\ Len(known) = Len(infected)
+
+Next == /\ known' = known
+        /\ infected' = Append(infected, known)
+
+Spec == Init /\ [][Next]_<<known, infected>>
+
+===="
+chattla:20b,BM017,Simple Allocator,storage,2,0,0,0.889,bronze,121.69,"---- MODULE MemoryAllocator ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, Pages, Clients
+
+VARIABLE free, allocated
+
+Init == /\ free = Pages
+       /\ allocated = [c \in Clients |-> {}]
+
+Next == /\ \E c \in Clients:
+          /\ c \in free
+          /\ free' = free \ {c}
+          /\ allocated' = [allocated EXCEPT ![c] = @ \cup {c}]
+       \/ \E c \in Clients:
+          /\ c \in Pages
+          /\ c \in allocated
+          /\ free' = free \cup {c}
+          /\ allocated' = [allocated EXCEPT ![c] = @ \ {c}]
+
+Spec == Init /\ [][Next]_<<free, allocated>>
+
+TypeOK == /\ free \subseteq Pages
+         /\ allocated \subseteq [Clients -> SUBSET Pages]
+         /\ \A c \in Clients: allocated[c] \subseteq Pages
+         /\ \A c \in Clients: allocated[c] \subseteq free
+         /\ \A c \in Clients: allocated[c] \subseteq allocated
+         /\ \A c \in Clients: allocated[c] \subseteq allocated'
+         /\ \A c \in Clients: allocated'[c] \subseteq Pages
+         /\ \A c \in Clients: allocated'[c] \subseteq free'
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated'
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated'
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated'
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated'
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated'
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated'
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated'
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated'
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated'
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated'
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated'
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated'
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated'
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated'
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated'
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated'
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated'
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated'
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated'
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated'
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated'
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated'
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated'
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated'
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated'
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated'
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated'
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated'
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated'
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated'
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated'
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated'
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated'
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated'
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated'
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated'
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated'
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated'
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated'
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated'
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated'
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated'
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated'
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated'
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated'
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated'
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated'
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated'
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated'
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated'
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated'
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated'
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated'
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated
+         /\ \A c \in Clients: allocated'[c] \subseteq allocated'
+       "
+chattla:20b,BM018,Publish-Subscribe Broker,networking,3,1,0,0.444,silver,47.92,"---- MODULE Broker ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES subscribers, topics, subscriptions, messages, inboxes
+
+===="
+chattla:20b,BM019,Dekker's Algorithm,scheduling,3,1,1,0.778,gold,3.71,"---- MODULE Dekker ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES turn, wants
+
+Init == /\ turn \in {0,1}
+        /\ wants \in {0,1}
+
+Next == 
+  \/ /\ turn = 0
+      /\ wants = 1
+      /\ turn' = 1
+      /\ wants' = 1
+  \/ /\ turn = 1
+      /\ wants = 0
+      /\ turn' = 0
+      /\ wants' = 0
+  \/ /\ turn = 0
+      /\ wants = 0
+      /\ turn' = 0
+      /\ wants' = 0
+  \/ /\ turn = 1
+      /\ wants = 1
+      /\ turn' = 1
+      /\ wants' = 1
+
+Spec == Init /\ [][Next]_<<turn, wants>>
+
+===="
+chattla:20b,BM020,Eventually Consistent Counter,storage,3,0,0,1.0,bronze,256.26,"---- MODULE GCounter ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS Node
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+
+VARIABLES counts
+
+
+  (* --state Increment
+  counts[n] = [m \in Node |-> IF m = n THEN counts[n][m] + 1 ELSE counts[n][m]]
+  *)
+  (* --state Merge
+  counts = [n \in Node |-> [m \in Node |-> IF m = n THEN counts[n][m] ELSE Max(counts[][m])]]
+  *)
+end
+*)
+
+(* --state Init
+counts = [n \in Node |-> [m \in Node |-> 0]]
+*)
+
+(* --state Increment
+counts[n] = [m \in Node |-> IF m = n THEN counts[n][m] + 1 ELSE counts[n][m]]
+*)
+
+(* --state Merge
+counts = [n \in Node |-> [m \in Node |-> IF m = n THEN counts[n][m] ELSE Max(counts[][m])]]
+*)
+
+(* --state GlobalCount
+globalCount = Sum([n \in Node |-> Max(counts[][n])])
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq Nat
+        /\ counts \in [Node -> [Node -> Nat]]
+        /\ globalCount \in Nat
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state Next
+Next == \/ /\ n \in Node
+          /\ counts' = [n \in Node |-> [m \in Node |-> IF m = n THEN counts[n][m] + 1 ELSE counts[n][m]]]
+        \/ /\ n \in Node
+          /\ counts' = [n \in Node |-> [m \in Node |-> IF m = n THEN counts[n][m] ELSE Max(counts[][m])]]
+        \/ /\ counts' = counts
+*)
+
+(* --state Init
+Init == /\ counts = [n \in Node |-> [m \in Node |-> 0]]
+*)
+
+(* --state Next
+Next == \/ /\ n \in Node
+          /\ counts' = [n \in Node |-> [m \in Node |-> IF m = n THEN counts[n][m] + 1 ELSE counts[n][m]]]
+        \/ /\ n \in Node
+          /\ counts' = [n \in Node |-> [m \in Node |-> IF m = n THEN counts[n][m] ELSE Max(counts[][m])]]
+        \/ /\ counts' = counts
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq Nat
+        /\ counts \in [Node -> [Node -> Nat]]
+        /\ globalCount \in Nat
+*)
+
+(* --state GlobalCount
+globalCount == Sum([n \in Node |-> Max(counts[][n])])
+*)
+
+(* --state Invariant
+Invariant == /\ globalCount = Sum([n \in Node |-> Max(counts[][n])])
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq Nat
+        /\ counts \in [Node -> [Node -> Nat]]
+        /\ globalCount \in Nat
+*)
+
+(* --state GlobalCount
+globalCount == Sum([n \in Node |-> Max(counts[][n])])
+*)
+
+(* --state Invariant
+Invariant == /\ globalCount = Sum([n \in Node |-> Max(counts[][n])])
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq Nat
+        /\ counts \in [Node -> [Node -> Nat]]
+        /\ globalCount \in Nat
+*)
+
+(* --state GlobalCount
+globalCount == Sum([n \in Node |-> Max(counts[][n])])
+*)
+
+(* --state Invariant
+Invariant == /\ globalCount = Sum([n \in Node |-> Max(counts[][n])])
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq Nat
+        /\ counts \in [Node -> [Node -> Nat]]
+        /\ globalCount \in Nat
+*)
+
+(* --state GlobalCount
+globalCount == Sum([n \in Node |-> Max(counts[][n])])
+*)
+
+(* --state Invariant
+Invariant == /\ globalCount = Sum([n \in Node |-> Max(counts[][n])])
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq Nat
+        /\ counts \in [Node -> [Node -> Nat]]
+        /\ globalCount \in Nat
+*)
+
+(* --state GlobalCount
+globalCount == Sum([n \in Node |-> Max(counts[][n])])
+*)
+
+(* --state Invariant
+Invariant == /\ globalCount = Sum([n \in Node |-> Max(counts[][n])])
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq Nat
+        /\ counts \in [Node -> [Node -> Nat]]
+        /\ globalCount \in Nat
+*)
+
+(* --state GlobalCount
+globalCount == Sum([n \in Node |-> Max(counts[][n])])
+*)
+
+(* --state Invariant
+Invariant == /\ globalCount = Sum([n \in Node |-> Max(counts[][n])])
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq Nat
+        /\ counts \in [Node -> [Node -> Nat]]
+        /\ globalCount \in Nat
+*)
+
+(* --state GlobalCount
+globalCount == Sum([n \in Node |-> Max(counts[][n])])
+*)
+
+(* --state Invariant
+Invariant == /\ globalCount = Sum([n \in Node |-> Max(counts[][n])])
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq Nat
+        /\ counts \in [Node -> [Node -> Nat]]
+        /\ globalCount \in Nat
+*)
+
+(* --state GlobalCount
+globalCount == Sum([n \in Node |-> Max(counts[][n])])
+*)
+
+(* --state Invariant
+Invariant == /\ globalCount = Sum([n \in Node |-> Max(counts[][n])])
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq Nat
+        /\ counts \in [Node -> [Node -> Nat]]
+        /\ globalCount \in Nat
+*)
+
+(* --state GlobalCount
+globalCount == Sum([n \in Node |-> Max(counts[][n])])
+*)
+
+(* --state Invariant
+Invariant == /\ globalCount = Sum([n \in Node |-> Max(counts[][n])])
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq Nat
+        /\ counts \in [Node -> [Node -> Nat]]
+        /\ globalCount \in Nat
+*)
+
+(* --state GlobalCount
+globalCount == Sum([n \in Node |-> Max(counts[][n])])
+*)
+
+(* --state Invariant
+Invariant == /\ globalCount = Sum([n \in Node |-> Max(counts[][n])])
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq Nat
+        /\ counts \in [Node -> [Node -> Nat]]
+        /\ globalCount \in Nat
+*)
+
+(* --state GlobalCount
+globalCount == Sum([n \in Node |-> Max(counts[][n])])
+*)
+
+(* --state Invariant
+Invariant == /\ globalCount = Sum([n \in Node |-> Max(counts[][n])])
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq Nat
+        /\ counts \in [Node -> [Node -> Nat]]
+        /\ globalCount \in Nat
+*)
+
+(* --state GlobalCount
+globalCount == Sum([n \in Node |-> Max(counts[][n])])
+*)
+
+(* --state Invariant
+Invariant == /\ globalCount = Sum([n \in Node |-> Max(counts[][n])])
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq Nat
+        /\ counts \in [Node -> [Node -> Nat]]
+        /\ globalCount \in Nat
+*)
+
+(* --state GlobalCount
+globalCount == Sum([n \in Node |-> Max(counts[][n])])
+*)
+
+(* --state Invariant
+Invariant == /\ globalCount = Sum([n \in Node |-> Max(counts[][n])])
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq Nat
+        /\ counts \in [Node -> [Node -> Nat]]
+        /\ globalCount \in Nat
+*)
+
+(* --state GlobalCount
+globalCount == Sum([n \in Node |-> Max(counts[][n])])
+*)
+
+(* --state Invariant
+Invariant == /\ globalCount = Sum([n \in Node |-> Max(counts[][n])])
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq Nat
+        /\ counts \in [Node -> [Node -> Nat]]
+        /\ globalCount \in Nat
+*)
+
+(* --state GlobalCount
+globalCount == Sum([n \in Node |-> Max(counts[][n])])
+*)
+
+(* --state Invariant
+Invariant == /\ globalCount = Sum([n \in Node |-> Max(counts[][n])])
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq Nat
+        /\ counts \in [Node -> [Node -> Nat]]
+        /\ globalCount \in Nat
+*)
+
+(* --state GlobalCount
+globalCount == Sum([n \in Node |-> Max(counts[][n])])
+*)
+
+(* --state Invariant
+Invariant == /\ globalCount = Sum([n \in Node |-> Max(counts[][n])])
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq Nat
+        /\ counts \in [Node -> [Node -> Nat]]
+        /\ globalCount \in Nat
+*)
+
+(* --state GlobalCount
+globalCount == Sum([n \in Node |-> Max(counts[][n])])
+*)
+
+(* --state Invariant
+Invariant == /\ globalCount = Sum([n \in Node |-> Max(counts[][n])])
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq Nat
+        /\ counts \in [Node -> [Node -> Nat]]
+        /\ globalCount \in Nat
+*)
+
+(* --state GlobalCount
+globalCount == Sum([n \in Node |-> Max(counts[][n])])
+*)
+
+(* --state Invariant
+Invariant == /\ globalCount = Sum([n \"

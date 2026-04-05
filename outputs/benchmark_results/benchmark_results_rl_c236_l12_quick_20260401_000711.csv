@@ -1,0 +1,510 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,0,0.444,silver,49.73,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, turn, N
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,1,0,0.444,silver,48.47,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES participants, votes, decision, messages, state
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,1,1,0.778,gold,9.46,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLES forks, states
+
+(* Fork ownership: forks[i] = j means fork i is held by philosopher j; forks[i] = -1 means fork i is free *)
+Init == /\ forks = [i \in 1..N |-> -1]
+        /\ states = [i \in 1..N |-> ""thinking""]
+
+Next == \/ (* Philosopher i becomes hungry *)
+          /\ \E i \in 1..N :
+                /\ states[i] = ""thinking""
+                /\ states' = [states EXCEPT ![i] = ""hungry""]
+                /\ forks' = forks
+        \/ (* Philosopher i picks up forks if both are free *)
+          /\ \E i \in 1..N :
+                /\ states[i] = ""hungry""
+                /\ forks[i] = -1
+                /\ forks[%(i, N) + 1] = -1
+                /\ forks' = [forks EXCEPT ![i] = i, ![%(i, N) + 1] = i]
+                /\ states' = [states EXCEPT ![i] = ""eating""]
+        \/ (* Philosopher i puts down forks after eating *)
+          /\ \E i \in 1..N :
+                /\ states[i] = ""eating""
+                /\ forks' = [forks EXCEPT ![i] = -1, ![%(i, N) + 1] = -1]
+                /\ states' = [states EXCEPT ![i] = ""thinking""]
+
+Spec == Init /\ [][Next]_<<forks, states>>
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,1,0,0.444,silver,91.42,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES num, flag
+
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,0,0.444,silver,59.28,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail
+
+(* The queue is represented as a sequence of length K. *)
+(* head and tail are indices into the sequence. *)
+
+(* The queue is empty when head = tail. *)
+(* The queue is full when (tail + 1) \mod K = head. *)
+
+(* The queue holds at most K elements. *)
+(* The queue holds at least 0 elements. *)
+
+(* The queue is a sequence of length K. *)
+(* The queue holds only integers. *)
+
+(* The queue is a FIFO queue. *)
+
+(* The queue is a bounded FIFO queue. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The producer blocks when the queue is full. *)
+(* The consumer blocks when the queue is empty. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a b"
+chattla:20b,BM006,Raft Leader Election,consensus,4,1,0,0.444,silver,94.29,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,0,0,0.778,bronze,25.67,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES readers, writer_active, r
+
+Init == /\ readers = <<>> \\
+       /\ writer_active = FALSE
+
+Next == \/ /\ writer_active = FALSE \\
+          /\ \E r \in 1..10 : /\ r \notin readers \\
+          /\ r' = r \\
+             /\ writer_active' = FALSE \\
+          \/ /\ writer_active = FALSE \\
+             /\ \E r \in 1..10 : /\ r \in readers \\
+             /\ r' = r \\
+                /\ writer_active' = FALSE \\
+          \/ /\ writer_active = FALSE \\
+             /\ \E r \in 1..10 : /\ r \notin readers \\
+             /\ r' = r \\
+                /\ writer_active' = TRUE \\
+          \/ /\ writer_active = TRUE \\
+             /\ \E r \in 1..10 : /\ r \in readers \\
+             /\ r' = r \\
+                /\ writer_active' = TRUE \\
+          \/ /\ writer_active = TRUE \\
+             /\ \E r \in 1..10 : /\ r \notin readers \\
+             /\ r' = r \\
+                /\ writer_active' = FALSE
+
+Spec == Init /\ [][Next]_<<readers, writer_active>>
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,1,0,0.444,silver,85.72,"---- MODULE ChandyLamportSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES procState, channelState, snapshotState, snapshotDone, markerSent, markerReceived
+
+===="
+chattla:20b,BM009,Token Ring,networking,2,1,1,0.667,gold,2.24,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLE token
+
+Init == /\ token \in 1..N
+
+Next == /\ token' \in 1..N
+        /\ token' = IF token = N THEN 1 ELSE token + 1
+
+Spec == Init /\ [][Next]_<<token>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,0.778,silver,4.86,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, Values, NULL
+
+VARIABLES store
+
+Init == store = [k \in Keys |-> NULL]
+
+Next == \/ /\ \E k \in Keys : \E v \in Values : /\ store' = [store EXCEPT ![k] = v]
+      \/ /\ \E k \in Keys : /\ store' = [store EXCEPT ![k] = NULL]
+
+Spec == Init /\ [][Next]_<<store>>
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,1,0,0.444,silver,150.62,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES acceptors, proposers, promises, accepted, chosen, chosenBy, chosenBallot, chosenByBallot, chosenBallotBy, chosenByBy, chosenBallotByBy, chosenByBallotBy, chosenBallotByBallot, chosenByByBallot, chosenBallotByByBallot, chosenByBallotByBallot, chosenBallotByBallotBy, chosenByByBallotBy, chosenBallotByByBallotBy, chosenByBallotByBallotBy, chosenBallotByBallotByBallot, chosenByByBallotByBallotBy, chosenBallotByByBallotByBallotBy, chosenByBallotByBallotByBallotBy, chosenBallotByBallotByBallotByBallotBy, chosenByByBallotByBallotByBallotByBallotBy, chosenBallotByByBallotByBallotByBallotByBallotBy, chosenByBallotByBallotByBallotByBallotByBallotBy, chosenBallotByBallotByBallotByBallotByBallotByBallotBy, chosenByByBallotByBallotByBallotByBallotByBallotBy, chosenBallotByByBallotByBallotByBallotByBallotByBallotByBallotBy, chosenByBallotByBallotByBallotByBallotByBallotByBallotBy, chosenBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotBy, chosenByByBallotByBallotByBallotByBallotByBallotByBallotByBallotBy, chosenBallotByByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotBy, chosenByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotBy, chosenBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotBy, chosenByByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotBy, chosenBallotByByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotBy, chosenByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotBy, chosenBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotBy, chosenByByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotBy, chosenBallotByByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotBy, chosenByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotBy, chosenBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotBy, chosenByByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotBy, chosenBallotByByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotBy, chosenByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotBy, chosenBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotBy, chosenByByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotBy, chosenBallotByByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotBy, chosenByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotBy, chosenBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotBy, chosenByByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotBy, chosenBallotByByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotBy, chosenByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotBy, chosenBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotBy, chosenByByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotBy, chosenBallotByByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotBy, chosenByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotBy, chosenBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotBy, chosenByByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBall"
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,0,0,0.778,bronze,205.64,"---- MODULE FileTransfer ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS MAX_RETRIES, CHUNK_SIZE, FILE_SIZE, CHANNEL_CAPACITY
+VARIABLES channel, fileChunks, retransmitCount, sentChunks
+
+    /\ fileChunks \in Seq(1..FILE_SIZE)
+    /\ sentChunks \in Seq(1..FILE_SIZE)
+    /\ retransmitCount \in Nat
+    /\ channel \in Seq(1..FILE_SIZE)
+
+Init ==
+    /\ fileChunks = [i \in 1..FILE_SIZE |-> i]
+    /\ sentChunks = <<>>
+    /\ retransmitCount = 0
+    /\ channel = <<>>
+
+SendChunk ==
+    /\ sentChunks' = Append(sentChunks, Head(fileChunks))
+    /\ fileChunks' = Tail(fileChunks)
+    /\ channel' = Append(channel, Head(fileChunks))
+    /\ retransmitCount' = 0
+
+Retransmit ==
+    /\ sentChunks' = Append(sentChunks, Head(channel))
+    /\ channel' = Tail(channel)
+    /\ retransmitCount' = retransmitCount + 1
+
+DropChunk ==
+    /\ channel' = Tail(channel)
+    /\ sentChunks' = sentChunks
+    /\ retransmitCount' = retransmitCount
+
+Next ==
+    /\ \E chunk \in channel : 
+        /\ \E action \in {SendChunk, Retransmit, DropChunk} : action
+    \/ \E chunk \in fileChunks : 
+        /\ \E action \in {SendChunk, DropChunk} : action
+
+Spec ==
+    Init /\ [][Next]_<<fileChunks, sentChunks, retransmitCount, channel>>
+
+===="

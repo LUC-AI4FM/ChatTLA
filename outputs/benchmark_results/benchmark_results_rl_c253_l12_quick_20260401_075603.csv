@@ -1,0 +1,528 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,0,0,1.0,bronze,28.92,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, turn
+StateSpace == [p \in 1..N |-> {idle, trying, critical}]
+
+(* Type invariant *)
+TypeOK == /\ state \in StateSpace
+        /\ turn \in 1..N
+
+(* Initial condition *)
+Init == /\ state = [p \in 1..N |-> idle]
+        /\ turn \in 1..N
+
+(* Next-state relation *)
+Next == 
+  \* Process p attempts to enter critical section
+  \/ /\ p \in 1..N
+     /\ state[p] = idle
+     /\ state' = [state EXCEPT ![p] = trying]
+     /\ turn' = turn
+  \* Process p enters critical section if it is its turn
+  \/ /\ p \in 1..N
+     /\ state[p] = trying
+     /\ turn = p
+     /\ state' = [state EXCEPT ![p] = critical]
+     /\ turn' = turn
+  \* Process p exits critical section and passes turn to next process
+  \/ /\ p \in 1..N
+     /\ state[p] = critical
+     /\ state' = [state EXCEPT ![p] = idle]
+     /\ turn' = (p \mod N) + 1
+
+(* Specification *)
+Spec == Init /\ [][Next]_<<state, turn>>
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,1,0,0.778,silver,20.33,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, participants, coordinator
+VARIABLES state, votes, decision
+
+Init ==
+    /\ state = [p \in participants |-> ""Init""]
+    /\ votes = [p \in participants |-> ""None""]
+    /\ decision = ""None""
+
+Prepare ==
+    /\ decision = ""None""
+    /\ \E p \in participants : state[p] = ""Init""
+    /\ \E p \in participants : state[p] = ""Prepared""
+
+VoteYes ==
+    /\ decision = ""None""
+    /\ \E p \in participants : state[p] = ""Prepared""
+    /\ \E p \in participants : votes[p] = ""Yes""
+
+VoteNo ==
+    /\ decision = ""None""
+    /\ \E p \in participants : state[p] = ""Prepared""
+    /\ \E p \in participants : votes[p] = ""No""
+
+Commit ==
+    /\ decision = ""None""
+    /\ \A p \in participants : state[p] = ""Prepared""
+    /\ \A p \in participants : votes[p] = ""Yes""
+    /\ decision' = ""Commit""
+
+Abort ==
+    /\ decision = ""None""
+    /\ \E p \in participants : state[p] = ""Prepared""
+    /\ \E p \in participants : votes[p] = ""No""
+    /\ decision' = ""Abort""
+
+Next ==
+    \/ Prepare
+    \/ VoteYes
+    \/ VoteNo
+    \/ Commit
+    \/ Abort
+
+Spec ==
+    Init /\ [][Next]_<<state, votes, decision>>
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,0,0,1.0,bronze,34.74,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLES forks, states
+
+(* Fork ownership: forks[i] = j means fork i is held by philosopher j; forks[i] = -1 means fork i is free *)
+Init == /\ forks = [i \in 1..N |-> -1]
+        /\ states = [i \in 1..N |-> ""thinking""]
+
+Next == \/ (* Philosopher i becomes hungry *)
+          /\ states' = [states EXCEPT ![i] = ""hungry""]
+        \/ (* Philosopher i picks up forks if both are free *)
+          /\ states[i] = ""hungry""
+          /\ forks[i] = -1
+          /\ forks[%(i, N) + 1] = -1
+          /\ forks' = [forks EXCEPT ![i] = i, ![%(i, N) + 1] = i]
+          /\ states' = [states EXCEPT ![i] = ""eating""]
+        \/ (* Philosopher i puts down forks after eating *)
+          /\ states[i] = ""eating""
+          /\ forks' = [forks EXCEPT ![i] = -1, ![%(i, N) + 1] = -1]
+          /\ states' = [states EXCEPT ![i] = ""thinking""]
+
+TypeOK == /\ forks \in [1..N -> 1..N \cup {-1}]
+          /\ states \in [1..N -> {""thinking"", ""hungry"", ""eating""}]
+
+Spec == Init /\ [][Next]_<<forks, states>>
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,1,0,0.444,silver,95.28,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES num, flag
+
+(* --algorithm Bakery
+    \* wait until all other processes have higher numbers or are not choosing
+    \* wait until all other processes with lower numbers have exited
+    \* critical section
+    \* exit: set num[i] := 0
+
+  exit(i) == \* process i exits critical section
+
+
+  Next == \* nondeterministic choice of process i and action
+    \* choose(i) \/ enter(i) \/ exit(i)
+*)
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,0,0.778,silver,15.76,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail
+
+Init == /\ q = <<>>
+        /\ head = 0
+        /\ tail = 0
+
+Next == 
+  \/ /\ head < tail
+      /\ head < K
+         /\ head' = head + 1
+            /\ q' = Append(q, head)
+            /\ tail' = tail
+      /\ head' = head
+         /\ tail' = tail
+  \/ /\ head = tail
+      /\ head' = head
+         /\ tail' = tail
+      /\ head' = head
+         /\ tail' = tail
+
+Spec == Init /\ [][Next]_<<q, head, tail>>
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,1,0,1.0,silver,17.61,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS Server
+
+VARIABLES currentTerm, votedFor, state
+
+
+
+(* --state variables
+*)
+
+(* --initialization
+Init == /\ currentTerm = 0
+        /\ votedFor = None
+        /\ state = Follower
+*)
+
+(* --next-state relation
+Next == \/ state = Follower /\ state' = Follower
+        /\ currentTerm' = currentTerm
+        /\ votedFor' = votedFor
+      \/ state = Candidate /\ state' = Candidate
+        /\ currentTerm' = currentTerm + 1
+        /\ votedFor' = self
+      \/ state = Leader /\ state' = Leader
+        /\ currentTerm' = currentTerm
+        /\ votedFor' = votedFor
+*)
+
+(* --specification
+Spec == Init /\ [][Next]_<<currentTerm, votedFor, state>>
+*)
+
+(* --type invariant
+TypeOK == /\ currentTerm \in Nat
+          /\ votedFor \in {None} \cup Server
+          /\ state \in {Follower, Candidate, Leader}
+*)
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,1,0,0.778,silver,191.67,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES readers, writer_active
+
+Init == /\ readers = <<>>
+        /\ writer_active = FALSE
+
+Next == \/ /\ writer_active = FALSE
+          /\ \A r \in readers : r = r
+        \/ /\ writer_active = FALSE
+          /\ \A r \in readers : r = r
+          /\ writer_active' = TRUE
+        \/ /\ writer_active = TRUE
+          /\ \A r \in readers : r = r
+          /\ writer_active' = FALSE
+
+Spec == Init /\ [][Next]_<<readers, writer_active>>
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,1,0,0.444,silver,54.57,"---- MODULE ChandyLamportSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, channel, snapshot, marker, recorded, channelState, N, P, C, initialState, initialChannel
+
+===="
+chattla:20b,BM009,Token Ring,networking,2,1,1,0.667,gold,2.2,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLE token
+
+Init == /\ token \in 1..N
+
+Next == /\ token' \in 1..N
+        /\ token' = IF token = N THEN 1 ELSE token + 1
+
+Spec == Init /\ [][Next]_<<token>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,0.778,silver,146.08,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, Values, NULL
+
+VARIABLES store
+
+Init == store = [k \in Keys |-> NULL]
+
+Next == \/ /\ \E k \in Keys : \E v \in Values : /\ store' = [store EXCEPT ![k] = v]
+      \/ /\ \E k \in Keys : /\ store' = [store EXCEPT ![k] = NULL]
+
+Spec == Init /\ [][Next]_<<store>>
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,1,0,0.444,silver,215.0,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES acceptors, proposers, promises, accepted, chosen, chosenBallot, chosenValue, chosenBallotValue, chosenBallotValueValue, chosenBallotValueValueValue, chosenBallotValueValueValueValue, chosenBallotValueValueValueValueValue, chosenBallotValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue
+===="
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,0,0,0.667,bronze,75.85,"---- MODULE FileTransfer ----
+EXTENDS Integers, Sequences, FiniteSets
+Min(S) == CHOOSE x \in S : \A y \in S : x =< y
+
+
+CONSTANTS MAX_RETRIES, CHUNK_SIZE, FILE_SIZE, CHANNEL_LOSS_PROBABILITY
+VARIABLES channel, chunks, file, retransmit_counts, sent_chunks
+
+    /\ file \in Seq
+    /\ chunks \in Seq
+    /\ sent_chunks \in FiniteSets
+    /\ retransmit_counts \in [chunk \in chunks |-> Int]
+    /\ channel \in FiniteSets
+
+Init ==
+    /\ file = Seq
+    /\ chunks = [i \in 1..Ceiling(FILE_SIZE \div CHUNK_SIZE) |-> SubSeq(file, (i-1)*CHUNK_SIZE+1, Min(i*CHUNK_SIZE, FILE_SIZE))]
+    /\ sent_chunks = {}
+    /\ retransmit_counts = [chunk \in chunks |-> 0]
+    /\ channel = {}
+
+SendChunk ==
+    /\ \E chunk \in chunks \setminus sent_chunks
+    /\ channel' = channel \cup {chunk}
+    /\ sent_chunks' = sent_chunks \cup {chunk}
+    /\ retransmit_counts' = [retransmit_counts EXCEPT ![chunk] = retransmit_counts[chunk] + 1]
+    /\ UNCHANGED <<file, chunks, retransmit_counts>>
+
+ReceiveChunk ==
+    /\ \E chunk \in channel :
+    /\ channel' = channel \setminus {chunk}
+    /\ UNCHANGED <<file, chunks, sent_chunks, retransmit_counts>>
+
+Next ==
+    /\ \E chunk \in chunks \setminus sent_chunks
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E chunk \in channel :
+    /\ \E"

@@ -1,0 +1,724 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,1,1.0,gold,3.11,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS N
+
+VARIABLES state, turn
+
+Init == /\ state = [p \in 1..N |-> ""idle""]
+        /\ turn = 1
+
+Next == \/ /\ state[turn] = ""idle""
+          /\ state' = [state EXCEPT ![turn] = ""critical""]
+          /\ turn' = turn
+        \/ /\ state[turn] # ""idle""
+          /\ turn' = %(turn, N) + 1
+          /\ state' = state
+
+Spec == Init /\ [][Next]_<<state, turn>>
+
+TypeOK == /\ state \in [1..N -> {""idle"", ""trying"", ""critical""}]
+          /\ turn \in 1..N
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,0,0,1.0,bronze,48.14,"---- MODULE TwoPhaseCommitProtocol ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N, participants, coordinator
+VARIABLES coordinator, messages
+
+
+vars == << participants, coordinator >>
+
+Prepare == [msgType |-> ""Prepare"", from |-> coordinator, to |-> participants]
+VoteYes == [msgType |-> ""VoteYes"", from |-> participants, to |-> coordinator]
+VoteNo == [msgType |-> ""VoteNo"", from |-> participants, to |-> coordinator]
+Commit == [msgType |-> ""Commit"", from |-> coordinator, to |-> participants]
+Abort == [msgType |-> ""Abort"", from |-> coordinator, to |-> participants]
+
+Init == /\ coordinator \in participants
+        /\ messages = {}
+
+Next == \/ /\ coordinator \notin messages
+        /\ messages' = messages \cup {Prepare}
+        \/ /\ coordinator \in messages
+           /\ \E msg \in messages : msg.msgType = ""VoteYes""
+           /\ messages' = messages \cup {Commit}
+           \/ /\ \E msg \in messages : msg.msgType = ""VoteNo""
+           /\ messages' = messages \cup {Abort}
+
+Spec == Init /\ [][Next]_vars
+
+TypeOK == /\ coordinator \in participants
+          /\ messages \subseteq {Prepare, VoteYes, VoteNo, Commit, Abort}
+          /\ messages \subseteq [msgType : {""Prepare"", ""VoteYes"", ""VoteNo"", ""Commit"", ""Abort""},
+                                 from : participants,
+                                 to : participants]
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,0,0,1.0,bronze,148.31,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+VARIABLES forkOwner, philosopherState
+
+
+\* Philosopher states
+States == {""thinking"", ""hungry"", ""eating""}
+
+\* Each philosopher is identified by an integer 0 .. N-1
+Philosophers == 0 .. N-1
+
+\* Each fork is identified by an integer 0 .. N-1
+Forks == 0 .. N-1
+
+\* Helper functions to get left and right fork indices
+LeftFork == [p \in Philosophers |-> p]
+RightFork == [p \in Philosophers |-> (p + 1) \mod N]
+
+\* State of each philosopher
+\* 0: thinking, 1: hungry, 2: eating
+philosopherState == [p \in Philosophers |-> 0]
+
+\* Ownership of each fork: either FALSE (unowned) or philosopher index
+forkOwner == [f \in Forks |-> FALSE]
+
+\* Helper function to check if a philosopher can eat
+CanEat(p) == philosopherState[p] = 1 /\ forkOwner[LeftFork[p]] = FALSE /\ forkOwner[RightFork[p]] = FALSE
+
+\* Action: philosopher p becomes hungry
+BecomeHungry(p) == philosopherState' = [philosopherState EXCEPT ![p] = 1] /\ UNCHANGED forkOwner
+
+\* Action: philosopher p starts eating
+StartEating(p) == philosopherState' = [philosopherState EXCEPT ![p] = 2] /\ forkOwner' = [forkOwner EXCEPT ![LeftFork[p]] = p, ![RightFork[p]] = p]
+
+\* Action: philosopher p finishes eating
+FinishEating(p) == philosopherState' = [philosopherState EXCEPT ![p] = 0] /\ forkOwner' = [forkOwner EXCEPT ![LeftFork[p]] = FALSE, ![RightFork[p]] = FALSE]
+
+\* Next-state relation
+Next == \E p \in Philosophers :
+          (philosopherState[p] = 0 /\ BecomeHungry(p)) \lor
+          (philosopherState[p] = 1 /\ CanEat(p) /\ StartEating(p)) \lor
+          (philosopherState[p] = 2 /\ FinishEating(p))
+
+\* Initial state: all philosophers are thinking, no forks are owned
+Init == philosopherState = [p \in Philosophers |-> 0] /\ forkOwner = [f \in Forks |-> FALSE]
+
+\* State variables
+vars == <<philosopherState, forkOwner>>
+
+\* Specification
+Spec == Init /\ [][Next]_vars
+
+\* Type correctness invariant
+TypeOK == /\ philosopherState \in [Philosophers -> States]
+          /\ forkOwner \in [Forks -> BOOLEAN \/ Philosophers]
+
+\* Fairness: each philosopher eventually gets to eat
+Fairness == WF_vars(\E p \in Philosophers : philosopherState[p] = 1)
+
+\* Liveness: no philosopher starves
+Liveness == []<>(\E p \in Philosophers : philosopherState[p] = 2)
+
+\* Safety: no two adjacent philosophers eat simultaneously
+Safety == []~(philosopherState[0] = 2 /\ philosopherState[1] = 2)
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,1,0,0.667,silver,58.25,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+
+CONSTANT N
+VARIABLES flag, num
+
+
+vars == <<num, flag>>
+
+Init == /\ num = [i \in 1..N |-> 0]
+        /\ flag = [i \in 1..N |-> FALSE]
+
+Next == \E i \in 1..N :
+          /\ flag' = [flag EXCEPT ![i] = TRUE]
+          /\ num' = [num EXCEPT ![i] = Max(num) + 1]
+          /\ flag' = [flag EXCEPT ![i] = FALSE]
+          /\ \A j \in 1..N : j # i => num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'[j] \/ num'[i] < num'[j]
+          /\ \A j \in 1..N : j # i => flag'[i] # flag'[j] \/ ~flag'[j] \/ num'[i] # num'"
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,0,1.0,silver,9.65,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail, size
+
+vars == <<q, head, tail, size>>
+
+Init == /\ q = [i \in 1..K |-> 0]  \* Queue initialized with zeros
+        /\ head = 1
+        /\ tail = 1
+        /\ size = 0
+
+ProducerAction == /\ size < K
+                 /\ q' = [q EXCEPT ![tail] = 1]  \* Produce item (set to 1)
+                 /\ tail' = IF tail = K THEN 1 ELSE tail + 1
+                 /\ size' = size + 1
+                 /\ UNCHANGED <<head, q>>
+
+ConsumerAction == /\ size > 0
+                 /\ q' = [q EXCEPT ![head] = 0]  \* Consume item (set to 0)
+                 /\ head' = IF head = K THEN 1 ELSE head + 1
+                 /\ size' = size - 1
+                 /\ UNCHANGED <<tail, q>>
+
+Next == ProducerAction \/ ConsumerAction
+
+Spec == Init /\ [][Next]_vars
+
+TypeOK == /\ head \in 1..K
+          /\ tail \in 1..K
+          /\ size \in 0..K
+          /\ q \in [1..K -> {0,1}]
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,0,0,1.0,bronze,220.38,"---- MODULE RaftElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, majority
+
+VARIABLES currentTerm, votedFor, state
+
+TypeOK == /\ currentTerm \in Nat
+          /\ votedFor \in [1..N] -> {0, 1..N}
+          /\ state \in [1..N] -> {""Follower"", ""Candidate"", ""Leader""}
+
+Init == /\ currentTerm = 0
+        /\ votedFor = [i \in 1..N |-> 0]
+        /\ state = [i \in 1..N |-> ""Follower""]
+
+ElectionTimeout == /\ state[i] = ""Follower""
+                   /\ \E newTerm \in currentTerm+1..currentTerm+1
+                       /\ currentTerm' = newTerm
+                       /\ votedFor' = [votedFor EXCEPT ![i] = i]
+                       /\ state' = [state EXCEPT ![i] = ""Candidate""]
+                   /\ UNCHANGED <<currentTerm, votedFor, state>>
+
+VoteRequest == /\ state[i] = ""Candidate""
+               /\ \E newTerm \in currentTerm+1..currentTerm+1
+                   /\ currentTerm' = newTerm
+                   /\ \E j \in 1..N : j # i
+                       /\ state[j] = ""Follower""
+                       /\ votedFor[j] = 0
+                       /\ votedFor' = [votedFor EXCEPT ![j] = i]
+                       /\ state' = [state EXCEPT ![j] = ""Follower""]
+                   /\ UNCHANGED <<currentTerm, state>>
+
+VoteResponse == /\ state[i] = ""Candidate""
+                /\ \E newTerm \in currentTerm+1..currentTerm+1
+                    /\ currentTerm' = newTerm
+                    /\ \E j \in 1..N : j # i
+                        /\ state[j] = ""Follower""
+                        /\ votedFor[j] = i
+                        /\ state' = [state EXCEPT ![j] = ""Follower""]
+                    /\ UNCHANGED <<currentTerm, votedFor>>
+
+LeaderElection == /\ state[i] = ""Candidate""
+                  /\ \E newTerm \in currentTerm+1..currentTerm+1
+                      /\ currentTerm' = newTerm
+                      /\ \E j \in 1..N : j # i
+                          /\ state[j] = ""Follower""
+                          /\ votedFor[j] = i
+                          /\ state' = [state EXCEPT ![j] = ""Leader""]
+                      /\ UNCHANGED <<currentTerm, votedFor>>
+
+Next == \E i \in 1..N : ElectionTimeout[i] \/ VoteRequest[i] \/ VoteResponse[i] \/ LeaderElection[i]
+
+Spec == Init /\ [][Next]_vars
+where vars == <<currentTerm, votedFor, state>>
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,1,0,0.667,silver,58.31,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES readers, writer_active, reader_action, reader_id, reader_state
+
+Init == 
+  /\ readers = <<>> 
+  /\ writer_active = FALSE
+
+Next == 
+  /\ \E r \in 1..Cardinality(readers) : 
+        /\ reader_id = readers[r] 
+        /\ reader_action = ""read"" 
+        /\ reader_state = ""reading"" 
+        /\ reader_action' = ""read"" 
+        /\ reader_state' = ""reading"" 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reader_action 
+        /\ reader_state' = reader_state 
+        /\ reader_id' = reader_id 
+        /\ reader_action' = reade"
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,0,0,1.0,bronze,40.06,"---- MODULE DistributedSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets, TLC
+
+CONSTANT N
+VARIABLES c, channel, marker, recvMarker, state
+
+CHANNELS \in [1..N -> 1..N -> FiniteSet({0,1})] \ {c |-> c' |-> {}}
+
+vars == <<state, channel, marker, recvMarker>>
+
+Init == /\ state = [i \in 1..N |-> 0]
+        /\ channel = [i \in 1..N, j \in 1..N |-> {}]
+        /\ marker = [i \in 1..N |-> FALSE]
+        /\ recvMarker = [i \in 1..N |-> FALSE]
+
+Send(i, j, msg) == /\ channel[i][j] = {}
+                   /\ channel' = [channel EXCEPT ![i][j] = {msg}]
+                   /\ UNCHANGED <<state, marker, recvMarker>>
+
+Recv(i, j, msg) == /\ channel[i][j] = {msg}
+                   /\ channel' = [channel EXCEPT ![i][j] = {}]
+                   /\ UNCHANGED <<state, marker, recvMarker>>
+
+RecordState(i) == /\ state' = [state EXCEPT ![i] = state[i] + 1]
+                 /\ marker' = [marker EXCEPT ![i] = TRUE]
+                 /\ UNCHANGED <<channel, recvMarker>>
+
+RecordChannel(i, j) == /\ channel' = [channel EXCEPT ![i][j] = channel[i][j] \cup {0}]
+                      /\ UNCHANGED <<state, marker, recvMarker>>
+
+RecvMarker(i, j) == /\ recvMarker' = [recvMarker EXCEPT ![i] = TRUE]
+                    /\ UNCHANGED <<state, marker, channel>>
+
+Next == \E i, j \in 1..N:
+          /\ i # j
+          /\ \E msg \in {0,1}:
+                /\ msg = 1
+                /\ Send(i, j, msg)
+          \/ \E msg \in {0,1}:
+                /\ msg = 0
+                /\ Recv(i, j, msg)
+          \/ /\ state[i] = 0
+             /\ Send(i, j, 1)
+          \/ /\ state[i] > 0
+             /\ marker[i] = FALSE
+             /\ RecordState(i)
+          \/ /\ state[i] > 0
+             /\ marker[i] = TRUE
+             /\ RecordChannel(i, j)
+          \/ /\ state[i] > 0
+             /\ recvMarker[i] = FALSE
+             /\ RecvMarker(i, j)
+
+Spec == Init /\ [][Next]_vars
+
+TypeOK == /\ state \in [1..N -> Nat]
+          /\ channel \in [1..N -> 1..N -> FiniteSet({0,1})]
+          /\ marker \in [1..N -> BOOLEAN]
+          /\ recvMarker \in [1..N -> BOOLEAN]
+===="
+chattla:20b,BM009,Token Ring,networking,2,0,0,0.889,bronze,11.47,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLE token \in 1..N  \* Current holder of the token, token
+
+Init == token = 1
+
+Next == token' = %(token, N) + 1
+
+Spec == Init /\ [][Next]_<<token>>
+
+TypeOK == token \in 1..N
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,1.0,silver,13.85,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets, TLC
+
+CONSTANTS Keys, Values, NULL
+VARIABLES store, action, key, value
+
+
+vars == <<store, action, key, value>>
+
+Init == 
+  /\ store = [k \in Keys |-> NULL]
+  /\ action \in {""Put"", ""Get""}
+  /\ key \in Keys
+  /\ value \in Values
+
+Next == 
+  \/ /\ action' = ""Put""
+     /\ key' \in Keys
+     /\ value' \in Values
+     /\ store' = [store EXCEPT ![key'] = value']
+  \/ /\ action' = ""Get""
+     /\ key' \in Keys
+     /\ store' = store
+
+Spec == Init /\ [][Next]_vars
+
+TypeOK == 
+  /\ store \in [Keys -> Values \cup {NULL}]
+  /\ action \in {""Put"", ""Get""}
+  /\ key \in Keys
+  /\ value \in Values
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,0,0,1.0,bronze,75.03,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, M, V, Ballot, Value
+
+VARIABLES acceptors, proposers, chosen, chosenBallot, chosenValue, promisedBallot
+
+vars == <<acceptors, proposers, chosen>>
+
+Init == 
+    /\ acceptors = [i \in 1..N |-> [maxBallot -> 0, promisedBallot -> 0, chosenBallot -> 0, chosenValue -> NULL]]
+    /\ proposers = [i \in 1..M |-> [maxBallot -> 0, promisedBallot -> 0, chosenBallot -> 0, chosenValue -> NULL]]
+    /\ chosen = <<>> 
+
+Prepare(p, b) == 
+    /\ proposers[p].maxBallot = b
+    /\ proposers[p].promisedBallot' = b
+    /\ acceptors' = [i \in 1..N |-> acceptors'[i]]
+    /\ proposers' = [i \in 1..M |-> proposers'[i]]
+    /\ chosen' = chosen
+
+Promise(p, b) == 
+    /\ proposers[p].maxBallot = b
+    /\ proposers[p].promisedBallot' = b
+    /\ acceptors' = [i \in 1..N |-> acceptors'[i]]
+    /\ proposers' = [i \in 1..M |-> proposers'[i]]
+    /\ chosen' = chosen
+
+Accept(p, b, v) == 
+    /\ proposers[p].maxBallot = b
+    /\ proposers[p].chosenBallot' = b
+    /\ proposers[p].chosenValue' = v
+    /\ acceptors' = [i \in 1..N |-> acceptors'[i]]
+    /\ proposers' = [i \in 1..M |-> proposers'[i]]
+    /\ chosen' = chosen
+
+Accepted(p, b, v) == 
+    /\ proposers[p].maxBallot = b
+    /\ proposers[p].chosenBallot' = b
+    /\ proposers[p].chosenValue' = v
+    /\ acceptors' = [i \in 1..N |-> acceptors'[i]]
+    /\ proposers' = [i \in 1..M |-> proposers'[i]]
+    /\ chosen' = chosen
+
+Proposer(p, b, v) == 
+    /\ proposers[p].maxBallot = b
+    /\ proposers[p].chosenBallot' = b
+    /\ proposers[p].chosenValue' = v
+    /\ acceptors' = [i \in 1..N |-> acceptors'[i]]
+    /\ proposers' = [i \in 1..M |-> proposers'[i]]
+    /\ chosen' = chosen
+
+Acceptor(i, b, v) == 
+    /\ acceptors[i].maxBallot = b
+    /\ acceptors[i].chosenBallot' = b
+    /\ acceptors[i].chosenValue' = v
+    /\ proposers' = proposers
+    /\ chosen' = chosen
+
+Next == 
+    /\ \E p \in 1..M : \E b \in 1..N : \E v \in V : Prepare(p, b)
+    \/ \E p \in 1..M : \E b \in 1..N : \E v \in V : Promise(p, b)
+    \/ \E p \in 1..M : \E b \in 1..N : \E v \in V : Accept(p, b, v)
+    \/ \E p \in 1..M : \E b \in 1..N : \E v \in V : Accepted(p, b, v)
+    \/ \E i \in 1..N : \E b \in 1..N : \E v \in V : Acceptor(i, b, v)
+
+Spec == Init /\ [][Next]_vars
+
+TypeOK == 
+    /\ acceptors \in [1..N -> [maxBallot: Nat, promisedBallot: Nat, chosenBallot: Nat, chosenValue: V \cup {NULL}]]
+    /\ proposers \in [1..M -> [maxBallot: Nat, promisedBallot: Nat, chosenBallot: Nat, chosenValue: V \cup {NULL}]]
+    /\ chosen \in Seq(V)
+
+===="
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,0,0,0.889,bronze,36.56,"---- MODULE Sender ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS MAX_RETRIES, CHUNK_SIZE, FILE_SIZE
+VARIABLES ackedChunks, retransmitCount, sentChunks
+
+    /\ sentChunks = {}
+    /\ ackedChunks = {}
+    /\ retransmitCount = [i \in 1..Ceiling(FILE_SIZE \div CHUNK_SIZE) |-> 0]
+
+Next == 
+    \E i \in 1..Ceiling(FILE_SIZE \div CHUNK_SIZE) :
+        /\ i \notin sentChunks
+        /\ sentChunks' = sentChunks \cup {i}
+        /\ IF Random < 0.5 THEN
+            /\ ackedChunks' = ackedChunks \cup {i}
+            /\ retransmitCount' = [retransmitCount EXCEPT ![i] = 0]
+
+            /\ ackedChunks' = ackedChunks
+            /\ retransmitCount' = [retransmitCount EXCEPT ![i] = retransmitCount[i] + 1]
+        /\ UNCHANGED <<sentChunks, ackedChunks>>
+
+Spec == Init /\ [][Next]_<<sentChunks, ackedChunks, retransmitCount>>
+
+TypeOK == 
+    /\ sentChunks \subseteq 1..Ceiling(FILE_SIZE \div CHUNK_SIZE)
+    /\ ackedChunks \subseteq 1..Ceiling(FILE_SIZE \div CHUNK_SIZE)
+    /\ retransmitCount \in (1..Ceiling(FILE_SIZE \div CHUNK_SIZE) -> Nat)
+
+===="

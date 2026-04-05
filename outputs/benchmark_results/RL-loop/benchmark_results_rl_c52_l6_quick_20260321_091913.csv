@@ -1,0 +1,176 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,0,0,0.778,bronze,59.04,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, turn
+
+Init == /\ state = [p \in 1..N |-> idle]
+        /\ turn = 1
+
+Next == \/ /\ state[turn] = idle
+          /\ state' = [state EXCEPT ![turn] = critical]
+        \/ /\ state[turn] = critical
+          /\ state' = [state EXCEPT ![turn] = idle]
+          /\ turn' = IF turn = N THEN 1 ELSE turn + 1
+        \/ /\ state' = state
+          /\ turn' = turn
+
+Spec == Init /\ [][Next]_<<state, turn>>
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,1,0,1.0,silver,193.87,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS FiniteSet
+
+VARIABLES participants, votes, decision
+
+TypeOK == /\ participants \in FiniteSet
+          /\ votes \in FiniteSet
+          /\ decision \in {""Commit"", ""Abort"", ""Pending""}
+
+Init == /\ participants = {}
+        /\ votes = {}
+        /\ decision = ""Pending""
+
+Prepare == /\ decision = ""Pending""
+          /\ votes = {}
+
+VoteYes == /\ decision = ""Pending""
+          /\ votes' = Append(votes, ""Yes"")
+
+VoteNo == /\ decision = ""Pending""
+          /\ votes' = Append(votes, ""No"")
+
+Commit == /\ decision = ""Pending""
+          /\ votes = [x \in participants |-> ""Yes""]
+          /\ decision' = ""Commit""
+
+Abort == /\ decision = ""Pending""
+          /\ votes = [x \in participants |-> ""No""]
+          /\ decision' = ""Abort""
+
+Next == \/ Prepare
+        \/ VoteYes
+        \/ VoteNo
+        \/ Commit
+        \/ Abort
+
+Spec == Init /\ [][Next]_<<participants, votes, decision>>
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,0,0,0.778,bronze,33.77,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLES forks, states
+
+(* Fork ownership: forks[i] = j means fork i is held by philosopher j; 0 means free *)
+Init == /\ forks = [i \in 1..N |-> -> 0]
+        /\ states = [i \in 1..N |-> -> ""thinking""]
+
+Next == \/ (* Philosopher i becomes hungry *)
+          /\ \E i \in 1..N : states[i] = ""thinking""
+          /\ states' = [states EXCEPT ![i] = ""hungry""]
+
+        \/ (* Philosopher i picks up forks if both are free *)
+          /\ \E i \in 1..N : states[i] = ""hungry""
+          /\ forks[i] = 0
+          /\ forks[%(i, N) + 1] = 0
+          /\ forks' = [forks EXCEPT ![i] = i, ![%(i, N) + 1] = i]
+          /\ states' = [states EXCEPT ![i] = ""eating""]
+
+        \/ (* Philosopher i puts down forks *)
+          /\ \E i \in 1..N : states[i] = ""eating""
+          /\ forks' = [forks EXCEPT ![i] = 0, ![%(i, N) + 1] = 0]
+          /\ states' = [states EXCEPT ![i] = ""thinking""]
+
+Spec == Init /\ [][Next]_<<forks, states>>
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,1,0,0.778,silver,6.52,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+
+CONSTANT N
+
+VARIABLES num, flag
+
+Init == /\ num = [i \in 1..N |-> 0]
+        /\ flag = [i \in 1..N |-> FALSE]
+
+Next == \E i \in 1..N :
+          /\ flag' = [flag EXCEPT ![i] = TRUE]
+          /\ num' = [num EXCEPT ![i] = 1 + Max(Seq(1..N))]
+          /\ flag' = [flag EXCEPT ![i] = FALSE]
+
+Spec == Init /\ [][Next]_<<num, flag>>
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,1,0.778,gold,3.51,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail, count
+
+Init == /\ q = <<>>
+        /\ head = 1
+        /\ tail = 1
+        /\ count = 0
+
+Next == 
+    \/ /\ count < K
+        /\ head' = head
+        /\ tail' = (tail % K) + 1
+        /\ count' = count + 1
+        /\ q' = Append(q, head)
+    \/ /\ count > 0
+        /\ head' = (head % K) + 1
+        /\ tail' = tail
+        /\ count' = count - 1
+        /\ q' = Tail(q)
+
+Spec == Init /\ [][Next]_<<q, head, tail, count>>
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,1,0,1.0,silver,16.4,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+(* State can be ""Follower"", ""Candidate"", or ""Leader"" *)
+State == {""Follower"", ""Candidate"", ""Leader""}
+
+(* TypeOK ensures all variables have the correct type *)
+TypeOK == /\ currentTerm \in Nat
+          /\ votedFor \in {""None""} \/ State
+          /\ state \in State
+
+(* Initial state: all servers start as Followers with term 0 and no vote *)
+Init == /\ currentTerm = 0
+        /\ votedFor = ""None""
+        /\ state = ""Follower""
+
+(* Transition to Candidate: increment term, vote for self, become Candidate *)
+BecomeCandidate == /\ state' = ""Candidate""
+                  /\ currentTerm' = currentTerm + 1
+                  /\ votedFor' = ""Self""
+
+(* Transition to Leader: become Leader *)
+BecomeLeader == /\ state' = ""Leader""
+
+(* Transition to Follower: reset term and votedFor *)
+BecomeFollower == /\ state' = ""Follower""
+                  /\ currentTerm' = currentTerm
+                  /\ votedFor' = ""None""
+
+(* Next-state relation: either become Candidate, Leader, or Follower *)
+Next == \/ BecomeCandidate
+        \/ BecomeLeader
+        \/ BecomeFollower
+
+Spec == Init /\ [][Next]_<<currentTerm, votedFor, state>>
+
+===="

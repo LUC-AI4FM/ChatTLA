@@ -1,0 +1,711 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,0,0,1.0,bronze,33.7,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS N
+
+VARIABLES state, turn
+N \in Nat
+N > 0
+
+(* State variables *)
+state \in [1..N -> {""idle"", ""trying"", ""critical""}]
+turn \in 1..N
+
+(* Initial state *)
+Init == /\ state = [p \in 1..N |-> ""idle""]
+        /\ turn \in 1..N
+
+(* Next-state relation *)
+Next == \/ \* Process p attempts to enter critical section
+        /\ \E p \in 1..N :
+           /\ state[p] = ""idle""
+           /\ state' = [state EXCEPT ![p] = ""trying""]
+           /\ turn' = turn
+        \/ \* Process p enters critical section
+        /\ \E p \in 1..N :
+           /\ state[p] = ""trying""
+           /\ turn = p
+           /\ state' = [state EXCEPT ![p] = ""critical""]
+           /\ turn' = turn
+        \/ \* Process p exits critical section
+        /\ \E p \in 1..N :
+           /\ state[p] = ""critical""
+           /\ state' = [state EXCEPT ![p] = ""idle""]
+           /\ turn' = turn
+        \/ \* No change
+        /\ state' = state
+        /\ turn' = turn
+
+(* Invariant: at most one process is in critical section *)
+TypeOK == /\ \A p \in 1..N : state[p] \in {""idle"", ""trying"", ""critical""}
+          /\ \A p, q \in 1..N : p /= q => ~(state[p] = ""critical"" /\ state[q] = ""critical"")
+
+Spec == Init /\ [][Next]_<<state, turn>>
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,0,0,1.0,bronze,123.38,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES participants, votes, decisions, coordinator, messages, logs
+IsParticipant(p) == p \in participants
+IsCoordinator(c) == c = coordinator
+IsVote(v) == v \in {""yes"", ""no""}
+IsDecision(d) == d \in {""commit"", ""abort""}
+IsMessage(m) == m \in messages
+IsLog(l) == l \in logs
+
+(* Type invariant *)
+TypeOK == 
+  /\ participants \subseteq Nat
+  /\ votes \in [participants -> {""yes"", ""no""}]
+  /\ decisions \in [participants -> {""commit"", ""abort""}]
+  /\ coordinator \in {""init"", ""preparing"", ""committing"", ""aborting"", ""done""}
+  /\ messages \subseteq [sender \in participants \cup {""coordinator""}, receiver \in participants \cup {""coordinator""}, type \in {""Prepare"", ""VoteYes"", ""VoteNo"", ""Commit"", ""Abort""}, content \in {""yes"", ""no"", ""commit"", ""abort""}]
+  /\ logs \in [participants -> Seq({""commit"")]
+
+(* Initial state *)
+Init == 
+  /\ participants = {1, 2, ..., N}
+  /\ votes = [p \in participants |-> ""yes""]
+  /\ decisions = [p \in participants |-> ""commit""]
+  /\ coordinator = ""init""
+  /\ messages = {}
+  /\ logs = [p \in participants |-> <<>>]
+
+(* Next-state relation *)
+Next == 
+  \/ CoordinatorAction
+  \/ ParticipantAction
+
+(* Coordinator actions *)
+CoordinatorAction == 
+  /\ coordinator = ""init""
+  /\ messages' = messages \cup { [sender |-> ""coordinator"", receiver |-> p, type |-> ""Prepare"", content |-> ""prepare""] : p \in participants }
+  /\ coordinator' = ""preparing""
+  /\ votes' = votes
+  /\ decisions' = decisions
+  /\ logs' = logs
+
+  \/ /\ coordinator = ""preparing""
+     /\ \E p \in participants : [sender |-> p, receiver |-> ""coordinator"", type |-> ""VoteYes"", content |-> ""yes""] \in messages
+     /\ votes' = [votes EXCEPT ![p] = ""yes""]
+     /\ messages' = messages \ { [sender |-> p, receiver |-> ""coordinator"", type |-> ""VoteYes"", content |-> ""yes""] : p \in participants }
+     /\ decisions' = decisions
+     /\ logs' = logs
+     /\ coordinator' = ""preparing""
+
+  \/ /\ coordinator = ""preparing""
+     /\ \E p \in participants : [sender |-> p, receiver |-> ""coordinator"", type |-> ""VoteNo"", content |-> ""no""] \in messages
+     /\ votes' = [votes EXCEPT ![p] = ""no""]
+     /\ messages' = messages \ { [sender |-> p, receiver |-> ""coordinator"", type |-> ""VoteNo"", content |-> ""no""] : p \in participants }
+     /\ decisions' = decisions
+     /\ logs' = logs
+     /\ coordinator' = ""preparing""
+
+  \/ /\ coordinator = ""preparing""
+     /\ \A p \in participants : [sender |-> ""coordinator"", receiver |-> p, type |-> ""Commit"", content |-> ""commit""] \in messages
+     /\ coordinator' = ""committing""
+     /\ decisions' = [p \in participants |-> ""commit""]
+     /\ messages' = messages \ { [sender |-> ""coordinator"", receiver |-> p, type |-> ""Commit"", content |-> ""commit""] : p \in participants }
+     /\ logs' = logs
+
+  \/ /\ coordinator = ""preparing""
+     /\ \A p \in participants : [sender |-> ""coordinator"", receiver |-> p, type |-> ""Abort"", content |-> ""abort""] \in messages
+     /\ coordinator' = ""aborting""
+     /\ decisions' = [p \in participants |-> ""abort""]
+     /\ messages' = messages \ { [sender |-> ""coordinator"", receiver |-> p, type |-> ""Abort"", content |-> ""abort""] : p \in participants }
+     /\ logs' = logs
+
+  \/ /\ coordinator = ""committing""
+     /\ \E p \in participants : [sender |-> p, receiver |-> ""coordinator"", type |-> ""Commit"", content |-> ""commit""] \in messages
+     /\ messages' = messages \ { [sender |-> p, receiver |-> ""coordinator"", type |-> ""Commit"", content |-> ""commit""] : p \in participants }
+     /\ logs' = [logs EXCEPT ![p] = Append(logs[p], ""commit"") : p \in participants]
+     /\ coordinator' = ""committing""
+
+  \/ /\ coordinator = ""aborting""
+     /\ \E p \in participants : [sender |-> p, receiver |-> ""coordinator"", type |-> ""Abort"", content |-> ""abort""] \in messages
+     /\ messages' = messages \ { [sender |-> p, receiver |-> ""coordinator"", type |-> ""Abort"", content |-> ""abort""] : p \in participants }
+     /\ logs' = [logs EXCEPT ![p] = Append(logs[p], ""abort"") : p \in participants]
+     /\ coordinator' = ""aborting""
+
+  \/ /\ coordinator = ""committing""
+     /\ \A p \in participants : [sender |-> p, receiver |-> ""coordinator"", type |-> ""Commit"", content |-> ""commit""] \in messages
+     /\ messages' = messages \ { [sender |-> p, receiver |-> ""coordinator"", type |-> ""Commit"", content |-> ""commit""] : p \in participants }
+     /\ logs' = [logs EXCEPT ![p] = Append(logs[p], ""commit"") : p \in participants]
+     /\ coordinator' = ""done""
+
+  \/ /\ coordinator = ""aborting""
+     /\ \A p \in participants : [sender |-> p, receiver |-> ""coordinator"", type |-> ""Abort"", content |-> ""abort""] \in messages
+     /\ messages' = messages \ { [sender |-> p, receiver |-> ""coordinator"", type |-> ""Abort"", content |-> ""abort""] : p \in participants }
+     /\ logs' = [logs EXCEPT ![p] = Append(logs[p], ""abort"") : p \in participants]
+     /\ coordinator' = ""done""
+
+(* Participant actions *)
+ParticipantAction == 
+  \/ /\ \E p \in participants : [sender |-> ""coordinator"", receiver |-> p, type |-> ""Prepare"", content |-> ""prepare""] \in messages
+     /\ [sender |-> p, receiver |-> ""coordinator"", type |-> ""VoteYes"", content |-> ""yes""] \in messages
+     /\ messages' = messages \ { [sender |-> ""coordinator"", receiver |-> p, type |-> ""Prepare"", content |-> ""prepare""] : p \in participants }
+     /\ logs' = logs
+     /\ votes' = votes
+     /\ decisions' = decisions
+     /\ coordinator' = coordinator
+
+  \/ /\ \E p \in participants : [sender |-> ""coordinator"", receiver |-> p, type |-> ""Commit"", content |-> ""commit""] \in messages
+     /\ [sender |-> p, receiver |-> ""coordinator"", type |-> ""Commit"", content |-> ""commit""] \in messages
+     /\ messages' = messages \ { [sender |-> ""coordinator"", receiver |-> p, type |-> ""Commit"", content |-> ""commit""] : p \in participants }
+     /\ logs' = [logs EXCEPT ![p] = Append(logs[p], ""commit"") : p \in participants]
+     /\ votes' = votes
+     /\ decisions' = decisions
+     /\ coordinator' = coordinator
+
+  \/ /\ \E p \in participants : [sender |-> ""coordinator"", receiver |-> p, type |-> ""Abort"", content |-> ""abort""] \in messages
+     /\ [sender |-> p, receiver |-> ""coordinator"", type |-> ""Abort"", content |-> ""abort""] \in messages
+     /\ messages' = messages \ { [sender |-> ""coordinator"", receiver |-> p, type |-> ""Abort"", content |-> ""abort""] : p \in participants }
+     /\ logs' = [logs EXCEPT ![p] = Append(logs[p], ""abort"") : p \in participants]
+     /\ votes' = votes
+     /\ decisions' = decisions
+     /\ coordinator' = coordinator
+
+(* Specification *)
+Spec == Init /\ [][Next]_<<participants, votes, decisions, coordinator, messages, logs>>
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,1,0,0.444,silver,62.17,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES forks, states
+
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,0,0,0.444,bronze,112.53,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+
+VARIABLES num, flag, maxNum
+
+
+define
+  maxNum == Max(Seq(num))
+  choose(i) == LET
+    maxNum' == IF flag[i] THEN maxNum ELSE maxNum + 1
+  IN
+    flag' == [j \in 1..N |-> IF j = i THEN TRUE ELSE flag[j]]
+    num' == [j \in 1..N |-> IF j = i THEN maxNum' ELSE num[j]]
+  end
+  next(i) == LET
+    maxNum' == Max(Seq(num))
+  IN
+    flag' == [j \in 1..N |-> IF j = i THEN FALSE ELSE flag[j]]
+    num' == [j \in 1..N |-> IF j = i THEN 0 ELSE num[j]]
+  end
+  next(i) == LET
+    maxNum' == Max(Seq(num))
+  IN
+    flag' == [j \in 1..N |-> IF j = i THEN FALSE ELSE flag[j]]
+    num' == [j \in 1..N |-> IF j = i THEN 0 ELSE num[j]]
+  end
+  next(i) == LET
+    maxNum' == Max(Seq(num))
+  IN
+    flag' == [j \in 1..N |-> IF j = i THEN FALSE ELSE flag[j]]
+    num' == [j \in 1..N |-> IF j = i THEN 0 ELSE num[j]]
+  end
+  next(i) == LET
+    maxNum' == Max(Seq(num))
+  IN
+    flag' == [j \in 1..N |-> IF j = i THEN FALSE ELSE flag[j]]
+    num' == [j \in 1..N |-> IF j = i THEN 0 ELSE num[j]]
+  end
+  next(i) == LET
+    maxNum' == Max(Seq(num))
+  IN
+    flag' == [j \in 1..N |-> IF j = i THEN FALSE ELSE flag[j]]
+    num' == [j \in 1..N |-> IF j = i THEN 0 ELSE num[j]]
+  end
+  next(i) == LET
+    maxNum' == Max(Seq(num))
+  IN
+    flag' == [j \in 1..N |-> IF j = i THEN FALSE ELSE flag[j]]
+    num' == [j \in 1..N |-> IF j = i THEN 0 ELSE num[j]]
+  end
+  next(i) == LET
+    maxNum' == Max(Seq(num))
+  IN
+    flag' == [j \in 1..N |-> IF j = i THEN FALSE ELSE flag[j]]
+    num' == [j \in 1..N |-> IF j = i THEN 0 ELSE num[j]]
+  end
+  next(i) == LET
+    maxNum' == Max(Seq(num))
+  IN
+    flag' == [j \in 1..N |-> IF j = i THEN FALSE ELSE flag[j]]
+    num' == [j \in 1..N |-> IF j = i THEN 0 ELSE num[j]]
+  end
+  next(i) == LET
+    maxNum' == Max(Seq(num))
+  IN
+    flag' == [j \in 1..N |-> IF j = i THEN FALSE ELSE flag[j]]
+    num' == [j \in 1..N |-> IF j = i THEN 0 ELSE num[j]]
+  end
+  next(i) == LET
+    maxNum' == Max(Seq(num))
+  IN
+    flag' == [j \in 1..N |-> IF j = i THEN FALSE ELSE flag[j]]
+    num' == [j \in 1..N |-> IF j = i THEN 0 ELSE num[j]]
+  end
+  next(i) == LET
+    maxNum' == Max(Seq(num))
+  IN
+    flag' == [j \in 1..N |-> IF j = i THEN FALSE ELSE flag[j]]
+    num' == [j \in 1..N |-> IF j = i THEN 0 ELSE num[j]]
+  end
+  next(i) == LET
+    maxNum' == Max(Seq(num))
+  IN
+    flag' == [j \in 1..N |-> IF j = i THEN FALSE ELSE flag[j]]
+    num' == [j \in 1..N |-> IF j = i THEN 0 ELSE num[j]]
+  end
+  next(i) == LET
+    maxNum' == Max(Seq(num))
+  IN
+    flag' == [j \in 1..N |-> IF j = i THEN FALSE ELSE flag[j]]
+    num' == [j \in 1..N |-> IF j = i THEN 0 ELSE num[j]]
+  end
+  next(i) == LET
+    maxNum' == Max(Seq(num))
+  IN
+    flag' == [j \in 1..N |-> IF j = i THEN FALSE ELSE flag[j]]
+    num' == [j \in 1..N |-> IF j = i THEN 0 ELSE num[j]]
+  end
+  next(i) == LET
+    maxNum' == Max(Seq(num))
+  IN
+    flag' == [j \in 1..N |-> IF j = i THEN FALSE ELSE flag[j]]
+    num' == [j \in 1..N |-> IF j = i THEN 0 ELSE num[j]]
+  end
+  next(i) == LET
+    maxNum' == Max(Seq(num))
+  IN
+    flag' == [j \in 1..N |-> IF j = i THEN FALSE ELSE flag[j]]
+    num' == [j \in 1..N |-> IF j = i THEN 0 ELSE num[j]]
+  end
+  next(i) == LET
+    maxNum' == Max(Seq(num))
+  IN
+    flag' == [j \in 1..N |-> IF j = i THEN FALSE ELSE flag[j]]
+    num' == [j \in 1..N |-> IF j = i THEN 0 ELSE num[j]]
+  end
+  next(i) == LET
+    maxNum' == Max(Seq(num))
+  IN
+    flag' == [j \in 1..N |-> IF j = i THEN FALSE ELSE flag[j]]
+    num' == [j \in 1..N |-> IF j = i THEN 0 ELSE num[j]]
+  end
+  next(i) == LET
+    maxNum' == Max(Seq(num))
+  IN
+    flag' == [j \in 1..N |-> IF j = i THEN FALSE ELSE flag[j]]
+    num' == [j \in 1..N |-> IF j = i THEN 0 ELSE num[j]]
+  end
+  next(i) == LET
+    maxNum' == Max(Seq(num))
+  IN
+    flag' == [j \in 1..N |-> IF j = i THEN FALSE ELSE flag[j]]
+    num' == [j \in 1..N |-> IF j = i THEN 0 ELSE num[j]]
+  end
+  next(i) == LET
+    maxNum' == Max(Seq(num))
+  IN
+    flag' == [j \in 1..N |-> IF j = i THEN FALSE ELSE flag[j]]
+    num' == [j \in 1..N |-> IF j = i THEN 0 ELSE num[j]]
+  end
+  next(i) == LET
+    maxNum' == Max(Seq(num))
+  IN
+    flag' == [j \in 1..N |-> IF j = i THEN FALSE ELSE flag[j]]
+    num' == [j \in 1..N |-> IF j = i THEN 0 ELSE num[j]]
+  end
+  next(i) == LET
+    maxNum' == Max(Seq(num))
+  IN
+    flag' == [j \in 1..N |-> IF j = i THEN FALSE ELSE flag[j]]
+    num' == [j \in 1..N |-> IF j = i THEN 0 ELSE num[j]]
+  end
+  next(i) == LET
+    maxNum' == Max(Seq(num))
+  IN
+    flag' == [j \in 1..N |-> IF j = i THEN FALSE ELSE flag[j]]
+    num' == [j \in 1..N |-> IF j = i THEN 0 ELSE num[j]]
+  end
+  next(i) == LET
+    maxNum' == Max(Seq(num))
+  IN
+    flag' == [j \in 1..N |-> IF j = i THEN FALSE ELSE flag[j]]
+    num' == [j \in 1..N |-> IF j = i THEN 0 ELSE num[j]]
+  end
+  next(i) == LET
+    maxNum' == Max(Seq(num))
+  IN
+    flag' == [j \in 1..N |-> IF j = i THEN FALSE ELSE flag[j]]
+    num' == [j \in 1..N |-> IF j = i THEN 0 ELSE num[j]]
+  end
+  next(i) == LET
+    maxNum' == Max(Seq(num))
+  IN
+    flag' == [j \in 1..N |-> IF j = i THEN FALSE ELSE flag[j]]
+    num' == [j \in 1..N |-> IF j = i THEN 0 ELSE num[j]]
+  end
+  next(i) == LET
+    maxNum' == Max(Seq(num))
+  IN
+    flag' == [j \in 1..N |-> IF j = i THEN FALSE ELSE flag[j]]
+    num' == [j \in 1..N |-> IF j = i THEN 0 ELSE num[j]]
+  end
+  next(i) == LET
+    maxNum' == Max(Seq(num))
+  IN
+    flag' == [j \in 1..N |-> IF j = i THEN FALSE ELSE flag[j]]
+    num' == [j \in 1..N |-> IF j = i THEN 0 ELSE num[j]]
+  end
+  next(i) == LET
+    maxNum' == Max(Seq(num))
+  IN
+    flag' == [j \in 1..N |-> IF j = i THEN FALSE ELSE flag[j]]
+    num' == [j \in 1..N |-> IF j = i THEN 0 ELSE num[j]]
+  end
+  next(i) == LET
+    maxNum' == Max(Seq(num))
+  IN
+    flag' == [j \in 1..N |-> IF j = i THEN FALSE ELSE flag[j]]
+    num' == [j \in 1..N |-> IF j = i THEN 0 ELSE num[j]]
+  end
+  next(i) == LET
+    maxNum' == Max(Seq(num))
+  IN
+    flag' == [j \in 1..N |-> IF j = i THEN FALSE ELSE flag[j]]
+    num' == [j \in 1..N |-> IF j = i THEN 0 ELSE num[j]]
+  end
+  next(i) == LET
+    maxNum' == Max(Seq(num))
+  IN
+    flag' == [j \in 1..N |-> IF j = i THEN FALSE ELSE flag[j]]
+    num' == [j \in 1..N |-> IF j = i THEN 0 ELSE num[j]]
+  end
+  next(i) == LET
+    maxNum' == Max(Seq(num))
+  IN
+    flag' == [j \in 1..N |-> IF j = i THEN FALSE ELSE flag[j]]
+    num' == [j \in 1..N |-> IF j = i THEN 0 ELSE num[j]]
+  end
+  next(i) == LET
+    maxNum' == Max(Seq(num))
+  IN
+    flag' == [j \in 1..N |-> IF j = i THEN FALSE ELSE flag[j]]
+    num' == [j \in 1..N |-> IF j = i THEN 0 ELSE num[j]]
+  end
+  next(i) == LET
+    maxNum' == Max(Seq(num))
+  IN
+    flag' == [j \in 1..N |-> IF j = i THEN FALSE ELSE flag[j]]
+    num' == [j \in 1..N |-> IF j = i THEN 0 ELSE num[j]]
+  end
+  next(i) == LET
+    maxNum' == Max(Seq(num))
+  IN
+    flag' == [j \in 1..N |-> IF j = i THEN FALSE ELSE flag[j]]
+    num' == [j \in 1..N |-> IF j = i THEN 0 ELSE num[j]]
+  end
+  next(i) == LET
+    maxNum' == Max(Seq(num))
+  IN
+    flag' == [j \in 1..N |-> IF j = i THEN FALSE ELSE flag[j]]
+    num' == [j \in 1..N |-> IF j = i THEN 0 ELSE num[j]]
+  end
+  next(i) == LET
+    maxNum' == Max(Seq(num))
+  IN
+    flag' == [j \in 1..N |-> IF j = i THEN FALSE ELSE flag[j]]
+    num' == [j \in 1..N |-> IF j = i THEN 0 ELSE num[j]]
+  end
+  next(i) == LET
+    maxNum' == Max(Seq(num))
+  IN
+    flag' == [j \in 1..N |-> IF j = i THEN FALSE ELSE flag[j]]
+    num' == [j \in 1..N |-> IF j = i THEN 0 ELSE num[j]]
+  end
+  next(i) == LET
+    maxNum' == Max(Seq(num))
+  IN
+    flag' == [j \in 1..N |-> IF j = i THEN FALSE ELSE flag[j]]
+    num' == [j \in 1..N |-> IF j = i THEN 0 ELSE num[j]]
+  end
+  next(i) == LET
+    maxNum' == Max(Seq(num))
+  IN
+    flag' == [j \in 1..N |-> IF j = i THEN FALSE ELSE flag[j]]
+    num' == [j \in 1..N |-> IF j = i THEN 0 ELSE num[j]]
+  end
+  next(i) == LET
+    maxNum' == Max(Seq(num))
+  IN
+    flag' == [j \in 1..N |-> IF j = i THEN FALSE ELSE flag[j]]
+    num' == [j \in 1..N |-> IF j = i THEN 0 ELSE num[j]]
+  end
+  ne"
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,0,0,1.0,bronze,38.9,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail, count
+
+(* TypeOK ensures that q is a sequence of length K, head and tail are integers in 0..K-1, and count is an integer in 0..K *)
+TypeOK == 
+  /\ q \in Seq(K)
+  /\ head \in 0..K-1
+  /\ tail \in 0..K-1
+  /\ count \in 0..K
+
+(* The queue is represented as a circular buffer of length K. head points to the next element to consume, tail points to the next slot to produce. count is the number of elements in the queue. *)
+Init == 
+  /\ q = <<>>
+  /\ head = 0
+  /\ tail = 0
+  /\ count = 0
+
+(* The producer action: if the queue is not full, it writes a value at tail and updates tail and count. *)
+Producer == 
+  /\ count < K
+  /\ q' = Append(q, value)  (* value is a placeholder for the produced item *)
+  /\ tail' = (tail + 1) \mod K
+  /\ count' = count + 1
+  /\ UNCHANGED <<head, q>>
+
+(* The consumer action: if the queue is not empty, it reads the value at head and updates head and count. *)
+Consumer == 
+  /\ count > 0
+  /\ head' = (head + 1) \mod K
+  /\ count' = count - 1
+  /\ UNCHANGED <<tail, q>>
+
+(* Next action: either the producer or the consumer acts. *)
+Next == 
+  \/ Producer
+  \/ Consumer
+
+Spec == Init /\ [][Next]_<<q, head, tail, count>> /\ TypeOK
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,1,0,0.444,silver,90.02,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,0,0,0.778,bronze,22.83,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES readers, writer_active, r
+
+Init == /\ readers = <<>> \\
+       /\ writer_active = FALSE
+
+Next == \/ /\ writer_active = FALSE \\
+          /\ \E r \in 1..10 : /\ r \notin readers \\
+          /\ r' = r \\
+             /\ writer_active' = FALSE \\
+             /\ readers' = Append(readers, r) \\
+          \/ /\ writer_active = FALSE \\
+             /\ \E r \in 1..10 : /\ r \in readers \\
+             /\ r' = r \\
+                /\ writer_active' = TRUE \\
+                /\ readers' = <<>> \\
+          \/ /\ writer_active = TRUE \\
+             /\ \E r \in 1..10 : /\ r \in readers \\
+             /\ r' = r \\
+                /\ writer_active' = FALSE \\
+                /\ readers' = Tail(readers)
+
+Spec == Init /\ [][Next]_<<readers, writer_active>>
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,1,0,0.444,silver,233.87,"---- MODULE ChandyLamportSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, channel, snapshot, channelSnapshot, recorded, markerSent
+===="
+chattla:20b,BM009,Token Ring,networking,2,1,1,0.667,gold,2.22,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLE token
+
+Init == /\ token \in 1..N
+
+Next == /\ token' \in 1..N
+        /\ token' = IF token = N THEN 1 ELSE token + 1
+
+Spec == Init /\ [][Next]_<<token>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,0.778,silver,10.27,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, Values, NULL
+
+VARIABLES store
+
+Init == store = [k \in Keys |-> NULL]
+
+Next == \/ /\ \E k \in Keys : \E v \in Values : /\ store' = [store EXCEPT ![k] = v]
+      \/ /\ \E k \in Keys : /\ store' = [store EXCEPT ![k] = NULL]
+
+Spec == Init /\ [][Next]_<<store>>
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,1,0,0.444,silver,196.53,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES acceptors, proposers, promises, accepts, chosen, chosenBallot
+
+===="
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,1,0,0.778,silver,135.34,"---- MODULE FileTransfer ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS MAX_RETRIES, CHUNK_SIZE, FILE_SIZE, CHANNEL_CAPACITY
+VARIABLES channel, chunks, file, retransmitCount, sentChunks
+
+Init ==
+    /\ file = <<>>
+    /\ chunks = <<>>
+    /\ sentChunks = <<>>
+    /\ retransmitCount = <<>>
+    /\ channel = <<>>
+
+Next ==
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ channel' = channel
+    \/ /\ file' = Append(file, <<>>)
+       /\ chunks' = Append(chunks, <<>>)
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = Append(sentChunks, <<>>)
+       /\ retransmitCount' = Append(retransmitCount, 0)
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = Append(retransmitCount, 0)
+       /\ channel' = Append(channel, <<>>)
+
+Spec == Init /\ [][Next]_<<channel, chunks, file, retransmitCount, sentChunks>>
+
+===="

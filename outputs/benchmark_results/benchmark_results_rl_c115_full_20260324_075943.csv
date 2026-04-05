@@ -1,0 +1,939 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,0,0.444,silver,55.61,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, turn, flag
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,1,0,0.444,silver,21.87,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES participants, votes, commitDecided, abortDecided
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,1,0,1.0,silver,46.09,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES forks, states
+
+(* Constants *)
+N == 5
+
+(* Helper functions *)
+LEFT(i) == IF i = 1 THEN N ELSE i - 1
+RIGHT(i) == IF i = N THEN 1 ELSE i + 1
+
+(* Initial state *)
+Init == /\ forks = [i \in 1..N |-> i]
+        /\ states = [i \in 1..N |-> ""thinking""]
+
+(* Next state *)
+Next == \/ (* Philosopher i becomes hungry *)
+          /\ \E i \in 1..N : states[i] = ""thinking"" /\ states' = [states EXCEPT ![i] = ""hungry""]
+        \/ (* Philosopher i starts eating if both forks are available *)
+          /\ \E i \in 1..N :
+                states[i] = ""hungry"" /\ forks[i] = i /\ forks[LEFT(i)] = LEFT(i)
+                /\ forks' = [forks EXCEPT ![i] = LEFT(i), ![LEFT(i)] = i]
+                /\ states' = [states EXCEPT ![i] = ""eating""]
+        \/ (* Philosopher i puts down forks after eating *)
+          /\ \E i \in 1..N :
+                states[i] = ""eating""
+                /\ forks' = [forks EXCEPT ![i] = i, ![LEFT(i)] = LEFT(i)]
+                /\ states' = [states EXCEPT ![i] = ""thinking""]
+
+(* Type invariant *)
+TypeOK == /\ forks \in [1..N -> 1..N]
+          /\ states \in [1..N -> {""thinking"", ""hungry"", ""eating""}]
+
+Spec == Init /\ [][Next]_<<forks, states>>
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,0,0,0.778,bronze,29.75,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+
+VARIABLES num, flag
+
+Init == /\ num = [i \in 1..N |-> 0]
+        /\ flag = [i \in 1..N |-> FALSE]
+
+Next == \E i \in 1..N :
+          /\ flag[i] = FALSE
+          /\ flag' = [flag EXCEPT ![i] = TRUE]
+          /\ num' = [num EXCEPT ![i] = 1 + Max({num[j] : j \in 1..N})]
+          /\ flag' = [flag EXCEPT ![i] = FALSE]
+
+Spec == Init /\ [][Next]_<<num, flag>>
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,1,0.778,gold,6.48,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES queue, size
+
+Init == /\ queue = <<>>
+        /\ size = 0
+
+Next == \/ /\ size < K
+          /\ queue' = Append(queue, 1)
+          /\ size' = size + 1
+        \/ /\ size > 0
+          /\ queue' = Tail(queue)
+          /\ size' = size - 1
+
+Spec == Init /\ [][Next]_<<queue, size>>
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,0,0,0.778,bronze,29.19,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+Init == /\ currentTerm = 0
+        /\ votedFor = NULL
+        /\ state = ""Follower""
+
+Next == \/ /\ state = ""Follower""
+        /\ currentTerm' = currentTerm
+        /\ votedFor' = votedFor
+        /\ state' = ""Follower""
+        \/ /\ state = ""Candidate""
+        /\ currentTerm' = currentTerm + 1
+        /\ votedFor' = NULL
+        /\ state' = ""Candidate""
+        \/ /\ state = ""Leader""
+        /\ currentTerm' = currentTerm
+        /\ votedFor' = votedFor
+        /\ state' = ""Leader""
+
+Spec == Init /\ [][Next]_<<currentTerm, votedFor, state>>
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,1,0,0.778,silver,29.5,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS Readers
+
+VARIABLES readers, writer_active
+
+Init == /\ readers = <<>>
+        /\ writer_active = FALSE
+
+Next == \/ /\ writer_active = FALSE
+          /\ \E r \in Readers : /\ r \in readers
+          /\ ~(r \in readers)
+          /\ writer_active' = TRUE
+        \/ /\ writer_active = TRUE
+          /\ \E r \in Readers : /\ r \in readers
+          /\ ~(r \in readers)
+          /\ writer_active' = FALSE
+        \/ /\ writer_active = FALSE
+          /\ \E r \in Readers : /\ r \in readers
+          /\ ~(r \in readers)
+          /\ writer_active' = FALSE
+
+Spec == Init /\ [][Next]_<<readers, writer_active>>
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,1,0,0.444,silver,58.14,"---- MODULE DistributedSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, channel, recorded, markerSent, markerReceived
+
+===="
+chattla:20b,BM009,Token Ring,networking,2,1,1,0.667,gold,21.89,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLE token
+
+Init == /\ token \in 1..N
+
+Next == /\ token' \in 1..N
+        /\ token' = IF token = N THEN 1 ELSE token + 1
+
+Spec == Init /\ [][Next]_<<token>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,0.778,silver,14.41,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, Values
+
+VARIABLES store
+
+Init == /\ store \in [Keys -> Values]
+Next == \/ /\ \E k \in Keys : \E v \in Values : /\ store' = [store EXCEPT ![k] = v]
+      \/ /\ \E k \in Keys: /\ store' = store
+Spec == Init /\ [][Next]_<<store>>
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,1,0,0.444,silver,398.03,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES acceptors, proposers, promises, accepted, chosen, chosenVal, chosenBallot, chosenValSet, chosenBallotSet
+
+===="
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,1,0,0.778,silver,207.66,"---- MODULE Sender ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS MAX_RETRIES, CHUNK_SIZE, FILE_CHUNKS
+VARIABLES fileChunks, retransmitCount, sentChunks
+
+Init ==
+    /\ fileChunks = FILE_CHUNKS
+    /\ sentChunks = <<>>
+    /\ retransmitCount = 0
+
+Next ==
+    /\ sentChunks' = Append(sentChunks, Head(fileChunks))
+    /\ fileChunks' = Tail(fileChunks)
+    /\ retransmitCount' = 0
+    \/ /\ sentChunks' = sentChunks
+       /\ fileChunks' = fileChunks
+       /\ retransmitCount' = retransmitCount + 1
+       /\ retransmitCount < MAX_RETRIES
+
+Spec ==
+    Init /\ [][Next]_<<fileChunks, sentChunks, retransmitCount>>
+
+===="
+chattla:20b,BM013,Transaction Isolation (Snapshot Isolation),transaction,4,1,0,0.889,silver,152.69,"---- MODULE SnapshotIsolation ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS FiniteSet
+
+VARIABLES data, snapshot, txState, txActive, txCommitted, txAborted, txReadSet, txWriteSet, txStart, txEnd, txId, txNextId, txReadOnly, txWriteOnly, txReadWrite, txReadOnlyCommitted, txWriteOnlyCommitted, txReadWriteCommitted, txReadOnlyAborted, txWriteOnlyAborted, txReadWriteAborted, txReadOnlyCommittedSnapshot, txWriteOnlyCommittedSnapshot, txReadWriteCommittedSnapshot, txReadOnlyAbortedSnapshot, txWriteOnlyAbortedSnapshot, txReadWriteAbortedSnapshot, txReadOnlyCommittedData, txWriteOnlyCommittedData, txReadWriteCommittedData, txReadOnlyAbortedData, txWriteOnlyAbortedData, txReadWriteAbortedData, txReadOnlyCommittedStart, txWriteOnlyCommittedStart, txReadWriteCommittedStart, txReadOnlyAbortedStart, txWriteOnlyAbortedStart, txReadWriteAbortedStart, txReadOnlyCommittedEnd, txWriteOnlyCommittedEnd, txReadWriteCommittedEnd, txReadOnlyAbortedEnd, txWriteOnlyAbortedEnd, txReadWriteAbortedEnd
+
+TypeOK == /\ data \in FiniteSet
+          /\ snapshot \in FiniteSet
+          /\ txState \in FiniteSet
+          /\ txActive \in FiniteSet
+          /\ txCommitted \in FiniteSet
+          /\ txAborted \in FiniteSet
+          /\ txReadSet \in FiniteSet
+          /\ txWriteSet \in FiniteSet
+          /\ txStart \in FiniteSet
+          /\ txEnd \in FiniteSet
+          /\ txId \in FiniteSet
+          /\ txNextId \in FiniteSet
+          /\ txReadOnly \in FiniteSet
+          /\ txWriteOnly \in FiniteSet
+          /\ txReadWrite \in FiniteSet
+          /\ txReadOnlyCommitted \in FiniteSet
+          /\ txWriteOnlyCommitted \in FiniteSet
+          /\ txReadWriteCommitted \in FiniteSet
+          /\ txReadOnlyAborted \in FiniteSet
+          /\ txWriteOnlyAborted \in FiniteSet
+          /\ txReadWriteAborted \in FiniteSet
+          /\ txReadOnlyCommittedSnapshot \in FiniteSet
+          /\ txWriteOnlyCommittedSnapshot \in FiniteSet
+          /\ txReadWriteCommittedSnapshot \in FiniteSet
+          /\ txReadOnlyAbortedSnapshot \in FiniteSet
+          /\ txWriteOnlyAbortedSnapshot \in FiniteSet
+          /\ txReadWriteAbortedSnapshot \in FiniteSet
+          /\ txReadOnlyCommittedData \in FiniteSet
+          /\ txWriteOnlyCommittedData \in FiniteSet
+          /\ txReadWriteCommittedData \in FiniteSet
+          /\ txReadOnlyAbortedData \in FiniteSet
+          /\ txWriteOnlyAbortedData \in FiniteSet
+          /\ txReadWriteAbortedData \in FiniteSet
+          /\ txReadOnlyCommittedStart \in FiniteSet
+          /\ txWriteOnlyCommittedStart \in FiniteSet
+          /\ txReadWriteCommittedStart \in FiniteSet
+          /\ txReadOnlyAbortedStart \in FiniteSet
+          /\ txWriteOnlyAbortedStart \in FiniteSet
+          /\ txReadWriteAbortedStart \in FiniteSet
+          /\ txReadOnlyCommittedEnd \in FiniteSet
+          /\ txWriteOnlyCommittedEnd \in FiniteSet
+          /\ txReadWriteCommittedEnd \in FiniteSet
+          /\ txReadOnlyAbortedEnd \in FiniteSet
+          /\ txWriteOnlyAbortedEnd \in FiniteSet
+          /\ txReadWriteAbortedEnd \in FiniteSet
+
+Init == /\ data = <<>>
+          /\ snapshot = <<>>
+          /\ txState = <<>>
+          /\ txActive = <<>>
+          /\ txCommitted = <<>>
+          /\ txAborted = <<>>
+          /\ txReadSet = <<>>
+          /\ txWriteSet = <<>>
+          /\ txStart = <<>>
+          /\ txEnd = <<>>
+          /\ txId = <<>>
+          /\ txNextId = <<>>
+          /\ txReadOnly = <<>>
+          /\ txWriteOnly = <<>>
+          /\ txReadWrite = <<>>
+          /\ txReadOnlyCommitted = <<>>
+          /\ txWriteOnlyCommitted = <<>>
+          /\ txReadWriteCommitted = <<>>
+          /\ txReadOnlyAborted = <<>>
+          /\ txWriteOnlyAborted = <<>>
+          /\ txReadWriteAborted = <<>>
+          /\ txReadOnlyCommittedSnapshot = <<>>
+          /\ txWriteOnlyCommittedSnapshot = <<>>
+          /\ txReadWriteCommittedSnapshot = <<>>
+          /\ txReadOnlyAbortedSnapshot = <<>>
+          /\ txWriteOnlyAbortedSnapshot = <<>>
+          /\ txReadWriteAbortedSnapshot = <<>>
+          /\ txReadOnlyCommittedData = <<>>
+          /\ txWriteOnlyCommittedData = <<>>
+          /\ txReadWriteCommittedData = <<>>
+          /\ txReadOnlyAbortedData = <<>>
+          /\ txWriteOnlyAbortedData = <<>>
+          /\ txReadWriteAbortedData = <<>>
+          /\ txReadOnlyCommittedStart = <<>>
+          /\ txWriteOnlyCommittedStart = <<>>
+          /\ txReadWriteCommittedStart = <<>>
+          /\ txReadOnlyAbortedStart = <<>>
+          /\ txWriteOnlyAbortedStart = <<>>
+          /\ txReadWriteAbortedStart = <<>>
+          /\ txReadOnlyCommittedEnd = <<>>
+          /\ txWriteOnlyCommittedEnd = <<>>
+          /\ txReadWriteCommittedEnd = <<>>
+          /\ txReadOnlyAbortedEnd = <<>>
+          /\ txWriteOnlyAbortedEnd = <<>>
+          /\ txReadWriteAbortedEnd = <<>>
+
+Next == \/ /\ txState = <<>>
+          /\ txActive = <<>>
+          /\ txCommitted = <<>>
+          /\ txAborted = <<>>
+          /\ txReadSet = <<>>
+          /\ txWriteSet = <<>>
+          /\ txStart = <<>>
+          /\ txEnd = <<>>
+          /\ txId = <<>>
+          /\ txNextId = <<>>
+          /\ txReadOnly = <<>>
+          /\ txWriteOnly = <<>>
+          /\ txReadWrite = <<>>
+          /\ txReadOnlyCommitted = <<>>
+          /\ txWriteOnlyCommitted = <<>>
+          /\ txReadWriteCommitted = <<>>
+          /\ txReadOnlyAborted = <<>>
+          /\ txWriteOnlyAborted = <<>>
+          /\ txReadWriteAborted = <<>>
+          /\ txReadOnlyCommittedSnapshot = <<>>
+          /\ txWriteOnlyCommittedSnapshot = <<>>
+          /\ txReadWriteCommittedSnapshot = <<>>
+          /\ txReadOnlyAbortedSnapshot = <<>>
+          /\ txWriteOnlyAbortedSnapshot = <<>>
+          /\ txReadWriteAbortedSnapshot = <<>>
+          /\ txReadOnlyCommittedData = <<>>
+          /\ txWriteOnlyCommittedData = <<>>
+          /\ txReadWriteCommittedData = <<>>
+          /\ txReadOnlyAbortedData = <<>>
+          /\ txWriteOnlyAbortedData = <<>>
+          /\ txReadWriteAbortedData = <<>>
+          /\ txReadOnlyCommittedStart = <<>>
+          /\ txWriteOnlyCommittedStart = <<>>
+          /\ txReadWriteCommittedStart = <<>>
+          /\ txReadOnlyAbortedStart = <<>>
+          /\ txWriteOnlyAbortedStart = <<>>
+          /\ txReadWriteAbortedStart = <<>>
+          /\ txReadOnlyCommittedEnd = <<>>
+          /\ txWriteOnlyCommittedEnd = <<>>
+          /\ txReadWriteCommittedEnd = <<>>
+          /\ txReadOnlyAbortedEnd = <<>>
+          /\ txWriteOnlyAbortedEnd = <<>>
+          /\ txReadWriteAbortedEnd = <<>>
+          /\ txReadOnlyCommittedData = <<>>
+          /\ txWriteOnlyCommittedData = <<>>
+          /\ txReadWriteCommittedData = <<>>
+          /\ txReadOnlyAbortedData = <<>>
+          /\ txWriteOnlyAbortedData = <<>>
+          /\ txReadWriteAbortedData = <<>>
+          /\ txReadOnlyCommittedStart = <<>>
+          /\ txWriteOnlyCommittedStart = <<>>
+          /\ txReadWriteCommittedStart = <<>>
+          /\ txReadOnlyAbortedStart = <<>>
+          /\ txWriteOnlyAbortedStart = <<>>
+          /\ txReadWriteAbortedStart = <<>>
+          /\ txReadOnlyCommittedEnd = <<>>
+          /\ txWriteOnlyCommittedEnd = <<>>
+          /\ txReadWriteCommittedEnd = <<>>
+          /\ txReadOnlyAbortedEnd = <<>>
+          /\ txWriteOnlyAbortedEnd = <<>>
+          /\ txReadWriteAbortedEnd = <<>>
+          /\ txReadOnlyCommittedData = <<>>
+          /\ txWriteOnlyCommittedData = <<>>
+          /\ txReadWriteCommittedData = <<>>
+          /\ txReadOnlyAbortedData = <<>>
+          /\ txWriteOnlyAbortedData = <<>>
+          /\ txReadWriteAbortedData = <<>>
+          /\ txReadOnlyCommittedStart = <<>>
+          /\ txWriteOnlyCommittedStart = <<>>
+          /\ txReadWriteCommittedStart = <<>>
+          /\ txReadOnlyAbortedStart = <<>>
+          /\ txWriteOnlyAbortedStart = <<>>
+          /\ txReadWriteAbortedStart = <<>>
+          /\ txReadOnlyCommittedEnd = <<>>
+          /\ txWriteOnlyCommittedEnd = <<>>
+          /\ txReadWriteCommittedEnd = <<>>
+          /\ txReadOnlyAbortedEnd = <<>>
+          /"
+chattla:20b,BM014,Clock Synchronisation,networking,3,1,0,0.667,silver,73.46,"---- MODULE ClockSync ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS N
+
+VARIABLES clocks, epsilon
+
+Init == /\ clocks \in [1..N -> Int]
+        /\ epsilon \in Nat
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+
+Next == /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ epsilon \in Nat
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : clocks[i] \in 1..N
+        /\ \A i \in 1..N : c"
+chattla:20b,BM015,Peterson's Algorithm,scheduling,2,1,0,0.778,silver,241.85,"---- MODULE Peterson ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES flag, turn
+
+Init == /\ flag = [i \in 1..2 |-> FALSE]
+        /\ turn = 1
+
+Next == \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag[1] = TRUE
+          /\ turn' = 2
+          /\ flag' = [flag EXCEPT ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag[2] = TRUE
+          /\ turn' = 1
+          /\ flag' = [flag EXCEPT ![1] = FALSE]
+        \/ /\ flag[1] = TRUE
+          /\ turn[1] = 1
+          /\ flag[2] = TRUE
+          /\ turn[2] = 2
+          /\ flag' = flag
+        \/ /\ flag[1] = TRUE
+          /\ turn[1] = 2
+          /\ flag[2] = TRUE
+          /\ turn[2] = 1
+          /\ flag' = flag
+
+Spec == Init /\ [][Next]_<<flag, turn>>
+
+===="
+chattla:20b,BM016,Gossip Protocol,networking,3,1,0,0.778,silver,298.73,"---- MODULE GossipProtocol ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES known, infected
+
+Init == /\ known = <<>> 
+        /\ infected = <<>> 
+
+Next == /\ known' = Append(known, 1)
+        /\ infected' = Append(infected, 1)
+
+Spec == Init /\ [][Next]_<<known, infected>> 
+
+===="
+chattla:20b,BM017,Simple Allocator,storage,2,0,0,1.0,bronze,38.62,"---- MODULE MemoryAllocator ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, Pages, Client
+
+VARIABLES free, allocated
+
+Init == /\ free = Pages
+        /\ allocated = [c \in Client |-> {}]
+
+Next == \/ /\ free # {}
+          /\ free' = free \ {p}
+              /\ allocated' = [c \in Client |-> IF c = client THEN allocated[c] \cup {p} ELSE allocated[c]]
+          /\ free' = free
+              /\ allocated' = [c \in Client |-> IF c = client THEN {} ELSE allocated[c]]
+
+Spec == Init /\ [][Next]_<<free, allocated>>
+
+TypeOK == /\ free \subseteq Pages
+          /\ allocated \in [Client -> SUBSET Pages]
+          /\ \A c \in Client: allocated[c] \subseteq Pages
+          /\ \A c1, c2 \in Client: c1 # c2 => allocated[c1] \cap allocated[c2] = {}
+
+===="
+chattla:20b,BM018,Publish-Subscribe Broker,networking,3,1,0,0.444,silver,82.91,"---- MODULE Broker ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES subscribers, topics, messages, subscriptions, pending, delivered
+
+===="
+chattla:20b,BM019,Dekker's Algorithm,scheduling,3,1,0,1.0,silver,33.73,"---- MODULE Dekker ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES turn, wants
+
+Init == /\ turn \in {0,1}
+        /\ wants \in {0,1}^2
+        /\ wants = [i \in {0,1} |-> FALSE]
+
+Next == \/ /\ turn = 0
+           /\ wants[0] = FALSE
+           /\ wants' = [wants EXCEPT ![0] = TRUE]
+           /\ turn' = 1
+           /\ UNCHANGED <<wants[1], turn>>
+       \/ /\ turn = 1
+           /\ wants[1] = FALSE
+           /\ wants' = [wants EXCEPT ![1] = TRUE]
+           /\ turn' = 0
+           /\ UNCHANGED <<wants[0], turn>>
+
+Spec == Init /\ [][Next]_<<turn, wants>>
+
+TypeOK == /\ turn \in {0,1}
+          /\ wants \in {0,1}^2
+
+===="
+chattla:20b,BM020,Eventually Consistent Counter,storage,3,1,0,0.444,silver,246.95,"---- MODULE GCounter ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES counts
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+===="

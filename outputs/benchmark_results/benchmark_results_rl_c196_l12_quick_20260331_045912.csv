@@ -1,0 +1,434 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,0,0.444,silver,57.68,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, turn, N
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,0,0,1.0,bronze,63.24,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES participants, votes, decision, messages, state
+CONSTANTS N, participants, FiniteSet
+
+(* Types *)
+TypeOK == 
+  /\ participants \in FiniteSet
+  /\ votes \in [participants -> {""yes"", ""no""}]
+  /\ decision \in {""commit"", ""abort"", ""none""}
+  /\ messages \in FiniteSet
+  /\ state \in [participants -> {""init"", ""prepared"", ""committed"", ""aborted""}]
+
+(* Initial state *)
+Init == 
+  /\ participants \subseteq 1..N
+  /\ votes = [p \in participants |-> ""yes""]
+  /\ decision = ""none""
+  /\ messages = {}
+  /\ state = [p \in participants |-> ""init""]
+
+(* Next-state relation *)
+Next == 
+  \/ /\ decision = ""none""
+     /\ messages' = messages \cup { [sender |-> ""coordinator"", receiver |-> p, type |-> ""Prepare""] : p \in participants }
+     /\ state' = state
+     /\ votes' = votes
+     /\ decision' = decision
+  \/ /\ decision = ""none""
+     /\ \E p \in participants : 
+        /\ state[p] = ""init""
+        /\ messages' = messages \cup { [sender |-> p, receiver |-> ""coordinator"", type |-> ""VoteYes""] }
+        /\ state' = [state EXCEPT ![p] = ""prepared""]
+        /\ votes' = [votes EXCEPT ![p] = ""yes""]
+        /\ decision' = decision
+  \/ /\ decision = ""none""
+     /\ \E p \in participants : 
+        /\ state[p] = ""init""
+        /\ messages' = messages \cup { [sender |-> p, receiver |-> ""coordinator"", type |-> ""VoteNo""] }
+        /\ state' = [state EXCEPT ![p] = ""prepared""]
+        /\ votes' = [votes EXCEPT ![p] = ""no""]
+        /\ decision' = decision
+  \/ /\ decision = ""none""
+     /\ \E p \in participants : 
+        /\ state[p] = ""prepared""
+        /\ \E m \in messages : 
+           /\ m.sender = ""coordinator""
+           /\ m.receiver = p
+           /\ m.type = ""Prepare""
+        /\ messages' = messages \ { [sender |-> ""coordinator"", receiver |-> p, type |-> ""Prepare""] }
+        /\ state' = state
+        /\ votes' = votes
+        /\ decision' = decision
+  \/ /\ decision = ""none""
+     /\ \E p \in participants : 
+        /\ state[p] = ""prepared""
+        /\ \E m \in messages : 
+           /\ m.sender = p
+           /\ m.receiver = ""coordinator""
+           /\ m.type = ""VoteYes""
+        /\ messages' = messages \ { [sender |-> p, receiver |-> ""coordinator"", type |-> ""VoteYes""] }
+        /\ state' = state
+        /\ votes' = [votes EXCEPT ![p] = ""yes""]
+        /\ decision' = decision
+  \/ /\ decision = ""none""
+     /\ \E p \in participants : 
+        /\ state[p] = ""prepared""
+        /\ \E m \in messages : 
+           /\ m.sender = p
+           /\ m.receiver = ""coordinator""
+           /\ m.type = ""VoteNo""
+        /\ messages' = messages \ { [sender |-> p, receiver |-> ""coordinator"", type |-> ""VoteNo""] }
+        /\ state' = state
+        /\ votes' = [votes EXCEPT ![p] = ""no""]
+        /\ decision' = decision
+  \/ /\ decision = ""none""
+     /\ \E p \in participants : 
+        /\ state[p] = ""prepared""
+        /\ \E m \in messages : 
+           /\ m.sender = ""coordinator""
+           /\ m.receiver = p
+           /\ m.type = ""Commit""
+        /\ messages' = messages \ { [sender |-> ""coordinator"", receiver |-> p, type |-> ""Commit""] }
+        /\ state' = [state EXCEPT ![p] = ""committed""]
+        /\ votes' = votes
+        /\ decision' = ""commit""
+  \/ /\ decision = ""none""
+     /\ \E p \in participants : 
+        /\ state[p] = ""prepared""
+        /\ \E m \in messages : 
+           /\ m.sender = ""coordinator""
+           /\ m.receiver = p
+           /\ m.type = ""Abort""
+        /\ messages' = messages \ { [sender |-> ""coordinator"", receiver |-> p, type |-> ""Abort""] }
+        /\ state' = [state EXCEPT ![p] = ""aborted""]
+        /\ votes' = votes
+        /\ decision' = ""abort""
+
+(* Specification *)
+Spec == Init /\ [][Next]_vars
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,1,1,0.778,gold,9.48,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLES forks, states
+
+(* Fork ownership: forks[i] = j means fork i is held by philosopher j; forks[i] = -1 means fork i is free *)
+Init == /\ forks = [i \in 1..N |-> -1]
+        /\ states = [i \in 1..N |-> ""thinking""]
+
+Next == \/ (* Philosopher i becomes hungry *)
+          /\ \E i \in 1..N :
+                /\ states[i] = ""thinking""
+                /\ states' = [states EXCEPT ![i] = ""hungry""]
+                /\ forks' = forks
+        \/ (* Philosopher i picks up forks if both are free *)
+          /\ \E i \in 1..N :
+                /\ states[i] = ""hungry""
+                /\ forks[i] = -1
+                /\ forks[%(i, N) + 1] = -1
+                /\ forks' = [forks EXCEPT ![i] = i, ![%(i, N) + 1] = i]
+                /\ states' = [states EXCEPT ![i] = ""eating""]
+        \/ (* Philosopher i puts down forks after eating *)
+          /\ \E i \in 1..N :
+                /\ states[i] = ""eating""
+                /\ forks' = [forks EXCEPT ![i] = -1, ![%(i, N) + 1] = -1]
+                /\ states' = [states EXCEPT ![i] = ""thinking""]
+
+Spec == Init /\ [][Next]_<<forks, states>>
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,1,0,0.778,silver,239.92,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+VARIABLES num, flag, maxFlag, maxNum
+
+Init == /\ num = 0
+       /\ flag = 0
+       /\ maxFlag = 0
+       /\ maxNum = 0
+
+Next == /\ num' = IF flag' THEN num ELSE num' + 1
+       /\ flag' = IF flag THEN flag ELSE flag' + 1
+       /\ maxNum' = IF maxFlag' THEN maxNum ELSE maxNum' + 1
+       /\ maxFlag' = IF maxFlag THEN maxFlag ELSE maxFlag' + 1
+
+Spec == Init /\ [][Next]_<<num, flag, maxFlag, maxNum>>
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,0,0,1.0,bronze,24.39,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail, size
+
+Init == /\ q = <<>>
+        /\ head = 0
+        /\ tail = 0
+        /\ size = 0
+
+ProducerAction == /\ size < K
+                 /\ head' = head
+                 /\ tail' = (tail + 1) \mod K
+                 /\ q' = Append(q, head)
+                 /\ size' = size + 1
+
+ConsumerAction == /\ size > 0
+                 /\ head' = (head + 1) \mod K
+                 /\ tail' = tail
+                 /\ q' = Tail(q)
+                 /\ size' = size - 1
+
+Next == ProducerAction \/ ConsumerAction
+
+Spec == Init /\ [][Next]_<<q, head, tail, size>>
+
+TypeOK == /\ K \in Nat
+         /\ q \in Seq(0..K-1)
+         /\ head \in 0..K-1
+         /\ tail \in 0..K-1
+         /\ size \in 0..K
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,1,0,0.444,silver,145.15,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,1,0,0.778,silver,13.02,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES readers, writer_active
+
+Init == /\ readers = <<>> 
+      /\ writer_active = FALSE
+
+Next == \/ /\ writer_active' = FALSE
+          /\ readers' = Append(readers, 1)
+      \/ /\ writer_active' = TRUE
+          /\ readers' = <<>>
+      \/ /\ writer_active' = FALSE
+          /\ readers' = Tail(readers)
+
+Spec == Init /\ [][Next]_<<readers, writer_active>>
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,0,0,1.0,bronze,80.37,"---- MODULE ChandyLamportSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS N
+
+VARIABLES state, channel, snapshot, markerSent, markerReceived, finished
+TypeOK == /\ state \in [1..N -> Nat]
+        /\ channel \in [1..N -> [1..N -> Seq(Nat)]]
+        /\ snapshot \in [1..N -> [1..N -> Seq(Nat)]]
+        /\ markerSent \in [1..N -> BOOLEAN]
+        /\ markerReceived \in [1..N -> BOOLEAN]
+        /\ finished \in [1..N -> BOOLEAN]
+
+(* Initial state *)
+Init == /\ state = [i \in 1..N |-> 0]
+        /\ channel = [i \in 1..N |-> [j \in 1..N |-> <<>>]]
+        /\ snapshot = [i \in 1..N |-> [j \in 1..N |-> <<>>]]
+        /\ markerSent = [i \in 1..N |-> FALSE]
+        /\ markerReceived = [i \in 1..N |-> FALSE]
+        /\ finished = [i \in 1..N |-> FALSE]
+
+(* Next-state relation *)
+Next == 
+  \/ /\ \E i \in 1..N : /\ state[i] = state[i] + 1
+      /\ channel' = [channel EXCEPT ![i][j] = Append(channel[i][j], state[i])]
+      /\ UNCHANGED <<markerSent, markerReceived, finished>>
+  \/ /\ \E i \in 1..N : /\ markerSent[i] = FALSE
+      /\ markerReceived[i] = FALSE
+      /\ finished[i] = FALSE
+      /\ markerSent' = [markerSent EXCEPT ![i] = TRUE]
+      /\ UNCHANGED <<state, channel, markerReceived, finished>>
+  \/ /\ \E i \in 1..N : /\ markerReceived[i] = FALSE
+      /\ finished[i] = FALSE
+      /\ markerSent[i] = TRUE
+      /\ UNCHANGED <<state, channel, markerSent, finished>>
+  \/ /\ \E i \in 1..N : /\ markerReceived[i] = TRUE
+      /\ finished[i] = FALSE
+      /\ UNCHANGED <<state, channel, markerSent, markerReceived>>
+  \/ /\ \E i \in 1..N : /\ markerReceived[i] = TRUE
+      /\ finished[i] = FALSE
+      /\ snapshot' = [snapshot EXCEPT ![i] = state[i]]
+      /\ UNCHANGED <<state, channel, markerSent, markerReceived, finished>>
+  \/ /\ \E i \in 1..N : /\ markerReceived[i] = TRUE
+      /\ finished[i] = FALSE
+      /\ channel' = [channel EXCEPT ![i][j] = <<>>]
+      /\ UNCHANGED <<state, markerSent, markerReceived, finished>>
+  \/ /\ \E i \in 1..N : /\ finished[i] = FALSE
+      /\ UNCHANGED <<state, channel, markerSent, markerReceived, finished>>
+  \/ /\ \E i \in 1..N : /\ finished[i] = TRUE
+      /\ UNCHANGED <<state, channel, markerSent, markerReceived, finished>>
+
+Spec == Init /\ [][Next]_<<state, channel, snapshot, markerSent, markerReceived, finished>> /\ TypeOK
+
+===="
+chattla:20b,BM009,Token Ring,networking,2,1,1,0.667,gold,10.29,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLE token
+
+Init == /\ token \in 1..N
+
+Next == /\ token' \in 1..N
+        /\ token' = IF token = N THEN 1 ELSE token + 1
+
+Spec == Init /\ [][Next]_<<token>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,0.778,silver,50.98,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, Values
+
+VARIABLES store
+
+Init == /\ store \in [Keys -> Values]
+Next == \/ /\ \E k \in Keys : \E v \in Values : /\ store' = [store EXCEPT ![k] = v]
+          \/ /\ \E k \in Keys: /\ store' = store
+Spec == Init /\ [][Next]_<<store>>
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,1,0,0.444,silver,76.63,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES acceptors, proposers, promises, accepts, chosen, values, ballots, maxBallot, maxValue
+
+===="
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,1,0,0.444,silver,9.59,"---- MODULE Sender ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES file, chunkSize, maxRetries, sentChunks, retransmitCount, channel, ackReceived
+
+===="

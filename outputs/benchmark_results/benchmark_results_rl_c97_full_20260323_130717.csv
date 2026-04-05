@@ -1,0 +1,915 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,0,1.0,silver,69.67,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N
+
+VARIABLES state, turn
+
+Init == /\ state = [i \in 1..N |-> ""idle""]
+        /\ turn \in 1..N
+
+Next == \E i \in 1..N :
+          /\ state[i] = ""idle""
+          /\ state' = [state EXCEPT ![i] = ""trying""]
+          /\ turn' = i
+          /\ state' = [state EXCEPT ![i] = ""critical""]
+          /\ state' = [state EXCEPT ![i] = ""idle""]
+
+Spec == Init /\ [][Next]_<<state, turn>>
+
+TypeOK == /\ state \in [1..N -> {""idle"", ""trying"", ""critical""}]
+          /\ turn \in 1..N
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,0,0,0.444,bronze,327.79,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES participants, coordinator, messages
+
+
+  sendPrepare() == 
+    LET prepareMsg == [type |-> ""Prepare"", from |-> 0, to |-> i] IN
+    messages' = Append(messages, prepareMsg)
+  (* Participants respond with VoteYes or VoteNo *)
+  participantResponds(i) == 
+    LET voteMsg == [type |-> IF Random < 0.5 THEN ""VoteYes"" ELSE ""VoteNo"", from |-> i, to |-> 0] IN
+    messages' = Append(messages, voteMsg)
+  (* Coordinator decides to Commit or Abort *)
+  coordinatorDecides() == 
+    LET allYes == \A msg \in messages : msg.type = ""VoteYes"" IN
+
+      messages' = Append(messages, [type |-> ""Commit"", from |-> 0, to |-> i])
+
+      messages' = Append(messages, [type |-> ""Abort"", from |-> 0, to |-> i])
+  (* Participants update state based on messages *)
+  participantUpdates(i) == 
+    LET msg == [type |-> ""Commit"", from |-> 0, to |-> i] IN
+    messages' = Append(messages, msg)
+  (* Coordinator updates state based on messages *)
+  coordinatorUpdates() == 
+    LET msg == [type |-> ""Commit"", from |-> 0, to |-> i] IN
+    messages' = Append(messages, msg)
+  (* Main process *)
+  main == 
+    sendPrepare() \* Coordinator sends Prepare
+    \* Participants respond
+    \* Coordinator decides
+    coordinatorDecides() \* Coordinator decides Commit or Abort
+    \* Participants update state
+    \* Coordinator updates state
+  (* Next action *)
+  Next == 
+    \* Coordinator sends Prepare
+    \* Participants respond
+    \* Coordinator decides
+    \* Participants update state
+    \* Coordinator updates state
+  (* Init action *)
+  Init == 
+    /\ participants = <<[id |-> i, state |-> ""Init""] : i \in 1..N>>
+    /\ coordinator = [id |-> 0, state |-> ""Init""]
+    /\ messages = <<>>
+  (* Spec *)
+  Spec == Init /\ [][Next]_vars
+  (* TypeOK *)
+  TypeOK == 
+    /\ participants \in <<[id |-> Int, state |-> {""Init"", ""Prepared"", ""Committed"", ""Aborted""}] : i \in 1..N>>
+    /\ coordinator \in [id |-> Int, state |-> {""Init"", ""Prepared"", ""Committed"", ""Aborted""}]
+    /\ messages \in <<[type |-> {""Prepare"", ""VoteYes"", ""VoteNo"", ""Commit"", ""Abort""}, from |-> Int, to |-> Int] : i \in 1..N>>
+  (* Variables *)
+  vars == <<participants, coordinator, messages>>
+  (* Spec *)
+  Spec == Init /\ [][Next]_vars
+  (* Invariant *)
+  Invariant == 
+    /\ coordinator.state \in {""Init"", ""Prepared"", ""Committed"", ""Aborted""}
+    /\ \A p \in 1..N : p \in <<[id |-> i, state |-> {""Init"", ""Prepared"", ""Committed"", ""Aborted""}] : i \in 1..N>>
+  (* TLC configuration *)
+  CONSTRAINT TypeOK
+  ===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,1,0,1.0,silver,31.91,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES forks, states
+
+(* Constants *)
+N == 5
+
+(* Helper functions *)
+LEFT(i) == IF i = 1 THEN N ELSE i - 1
+RIGHT(i) == IF i = N THEN 1 ELSE i + 1
+
+(* State predicates *)
+IsThinking(i) == states[i] = ""thinking""
+IsHungry(i) == states[i] = ""hungry""
+IsEating(i) == states[i] = ""eating""
+
+(* Initial state *)
+Init == /\ forks = [i \in 1..N |-> ""free""]
+        /\ states = [i \in 1..N |-> ""thinking""]
+
+(* Next-state relation *)
+Next == \/ \E i \in 1..N :
+          /\ IsThinking(i)
+          /\ forks[LEFT(i)] = ""free""
+          /\ forks[RIGHT(i)] = ""free""
+          /\ states' = [states EXCEPT ![i] = ""hungry""]
+          /\ forks' = forks
+        \/ \E i \in 1..N :
+          /\ IsHungry(i)
+          /\ forks[LEFT(i)] = ""free""
+          /\ forks[RIGHT(i)] = ""free""
+          /\ states' = [states EXCEPT ![i] = ""eating""]
+          /\ forks' = [forks EXCEPT ![LEFT(i)] = i, ![RIGHT(i)] = i]
+        \/ \E i \in 1..N :
+          /\ IsEating(i)
+          /\ forks[LEFT(i)] = i
+          /\ forks[RIGHT(i)] = i
+          /\ states' = [states EXCEPT ![i] = ""thinking""]
+          /\ forks' = [forks EXCEPT ![LEFT(i)] = ""free"", ![RIGHT(i)] = ""free""]
+
+(* Specification *)
+Spec == Init /\ [][Next]_<<forks, states>>
+
+(* Type invariant *)
+TypeOK == /\ forks \in [1..N -> {""free""} \cup 1..N]
+          /\ states \in [1..N -> {""thinking"", ""hungry"", ""eating""}]
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,0,0,0.778,bronze,394.03,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+
+VARIABLES num, flag
+
+Init == /\ num = [i \in 1..N |-> 0]
+        /\ flag = [i \in 1..N |-> FALSE]
+
+Next == \E i \in 1..N :
+          /\ flag[i] = FALSE
+          /\ flag' = [flag EXCEPT ![i] = TRUE]
+          /\ num' = [num EXCEPT ![i] = 1 + Max({num[j] : j \in 1..N})]
+          /\ flag' = [flag EXCEPT ![i] = FALSE]
+
+Spec == Init /\ [][Next]_<<num, flag>>
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,0,0.667,silver,115.31,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail, full, empty
+
+Init == /\ q = <<>>
+        /\ head = 0
+        /\ tail = 0
+        /\ full = FALSE
+        /\ empty = TRUE
+
+Next == \/ /\ full = FALSE
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+          /\ q = <<>>
+          /\ head = tail
+      "
+chattla:20b,BM006,Raft Leader Election,consensus,4,1,1,0.778,gold,49.29,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+Init == /\ currentTerm = 0
+        /\ votedFor = {}
+        /\ state = ""Follower""
+
+Next == \/ /\ state = ""Follower""
+          /\ currentTerm' = currentTerm
+          /\ votedFor' = votedFor
+          /\ state' = ""Follower""
+        \/ /\ state = ""Candidate""
+          /\ currentTerm' = currentTerm + 1
+          /\ votedFor' = {currentTerm + 1}
+          /\ state' = ""Candidate""
+        \/ /\ state = ""Leader""
+          /\ currentTerm' = currentTerm
+          /\ votedFor' = votedFor
+          /\ state' = ""Leader""
+
+Spec == Init /\ [][Next]_<<currentTerm, votedFor, state>>
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,1,0,0.778,silver,204.85,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES readers, writer_active
+
+Init == /\ readers = <<>>
+       /\ writer_active = FALSE
+
+Next == \/ /\ writer_active' = FALSE
+          /\ readers' = Append(readers, 1)
+        \/ /\ writer_active' = TRUE
+          /\ readers' = <<>>
+        \/ /\ writer_active' = FALSE
+          /\ readers' = Tail(readers)
+
+Spec == Init /\ [][Next]_<<readers, writer_active>>
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,1,0,0.444,silver,172.61,"---- MODULE DistributedSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, channel, recorded, markerSent, markerReceived
+===="
+chattla:20b,BM009,Token Ring,networking,2,0,0,0.778,bronze,25.43,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS N
+
+VARIABLES token, messages
+
+Init == /\ token \in 1..N
+        /\ messages \in 1..N -> 1..N
+
+Next == /\ token' \in 1..N
+        /\ messages' \in 1..N -> 1..N
+        /\ token' = IF token = N THEN 1 ELSE token + 1
+           /\ messages' = [i \in 1..N |-> IF i = token THEN token' ELSE messages[i]]
+
+Spec == Init /\ [][Next]_<<token, messages>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,0.778,silver,17.87,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, Values
+
+VARIABLES store
+
+Init == /\ store \in [Keys -> Values]
+Next == /\ store' \in [Keys -> Values]
+    /\ \E k \in Keys : \E v \in Values : store' = [store EXCEPT ![k] = v]
+
+Spec == Init /\ [][Next]_<<store>>
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,1,1,0.778,gold,191.65,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES acceptors, proposers, promises, accepted, chosen, chosenBallot, chosenValue, chosenBallotValue, chosenValueBallot
+
+Init == /\ acceptors = <<>>
+       /\ proposers = <<>>
+       /\ promises = <<>>
+       /\ accepted = <<>>
+       /\ chosen = <<>>
+       /\ chosenBallot = <<>>
+       /\ chosenValue = <<>>
+       /\ chosenBallotValue = <<>>
+       /\ chosenValueBallot = <<>>
+
+Next == /\ acceptors' = acceptors
+       /\ proposers' = proposers
+       /\ promises' = promises
+       /\ accepted' = accepted
+       /\ chosen' = chosen
+       /\ chosenBallot' = chosenBallot
+       /\ chosenValue' = chosenValue
+       /\ chosenBallotValue' = chosenBallotValue
+       /\ chosenValueBallot' = chosenValueBallot
+
+Spec == Init /\ [][Next]_<<acceptors, proposers, promises, accepted, chosen, chosenBallot, chosenValue, chosenBallotValue, chosenValueBallot>>
+
+===="
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,1,0,0.444,silver,59.01,"---- MODULE Sender ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES file, chunkSize, maxRetries, sentChunks, lostChunks, retries, done
+
+===="
+chattla:20b,BM013,Transaction Isolation (Snapshot Isolation),transaction,4,1,0,0.444,silver,388.63,"---- MODULE SnapshotIsolation ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES db, txns, snapshot, nextTxnId
+
+===="
+chattla:20b,BM014,Clock Synchronisation,networking,3,0,0,0.667,bronze,434.99,"---- MODULE ClockSync ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES clocks, offsets
+
+Init == /\ clocks = [i \in 1..N |-> 0]
+        /\ offsets = [i \in 1..N |-> 0]
+
+Next == /\ \E i \in 1..N : /\ clocks' = [clocks EXCEPT ![i] = clocks[i] + offsets[i]]
+        /\ offsets' = [offsets EXCEPT ![i] = 0]
+        /\ \E j \in 1..N \ {i} : /\ offsets' = [offsets EXCEPT ![j] = offsets[j] + (clocks[i] - clocks[j])]
+        /\ \E k \in 1..N \ {i} : /\ offsets' = [offsets EXCEPT ![k] = offsets[k] + (clocks[j] - clocks[k])]
+        /\ \E l \in 1..N \ {i, j} : /\ offsets' = [offsets EXCEPT ![l] = offsets[l] + (clocks[k] - clocks[l])]
+        /\ \E m \in 1..N \ {i, j, k} : /\ offsets' = [offsets EXCEPT ![m] = offsets[m] + (clocks[l] - clocks[m])]
+        /\ \E n \in 1..N \ {i, j, k, l} : /\ offsets' = [offsets EXCEPT ![n] = offsets[n] + (clocks[m] - clocks[n])]
+        /\ \E o \in 1..N \ {i, j, k, l, m} : /\ offsets' = [offsets EXCEPT ![o] = offsets[o] + (clocks[n] - clocks[o])]
+        /\ \E p \in 1..N \ {i, j, k, l, m, n} : /\ offsets' = [offsets EXCEPT ![p] = offsets[p] + (clocks[o] - clocks[p])]
+        /\ \E q \in 1..N \ {i, j, k, l, m, n, o} : /\ offsets' = [offsets EXCEPT ![q] = offsets[q] + (clocks[p] - clocks[q])]
+        /\ \E r \in 1..N \ {i, j, k, l, m, n, o, p} : /\ offsets' = [offsets EXCEPT ![r] = offsets[r] + (clocks[q] - clocks[r])]
+        /\ \E s \in 1..N \ {i, j, k, l, m, n, o, p, q} : /\ offsets' = [offsets EXCEPT ![s] = offsets[s] + (clocks[r] - clocks[s])]
+        /\ \E t \in 1..N \ {i, j, k, l, m, n, o, p, q, r} : /\ offsets' = [offsets EXCEPT ![t] = offsets[t] + (clocks[s] - clocks[t])]
+        /\ \E u \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s} : /\ offsets' = [offsets EXCEPT ![u] = offsets[u] + (clocks[t] - clocks[u])]
+        /\ \E v \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t} : /\ offsets' = [offsets EXCEPT ![v] = offsets[v] + (clocks[u] - clocks[v])]
+        /\ \E w \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u} : /\ offsets' = [offsets EXCEPT ![w] = offsets[w] + (clocks[v] - clocks[w])]
+        /\ \E x \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v} : /\ offsets' = [offsets EXCEPT ![x] = offsets[x] + (clocks[w] - clocks[x])]
+        /\ \E y \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w} : /\ offsets' = [offsets EXCEPT ![y] = offsets[y] + (clocks[x] - clocks[y])]
+        /\ \E z \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x} : /\ offsets' = [offsets EXCEPT ![z] = offsets[z] + (clocks[y] - clocks[z])]
+        /\ \E a \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y} : /\ offsets' = [offsets EXCEPT ![a] = offsets[a] + (clocks[z] - clocks[a])]
+        /\ \E b \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z} : /\ offsets' = [offsets EXCEPT ![b] = offsets[b] + (clocks[a] - clocks[b])]
+        /\ \E c \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a} : /\ offsets' = [offsets EXCEPT ![c] = offsets[c] + (clocks[b] - clocks[c])]
+        /\ \E d \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b} : /\ offsets' = [offsets EXCEPT ![d] = offsets[d] + (clocks[c] - clocks[d])]
+        /\ \E e \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c} : /\ offsets' = [offsets EXCEPT ![e] = offsets[e] + (clocks[d] - clocks[e])]
+        /\ \E f \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d} : /\ offsets' = [offsets EXCEPT ![f] = offsets[f] + (clocks[e] - clocks[f])]
+        /\ \E g \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e} : /\ offsets' = [offsets EXCEPT ![g] = offsets[g] + (clocks[f] - clocks[g])]
+        /\ \E h \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f} : /\ offsets' = [offsets EXCEPT ![h] = offsets[h] + (clocks[g] - clocks[h])]
+        /\ \E i \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f, g} : /\ offsets' = [offsets EXCEPT ![i] = offsets[i] + (clocks[h] - clocks[i])]
+        /\ \E j \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f, g, h} : /\ offsets' = [offsets EXCEPT ![j] = offsets[j] + (clocks[i] - clocks[j])]
+        /\ \E k \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f, g, h, i} : /\ offsets' = [offsets EXCEPT ![k] = offsets[k] + (clocks[j] - clocks[k])]
+        /\ \E l \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f, g, h, i, j} : /\ offsets' = [offsets EXCEPT ![l] = offsets[l] + (clocks[k] - clocks[l])]
+        /\ \E m \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f, g, h, i, j, k} : /\ offsets' = [offsets EXCEPT ![m] = offsets[m] + (clocks[l] - clocks[m])]
+        /\ \E n \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f, g, h, i, j, k, l} : /\ offsets' = [offsets EXCEPT ![n] = offsets[n] + (clocks[m] - clocks[n])]
+        /\ \E o \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f, g, h, i, j, k, l, m} : /\ offsets' = [offsets EXCEPT ![o] = offsets[o] + (clocks[n] - clocks[o])]
+        /\ \E p \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f, g, h, i, j, k, l, m, n} : /\ offsets' = [offsets EXCEPT ![p] = offsets[p] + (clocks[o] - clocks[p])]
+        /\ \E q \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o} : /\ offsets' = [offsets EXCEPT ![q] = offsets[q] + (clocks[p] - clocks[q])]
+        /\ \E r \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p} : /\ offsets' = [offsets EXCEPT ![r] = offsets[r] + (clocks[q] - clocks[r])]
+        /\ \E s \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q} : /\ offsets' = [offsets EXCEPT ![s] = offsets[s] + (clocks[r] - clocks[s])]
+        /\ \E t \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r} : /\ offsets' = [offsets EXCEPT ![t] = offsets[t] + (clocks[s] - clocks[t])]
+        /\ \E u \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s} : /\ offsets' = [offsets EXCEPT ![u] = offsets[u] + (clocks[t] - clocks[u])]
+        /\ \E v \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t} : /\ offsets' = [offsets EXCEPT ![v] = offsets[v] + (clocks[u] - clocks[v])]
+        /\ \E w \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u} : /\ offsets' = [offsets EXCEPT ![w] = offsets[w] + (clocks[v] - clocks[w])]
+        /\ \E x \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v} : /\ offsets' = [offsets EXCEPT ![x] = offsets[x] + (clocks[w] - clocks[x])]
+        /\ \E y \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w} : /\ offsets' = [offsets EXCEPT ![y] = offsets[y] + (clocks[x] - clocks[y])]
+        /\ \E z \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x} : /\ offsets' = [offsets EXCEPT ![z] = offsets[z] + (clocks[y] - clocks[z])]
+        /\ \E a \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z} : /\ offsets' = [offsets EXCEPT ![a] = offsets[a] + (clocks[z] - clocks[a])]
+        /\ \E b \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a} : /\ offsets' = [offsets EXCEPT ![b] = offsets[b] + (clocks[a] -"
+chattla:20b,BM015,Peterson's Algorithm,scheduling,2,1,0,0.778,silver,249.88,"---- MODULE Peterson2 ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES flag, turn
+
+Init == /\ flag = [i \in 1..2 |-> FALSE]
+        /\ turn = 1
+
+Next == \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag[1] = TRUE
+          /\ turn = 2
+          /\ flag[2] = FALSE
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag[2] = TRUE
+          /\ turn = 1
+          /\ flag[1] = FALSE
+
+Spec == Init /\ [][Next]_<<flag, turn>>
+
+===="
+chattla:20b,BM016,Gossip Protocol,networking,3,1,0,0.778,silver,115.87,"---- MODULE GossipProtocol ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES known, infected
+
+Init == /\ known = <<>> /\ infected = <<>> /\ Len(known) = Len(infected)
+
+Next == /\ known' = known
+      /\ infected' = Append(infected, known)
+
+Spec == Init /\ [][Next]_<<known, infected>>
+
+===="
+chattla:20b,BM017,Simple Allocator,storage,2,1,0,0.778,silver,25.88,"---- MODULE MemoryAllocator ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, Clients, Pages
+
+VARIABLES free, allocated
+
+Init == /\ free = Pages
+        /\ allocated = [c \in Clients |-> {}]
+
+Next == /\ \E c \in Clients:
+          /\ \E p \in free:
+             /\ allocated' = [allocated EXCEPT ![c] = @ \cup {p}]
+             /\ free' = free \ {p}
+        \/ \E c \in Clients:
+             /\ \E p \in allocated[c]:
+                /\ allocated' = [allocated EXCEPT ![c] = @ \ {p}]
+                /\ free' = free \cup {p}
+        \/ /\ free' = free
+           /\ allocated' = allocated
+
+Spec == Init /\ [][Next]_<<free, allocated>>
+
+===="
+chattla:20b,BM018,Publish-Subscribe Broker,networking,3,1,0,0.444,silver,202.03,"---- MODULE Broker ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES subscribers, messages, topicMsgs, topicSubs, topicMsgIdx, topicSubIdx
+===="
+chattla:20b,BM019,Dekker's Algorithm,scheduling,3,1,0,0.778,silver,16.67,"---- MODULE Dekker ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES turn, wants
+
+Init == /\ turn \in {0,1}
+        /\ wants \in {0,1} \cup {0,1} \cup {0,1} \cup {0,1}
+        /\ wants = [i \in {0,1} |-> 0]
+
+Next == 
+  \/ /\ turn = 0
+     /\ wants[0] = 0
+     /\ wants[1] = 0
+     /\ turn' = 1
+     /\ wants' = [wants EXCEPT ![0] = 1]
+  \/ /\ turn = 1
+     /\ wants[0] = 0
+     /\ wants[1] = 0
+     /\ turn' = 0
+     /\ wants' = [wants EXCEPT ![1] = 1]
+  \/ /\ turn = 0
+     /\ wants[0] = 1
+     /\ wants[1] = 0
+     /\ turn' = 0
+     /\ wants' = [wants EXCEPT ![0] = 0]
+  \/ /\ turn = 1
+     /\ wants[0] = 0
+     /\ wants[1] = 1
+     /\ turn' = 1
+     /\ wants' = [wants EXCEPT ![1] = 0]
+  \/ /\ turn = 0
+     /\ wants[0] = 1
+     /\ wants[1] = 1
+     /\ turn' = 0
+     /\ wants' = [wants EXCEPT ![0] = 0]
+  \/ /\ turn = 1
+     /\ wants[0] = 1
+     /\ wants[1] = 1
+     /\ turn' = 1
+     /\ wants' = [wants EXCEPT ![1] = 0]
+
+Spec == Init /\ [][Next]_<<turn, wants>>
+
+===="
+chattla:20b,BM020,Eventually Consistent Counter,storage,3,1,0,0.667,silver,104.03,"---- MODULE GCounter ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS Node
+
+VARIABLES counts
+
+Init == /\ counts \in [Node -> [Node -> Nat]]
+       /\ \A n \in Node: counts[n] = [m \in Node |-> 0]
+
+Next == /\ \E n \in Node:
+          /\ counts' = [counts EXCEPT ![n] = [m \in Node |-> 
+                IF m = n THEN counts[n][m] + 1 ELSE counts[n][m]]]
+          /\ \A m \in Node: m \in Node
+          /\ \A m \in Node: counts'[m] \in [Node -> Nat]
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+      "

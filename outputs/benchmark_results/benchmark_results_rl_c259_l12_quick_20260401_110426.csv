@@ -1,0 +1,346 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,0,0.444,silver,17.44,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,0,0,0.778,bronze,114.79,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, participants, coordinator
+VARIABLES messages, state, votes
+
+    /\ participants \subseteq Nat
+    /\ coordinator \in Nat
+    /\ state \in [participants \cup {coordinator} -> {""Init"", ""Prepared"", ""Committed"", ""Aborted""}]
+    /\ votes \in [participants -> {""Yes"", ""No"", ""Pending""}]
+    /\ messages \subseteq [sender \in participants \cup {coordinator}, receiver \in participants \cup {coordinator}, type \in {""Prepare"", ""VoteYes"", ""VoteNo"", ""Commit"", ""Abort""}, content \in {""Yes"", ""No"", ""Pending""}]
+
+Init ==
+    /\ state = [p \in participants \cup {coordinator} |-> ""Init""]
+    /\ votes = [p \in participants |-> ""Pending""]
+    /\ messages = {}
+
+Next ==
+    \/ /\ coordinator \in participants
+       /\ state[coordinator] = ""Init""
+       /\ messages' = messages \cup { [sender |-> coordinator, receiver |-> p, type |-> ""Prepare"", content |-> ""Pending""] : p \in participants }
+       /\ state' = [state EXCEPT ![coordinator] = ""Prepared""]
+       /\ votes' = votes
+    \/ /\ \E p \in participants:
+          /\ state[p] = ""Prepared""
+          /\ votes[p] = ""Pending""
+          /\ messages' = messages \cup { [sender |-> p, receiver |-> coordinator, type |-> ""VoteYes"", content |-> ""Yes""] }
+          /\ state' = [state EXCEPT ![p] = ""Committed""]
+          /\ votes' = [votes EXCEPT ![p] = ""Yes""]
+    \/ /\ \E p \in participants:
+          /\ state[p] = ""Prepared""
+          /\ votes[p] = ""Pending""
+          /\ messages' = messages \cup { [sender |-> p, receiver |-> coordinator, type |-> ""VoteNo"", content |-> ""No""] }
+          /\ state' = [state EXCEPT ![p] = ""Aborted""]
+          /\ votes' = [votes EXCEPT ![p] = ""No""]
+    \/ /\ state[coordinator] = ""Prepared""
+       /\ \E p \in participants:
+          /\ votes[p] = ""Yes""
+          /\ messages' = messages \cup { [sender |-> coordinator, receiver |-> p, type |-> ""Commit"", content |-> ""Committed""] }
+          /\ state' = [state EXCEPT ![coordinator] = ""Committed""]
+          /\ votes' = votes
+    \/ /\ state[coordinator] = ""Prepared""
+       /\ \E p \in participants:
+          /\ votes[p] = ""No""
+          /\ messages' = messages \cup { [sender |-> coordinator, receiver |-> p, type |-> ""Abort"", content |-> ""Aborted""] }
+          /\ state' = [state EXCEPT ![coordinator] = ""Aborted""]
+          /\ votes' = votes
+    \/ /\ \E m \in messages:
+          /\ m.type = ""Commit""
+          /\ state[m.receiver] = ""Committed""
+          /\ messages' = messages \ { m }
+    \/ /\ \E m \in messages:
+          /\ m.type = ""Abort""
+          /\ state[m.receiver] = ""Aborted""
+          /\ messages' = messages \ { m }
+    \/ /\ \E m \in messages:
+          /\ m.type = ""VoteYes""
+          /\ votes[m.sender] = ""Yes""
+          /\ messages' = messages \ { m }
+    \/ /\ \E m \in messages:
+          /\ m.type = ""VoteNo""
+          /\ votes[m.sender] = ""No""
+          /\ messages' = messages \ { m }
+    \/ /\ \E m \in messages:
+          /\ m.type = ""Prepare""
+          /\ state[m.sender] = ""Prepared""
+          /\ messages' = messages \ { m }
+
+Spec ==
+    Init /\ [][Next]_<<state, votes, messages>>
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,0,0,1.0,bronze,37.85,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS N
+
+VARIABLES forks, states
+
+
+  states = [i \in 1..N |-> -> ""thinking""];  (* ""thinking"", ""hungry"", ""eating"" *)
+
+      pickUp(i);
+
+      putDown(i);
+
+  parallel
+    for i \in 1..N do
+      philosopher(i)
+    end for
+  end parallel
+
+*)
+
+(* Helper function to get the next philosopher/fork index *)
+Next(i) == IF i = N THEN 1 ELSE i + 1
+
+(* Initial state: all forks are free, all philosophers are thinking *)
+Init == /\ forks = [i \in 1..N |-> -> FALSE]
+        /\ states = [i \in 1..N |-> -> ""thinking""]
+
+(* Next-state relation: each philosopher can pick up or put down forks *)
+Next == \E i \in 1..N :
+          /\ forks' = [forks EXCEPT ![i] = TRUE, ![Next(i)] = TRUE]
+          /\ states' = [states EXCEPT ![i] = ""eating""]
+        \/ \E i \in 1..N :
+          /\ forks' = [forks EXCEPT ![i] = FALSE, ![Next(i)] = FALSE]
+          /\ states' = [states EXCEPT ![i] = ""thinking""]
+
+(* Type invariant: forks is a function from 1..N to BOOLEAN, states is a function from 1..N to {""thinking"", ""hungry"", ""eating""} *)
+TypeOK == /\ forks \in 1..N -> BOOLEAN
+          /\ states \in 1..N -> {""thinking"", ""hungry"", ""eating""}
+
+Spec == Init /\ [][Next]_<<forks, states>>
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,1,0,0.444,silver,100.31,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES num, flag
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,1,0.778,gold,21.19,"---- MODULE BoundedFIFO ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail, size
+
+Init == /\ q = <<>>
+        /\ head = 0
+        /\ tail = 0
+        /\ size = 0
+
+Producer == /\ size < K
+           /\ head' = head
+           /\ tail' = (tail + 1) % K
+           /\ q' = Append(q, head)
+           /\ size' = size + 1
+
+Consumer == /\ size > 0
+           /\ head' = (head + 1) % K
+           /\ tail' = tail
+           /\ q' = Tail(q)
+           /\ size' = size - 1
+
+Next == Producer \/ Consumer
+
+Spec == Init /\ [][Next]_<<q, head, tail, size>>
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,0,0,1.0,bronze,30.07,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+
+
+(* State definitions *)
+Follower == state = Follower
+Candidate == state = Candidate
+Leader == state = Leader
+
+(* Type definitions *)
+Server == 1..N
+None == 0
+
+(* TypeOK definition *)
+TypeOK == /\ currentTerm \in Nat
+          /\ votedFor \in {None} \cup Server
+          /\ state \in {Follower, Candidate, Leader}
+
+(* Initial state *)
+Init == /\ currentTerm = 0
+        /\ votedFor = None
+        /\ state = Follower
+
+(* Next-state relation *)
+Next == 
+  \/ /\ state = Follower
+     /\ currentTerm' = currentTerm
+        /\ votedFor' = votedFor
+        /\ state' = Candidate
+        /\ currentTerm' = currentTerm + 1
+        /\ votedFor' = None
+  \/ /\ state = Candidate
+     /\ currentTerm' = currentTerm
+        /\ votedFor' = votedFor
+        /\ state' = Leader
+     \/ /\ currentTerm' = currentTerm
+        /\ votedFor' = votedFor
+        /\ state' = Follower
+  \/ /\ state = Leader
+     /\ currentTerm' = currentTerm
+        /\ votedFor' = votedFor
+        /\ state' = Leader
+
+Spec == Init /\ [][Next]_<<currentTerm, votedFor, state>>
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,1,0,0.778,silver,12.48,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES readers, writer_active
+
+Init == /\ readers = <<>>
+       /\ writer_active = FALSE
+
+Next == \/ /\ writer_active = FALSE
+          /\ \A r \in readers : r = r
+        \/ /\ writer_active = TRUE
+          /\ \A r \in readers : r = r
+
+Spec == Init /\ [][Next]_<<readers, writer_active>> ===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,1,0,0.444,silver,19.03,"---- MODULE DistributedSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, channel, snapshot, marker, recorded, channelState, N, P, C
+
+===="
+chattla:20b,BM009,Token Ring,networking,2,0,0,0.778,bronze,20.26,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES token, messages
+
+(* The token is an integer in 1..N indicating the current holder *)
+Token == token \in 1..N
+
+(* Messages is a sequence of messages, each message is a tuple [sender, receiver, content] *)
+Message == [sender \in 1..N, receiver \in 1..N, content \in Nat]
+Messages == messages \in Seq(Message)
+
+(* Initial state: token starts at node 1, no messages *)
+Init == /\ token = 1
+        /\ messages = <<>>
+
+(* Next state: token passes to the next node, optionally a message is sent *)
+Next == /\ token' = IF token = N THEN 1 ELSE token + 1
+        /\ messages' = IF token' = 1 THEN Append(messages, [sender |-> token, receiver |-> 1, content |-> 0]) ELSE messages
+
+Spec == Init /\ [][Next]_<<token, messages>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,0.778,silver,192.81,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, Values
+
+VARIABLES store
+
+
+
+Init == /\ store \in [Keys -> Values]
+
+Next == \/ /\ \E k \in Keys : \E v \in Values : /\ store' = [store EXCEPT ![k] = v]
+      \/ /\ \E k \in Keys: /\ store' = [store EXCEPT ![k] = store[k]]
+      \/ /\ \E k \in Keys: /\ store' = [store EXCEPT ![k] = store[k]]
+
+Spec == Init /\ [][Next]_<<store>>
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,0,0,0.667,bronze,378.54,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS M, N
+
+VARIABLES
+  acceptors, proposers, promises, accepted, chosen
+
+(* Type definitions *)
+TypeOK ==
+  /\ acceptors \in SUBSET 1..N
+  /\ proposers \in SUBSET 1..M
+  /\ promises \in [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N -> [1..M -> [1..N ->
+===="
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,0,0,0.667,bronze,31.02,"---- MODULE FileTransfer ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS MAX_RETRIES, CHUNK_SIZE, FILE_SIZE, CHANNEL_LOSS_PROBABILITY
+VARIABLES channelState, retransmitCount, sentChunks
+
+    /\ fileChunks = [i \in 1..FILE_SIZE /-> i]
+    /\ sentChunks = <<>>
+    /\ retransmitCount = 0
+    /\ channelState = [i \in 1..FILE_SIZE /-> 0]
+
+Next ==
+    /\ sentChunks' = Append(sentChunks, lastChunk)
+    /\ retransmitCount' = IF lastChunk \in sentChunks THEN retransmitCount + 1 ELSE 0
+    /\ channelState' = [i \in 1..FILE_SIZE |-> IF i = lastChunk THEN 1 ELSE channelState[i]]
+    /\ lastChunk \in 1..FILE_SIZE
+    /\ lastChunk \notin sentChunks
+    /\ retransmitCount' <= MAX_RETRIES
+
+Spec ==
+    Init /\ [][Next]_<<fileChunks, sentChunks, retransmitCount, channelState>>
+
+===="

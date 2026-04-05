@@ -1,0 +1,651 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,0,0,1.0,bronze,29.6,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS N
+
+VARIABLES state, turn
+StateSpace == [i \in 1..N |-> state[i] \in {idle, trying, critical}]
+
+(* Type invariant *)
+TypeOK == /\ N \in Nat
+        /\ N > 0
+        /\ state \in [1..N -> {idle, trying, critical}]
+        /\ turn \in 1..N
+
+(* Initial condition *)
+Init == /\ turn \in 1..N
+        /\ \A i \in 1..N : state[i] = idle
+
+(* Next-state relation *)
+Next == \E i \in 1..N :
+          /\ state' = [state EXCEPT ![i] = \IF state[i] = idle THEN trying
+                                            \ELSE \IF state[i] = trying THEN critical
+                                            \ELSE idle]
+          /\ turn' = \IF state[i] = trying /\ turn = i THEN i
+                                 \ELSE turn
+
+Spec == Init /\ [][Next]_<<state, turn>>
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,1,0,1.0,silver,52.05,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, Participants
+
+VARIABLES participantStates, messages, coordinatorState
+TypeOK ==
+  /\ coordinatorState \in {""Init"", ""Prepare"", ""Commit"", ""Abort""}
+  /\ participantStates \in [Participants -> {""Init"", ""Prepare"", ""VoteYes"", ""VoteNo"", ""Commit"", ""Abort""}]
+  /\ messages \in [Participants -> {""Prepare"", ""VoteYes"", ""VoteNo"", ""Commit"", ""Abort""}]
+
+(* Initial state *)
+Init ==
+  /\ coordinatorState = ""Init""
+  /\ participantStates = [p \in Participants |-> ""Init""]
+  /\ messages = [p \in Participants |-> ""Prepare""]
+
+(* Next-state relation *)
+Next ==
+  \/ (* Coordinator sends Prepare to all participants *)
+     /\ coordinatorState = ""Init""
+     /\ messages' = [p \in Participants |-> ""Prepare""]
+     /\ coordinatorState' = ""Prepare""
+     /\ participantStates' = participantStates
+  \/ (* Participants vote yes or no *)
+     /\ coordinatorState = ""Prepare""
+     /\ \E p \in Participants :
+        /\ participantStates[p] = ""Prepare""
+        /\ messages[p] = ""Prepare""
+        /\ \E vote \in {""VoteYes"", ""VoteNo""} :
+           /\ participantStates' = [participantStates EXCEPT ![p] = vote]
+           /\ messages' = [messages EXCEPT ![p] = vote]
+           /\ coordinatorState' = coordinatorState
+  \/ (* Coordinator decides to commit *)
+     /\ coordinatorState = ""Prepare""
+     /\ \A p \in Participants : participantStates[p] = ""VoteYes""
+     /\ messages' = [p \in Participants |-> ""Commit""]
+     /\ coordinatorState' = ""Commit""
+  \/ (* Coordinator decides to abort *)
+     /\ coordinatorState = ""Prepare""
+     /\ \E p \in Participants : participantStates[p] = ""VoteNo""
+     /\ messages' = [p \in Participants |-> ""Abort""]
+     /\ coordinatorState' = ""Abort""
+  \/ (* Participants commit or abort *)
+     /\ coordinatorState \in {""Commit"", ""Abort""}
+     /\ \E p \in Participants :
+        /\ participantStates[p] = coordinatorState
+        /\ messages[p] = coordinatorState
+        /\ participantStates' = [participantStates EXCEPT ![p] = coordinatorState]
+        /\ messages' = messages
+        /\ coordinatorState' = coordinatorState
+
+Spec == Init /\ [][Next]_<<coordinatorState, participantStates, messages>>
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,0,0,1.0,bronze,33.91,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLES forks, states
+
+(* Fork ownership: forks[i] = j means fork i is held by philosopher j; forks[i] = -1 means fork i is free *)
+Init == /\ forks = [i \in 1..N |-> -1]
+        /\ states = [i \in 1..N |-> ""thinking""]
+
+Next == \/ (* Philosopher i becomes hungry *)
+          /\ states' = [states EXCEPT ![i] = ""hungry""]
+        \/ (* Philosopher i picks up forks if both are free *)
+          /\ states[i] = ""hungry""
+          /\ forks[i] = -1
+          /\ forks[%(i, N) + 1] = -1
+          /\ forks' = [forks EXCEPT ![i] = i, ![%(i, N) + 1] = i]
+          /\ states' = [states EXCEPT ![i] = ""eating""]
+        \/ (* Philosopher i puts down forks after eating *)
+          /\ states[i] = ""eating""
+          /\ forks' = [forks EXCEPT ![i] = -1, ![%(i, N) + 1] = -1]
+          /\ states' = [states EXCEPT ![i] = ""thinking""]
+
+TypeOK == /\ forks \in [1..N -> 1..N \cup {-1}]
+          /\ states \in [1..N -> {""thinking"", ""hungry"", ""eating""}]
+
+Spec == Init /\ [][Next]_<<forks, states>>
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,1,0,0.778,silver,209.99,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+VARIABLES num, flag, maxNum
+
+Init == /\ num = <<>>
+       /\ flag = <<>>
+       /\ maxNum = 0
+
+Next == /\ num' = Append(num, 0)
+       /\ flag' = Append(flag, FALSE)
+       /\ maxNum' = IF maxNum = 0 THEN 0 ELSE maxNum + 1
+
+Spec == Init /\ [][Next]_<<num, flag, maxNum>>
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,0,0,1.0,bronze,24.88,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail, count
+
+Init == /\ q = <<>>
+        /\ head = 0
+        /\ tail = 0
+        /\ count = 0
+
+ProducerAction == /\ count < K
+                 /\ head' = head
+                 /\ tail' = (tail + 1) \mod K
+                 /\ q' = Append(q, head)
+                 /\ count' = count + 1
+
+ConsumerAction == /\ count > 0
+                 /\ head' = (head + 1) \mod K
+                 /\ tail' = tail
+                 /\ q' = Tail(q)
+                 /\ count' = count - 1
+
+Next == ProducerAction \/ ConsumerAction
+
+Spec == Init /\ [][Next]_<<q, head, tail, count>>
+
+TypeOK == /\ K \in Nat
+          /\ q \in Seq(0..K-1)
+          /\ head \in 0..K-1
+          /\ tail \in 0..K-1
+          /\ count \in 0..K
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,1,0,0.444,silver,89.65,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,0,0,0.778,bronze,29.29,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES readers, writer_active
+
+Init == /\ readers = <<>> \\
+       /\ writer_active = FALSE
+
+Next == \/ /\ writer_active' = FALSE \\
+          /\ readers' = <<>> \\
+          /\ writer_active = FALSE \\
+             \/ /\ writer_active = TRUE \\
+                /\ readers' = <<>> \\
+          \/ /\ writer_active' = writer_active \\
+             /\ writer_active = FALSE \\
+                /\ readers' = Append(readers, 1) \\
+                \/ /\ readers' = Tail(readers) \\
+             \/ /\ writer_active = TRUE \\
+                /\ readers' = Append(readers, 1) \\
+                \/ /\ readers' = Tail(readers) \\
+                \/ /\ readers' = readers
+
+Spec == Init /\ [][Next]_<<readers, writer_active>>
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,1,0,0.444,silver,183.39,"---- MODULE ChandyLamportSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, channel, snapshot, channelSnapshot
+
+===="
+chattla:20b,BM009,Token Ring,networking,2,1,1,0.667,gold,2.29,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLE token
+
+Init == /\ token \in 1..N
+
+Next == /\ token' \in 1..N
+        /\ token' = IF token = N THEN 1 ELSE token + 1
+
+Spec == Init /\ [][Next]_<<token>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,1.0,silver,5.02,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, Values, NULL
+
+VARIABLES store
+
+Init == store = [k \in Keys |-> NULL]
+
+Next == \E k \in Keys : \E v \in Values :
+          /\ store' = [store EXCEPT ![k] = v]
+          /\ UNCHANGED <<>>
+
+Spec == Init /\ [][Next]_<<store>>
+
+TypeOK == /\ store \in [Keys -> Values]
+          /\ \A k \in Keys : store[k] \in Values
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,1,0,0.444,silver,137.54,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES acceptors, proposers, promises, accepted, chosen, chosenBy, chosenBallot, chosenByBallot, chosenBallotBy, chosenByBy, chosenBallotByBy, chosenByByBallot, chosenBallotByByBallot, chosenByByBallotBy, chosenBallotByByBallotBy, chosenByByBallotByBallot, chosenBallotByByBallotByBallot, chosenByByBallotByBallotBy, chosenBallotByByBallotByBallotBy, chosenByByBallotByBallotByBallot, chosenBallotByByBallotByBallotByBallot, chosenByByBallotByBallotByBallotBy, chosenBallotByByBallotByBallotByBallotBy, chosenByByBallotByBallotByBallotByBallot, chosenBallotByByBallotByBallotByBallotByBallot, chosenByByBallotByBallotByBallotByBallotBy, chosenBallotByByBallotByBallotByBallotByBallotByBallot, chosenByByBallotByBallotByBallotByBallotByBallot, chosenBallotByByBallotByBallotByBallotByBallotByBallotBy, chosenByByBallotByBallotByBallotByBallotByBallotBy, chosenBallotByByBallotByBallotByBallotByBallotByBallotByBallot, chosenByByBallotByBallotByBallotByBallotByBallotByBallot, chosenBallotByByBallotByBallotByBallotByBallotByBallotByBallotBy, chosenByByBallotByBallotByBallotByBallotByBallotByBallotByBallot, chosenBallotByByBallotByBallotByBallotByBallotByBallotByBallotByBallot, chosenByByBallotByBallotByBallotByBallotByBallotByBallotByBallotBy, chosenBallotByByBallotByBallotByBallotByBallotByBallotByBallotByBallotBy, chosenByByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallot, chosenBallotByByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallot, chosenByByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotBy, chosenBallotByByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallot, chosenByByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallot, chosenBallotByByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotBy, chosenByByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotBy, chosenBallotByByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallot, chosenByByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallot, chosenBallotByByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallot, chosenByByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallot, chosenBallotByByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallot, chosenByByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallot, chosenBallotByByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallot, chosenByByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallot, chosenBallotByByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallot, chosenByByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotBy, chosenBallotByByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotBy, chosenByByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallot, chosenBallotByByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallot, chosenByByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallot, chosenBallotByByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotBy, chosenByByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallot, chosenBallotByByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallot, chosenByByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallot, chosenBallotByByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotBy, chosenByByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallot, chosenBallotByByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallot, chosenByByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotByBallotBy"
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,0,0,0.778,bronze,37.23,"---- MODULE FileTransfer ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS MAX_RETRIES, CHUNK_SIZE, FILE_SIZE, CHANNEL_LOSS_PROBABILITY, FiniteSet
+VARIABLES channel, chunks, file, retransmitCount, sentChunks
+
+    /\ file \in Seq
+    /\ chunks \in Seq
+    /\ sentChunks \in FiniteSet
+    /\ retransmitCount \in FiniteSet
+    /\ channel \in FiniteSet
+
+Init ==
+    /\ file = Seq
+    /\ chunks = [i \in 1..Ceiling(FILE_SIZE \div CHUNK_SIZE) |-> 
+
+            SubSeq(file, (i-1)*CHUNK_SIZE + 1, i*CHUNK_SIZE)
+
+            SubSeq(file, (i-1)*CHUNK_SIZE + 1, FILE_SIZE)]
+    /\ sentChunks = {}
+    /\ retransmitCount = {}
+    /\ channel = {}
+
+Next ==
+    /\ \E i \in 1..Ceiling(FILE_SIZE \div CHUNK_SIZE) :
+        /\ i \notin sentChunks
+        /\ i \in retransmitCount
+            => retransmitCount' = [retransmitCount EXCEPT ![i] = retransmitCount[i] + 1]
+        /\ i \notin retransmitCount
+            => retransmitCount' = [retransmitCount EXCEPT ![i] = 1]
+        /\ i \in retransmitCount
+            /\ retransmitCount[i] <= MAX_RETRIES
+            => /\ channel' = channel \cup {chunks[i]}
+               /\ sentChunks' = sentChunks \cup {i}
+        /\ i \in retransmitCount
+            /\ retransmitCount[i] > MAX_RETRIES
+            => /\ channel' = channel
+               /\ sentChunks' = sentChunks
+        /\ i \notin retransmitCount
+            => /\ channel' = channel \cup {chunks[i]}
+               /\ sentChunks' = sentChunks \cup {i}
+    /\ \E msg \in channel :
+        /\ msg \in channel
+            => channel' = channel \setminus {msg}
+        /\ msg \notin channel
+            => channel' = channel
+
+Spec ==
+    Init /\ [][Next]_<<file, chunks, sentChunks, retransmitCount, channel>> ==
+
+===="
+chattla:20b,BM013,Transaction Isolation (Snapshot Isolation),transaction,4,0,0,1.0,bronze,227.53,"---- MODULE SnapshotIsolationDB ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS Key, Value
+
+VARIABLES data, snapshot, txState, txWrites, txReadSet, txWriteSet, txStartVersion, txVersion, txID, txCounter
+TypeOK ==
+  /\ data \in [Key -> Value]
+  /\ snapshot \in [Key -> Value]
+  /\ txState \in {""idle"", ""active"", ""committed"", ""aborted""}
+  /\ txWrites \in [Key -> Value]
+  /\ txReadSet \in SUBSET Key
+  /\ txWriteSet \in SUBSET Key
+  /\ txStartVersion \in Nat
+  /\ txVersion \in Nat
+  /\ txID \in Nat
+  /\ txCounter \in Nat
+
+\* Initial state
+Init ==
+  /\ data = [k \in Key |-> 0]   \* All keys initialized to 0
+  /\ snapshot = data
+  /\ txState = ""idle""
+  /\ txWrites = [k \in Key |-> 0]
+  /\ txReadSet = {}
+  /\ txWriteSet = {}
+  /\ txStartVersion = 0
+  /\ txVersion = 0
+  /\ txID = 0
+  /\ txCounter = 0
+
+\* Transaction actions
+BeginTx ==
+  /\ txState = ""idle""
+  /\ txID' = txCounter + 1
+  /\ txCounter' = txCounter + 1
+  /\ txStartVersion' = txVersion
+  /\ snapshot' = data
+  /\ txState' = ""active""
+  /\ txWrites' = [k \in Key |-> 0]
+  /\ txReadSet' = {}
+  /\ txWriteSet' = {}
+
+Read(k) ==
+  /\ txState = ""active""
+  /\ k \in Key
+  /\ txReadSet' = txReadSet \cup {k}
+  /\ txWrites' = txWrites
+  /\ snapshot' = snapshot
+  /\ txState' = txState
+  /\ txStartVersion' = txStartVersion
+  /\ txVersion' = txVersion
+  /\ txID' = txID
+
+Write(k, v) ==
+  /\ txState = ""active""
+  /\ k \in Key
+  /\ v \in Value
+  /\ txWriteSet' = txWriteSet \cup {k}
+  /\ txWrites' = [txWrites EXCEPT ![k] = v]
+  /\ snapshot' = snapshot
+  /\ txState' = txState
+  /\ txStartVersion' = txStartVersion
+  /\ txVersion' = txVersion
+  /\ txID' = txID
+
+Commit ==
+  /\ txState = ""active""
+  /\ \A k \in txWriteSet : data[k] = snapshot[k]
+  /\ data' = [data EXCEPT ![k] = txWrites[k] \in txWriteSet]
+  /\ txState' = ""committed""
+  /\ txWrites' = [k \in Key |-> 0]
+  /\ txReadSet' = {}
+  /\ txWriteSet' = {}
+  /\ txStartVersion' = txStartVersion
+  /\ txVersion' = txVersion + 1
+  /\ txID' = txID
+  /\ snapshot' = data
+
+Abort ==
+  /\ txState = ""active""
+  /\ txState' = ""aborted""
+  /\ txWrites' = [k \in Key |-> 0]
+  /\ txReadSet' = {}
+  /\ txWriteSet' = {}
+  /\ txStartVersion' = txStartVersion
+  /\ txVersion' = txVersion
+  /\ txID' = txID
+  /\ snapshot' = data
+
+Next ==
+  \/ BeginTx
+  \/ Read(k) \in Key
+  \/ Write(k, v) \in Key \times Value
+  \/ Commit
+  \/ Abort
+
+Spec ==
+  Init /\ [][Next]_<<data, snapshot, txState, txWrites, txReadSet, txWriteSet, txStartVersion, txVersion, txID, txCounter>>
+
+===="
+chattla:20b,BM014,Clock Synchronisation,networking,3,0,0,1.0,bronze,21.15,"---- MODULE ClockSync ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS N
+
+VARIABLES clocks, offsets
+
+Init == /\ clocks = [i \in 1..N |-> 0]
+        /\ offsets = [i \in 1..N |-> 0]
+
+Next == /\ \E i \in 1..N : /\ clocks[i] = clocks[i] + offsets[i]
+        /\ offsets' = [j \in 1..N |-> offsets[j] + (Avg(clocks) - clocks[j])]
+        /\ clocks' = [j \in 1..N |-> clocks[j] + offsets[j]]
+
+Avg(c) == (1 \div N) * \Sum i \in 1..N : c[i]
+
+TypeOK == /\ clocks \in [1..N -> Int]
+          /\ offsets \in [1..N -> Int]
+
+Spec == Init /\ [][Next]_<<clocks, offsets>>
+
+===="
+chattla:20b,BM015,Peterson's Algorithm,scheduling,2,1,1,0.778,gold,3.04,"---- MODULE Peterson2 ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES flag, turn
+
+Init == /\ flag = [i \in 1..2 |-> FALSE]
+        /\ turn = 1
+
+Next == \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ turn' = turn
+          /\ flag' = flag
+        \/ /\ flag[1] = TRUE
+          /\ turn' = 2
+          /\ flag' = [flag EXCEPT ![2] = FALSE]
+        \/ /\ flag[2] = TRUE
+          /\ turn' = 1
+          /\ flag' = [flag EXCEPT ![1] = FALSE]
+
+Spec == Init /\ [][Next]_<<flag, turn>>
+
+===="
+chattla:20b,BM016,Gossip Protocol,networking,3,1,0,0.778,silver,191.35,"---- MODULE GossipProtocol ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES known, infected
+
+Init == /\ known = <<>> /\ infected = <<>> /\ Len(known) = Len(infected)
+
+Next == /\ known' = known
+      /\ infected' = infected \cup known
+
+Spec == Init /\ [][Next]_<<known, infected>>
+
+===="
+chattla:20b,BM017,Simple Allocator,storage,2,0,0,1.0,bronze,69.81,"---- MODULE MemoryAllocator ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, Pages, Clients
+
+VARIABLES free, allocated, p
+
+Init == /\ free = Pages
+       /\ allocated = [c \in Clients |-> {}]
+
+Next == /\ \E c \in Clients : \E p \in free :
+          /\ allocated' = [allocated EXCEPT ![c] = \E p' \in free' : p' = p \implies p' \in allocated[c] \cup {p} \else p' \in allocated[c]]
+          /\ free' = free \ {p}
+       \/ \E c \in Clients : \E p \in allocated[c] :
+          /\ allocated' = [allocated EXCEPT ![c] = \E p' \in free' : p' = p \implies p' \in allocated[c] \cup {p} \else p' \in allocated[c]]
+          /\ free' = free \cup {p}
+
+Spec == Init /\ [][Next]_<<free, allocated>>
+
+TypeOK == /\ free \subseteq Pages
+        /\ \A c \in Clients : allocated[c] \subseteq Pages
+        /\ \A c \in Clients : IsFiniteSet(allocated[c])
+
+===="
+chattla:20b,BM018,Publish-Subscribe Broker,networking,3,1,0,0.444,silver,8.38,"---- MODULE Broker ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES subscribers, messages, nextMsgId, nextSubId
+
+===="
+chattla:20b,BM019,Dekker's Algorithm,scheduling,3,1,1,0.778,gold,7.95,"---- MODULE Dekker ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES turn, wants
+
+Init == /\ turn \in {0, 1}
+        /\ wants \in {0, 1}
+        /\ turn = 0
+        /\ wants = 0
+
+Next == \/ /\ turn = 0
+          /\ wants = 0
+          /\ turn' = 1
+          /\ wants' = 1
+        \/ /\ turn = 1
+          /\ wants = 1
+          /\ turn' = 0
+          /\ wants' = 0
+
+Spec == Init /\ [][Next]_<<turn, wants>>
+
+===="
+chattla:20b,BM020,Eventually Consistent Counter,storage,3,1,0,1.0,silver,15.27,"---- MODULE GCounter ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS Node
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+
+VARIABLES counts
+
+
+
+(* --type invariant
+TypeOK == /\ counts \in [Node -> [Node -> Nat]]
+*)
+
+(* --specification
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --initial state
+Init == /\ counts = [n \in Node |-> [m \in Node |-> 0]]
+*)
+
+(* --next state
+Next == \/ /\ \E n \in Node : counts' = [counts EXCEPT ![n] = [k \in Node |-> counts[n][k] + 1]]
+   \/ /\ \E n, m \in Node : counts' = [counts EXCEPT ![n] = [k \in Node |-> Max(counts[n][k], counts[m][k])]]
+*)
+
+(* --global count
+GlobalCount == Sum([n \in Node |-> Max({counts[n][m] : m \in Node})])
+*)
+
+(* --invariant that all nodes agree on GlobalCount
+AllAgree == /\ \A n \in Node : GlobalCount = Sum([m \in Node |-> Max({counts[n][k] : k \in Node})])
+*)
+
+(* --property that all nodes agree on GlobalCount
+AllAgreeProp == []AllAgree
+*)
+
+(* --specification with invariant
+Spec == Init /\ [][Next]_vars
+*)
+
+(* TLC configuration
+SPECIFICATION Spec
+INVARIANT TypeOK
+*)
+
+===="

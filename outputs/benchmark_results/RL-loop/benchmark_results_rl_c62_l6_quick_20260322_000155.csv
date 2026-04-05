@@ -1,0 +1,207 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,0,0.444,silver,190.18,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,0,0,0.444,bronze,31.22,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES participants, coordinator, messages
+
+
+  coordinator = 0;       (* coordinator ID *)
+  messages = <<>>;       (* list of messages in the system *)
+
+actions
+  Init == /\ participants = <<1, 2, 3>>  (* example with 3 participants *)
+          /\ coordinator = 0
+          /\ messages = <<>>;
+
+  Next == \/ CoordinatorAction
+          \/ ParticipantAction;
+
+  CoordinatorAction == /\ coordinator = 0
+                     /\ messages' = Append(messages, [type |-> ""Prepare"", from |-> 0, to |-> 1])
+                     /\ messages' = Append(messages', [type |-> ""Prepare"", from |-> 0, to |-> 2])
+                     /\ messages' = Append(messages', [type |-> ""Prepare"", from |-> 0, to |-> 3])
+                     /\ messages' = <<>>;  (* coordinator clears messages after sending Prepare *)
+
+  ParticipantAction == /\ \E p \in participants :
+                     /\ \E msg \in messages :
+                     /\ msg.from = p
+                     /\ msg.type = ""Prepare""
+                     /\ messages' = <<>>;  (* participant clears messages after receiving Prepare *)
+                     /\ \E vote \in {""VoteYes"", ""VoteNo""}
+                     /\ messages' = Append(messages', [type |-> vote, from |-> p, to |-> 0]);
+
+  CoordinatorDecision == /\ \E msg \in messages :
+                        /\ msg.type = ""VoteYes""
+                        /\ \E msg2 \in messages :
+                        /\ msg2.type = ""VoteYes""
+                        /\ \E msg3 \in messages :
+                        /\ msg3.type = ""VoteYes""
+                        /\ messages' = Append(messages, [type |-> ""Commit"", from |-> 0, to |-> 1])
+                        /\ messages' = Append(messages', [type |-> ""Commit"", from |-> 0, to |-> 2])
+                        /\ messages' = Append(messages', [type |-> ""Commit"", from |-> 0, to |-> 3])
+                        /\ messages' = <<>>;  (* coordinator clears messages after sending Commit *)
+
+  CoordinatorAbort == /\ \E msg \in messages :
+                     /\ msg.type = ""VoteNo""
+                     /\ messages' = Append(messages, [type |-> ""Abort"", from |-> 0, to |-> 1])
+                     /\ messages' = Append(messages', [type |-> ""Abort"", from |-> 0, to |-> 2])
+                     /\ messages' = Append(messages', [type |-> ""Abort"", from |-> 0, to |-> 3])
+                     /\ messages' = <<>>;  (* coordinator clears messages after sending Abort *)
+
+  ParticipantCommit == /\ \E msg \in messages :
+                      /\ msg.type = ""Commit""
+                      /\ messages' = <<>>;  (* participant clears messages after receiving Commit *)
+
+  ParticipantAbort == /\ \E msg \in messages :
+                     /\ msg.type = ""Abort""
+                     /\ messages' = <<>>;  (* participant clears messages after receiving Abort *)
+
+  Next == \/ CoordinatorAction
+          \/ ParticipantAction
+          \/ CoordinatorDecision
+          \/ CoordinatorAbort
+          \/ ParticipantCommit
+          \/ ParticipantAbort;
+
+  Spec == Init /\ [][Next]_<<participants, coordinator, messages>>;
+
+  TypeOK == /\ participants \in Seq(1..N)
+            /\ coordinator \in 1..N
+            /\ messages \in Seq([type |-> {""Prepare"");
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,1,0,1.0,silver,26.98,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES forks, states
+
+(* Constants *)
+N == 5
+
+(* Helper functions *)
+LEFT(i) == IF i = 1 THEN N ELSE i - 1
+RIGHT(i) == IF i = N THEN 1 ELSE i + 1
+
+(* State predicates *)
+IsThinking(i) == states[i] = ""thinking""
+IsHungry(i) == states[i] = ""hungry""
+IsEating(i) == states[i] = ""eating""
+
+(* Fork ownership *)
+ForkOwner(i) == forks[i]
+
+(* Next action *)
+Next == 
+  \/ \E i \in 1..N :
+       /\ IsThinking(i)
+       /\ states' = [states EXCEPT ![i] = ""hungry""]
+  \/ \E i \in 1..N :
+       /\ IsHungry(i)
+       /\ ForkOwner(LEFT(i)) = i
+       /\ ForkOwner(RIGHT(i)) = i
+       /\ states' = [states EXCEPT ![i] = ""eating""]
+  \/ \E i \in 1..N :
+       /\ IsEating(i)
+       /\ ForkOwner(LEFT(i)) = i
+       /\ ForkOwner(RIGHT(i)) = i
+       /\ forks' = [forks EXCEPT ![LEFT(i)] = 0, ![RIGHT(i)] = 0]
+       /\ states' = [states EXCEPT ![i] = ""thinking""]
+
+(* Initial state *)
+Init == 
+  /\ forks = [i \in 1..N |-> 0]
+  /\ states = [i \in 1..N |-> ""thinking""]
+
+(* Invariant: Forks are either 0 or owned by a philosopher *)
+TypeOK == 
+  /\ forks \in [1..N -> 0..N]
+  /\ states \in [1..N -> {""thinking"", ""hungry"", ""eating""}]
+
+Spec == Init /\ [][Next]_<<forks, states>>
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,0,0,0.778,bronze,61.96,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+
+VARIABLES num, flag
+
+Init == /\ num = [i \in 1..N |-> 0]
+        /\ flag = [i \in 1..N |-> FALSE]
+
+Next == \E i \in 1..N : /\ flag[i] = FALSE
+               /\ flag' = [flag EXCEPT ![i] = TRUE]
+               /\ num' = [num EXCEPT ![i] = Max([num[j] | j \in 1..N]) + 1]
+               /\ flag' = [flag EXCEPT ![i] = FALSE]
+
+Spec == Init /\ [][Next]_<<num, flag>>
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,0,0.778,silver,10.39,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail, count
+
+Init == /\ q \in Seq(K)
+        /\ head \in 1..K
+        /\ tail \in 1..K
+        /\ count \in 0..K
+        /\ q = <<>>
+        /\ head = 1
+        /\ tail = 1
+        /\ count = 0
+
+Producer == /\ count < K
+           /\ head' = head
+           /\ tail' = IF tail = K THEN 1 ELSE tail + 1
+           /\ count' = count + 1
+           /\ q' = Append(q, 1)
+
+Consumer == /\ count > 0
+           /\ head' = IF head = K THEN 1 ELSE head + 1
+           /\ tail' = tail
+           /\ count' = count - 1
+           /\ q' = Tail(q)
+
+Next == Producer \/ Consumer
+
+Spec == Init /\ [][Next]_<<q, head, tail, count>>
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,1,1,0.778,gold,13.28,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+Init ==
+  /\ currentTerm = 0
+  /\ votedFor = {}
+  /\ state = ""Follower""
+
+Next ==
+  \/ /\ state = ""Follower""
+     /\ currentTerm' = currentTerm
+     /\ votedFor' = votedFor
+     /\ state' = ""Follower""
+  \/ /\ state = ""Candidate""
+     /\ currentTerm' = currentTerm + 1
+     /\ votedFor' = {currentTerm'}
+     /\ state' = ""Candidate""
+  \/ /\ state = ""Leader""
+     /\ currentTerm' = currentTerm
+     /\ votedFor' = votedFor
+     /\ state' = ""Leader""
+
+Spec ==
+  Init /\ [][Next]_<<currentTerm, votedFor, state>>
+
+===="

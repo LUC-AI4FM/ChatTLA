@@ -1,0 +1,94 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,0,0,1.0,bronze,26.89,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS N
+
+VARIABLES state, turn
+
+
+
+Init == 
+    /\ state = [i \in 1..N |-> ""idle""]
+    /\ turn = 1
+
+Next == 
+    \/ /\ state[i] = ""idle""
+        /\ state[i] := ""trying""
+        /\ turn := i
+    \/ /\ state[i] = ""trying""
+        /\ turn = i
+        /\ state[i] := ""critical""
+    \/ /\ state[i] = ""critical""
+        /\ state[i] := ""idle""
+
+Spec == Init /\ [][Next]_<<state, turn>>
+
+TypeOK == 
+    /\ state \in [1..N -> {""idle"", ""trying"", ""critical""}]
+    /\ turn \in 1..N
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,0,0,1.0,bronze,14.77,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail, size
+
+(* Type invariants *)
+TypeOK == 
+    /\ q \in Seq(1..K)
+    /\ head \in 1..K
+    /\ tail \in 1..K
+    /\ size \in 0..K
+
+(* Initial state *)
+Init == 
+    /\ q = <<>>
+    /\ head = 1
+    /\ tail = 1
+    /\ size = 0
+
+(* Producer action: enqueues an element if not full *)
+Enqueue(x) == 
+    /\ size < K
+    /\ q' = Append(q, x)
+    /\ tail' = IF tail = K THEN 1 ELSE tail + 1
+    /\ size' = size + 1
+    /\ head' = head
+
+(* Consumer action: dequeues an element if not empty *)
+Dequeue == 
+    /\ size > 0
+    /\ q' = Tail(q)
+    /\ head' = IF head = K THEN 1 ELSE head + 1
+    /\ size' = size - 1
+    /\ tail' = tail
+
+(* Next-state relation *)
+Next == 
+    Enqueue(x) \/ Dequeue
+
+(* Specification *)
+Spec == Init /\ [][Next]_<<q, head, tail, size>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,0,0,1.0,bronze,7.24,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, Values, NULL
+
+VARIABLES store
+
+Init == store = [k \in Keys |-> NULL]
+
+Next == \E k \in Keys : \E v \in Values :
+          store' = [store EXCEPT ![k] = v]
+
+Spec == Init /\ [][Next]_<<store>>
+
+TypeOK == /\ store \in [Keys -> Values]
+          /\ Keys \in FiniteSets
+          /\ Values \in FiniteSets
+
+===="

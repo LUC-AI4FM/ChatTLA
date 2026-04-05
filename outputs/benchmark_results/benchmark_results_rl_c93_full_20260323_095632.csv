@@ -1,0 +1,504 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,0,0.444,silver,51.53,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, turn, flag
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,1,0,0.444,silver,103.85,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES participants, votes, commitDecided, abortDecided, commitSent, abortSent
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,1,1,1.0,gold,48.47,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES forks, states
+
+(* Constants *)
+N == 5
+
+(* Helper functions *)
+LEFT(i) == IF i = 1 THEN N ELSE i - 1
+RIGHT(i) == IF i = N THEN 1 ELSE i + 1
+
+(* State predicates *)
+ForkFree(i) == forks[i] = 0
+ForkHeld(i, p) == forks[i] = p
+
+PhilosopherState(i) == states[i]
+
+Thinking(i) == states[i] = ""thinking""
+Hungry(i) == states[i] = ""hungry""
+Eating(i) == states[i] = ""eating""
+
+(* Initial state *)
+Init == /\ forks = [i \in 1..N |-> 0]
+        /\ states = [i \in 1..N |-> ""thinking""]
+
+(* Next-state relation *)
+Next == 
+  \/ \E i \in 1..N : 
+       /\ states[i] = ""thinking""
+       /\ ForkFree(LEFT(i))
+       /\ ForkFree(RIGHT(i))
+       /\ states' = [states EXCEPT ![i] = ""hungry""]
+       /\ forks' = [forks EXCEPT ![LEFT(i)] = i, ![RIGHT(i)] = i]
+  \/ \E i \in 1..N : 
+       /\ states[i] = ""hungry""
+       /\ ForkHeld(LEFT(i), i)
+       /\ ForkHeld(RIGHT(i), i)
+       /\ states' = [states EXCEPT ![i] = ""eating""]
+       /\ forks' = forks
+  \/ \E i \in 1..N : 
+       /\ states[i] = ""eating""
+       /\ ForkHeld(LEFT(i), i)
+       /\ ForkHeld(RIGHT(i), i)
+       /\ states' = [states EXCEPT ![i] = ""thinking""]
+       /\ forks' = [forks EXCEPT ![LEFT(i)] = 0, ![RIGHT(i)] = 0]
+  \/ \E i \in 1..N : 
+       /\ states[i] = ""hungry""
+       /\ ForkFree(LEFT(i))
+       /\ ForkFree(RIGHT(i))
+       /\ states' = [states EXCEPT ![i] = ""thinking""]
+       /\ forks' = forks
+
+(* Invariant: No fork is held by more than one philosopher *)
+TypeOK == \A i \in 1..N : forks[i] \in 0..N
+
+(* Specification *)
+Spec == Init /\ [][Next]_<<forks, states>>
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,0,0,0.778,bronze,167.75,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+
+VARIABLES num, flag
+
+Init == /\ num = [i \in 1..N |-> 0]
+        /\ flag = [i \in 1..N |-> FALSE]
+
+Next == \/ /\ \E i \in 1..N : /\ flag[i] = FALSE
+                    /\ flag' = [flag EXCEPT ![i] = TRUE]
+                    /\ num' = [num EXCEPT ![i] = Max([num[j] | j \in 1..N]) + 1]
+               \/ /\ \E i \in 1..N : /\ flag[i] = TRUE
+                    /\ \E j \in 1..N : /\ flag[j] = TRUE
+                        /\ num[j] < num[i]
+                        /\ \E k \in 1..N : /\ flag[k] = TRUE
+                            /\ num[k] < num[i]
+                            /\ num[k] < num[j]
+                    /\ flag' = [flag EXCEPT ![i] = FALSE]
+                    /\ num' = num
+
+Spec == Init /\ [][Next]_<<num, flag>>
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,0,0.778,silver,15.63,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail, size
+
+Init == /\ q \in Seq(1..K)
+        /\ head \in 1..K
+        /\ tail \in 1..K
+        /\ size \in 0..K
+        /\ head = 1
+        /\ tail = 1
+        /\ size = 0
+        /\ q = [i \in 1..K |-> 0]
+
+Producer == /\ size < K
+           /\ q' = [q EXCEPT ![tail] = 1]
+           /\ tail' = IF tail = K THEN 1 ELSE tail + 1
+           /\ size' = size + 1
+           /\ head' = head
+
+Consumer == /\ size > 0
+           /\ q' = [q EXCEPT ![head] = 0]
+           /\ head' = IF head = K THEN 1 ELSE head + 1
+           /\ size' = size - 1
+           /\ tail' = tail
+
+Next == Producer \/ Consumer
+
+Spec == Init /\ [][Next]_<<q, head, tail, size>>
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,1,0,0.444,silver,62.72,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,1,0,0.778,silver,17.97,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS Readers
+
+VARIABLES readers, writer_active
+
+Init == /\ readers = <<>>
+        /\ writer_active = FALSE
+
+Next == \/ /\ writer_active = FALSE
+          /\ \E r \in Readers : /\ r \in readers
+          /\ ~(r \in readers)
+          /\ writer_active' = FALSE
+          /\ readers' = readers
+        \/ /\ writer_active = FALSE
+          /\ \E r \in Readers : /\ ~(r \in readers)
+          /\ r \in readers'
+          /\ writer_active' = FALSE
+          /\ readers' = Append(readers, r)
+        \/ /\ writer_active = FALSE
+          /\ \E r \in Readers : /\ r \in readers
+          /\ ~(r \in readers')
+          /\ writer_active' = FALSE
+          /\ readers' = Tail(readers)
+        \/ /\ writer_active = FALSE
+          /\ \E r \in Readers : /\ ~(r \in readers)
+          /\ r \in readers'
+          /\ writer_active' = TRUE
+          /\ readers' = <<>>
+        \/ /\ writer_active = TRUE
+          /\ writer_active' = FALSE
+          /\ readers' = <<>>
+        \/ /\ writer_active = TRUE
+          /\ \E r \in Readers : /\ r \in readers
+          /\ ~(r \in readers')
+          /\ writer_active' = TRUE
+          /\ readers' = Tail(readers)
+
+Spec == Init /\ [][Next]_<<readers, writer_active>>
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,1,0,0.444,silver,121.65,"---- MODULE DistributedSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, channel, markerSent, markerReceived, snapshotTaken
+===="
+chattla:20b,BM009,Token Ring,networking,2,0,0,0.778,bronze,16.08,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES token
+
+Init == /\ token \in 1..N
+
+Next == /\ token' \in 1..N
+        /\ token' = IF token = N THEN 1 ELSE token + 1
+
+Spec == Init /\ [][Next]_<<token>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,0.778,silver,64.94,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, Values
+VARIABLES kv
+
+Init == 
+  /\ kv \in [Keys -> Values]
+  /\ \A k \in Keys: kv[k] = 0
+
+Next == 
+  /\ \E k \in Keys : \E v \in Values :
+       /\ kv' = [kv EXCEPT ![k] = v]
+       /\ UNCHANGED <<>>  (* No other state changes *)
+
+Spec == Init /\ [][Next]_<<kv>>
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,1,0,0.444,silver,245.7,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES acceptors, proposers, promises, accepts, chosen, chosenValue
+
+===="
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,0,0,0.889,bronze,49.35,"---- MODULE FileSender ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS MAX_RETRIES, CHUNK_SIZE, FILE_SIZE
+VARIABLES chunks, retransmitCount, sentChunks
+
+    /\ file \in Seq
+    /\ Len(file) = FILE_SIZE
+    /\ chunks \in Seq
+    /\ Len(chunks) = Ceil(FILE_SIZE \div CHUNK_SIZE)
+    /\ sentChunks \in Seq
+    /\ Len(sentChunks) = 0
+    /\ retransmitCount \in Seq
+    /\ Len(retransmitCount) = 0
+
+Next ==
+    /\ sentChunks' \in Seq
+    /\ Len(sentChunks') = Len(sentChunks) + 1
+    /\ sentChunks' = Append(sentChunks, Head(chunks))
+    /\ chunks' \in Seq
+    /\ Len(chunks') = Len(chunks) - 1
+    /\ chunks' = Tail(chunks)
+    /\ retransmitCount' \in Seq
+    /\ Len(retransmitCount') = Len(retransmitCount) + 1
+    /\ retransmitCount' = Append(retransmitCount, 0)
+
+TypeOK ==
+    /\ file \in Seq
+    /\ Len(file) = FILE_SIZE
+    /\ chunks \in Seq
+    /\ Len(chunks) = Ceil(FILE_SIZE \div CHUNK_SIZE)
+    /\ sentChunks \in Seq
+    /\ Len(sentChunks) = Len(chunks) - Len(chunks')
+    /\ retransmitCount \in Seq
+    /\ Len(retransmitCount) = Len(chunks) - Len(chunks')
+
+Spec ==
+    Init /\ [][Next]_<<file, chunks, sentChunks, retransmitCount>>
+
+===="
+chattla:20b,BM013,Transaction Isolation (Snapshot Isolation),transaction,4,1,0,0.444,silver,244.44,"---- MODULE SnapshotIsolation ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES db, txns, nextTxId, committed, aborted, snapshot, writes, reads, status
+
+===="
+chattla:20b,BM014,Clock Synchronisation,networking,3,0,0,0.778,bronze,208.41,"---- MODULE ClockSync ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES clocks, offsets
+
+Init == /\ clocks = [i \in 1..N |-> 0]
+        /\ offsets = [i \in 1..N |-> 0]
+
+Next == /\ \E i \in 1..N : /\ clocks[i] = clocks[i] + offsets[i]
+        /\ offsets[i] = 0
+        /\ \E j \in 1..N \ {i} : /\ offsets[j] = offsets[j] + (clocks[i] - clocks[j]) \div (N - 1)
+        /\ offsets[j] = 0
+
+Spec == Init /\ [][Next]_<<clocks, offsets>>
+
+===="
+chattla:20b,BM015,Peterson's Algorithm,scheduling,2,1,0,0.778,silver,237.77,"---- MODULE Peterson2 ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES flag, turn
+
+Init == /\ flag = [i \in 1..2 |-> FALSE]
+        /\ turn = 1
+
+Next == \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag[1] = TRUE
+          /\ turn = 2
+          /\ flag[2] = FALSE
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag[2] = TRUE
+          /\ turn = 1
+          /\ flag[1] = FALSE
+
+Spec == Init /\ [][Next]_<<flag, turn>>
+
+===="
+chattla:20b,BM016,Gossip Protocol,networking,3,1,0,0.778,silver,18.79,"---- MODULE Gossip ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES known, infected
+
+Init == /\ known = <<>> /\ infected = <<>> /\ Len(known) = Len(infected)
+
+Next == /\ known' = Append(known, known[Len(known)])
+        /\ infected' = Append(infected, infected[Len(infected)])
+
+Spec == Init /\ [][Next]_<<known, infected>>
+
+===="
+chattla:20b,BM017,Simple Allocator,storage,2,1,0,1.0,silver,15.21,"---- MODULE MemoryAllocator ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, Clients, Pages
+
+VARIABLES free, allocated
+
+Init == /\ free = Pages
+        /\ allocated = [c \in Clients |-> {}]
+
+Next == /\ \E c \in Clients:
+          /\ c \in free
+          /\ free' = free \ {c}
+          /\ allocated' = [allocated EXCEPT ![c] = @ \cup {c}]
+        \/ \E c \in Clients:
+          /\ c \in Pages
+          /\ c \in allocated
+          /\ free' = free \cup {c}
+          /\ allocated' = [allocated EXCEPT ![c] = @ \ {c}]
+
+TypeOK == /\ free \subseteq Pages
+          /\ \A c \in Clients: allocated[c] \subseteq Pages
+          /\ \A c \in Clients: allocated[c] \in SUBSET Pages
+
+Spec == Init /\ [][Next]_<<free, allocated>>
+
+===="
+chattla:20b,BM018,Publish-Subscribe Broker,networking,3,1,0,0.444,silver,100.23,"---- MODULE Broker ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES subscribers, messages, topicMsgs, topicSubs, topicMsgIdx, topicSubIdx
+===="
+chattla:20b,BM019,Dekker's Algorithm,scheduling,3,1,0,0.778,silver,35.93,"---- MODULE Dekker ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES turn, wants
+
+Init == /\ turn \in {0,1}
+        /\ wants \in {0,1}^2
+        /\ wants = [i \in {0,1} |-> 0]
+
+Next == /\ turn' \in {0,1}
+        /\ wants' \in {0,1}^2
+        /\ turn' = turn
+        /\ wants' = [i \in {0,1} |-> IF i = turn THEN 1 ELSE wants[i]]
+        /\ turn' = 1 - turn
+
+Spec == Init /\ [][Next]_<<turn, wants>>
+
+===="
+chattla:20b,BM020,Eventually Consistent Counter,storage,3,1,0,1.0,silver,111.26,"---- MODULE GCounter ----
+EXTENDS Integers, Sequences, FiniteSets
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+
+VARIABLES counts
+
+(* --type invariant
+TypeOK == /\ counts \in [Node -> [Node -> Nat]]
+*)
+
+(* --specification
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --initial state
+Init == /\ counts = [n \in Node |-> [m \in Node |-> 0]]
+*)
+
+(* --next state
+Next == 
+  \/ \E n \in Node : 
+       counts' = [n \in Node |-> [m \in Node |-> IF m = n THEN counts[n][m] + 1 ELSE counts[n][m]]]
+  \/ \E n \in Node : 
+       counts' = [n \in Node |-> [m \in Node |-> IF m = n THEN counts[n][m] ELSE Max(counts[][m])]]
+  /\ UNCHANGED <<>>
+*)
+
+(* --global count
+GlobalCount == Sum(\E n \in Node : Max(counts[][n]))
+*)
+
+(* --TLC configuration
+CONSTANTS Node
+vars == <<counts>>
+*)
+
+===="

@@ -1,0 +1,1053 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,0,0.444,silver,14.57,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, turn, N
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,0,0,0.667,bronze,379.17,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES participants, votes, decision, messages, state
+CONSTANTS N, participants
+
+(* Helper definitions *)
+MessageType == {""Prepare"", ""VoteYes"", ""VoteNo"", ""Commit"", ""Abort""}
+
+SendMessage == [sender \in participants \cup {""coordinator""}; receiver \in participants \cup {""coordinator""}; type \in MessageType; content \in {"""", ""yes"", ""no""} |-> [sender |-> sender; receiver |-> receiver; type |-> type; content |-> content]
+
+(* Initial state *)
+Init == /\ participants = {1, 2, ..., N}
+      /\ votes = [p \in participants |-> ""none""]
+      /\ decision = ""none""
+      /\ messages = {}
+      /\ state = [p \in participants |-> ""init""]
+
+(* Next-state relation *)
+Next ==
+  \/ /\ messages = {}
+      /\ decision = ""none""
+      /\ \E p \in participants : /\ state[p] = ""init""
+          /\ messages' = messages \cup {SendMessage[""coordinator"", p, ""Prepare"", """"]} /\ state' = state
+      \/ /\ \E p \in participants : /\ state[p] = ""init""
+          /\ messages' = messages \cup {SendMessage[p, ""coordinator"", ""VoteYes"", ""yes""]} /\ state' = [state EXCEPT ![p] = ""prepared""]
+      \/ /\ \E p \in participants : /\ state[p] = ""init""
+          /\ messages' = messages \cup {SendMessage[p, ""coordinator"", ""VoteNo"", ""no""]} /\ state' = [state EXCEPT ![p] = ""prepared""]
+      \/ /\ decision = ""none""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+          /\ \E p \in participants : /\ state[p] = ""prepared""
+         "
+chattla:20b,BM003,Dining Philosophers,scheduling,2,1,0,1.0,silver,22.09,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N
+ASSUME N \in Nat /\ N > 0
+
+VARIABLES forks, states
+
+(* Forks: a sequence of length N where each element is either 0 (free) or 1 (held) *)
+(* States: a sequence of length N where each element is one of {""thinking"", ""hungry"", ""eating""} *)
+
+TypeOK == 
+  /\ forks \in Seq(N) /\ Len(forks) = N
+  /\ \A i \in 1..N : forks[i] \in {0,1}
+  /\ states \in Seq(N) /\ Len(states) = N
+  /\ \A i \in 1..N : states[i] \in {""thinking"", ""hungry"", ""eating""}
+
+Init == 
+  /\ forks = [i \in 1..N |-> 0]
+  /\ states = [i \in 1..N |-> ""thinking""]
+
+Next == 
+  (* A philosopher can become hungry if they are thinking *)
+  \/ \A i \in 1..N : 
+       /\ states[i] = ""thinking""
+       /\ states' = [states EXCEPT ![i] = ""hungry""]
+       /\ forks' = forks
+  (* A philosopher can start eating if they are hungry and both adjacent forks are free *)
+  \/ \A i \in 1..N : 
+       /\ states[i] = ""hungry""
+       /\ forks[i] = 0
+       /\ forks[%(i,N)+1] = 0
+       /\ states' = [states EXCEPT ![i] = ""eating""]
+       /\ forks' = [forks EXCEPT ![i] = 1, ![%(i,N)+1] = 1]
+  (* A philosopher can finish eating and put down forks *)
+  \/ \A i \in 1..N : 
+       /\ states[i] = ""eating""
+       /\ states' = [states EXCEPT ![i] = ""thinking""]
+       /\ forks' = [forks EXCEPT ![i] = 0, ![%(i,N)+1] = 0]
+  (* No other changes *)
+  \/ forks' = forks
+  \/ states' = states
+
+Spec == Init /\ [][Next]_<<forks, states>>
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,1,0,0.444,silver,7.8,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES num, flag
+
+
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,0,0,1.0,bronze,33.79,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail, count, value
+
+(* TypeOK ensures that q is a sequence of length K, head and tail are integers in 0..K-1, and count is an integer in 0..K *)
+TypeOK == 
+  /\ q \in Seq(K)
+  /\ head \in 0..K-1
+  /\ tail \in 0..K-1
+  /\ count \in 0..K
+
+(* The queue is represented as a sequence of length K, with head pointing to the next element to consume, tail pointing to the next slot to produce into, and count indicating the number of elements in the queue. *)
+Init == 
+  /\ q = <<>> \o <<K-1 \# 0>>  (* Pad the sequence to length K *)
+  /\ head = 0
+  /\ tail = 0
+  /\ count = 0
+
+(* The producer action: if the queue is not full, it writes a value into the tail slot and updates tail and count. *)
+Producer == 
+  /\ count < K
+  /\ q' = Append(q, <<>>)[tail \in 0..K-1 |-> value]  (* Write value at tail *)
+  /\ tail' = (tail + 1) \mod K
+  /\ count' = count + 1
+  /\ UNCHANGED <<head, q>>
+
+(* The consumer action: if the queue is not empty, it reads the value at head and updates head and count. *)
+Consumer == 
+  /\ count > 0
+  /\ value' = q[head]
+  /\ head' = (head + 1) \mod K
+  /\ count' = count - 1
+  /\ UNCHANGED <<tail, q>>
+
+(* Next action: either the producer or the consumer can act. *)
+Next == 
+  \/ Producer
+  \/ Consumer
+
+Spec == Init /\ [][Next]_<<q, head, tail, count>>
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,1,0,0.444,silver,56.72,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,0,0,0.778,bronze,202.57,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES readers, writer_active, r
+
+Init == /\ readers = <<>> \\
+       /\ writer_active = FALSE
+
+Next == \/ /\ writer_active = FALSE \\
+          /\ \E r \in 1..10 : /\ r \notin readers \\
+          /\ r' = r \\
+             /\ writer_active' = FALSE \\
+             /\ readers' = Append(readers, r) \\
+          \/ /\ writer_active = TRUE \\
+             /\ r' = r \\
+                /\ writer_active' = FALSE \\
+                /\ readers' = <<>> \\
+          \/ /\ writer_active = FALSE \\
+             /\ r' = r \\
+                /\ writer_active' = TRUE \\
+                /\ readers' = <<>> \\
+          \/ /\ writer_active = FALSE \\
+             /\ r' = r \\
+                /\ writer_active' = FALSE \\
+                /\ readers' = readers
+
+Spec == Init /\ [][Next]_<<readers, writer_active>>
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,0,0,1.0,bronze,165.43,"---- MODULE ChandyLamportSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, channel, markerSent, markerReceived, snapshotTaken, N, Channels, initialState, hasn
+Init == /\ state = [i \in 1..N |-> initialState[i]]
+        /\ channel = [c \in Channels |-> <<>>]
+        /\ markerSent = [c \in Channels |-> FALSE]
+        /\ markerReceived = [c \in Channels |-> FALSE]
+        /\ snapshotTaken = [i \in 1..N |-> FALSE]
+
+\* Next-state relation
+Next == 
+  \* Process i records its state and sends markers if it hasn't already
+  \/ /\ \E i \in 1..N : /\ ~snapshotTaken[i]
+        /\ snapshotTaken' = [snapshotTaken EXCEPT ![i] = TRUE]
+        /\ \E j \in 1..N : /\ i # j
+            /\ markerSent' = [markerSent EXCEPT !i..j = TRUE]
+            /\ channel' = [channel EXCEPT !i..j = Append(channeli..j, ""marker"")]
+        /\ UNCHANGED <<state, markerReceived>>
+  \* Process i receives a marker on channel (j, i) if it hasn't yet
+  \/ /\ \E i, j \in 1..N : /\ i # j
+        /\ ~markerReceivedi..j
+        /\ channeli..j = <<>> \/ /\ channeli..j[1] = ""marker""
+        /\ channel' = [channel EXCEPT !i..j = Tail(channeli..j)]
+        /\ markerReceived' = [markerReceived EXCEPT !i..j = TRUE]
+        /\ UNCHANGED <<state, snapshotTaken, markerSent>>
+  \* Process i receives a non-marker message on channel (j, i) if it has already taken a snapshot
+  \/ /\ \E i, j \in 1..N : /\ i # j
+        /\ snapshotTaken[i]
+        /\ ~markerReceivedi..j
+        /\ channeli..j = <<>> \/ /\ channeli..j[1] = ""msg""
+        /\ channel' = [channel EXCEPT !i..j = Tail(channeli..j)]
+        /\ UNCHANGED <<state, snapshotTaken, markerSent, markerReceived>>
+
+\* Invariant: All markers are eventually received
+TypeOK == /\ \A i, j \in 1..N : i # j
+          /\ markerSenti..j => markerReceivedi..j
+          /\ \A i \in 1..N : snapshotTaken[i] => \A j \in 1..N : i # j => markerReceivedi..j
+
+Spec == Init /\ [][Next]_<<state, channel, markerSent, markerReceived, snapshotTaken>>
+
+===="
+chattla:20b,BM009,Token Ring,networking,2,1,1,0.667,gold,10.32,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLE token
+
+Init == /\ token \in 1..N
+
+Next == /\ token' \in 1..N
+        /\ token' = IF token = N THEN 1 ELSE token + 1
+
+Spec == Init /\ [][Next]_<<token>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,1.0,silver,7.85,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, Values, NULL
+
+VARIABLES store
+
+Init == store = [k \in Keys |-> NULL]
+
+Next == \/ /\ \E k \in Keys : \E v \in Values : /\ store' = [store EXCEPT ![k] = v]
+      \/ /\ \E k \in Keys : /\ store' = [store EXCEPT ![k] = NULL]
+
+Spec == Init /\ [][Next]_<<store>>
+
+TypeOK == /\ store \in [Keys -> Values]
+          /\ \A k \in Keys : store[k] \in Values
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,1,0,0.444,silver,199.07,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES acceptors, proposers, promises, accepts, chosen, chosenBy
+
+===="
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,0,0,0.778,bronze,73.88,"---- MODULE Sender ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES file, chunkSize, maxRetries, retransmitCount, sentChunks, receivedChunks, lostChunks
+
+Init == /\ file \in Seq
+       /\ chunkSize \in Nat
+       /\ maxRetries \in Nat
+       /\ retransmitCount \in Nat
+       /\ sentChunks \in Seq
+       /\ receivedChunks \in Seq
+       /\ lostChunks \in Seq
+       /\ retransmitCount = 0
+       /\ sentChunks = <<>>
+       /\ receivedChunks = <<>>
+       /\ lostChunks = <<>>
+
+Next == /\ sentChunks' = Append(sentChunks, file[retransmitCount + 1 .. retransmitCount + chunkSize])
+       /\ lostChunks' = Append(lostChunks, [x \in Seq |-> x \in lostChunks \/ x \in sentChunks'])
+       /\ receivedChunks' = Append(receivedChunks, [x \in Seq |-> x \in receivedChunks \/ x \in sentChunks' /\ x \notin lostChunks'])
+       /\ retransmitCount' = IF retransmitCount < maxRetries THEN retransmitCount + 1 ELSE retransmitCount
+       /\ UNCHANGED <<file, chunkSize, maxRetries>>
+
+Spec == Init /\ [][Next]_<<file, chunkSize, maxRetries, retransmitCount, sentChunks, receivedChunks, lostChunks>>
+
+===="
+chattla:20b,BM013,Transaction Isolation (Snapshot Isolation),transaction,4,1,0,0.444,silver,18.73,"---- MODULE SnapshotIsolationDB ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES data, snapshot, txState, txWrites, txReadSet, txWriteSet, txStartVersion
+
+===="
+chattla:20b,BM014,Clock Synchronisation,networking,3,1,0,0.444,silver,90.26,"---- MODULE ClockSync ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES clocks, offsets
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+(* -- *)
+===="
+chattla:20b,BM015,Peterson's Algorithm,scheduling,2,1,1,0.778,gold,5.47,"---- MODULE Peterson2 ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES flag, turn
+
+Init == /\ flag = [i \in 1..2 |-> FALSE]
+        /\ turn = 1
+
+Next == \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ turn' = turn
+          /\ flag' = flag
+        \/ /\ flag[1] = TRUE
+          /\ turn' = 2
+          /\ flag' = [flag EXCEPT ![2] = FALSE]
+        \/ /\ flag[2] = TRUE
+          /\ turn' = 1
+          /\ flag' = [flag EXCEPT ![1] = FALSE]
+
+Spec == Init /\ [][Next]_<<flag, turn>>
+
+===="
+chattla:20b,BM016,Gossip Protocol,networking,3,1,0,0.778,silver,9.78,"---- MODULE GossipProtocol ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES known, infected
+
+Init == /\ known = <<>> 
+        /\ infected = <<>> 
+
+Next == /\ known' = known
+        /\ infected' = infected \cup known
+
+Spec == Init /\ [][Next]_<<known, infected>> 
+
+===="
+chattla:20b,BM017,Simple Allocator,storage,2,0,0,0.889,bronze,31.15,"---- MODULE MemoryAllocator ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, Pages, Clients
+
+VARIABLE free, allocated, c
+
+Init == /\ free = Pages
+        /\ allocated = [c \in Clients |-> {}]
+
+Next == /\ \E p \in Pages :
+          /\ p \in free
+          /\ free' = free \ {p}
+          /\ \E c \in Clients :
+              /\ allocated' = [allocated EXCEPT ![c] = @ \cup {p}]
+              /\ \E c' \in Clients \ {c} :
+                  /\ allocated' = [allocated EXCEPT ![c'] = @]
+          \/ \E c \in Clients :
+              /\ \E p \in allocated[c] :
+                  /\ free' = free \cup {p}
+                  /\ allocated' = [allocated EXCEPT ![c] = @ \ {p}]
+                  /\ \E c' \in Clients \ {c} :
+                      /\ allocated' = [allocated EXCEPT ![c'] = @]
+          \/ /\ free' = free
+              /\ allocated' = allocated
+
+TypeOK == /\ free \subseteq Pages
+          /\ \A c \in Clients : allocated[c] \subseteq Pages
+          /\ \A c \in Clients : IsFiniteSet(allocated[c])
+          /\ \A c \in Clients : \A p \in allocated[c] : p \in Pages
+          /\ \A c \in Clients : \A p \in allocated[c] : \A c' \in Clients \ {c} : p \notin allocated[c']
+
+Spec == Init /\ [][Next]_<<free, allocated>> /\ TypeOK
+
+===="
+chattla:20b,BM018,Publish-Subscribe Broker,networking,3,1,0,0.444,silver,49.91,"---- MODULE Broker ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES subscribers, messages, nextMsgId, nextSubId
+
+===="
+chattla:20b,BM019,Dekker's Algorithm,scheduling,3,1,0,0.778,silver,192.35,"---- MODULE Dekker ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES turn, wants
+
+Init == /\ turn \in {0,1}
+        /\ wants \in {0,1}^2
+        /\ wants = <<0,0>>
+
+Next == \/ /\ turn' = 1
+          /\ wants' = <<1,0>>
+        \/ /\ turn' = 0
+          /\ wants' = <<0,1>>
+        \/ /\ turn' = turn
+          /\ wants' = wants
+
+Spec == Init /\ [][Next]_<<turn,wants>>
+
+===="
+chattla:20b,BM020,Eventually Consistent Counter,storage,3,0,0,0.889,bronze,253.67,"---- MODULE GCounter ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS Node
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+
+VARIABLES counts, TypeOK, globalCount
+
+
+  (* --state Increment
+
+  *)
+  (* --state Merge
+
+  *)
+end
+*)
+
+(* --state Init
+counts = [n \in Node |-> [m \in Node |-> 0]]
+*)
+
+(* --state Increment
+counts[n][n] := counts[n][n] + 1
+*)
+
+(* --state Merge
+counts[n][m] := Max(counts[n][m], counts[m][n])
+*)
+
+(* --state GlobalCount
+globalCount = Sum([n \in Node |-> Max({counts[n][m] : m \in Node})])
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq DOMAIN counts
+          /\ \A n \in Node : Node \subseteq DOMAIN counts[n]
+          /\ \A n \in Node : \A m \in Node : counts[n][m] \in Nat
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state Next
+Next == \/ /\ n \in Node
+        /\ counts' = [counts EXCEPT ![n][n] = counts[n][n] + 1]
+     \/ /\ n \in Node, m \in Node
+        /\ n # m
+        /\ counts' = [counts EXCEPT ![n][m] = Max(counts[n][m], counts[m][n])]
+*)
+
+(* --state GlobalCount
+globalCount' = Sum([n \in Node |-> Max({counts'[n][m] : m \in Node})])
+*)
+
+(* --state TypeOK
+TypeOK' == /\ Node \subseteq DOMAIN counts'
+          /\ \A n \in Node : Node \subseteq DOMAIN counts'[n]
+          /\ \A n \in Node : \A m \in Node : counts'[n][m] \in Nat
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state GlobalCount
+globalCount == Sum([n \in Node |-> Max({counts[n][m] : m \in Node})])
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq DOMAIN counts
+          /\ \A n \in Node : Node \subseteq DOMAIN counts[n]
+          /\ \A n \in Node : \A m \in Node : counts[n][m] \in Nat
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state GlobalCount
+globalCount == Sum([n \in Node |-> Max({counts[n][m] : m \in Node})])
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq DOMAIN counts
+          /\ \A n \in Node : Node \subseteq DOMAIN counts[n]
+          /\ \A n \in Node : \A m \in Node : counts[n][m] \in Nat
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state GlobalCount
+globalCount == Sum([n \in Node |-> Max({counts[n][m] : m \in Node})])
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq DOMAIN counts
+          /\ \A n \in Node : Node \subseteq DOMAIN counts[n]
+          /\ \A n \in Node : \A m \in Node : counts[n][m] \in Nat
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state GlobalCount
+globalCount == Sum([n \in Node |-> Max({counts[n][m] : m \in Node})])
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq DOMAIN counts
+          /\ \A n \in Node : Node \subseteq DOMAIN counts[n]
+          /\ \A n \in Node : \A m \in Node : counts[n][m] \in Nat
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state GlobalCount
+globalCount == Sum([n \in Node |-> Max({counts[n][m] : m \in Node})])
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq DOMAIN counts
+          /\ \A n \in Node : Node \subseteq DOMAIN counts[n]
+          /\ \A n \in Node : \A m \in Node : counts[n][m] \in Nat
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state GlobalCount
+globalCount == Sum([n \in Node |-> Max({counts[n][m] : m \in Node})])
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq DOMAIN counts
+          /\ \A n \in Node : Node \subseteq DOMAIN counts[n]
+          /\ \A n \in Node : \A m \in Node : counts[n][m] \in Nat
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state GlobalCount
+globalCount == Sum([n \in Node |-> Max({counts[n][m] : m \in Node})])
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq DOMAIN counts
+          /\ \A n \in Node : Node \subseteq DOMAIN counts[n]
+          /\ \A n \in Node : \A m \in Node : counts[n][m] \in Nat
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state GlobalCount
+globalCount == Sum([n \in Node |-> Max({counts[n][m] : m \in Node})])
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq DOMAIN counts
+          /\ \A n \in Node : Node \subseteq DOMAIN counts[n]
+          /\ \A n \in Node : \A m \in Node : counts[n][m] \in Nat
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state GlobalCount
+globalCount == Sum([n \in Node |-> Max({counts[n][m] : m \in Node})])
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq DOMAIN counts
+          /\ \A n \in Node : Node \subseteq DOMAIN counts[n]
+          /\ \A n \in Node : \A m \in Node : counts[n][m] \in Nat
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state GlobalCount
+globalCount == Sum([n \in Node |-> Max({counts[n][m] : m \in Node})])
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq DOMAIN counts
+          /\ \A n \in Node : Node \subseteq DOMAIN counts[n]
+          /\ \A n \in Node : \A m \in Node : counts[n][m] \in Nat
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state GlobalCount
+globalCount == Sum([n \in Node |-> Max({counts[n][m] : m \in Node})])
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq DOMAIN counts
+          /\ \A n \in Node : Node \subseteq DOMAIN counts[n]
+          /\ \A n \in Node : \A m \in Node : counts[n][m] \in Nat
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state GlobalCount
+globalCount == Sum([n \in Node |-> Max({counts[n][m] : m \in Node})])
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq DOMAIN counts
+          /\ \A n \in Node : Node \subseteq DOMAIN counts[n]
+          /\ \A n \in Node : \A m \in Node : counts[n][m] \in Nat
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state GlobalCount
+globalCount == Sum([n \in Node |-> Max({counts[n][m] : m \in Node})])
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq DOMAIN counts
+          /\ \A n \in Node : Node \subseteq DOMAIN counts[n]
+          /\ \A n \in Node : \A m \in Node : counts[n][m] \in Nat
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state GlobalCount
+globalCount == Sum([n \in Node |-> Max({counts[n][m] : m \in Node})])
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq DOMAIN counts
+          /\ \A n \in Node : Node \subseteq DOMAIN counts[n]
+          /\ \A n \in Node : \A m \in Node : counts[n][m] \in Nat
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state GlobalCount
+globalCount == Sum([n \in Node |-> Max({counts[n][m] : m \in Node})])
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq DOMAIN counts
+          /\ \A n \in Node : Node \subseteq DOMAIN counts[n]
+          /\ \A n \in Node : \A m \in Node : counts[n][m] \in Nat
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state GlobalCount
+globalCount == Sum([n \in Node |-> Max({counts[n][m] : m \in Node})])
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq DOMAIN counts
+          /\ \A n \in Node : Node \subseteq DOMAIN counts[n]
+          /\ \A n \in Node : \A m \in Node : counts[n][m] \in Nat
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state GlobalCount
+globalCount == Sum([n \in Node |-> Max({counts[n][m] : m \in Node})])
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq DOMAIN counts
+          /\ \A n \in Node : Node \subseteq DOMAIN counts[n]
+          /\ \A n \in Node : \A m \in Node : counts[n][m] \in Nat
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state GlobalCount
+globalCount == Sum([n \in Node |-> Max({counts[n][m] : m \in Node})])
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq DOMAIN counts
+          /\ \A n \in Node : Node \subseteq DOMAIN counts[n]
+          /\ \A n \in Node : \A m \in Node : counts[n][m] \in Nat
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state GlobalCount
+globalCount == Sum([n \in Node |-> Max({counts[n][m] : m \in Node})])
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq DOMAIN counts
+          /\ \A n \in Node : Node \subseteq DOMAIN counts[n]
+          /\ \A n \in Node : \A m \in Node : counts[n][m] \in Nat
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state GlobalCount
+globalCount == Sum([n \in Node |-> Max({counts[n][m] : m \in Node})])
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq DOMAIN counts
+          /\ \A n \in Node : Node \subseteq DOMAIN counts[n]
+          /\ \A n"

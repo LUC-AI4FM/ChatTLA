@@ -1,0 +1,524 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,0,0,1.0,bronze,40.92,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS N
+
+VARIABLES state, turn
+StateSpace == [i \in 1..N |-> state[i] \in {idle, trying, critical}]
+
+(* Type invariant *)
+TypeOK == /\ N \in Nat
+        /\ N > 0
+        /\ state \in [1..N -> {idle, trying, critical}]
+        /\ turn \in 1..N
+
+(* Initial condition *)
+Init == /\ turn \in 1..N
+        /\ \A i \in 1..N : state[i] = idle
+
+(* Next-state relation *)
+Next == \E i \in 1..N :
+          /\ state' = [state EXCEPT ![i] = \*]
+          /\ turn' = \*  \* turn may change arbitrarily
+
+Spec == Init /\ [][Next]_<<state, turn>>
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,1,0,0.444,silver,191.95,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+CONSTANT Prepare, VoteYes, VoteNo, Commit, Abort
+
+VARIABLES participants, votes, decision, messages, state
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,1,0,1.0,silver,33.9,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLES forks, states
+
+(* Fork ownership: forks[i] = j means fork i is held by philosopher j; 0 means free *)
+Init == /\ forks = [i \in 1..N |-> 0]
+        /\ states = [i \in 1..N |-> ""thinking""]
+
+Next == \/ (* Philosopher i becomes hungry *)
+          /\ \E i \in 1..N :
+                /\ states' = [states EXCEPT ![i] = ""hungry""]
+                /\ forks' = forks
+        \/ (* Philosopher i picks up forks if both are free *)
+          /\ \E i \in 1..N :
+                /\ states[i] = ""hungry""
+                /\ forks[i] = 0
+                /\ forks[%(i, N) + 1] = 0
+                /\ forks' = [forks EXCEPT ![i] = i, ![%(i, N) + 1] = i]
+                /\ states' = [states EXCEPT ![i] = ""eating""]
+        \/ (* Philosopher i puts down forks after eating *)
+          /\ \E i \in 1..N :
+                /\ states[i] = ""eating""
+                /\ forks[i] = i
+                /\ forks[%(i, N) + 1] = i
+                /\ forks' = [forks EXCEPT ![i] = 0, ![%(i, N) + 1] = 0]
+                /\ states' = [states EXCEPT ![i] = ""thinking""]
+
+TypeOK == /\ forks \in [1..N -> 0..N]
+          /\ states \in [1..N -> {""thinking"", ""hungry"", ""eating""}]
+          /\ \A i \in 1..N :
+                forks[i] = 0 \/ forks[i] = i
+          /\ \A i \in 1..N :
+                forks[%(i, N) + 1] = 0 \/ forks[%(i, N) + 1] = i
+
+Spec == Init /\ [][Next]_<<forks, states>>
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,1,0,0.778,silver,157.29,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+VARIABLES num, flag, maxFlag, maxNum
+
+Init == /\ num = 0
+       /\ flag = 0
+       /\ maxFlag = 0
+       /\ maxNum = 0
+
+Next == /\ num' = IF flag' THEN num ELSE num' + 1
+       /\ flag' = IF flag THEN flag ELSE flag' + 1
+       /\ maxNum' = IF maxFlag' THEN maxNum ELSE maxNum' + 1
+       /\ maxFlag' = IF maxFlag THEN maxFlag ELSE maxFlag' + 1
+
+Spec == Init /\ [][Next]_<<num, flag, maxFlag, maxNum>>
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,0,0,1.0,bronze,28.51,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail, count
+
+(* TypeOK ensures that q is a sequence of length K, head and tail are integers in 0..K-1, and count is an integer in 0..K *)
+TypeOK == 
+  /\ q \in Seq(K)
+  /\ head \in 0..K-1
+  /\ tail \in 0..K-1
+  /\ count \in 0..K
+
+(* The queue is represented as a sequence of length K, with head and tail indices indicating the positions for dequeue and enqueue, respectively. *)
+Init == 
+  /\ q = [i \in 0..K-1 |-> 0]
+  /\ head = 0
+  /\ tail = 0
+  /\ count = 0
+
+(* The producer action enqueues an item when the queue is not full. *)
+Producer == 
+  /\ count < K
+  /\ q' = [q EXCEPT ![tail] = 1]
+  /\ tail' = (tail + 1) \mod K
+  /\ count' = count + 1
+  /\ head' = head
+
+(* The consumer action dequeues an item when the queue is not empty. *)
+Consumer == 
+  /\ count > 0
+  /\ q' = [q EXCEPT ![head] = 0]
+  /\ head' = (head + 1) \mod K
+  /\ count' = count - 1
+  /\ tail' = tail
+
+(* Next action is either Producer or Consumer. *)
+Next == 
+  \/ Producer
+  \/ Consumer
+
+Spec == Init /\ [][Next]_<<q, head, tail, count>> /\ TypeOK
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,1,0,0.444,silver,90.32,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,0,0,0.778,bronze,193.1,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES readers, writer_active
+
+Init == /\ readers = <<>> 
+      /\ writer_active = FALSE
+
+Next == \/ /\ writer_active' = FALSE
+          /\ readers' = Append(readers, 1)
+      \/ /\ writer_active' = TRUE
+          /\ readers' = <<>>
+      \/ /\ writer_active' = FALSE
+          /\ readers' = Tail(readers)
+
+Spec == Init /\ [][Next]_<<readers, writer_active>> ==
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,0,0,0.667,bronze,263.74,"---- MODULE ChandyLamportSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, channel, snapshot, markerSent, markerReceived, finished
+P == 1..N
+
+\* The set of channels
+Channels == << [p \in P, q \in P |-> channel[p][q] ]>>
+
+\* The set of markers sent
+MarkersSent == << [p \in P, q \in P |-> markerSent[p][q] ]>>
+
+\* The set of markers received
+MarkersReceived == << [p \in P, q \in P |-> markerReceived[p][q] ]>>
+
+\* The set of finished processes
+Finished == << [p \in P |-> finished[p] ]>>
+
+\* The set of snapshots
+Snapshots == << [p \in P |-> snapshot[p] ]>>
+
+\* The set of local states
+States == << [p \in P |-> state[p] ]>>
+
+\* The set of channel states
+ChannelStates == << [p \in P, q \in P |-> channel[p][q] ]>>
+
+\* The set of all variables
+vars == << state, channel, snapshot, markerSent, markerReceived, finished >>
+
+\* The initial state
+Init == /\ state \in [P -> Nat]
+       /\ channel \in [P, P -> [Seq of Nat]]
+       /\ snapshot \in [P -> [Seq of Nat]]
+       /\ markerSent \in [P, P -> BOOLEAN]
+       /\ markerReceived \in [P, P -> BOOLEAN]
+       /\ finished \in [P -> BOOLEAN]
+       /\ \A p \in P : finished[p] = FALSE
+       /\ \A p, q \in P : markerSent[p][q] = FALSE
+       /\ \A p, q \in P : markerReceived[p][q] = FALSE
+       /\ \A p, q \in P : channel[p][q] = << >>
+
+\* The next-state relation
+Next == \/ /\ \A p \in P : finished[p] = FALSE
+        /\ \A p, q \in P : markerReceived[p][q] = FALSE
+        /\ \A p, q \in P : markerSent[p][q] = FALSE
+        /\ \A p \in P : state[p] \in Nat
+        /\ \A p, q \in P : channel[p][q] \in [Seq of Nat]
+        /\ \A p \in P : snapshot[p] \in [Seq of Nat]
+        /\ \A p, q \in P : markerSent[p][q] = FALSE
+        /\ \A p, q \in P : markerReceived[p][q] = FALSE
+        /\ \A p \in P : finished[p] = FALSE
+        /\ \A p, q \in P : channel[p][q] = << >>
+        /\ \A p \in P : state[p] = 0
+        /\ \A p, q \in P : snapshot[p] = << >>
+        /\ \A p, q \in P : markerSent[p][q] = FALSE
+        /\ \A p, q \in P : markerReceived[p][q] = FALSE
+        /\ \A p \in P : finished[p] = FALSE
+        /\ \A p, q \in P : channel[p][q] = << >>
+        /\ \A p \in P : state[p] = 0
+        /\ \A p, q \in P : snapshot[p] = << >>
+        /\ \A p, q \in P : markerSent[p][q] = FALSE
+        /\ \A p, q \in P : markerReceived[p][q] = FALSE
+        /\ \A p \in P : finished[p] = FALSE
+        /\ \A p, q \in P : channel[p][q] = << >>
+        /\ \A p \in P : state[p] = 0
+        /\ \A p, q \in P : snapshot[p] = << >>
+        /\ \A p, q \in P : markerSent[p][q] = FALSE
+        /\ \A p, q \in P : markerReceived[p][q] = FALSE
+        /\ \A p \in P : finished[p] = FALSE
+        /\ \A p, q \in P : channel[p][q] = << >>
+        /\ \A p \in P : state[p] = 0
+        /\ \A p, q \in P : snapshot[p] = << >>
+        /\ \A p, q \in P : markerSent[p][q] = FALSE
+        /\ \A p, q \in P : markerReceived[p][q] = FALSE
+        /\ \A p \in P : finished[p] = FALSE
+        /\ \A p, q \in P : channel[p][q] = << >>
+        /\ \A p \in P : state[p] = 0
+        /\ \A p, q \in P : snapshot[p] = << >>
+        /\ \A p, q \in P : markerSent[p][q] = FALSE
+        /\ \A p, q \in P : markerReceived[p][q] = FALSE
+        /\ \A p \in P : finished[p] = FALSE
+        /\ \A p, q \in P : channel[p][q] = << >>
+        /\ \A p \in P : state[p] = 0
+        /\ \A p, q \in P : snapshot[p] = << >>
+        /\ \A p, q \in P : markerSent[p][q] = FALSE
+        /\ \A p, q \in P : markerReceived[p][q] = FALSE
+        /\ \A p \in P : finished[p] = FALSE
+        /\ \A p, q \in P : channel[p][q] = << >>
+        /\ \A p \in P : state[p] = 0
+        /\ \A p, q \in P : snapshot[p] = << >>
+        /\ \A p, q \in P : markerSent[p][q] = FALSE
+        /\ \A p, q \in P : markerReceived[p][q] = FALSE
+        /\ \A p \in P : finished[p] = FALSE
+        /\ \A p, q \in P : channel[p][q] = << >>
+        /\ \A p \in P : state[p] = 0
+        /\ \A p, q \in P : snapshot[p] = << >>
+        /\ \A p, q \in P : markerSent[p][q] = FALSE
+        /\ \A p, q \in P : markerReceived[p][q] = FALSE
+        /\ \A p \in P : finished[p] = FALSE
+        /\ \A p, q \in P : channel[p][q] = << >>
+        /\ \A p \in P : state[p] = 0
+        /\ \A p, q \in P : snapshot[p] = << >>
+        /\ \A p, q \in P : markerSent[p][q] = FALSE
+        /\ \A p, q \in P : markerReceived[p][q] = FALSE
+        /\ \A p \in P : finished[p] = FALSE
+        /\ \A p, q \in P : channel[p][q] = << >>
+        /\ \A p \in P : state[p] = 0
+        /\ \A p, q \in P : snapshot[p] = << >>
+        /\ \A p, q \in P : markerSent[p][q] = FALSE
+        /\ \A p, q \in P : markerReceived[p][q] = FALSE
+        /\ \A p \in P : finished[p] = FALSE
+        /\ \A p, q \in P : channel[p][q] = << >>
+        /\ \A p \in P : state[p] = 0
+        /\ \A p, q \in P : snapshot[p] = << >>
+        /\ \A p, q \in P : markerSent[p][q] = FALSE
+        /\ \A p, q \in P : markerReceived[p][q] = FALSE
+        /\ \A p \in P : finished[p] = FALSE
+        /\ \A p, q \in P : channel[p][q] = << >>
+        /\ \A p \in P : state[p] = 0
+        /\ \A p, q \in P : snapshot[p] = << >>
+        /\ \A p, q \in P : markerSent[p][q] = FALSE
+        /\ \A p, q \in P : markerReceived[p][q] = FALSE
+        /\ \A p \in P : finished[p] = FALSE
+        /\ \A p, q \in P : channel[p][q] = << >>
+        /\ \A p \in P : state[p] = 0
+        /\ \A p, q \in P : snapshot[p] = << >>
+        /\ \A p, q \in P : markerSent[p][q] = FALSE
+        /\ \A p, q \in P : markerReceived[p][q] = FALSE
+        /\ \A p \in P : finished[p] = FALSE
+        /\ \A p, q \in P : channel[p][q] = << >>
+        /\ \A p \in P : state[p] = 0
+        /\ \A p, q \in P : snapshot[p] = << >>
+        /\ \A p, q \in P : markerSent[p][q] = FALSE
+        /\ \A p, q \in P : markerReceived[p][q] = FALSE
+        /\ \A p \in P : finished[p] = FALSE
+        /\ \A p, q \in P : channel[p][q] = << >>
+        /\ \A p \in P : state[p] = 0
+        /\ \A p, q \in P : snapshot[p] = << >>
+        /\ \A p, q \in P : markerSent[p][q] = FALSE
+        /\ \A p, q \in P : markerReceived[p][q] = FALSE
+        /\ \A p \in P : finished[p] = FALSE
+        /\ \A p, q \in P : channel[p][q] = << >>
+        /\ \A p \in P : state[p] = 0
+        /\ \A p, q \in P : snapshot[p] = << >>
+        /\ \A p, q \in P : markerSent[p][q] = FALSE
+        /\ \A p, q \in P : markerReceived[p][q] = FALSE
+        /\ \A p \in P : finished[p] = FALSE
+        /\ \A p, q \in P : channel[p][q] = << >>
+        /\ \A p \in P : state[p] = 0
+        /\ \A p, q \in P : snapshot[p] = << >>
+        /\ \A p, q \in P : markerSent[p][q] = FALSE
+        /\ \A p, q \in P : markerReceived[p][q] = FALSE
+        /\ \A p \in P : finished[p] = FALSE
+        /\ \A p, q \in P : channel[p][q] = << >>
+        /\ \A p \in P : state[p] = 0
+        /\ \A p, q \in P : snapshot[p] = << >>
+        /\ \A p, q \in P : markerSent[p][q] = FALSE
+        /\ \A p, q \in P : markerReceived[p][q] = FALSE
+        /\ \A p \in P : finished[p] = FALSE
+        /\ \A p, q \in P : channel[p][q] = << >>
+        /\ \A p \in P : state[p] = 0
+        /\ \A p, q \in P : snapshot[p] = << >>
+        /\ \A p, q \in P : markerSent[p][q] = FALSE
+        /\ \A p, q \in P : markerReceived[p][q] = FALSE
+        /\ \A p \in P : finished[p] = FALSE
+        /\ \A p, q \in P : channel[p][q] = << >>
+        /\ \A p \in P : state[p] = 0
+        /\ \A p, q \in P : snapshot[p] = << >>
+        /\ \A p, q \in P : markerSent[p][q] = FALSE
+        /\ \A p, q \in P : markerReceived[p][q] = FALSE
+        /\ \A p \in P : finished[p] = FALSE
+        /\ \A p, q \in P : channel[p][q] = << >>
+        /\ \A p \in P : state[p] = 0
+        /\ \A p, q \in P : snapshot[p] = << >>
+        /\ \A p, q \in P : markerSent[p][q] = FALSE
+        /\ \A p, q \in P : markerReceived[p][q] = FALSE
+        /\ \A p \in P : finished[p] = FALSE
+        /\ \A p, q \in P : channel[p][q] = << >>
+        /\ \A p \in P : state[p] = 0
+        /\ \A p, q \in P : snapshot[p] = << >>
+        /\ \A p, q \in P : markerSent[p][q] = FALSE
+        /\ \A p, q \in P : marker"
+chattla:20b,BM009,Token Ring,networking,2,1,1,0.667,gold,2.26,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLE token
+
+Init == /\ token \in 1..N
+
+Next == /\ token' \in 1..N
+        /\ token' = IF token = N THEN 1 ELSE token + 1
+
+Spec == Init /\ [][Next]_<<token>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,1.0,silver,5.24,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, Values, NULL
+
+VARIABLES store
+
+Init == store = [k \in Keys |-> NULL]
+
+Next == \/ /\ \E k \in Keys : \E v \in Values : /\ store' = [store EXCEPT ![k] = v]
+      \/ /\ \E k \in Keys : /\ store' = [store EXCEPT ![k] = NULL]
+
+Spec == Init /\ [][Next]_<<store>>
+
+TypeOK == /\ store \in [Keys -> Values]
+          /\ \A k \in Keys : store[k] \in Values
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,1,0,0.444,silver,55.23,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES acceptors, proposers, promises, accepted, chosen, chosenBy
+
+===="
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,0,0,0.667,bronze,35.84,"---- MODULE FileTransfer ----
+EXTENDS Integers, Sequences, FiniteSets
+Min(S) == CHOOSE x \in S : \A y \in S : x =< y
+
+
+CONSTANTS MAX_RETRIES, CHUNK_SIZE, FILE_SIZE, CHANNEL_LOSS_PROBABILITY
+VARIABLES channel, retransmit_count, sent_chunks
+
+    /\ file \in Seq(1..FILE_SIZE)
+    /\ chunks = [i \in 1..Len(file) |-> -> SubSeq(file, i, Min(i+CHUNK_SIZE-1, Len(file)))]
+    /\ sent_chunks = <<>>
+    /\ retransmit_count = <<>>
+    /\ channel = <<>>
+
+Next ==
+    /\ channel \in Seq(1..Len(chunks))
+    /\ \E i \in 1..Len(chunks) :
+        /\ i \notin {j \in 1..Len(chunks) : channel[j] = i}
+        /\ \E j \in 1..Len(chunks) :
+            /\ channel[j] = i
+            /\ \E loss \in BOOLEAN :
+                /\ loss
+                /\ channel' = [channel EXCEPT ![j] = i]
+                /\ retransmit_count' = [retransmit_count EXCEPT ![j] = Min(retransmit_count[j] + 1, MAX_RETRIES)]
+                /\ sent_chunks' = sent_chunks
+        \/ \E j \in 1..Len(chunks) :
+            /\ channel[j] = i
+            /\ \E loss \in BOOLEAN :
+                /\ \Not loss
+                /\ channel' = [channel EXCEPT ![j] = i]
+                /\ sent_chunks' = Append(sent_chunks, chunks[i])
+                /\ retransmit_count' = [retransmit_count EXCEPT ![j] = Min(retransmit_count[j] + 1, MAX_RETRIES)]
+
+Spec ==
+    Init /\ [][Next]_<<file, chunks, sent_chunks, retransmit_count, channel>>
+
+===="

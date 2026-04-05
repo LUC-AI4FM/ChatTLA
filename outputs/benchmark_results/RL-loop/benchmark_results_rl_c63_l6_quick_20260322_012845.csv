@@ -1,0 +1,152 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,0,1.0,silver,13.2,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, turn, flag, nextTurn
+N == 3  \* Number of processes
+
+(* State definitions *)
+idle == 0
+trying == 1
+critical == 2
+
+(* Type invariant *)
+TypeOK == /\ state \in [1..N -> {idle, trying, critical}]
+          /\ turn \in 1..N
+          /\ flag \in [1..N -> BOOLEAN]
+          /\ nextTurn \in [1..N -> 1..N]
+
+(* Initial state *)
+Init == /\ state = [p \in 1..N |-> idle]
+        /\ turn = 1
+        /\ flag = [p \in 1..N |-> FALSE]
+        /\ nextTurn = [p \in 1..N |-> p]
+
+(* Next-state relation *)
+Next == \/ /\ \E p \in 1..N : /\ state[p] = idle
+                        /\ flag[p] = FALSE
+                        /\ nextTurn[p] = p
+                        /\ state' = [state EXCEPT ![p] = trying]
+                        /\ flag' = [flag EXCEPT ![p] = TRUE]
+                        /\ nextTurn' = nextTurn
+                        /\ turn' = turn
+        \/ /\ \E p \in 1..N : /\ state[p] = trying
+                        /\ flag[p] = TRUE
+                        /\ nextTurn[p] = p
+                        /\ state' = [state EXCEPT ![p] = critical]
+                        /\ flag' = [flag EXCEPT ![p] = FALSE]
+                        /\ nextTurn' = nextTurn
+                        /\ turn' = turn
+        \/ /\ \E p \in 1..N : /\ state[p] = critical
+                        /\ flag[p] = FALSE
+                        /\ nextTurn[p] = p
+                        /\ state' = [state EXCEPT ![p] = idle]
+                        /\ flag' = [flag EXCEPT ![p] = FALSE]
+                        /\ nextTurn' = [nextTurn EXCEPT ![p] = nextTurn[p] + 1]
+                        /\ turn' = nextTurn[p] + 1
+        \/ /\ \E p \in 1..N : /\ state[p] = idle
+                        /\ flag[p] = FALSE
+                        /\ nextTurn[p] = p
+                        /\ state' = state
+                        /\ flag' = flag
+                        /\ nextTurn' = nextTurn
+                        /\ turn' = turn
+
+(* Specification *)
+Spec == Init /\ [][Next]_<<state, turn, flag, nextTurn>>
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,1,0,0.444,silver,18.99,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES participants, votes, commit, abort, messages, state
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,1,0,1.0,silver,26.42,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES forks, states
+
+(* Constants *)
+N == 5
+
+(* Helper functions *)
+LEFT(i) == IF i = 1 THEN N ELSE i - 1
+RIGHT(i) == IF i = N THEN 1 ELSE i + 1
+
+(* Initial state *)
+Init == /\ forks = [i \in 1..N |-> 0]
+        /\ states = [i \in 1..N |-> ""thinking""]
+
+(* Next state *)
+Next == \/ (* Philosopher i becomes hungry *)
+          /\ \E i \in 1..N : states[i] = ""thinking"" /\ states' = [states EXCEPT ![i] = ""hungry""]
+      \/ (* Philosopher i starts eating if both forks are free *)
+          /\ \E i \in 1..N :
+                states[i] = ""hungry"" /\ forks[LEFT(i)] = 0 /\ forks[RIGHT(i)] = 0
+                /\ forks' = [forks EXCEPT ![LEFT(i)] = i, ![RIGHT(i)] = i]
+                /\ states' = [states EXCEPT ![i] = ""eating""]
+      \/ (* Philosopher i puts down forks after eating *)
+          /\ \E i \in 1..N :
+                states[i] = ""eating"" /\ forks[LEFT(i)] = i /\ forks[RIGHT(i)] = i
+                /\ forks' = [forks EXCEPT ![LEFT(i)] = 0, ![RIGHT(i)] = 0]
+                /\ states' = [states EXCEPT ![i] = ""thinking""]
+
+(* Invariant: forks are either free (0) or held by a philosopher *)
+TypeOK == /\ forks \in [1..N -> 1..N]
+          /\ states \in [1..N -> {""thinking"", ""hungry"", ""eating""}]
+
+Spec == Init /\ [][Next]_<<forks, states>>
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,0,0,0.778,bronze,199.87,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+
+VARIABLES num, flag
+
+Init == /\ num = [i \in 1..N |-> 0]
+        /\ flag = [i \in 1..N |-> FALSE]
+
+Next == \E i \in 1..N :
+          /\ flag[i] = FALSE
+          /\ flag' = [flag EXCEPT ![i] = TRUE]
+          /\ num' = [num EXCEPT ![i] = 1 + Max({num[j] : j \in 1..N})]
+          /\ flag' = [flag EXCEPT ![i] = FALSE]
+
+Spec == Init /\ [][Next]_<<num, flag>>
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,0,0.444,silver,13.04,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES queue, full, empty
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,0,0,0.778,bronze,19.52,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+Init == /\ currentTerm = 0
+        /\ votedFor = <<>>
+        /\ state = ""Follower""
+
+Next == \/ /\ state = ""Follower""
+        /\ currentTerm' = currentTerm
+        /\ votedFor' = votedFor
+        /\ state' = ""Follower""
+        \/ /\ state = ""Candidate""
+        /\ currentTerm' = currentTerm + 1
+        /\ votedFor' = <<>>
+        /\ state' = ""Candidate""
+        \/ /\ state = ""Leader""
+        /\ currentTerm' = currentTerm
+        /\ votedFor' = votedFor
+        /\ state' = ""Leader""
+
+Spec == Init /\ [][Next]_<<currentTerm, votedFor, state>>
+
+===="

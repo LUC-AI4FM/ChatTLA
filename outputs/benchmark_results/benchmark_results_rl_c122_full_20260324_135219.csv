@@ -1,0 +1,535 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,0,0.444,silver,105.37,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, turn
+
+
+  \* Each process runs the following
+  \* process P(i) \in 1..N
+  \* begin
+  \*   \* Trying to enter critical section
+  \*   state[i] := trying;
+  \*   turn := i;
+  \*   \* Wait until all other processes are not in critical section
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle or trying
+  \*   \* Wait until all other processes are idle "
+chattla:20b,BM002,Two-Phase Commit,transaction,3,1,0,0.444,silver,83.66,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES participants, votes, state, messages, coordinator, finished
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,1,0,1.0,silver,28.63,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES forks, states
+
+(* Constants *)
+N == 5
+
+(* Helper functions *)
+LEFT(i) == IF i = 1 THEN N ELSE i - 1
+RIGHT(i) == IF i = N THEN 1 ELSE i + 1
+
+(* State predicates *)
+ForkFree(i) == forks[i] = 0
+ForkHeldBy(i, j) == forks[i] = j
+
+PhilosopherThinking(i) == states[i] = ""thinking""
+PhilosopherHungry(i) == states[i] = ""hungry""
+PhilosopherEating(i) == states[i] = ""eating""
+
+(* Actions *)
+TakeFork(i, j) == forks' = [forks EXCEPT ![j] = i]
+PutFork(i, j) == forks' = [forks EXCEPT ![j] = 0]
+Think(i) == states' = [states EXCEPT ![i] = ""thinking""]
+Hungry(i) == states' = [states EXCEPT ![i] = ""hungry""]
+Eat(i) == states' = [states EXCEPT ![i] = ""eating""]
+
+(* Next action *)
+Next == 
+  \/ \E i \in 1..N : 
+       PhilosopherThinking(i) /\ ForkFree(LEFT(i)) /\ ForkFree(RIGHT(i)) 
+       /\ TakeFork(i, LEFT(i)) 
+       /\ TakeFork(i, RIGHT(i)) 
+       /\ Eat(i)
+  \/ \E i \in 1..N : 
+       PhilosopherEating(i) 
+       /\ PutFork(i, LEFT(i)) 
+       /\ PutFork(i, RIGHT(i)) 
+       /\ Think(i)
+
+(* Initial state *)
+Init == 
+  /\ forks = [i \in 1..N |-> 0]
+  /\ states = [i \in 1..N |-> ""thinking""]
+
+(* Type invariant *)
+TypeOK == 
+  /\ forks \in [1..N -> 0..N]
+  /\ states \in [1..N -> {""thinking"", ""hungry"", ""eating""}]
+
+(* Specification *)
+Spec == Init /\ [][Next]_<<forks, states>>
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,1,0,0.778,silver,65.55,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+
+CONSTANTS N
+ASSUME N \in Nat
+
+VARIABLES num, flag
+
+Init == /\ num = [i \in 1..N |-> 0]
+        /\ flag = [i \in 1..N |-> FALSE]
+
+Next == \E i \in 1..N : /\ flag[i] = FALSE
+               /\ flag' = [flag EXCEPT ![i] = TRUE]
+               /\ num' = [num EXCEPT ![i] = 1 + Max({num[j] : j \in 1..N})]
+               /\ flag' = [flag EXCEPT ![i] = FALSE]
+
+Spec == Init /\ [][Next]_<<num, flag>>
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,0,0.778,silver,17.96,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail, count
+
+Init == /\ q \in Seq(1..K)
+        /\ head \in 1..K
+        /\ tail \in 1..K
+        /\ count \in 0..K
+        /\ q = <<>>
+        /\ head = 1
+        /\ tail = 1
+        /\ count = 0
+
+Producer == /\ count < K
+           /\ head' = head
+           /\ tail' = IF tail = K THEN 1 ELSE tail + 1
+           /\ count' = count + 1
+           /\ q' = Append(q, 1)
+           /\ UNCHANGED <<head, tail, count>>
+
+Consumer == /\ count > 0
+           /\ head' = IF head = K THEN 1 ELSE head + 1
+           /\ tail' = tail
+           /\ count' = count - 1
+           /\ q' = Tail(q)
+           /\ UNCHANGED <<head, tail, count>>
+
+Next == Producer \/ Consumer
+
+Spec == Init /\ [][Next]_<<q, head, tail, count>>
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,1,1,0.778,gold,13.15,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+Init == /\ currentTerm = 0
+        /\ votedFor = {}
+        /\ state = ""Follower""
+
+Next == \/ /\ state = ""Follower""
+          /\ currentTerm' = currentTerm
+          /\ votedFor' = votedFor
+          /\ state' = ""Follower""
+        \/ /\ state = ""Candidate""
+          /\ currentTerm' = currentTerm + 1
+          /\ votedFor' = {currentTerm'}
+          /\ state' = ""Candidate""
+        \/ /\ state = ""Leader""
+          /\ currentTerm' = currentTerm
+          /\ votedFor' = votedFor
+          /\ state' = ""Leader""
+
+Spec == Init /\ [][Next]_<<currentTerm, votedFor, state>>
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,1,0,0.778,silver,24.48,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES readers, writer_active
+
+Init == /\ readers = <<>>
+       /\ writer_active = FALSE
+
+Next == \/ /\ writer_active' = FALSE
+          /\ readers' = Append(readers, 1)
+        \/ /\ writer_active' = TRUE
+          /\ readers' = <<>>
+        \/ /\ writer_active' = FALSE
+          /\ readers' = Tail(readers)
+
+Spec == Init /\ [][Next]_<<readers, writer_active>>
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,1,0,0.444,silver,135.09,"---- MODULE DistributedSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, channel, markerSent, snapshotTaken
+===="
+chattla:20b,BM009,Token Ring,networking,2,1,1,0.667,gold,2.52,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLE token
+
+Init == /\ token \in 1..N
+
+Next == /\ token' \in 1..N
+        /\ token' = IF token = N THEN 1 ELSE token + 1
+
+Spec == Init /\ [][Next]_<<token>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,0.778,silver,57.2,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, Values
+
+VARIABLES store
+
+Init == /\ store \in [Keys -> Values]
+Next == /\ store' \in [Keys -> Values]
+      /\ \E k \in Keys : \E v \in Values : store' = [store EXCEPT ![k] = v]
+
+Spec == Init /\ [][Next]_<<store>>
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,1,0,0.444,silver,243.62,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES acceptors, proposers, promises, accepts, chosen, chosenBallot, chosenValue
+
+===="
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,1,0,0.444,silver,49.09,"---- MODULE FileTransfer ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES file, chunks, sentChunks, receivedChunks, retransmitCount, MAX_RETRIES, chunkSize, totalChunks
+===="
+chattla:20b,BM013,Transaction Isolation (Snapshot Isolation),transaction,4,1,0,0.444,silver,35.91,"---- MODULE SnapshotIsolation ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES db, txns, nextTxId, committed, aborted, snapshot, writes, reads, status
+
+===="
+chattla:20b,BM014,Clock Synchronisation,networking,3,0,0,0.778,bronze,391.69,"---- MODULE ClockSync ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES clocks, offsets, epsilon
+
+Init == /\ clocks = [i \in 1..N |-> 0]
+        /\ offsets = [i \in 1..N |-> 0]
+        /\ epsilon \in Nat
+        /\ epsilon > 0
+
+Next == /\ \E i \in 1..N :
+          /\ clocks' = [clocks EXCEPT ![i] = clocks[i] + offsets[i]]
+          /\ offsets' = [offsets EXCEPT ![i] = offsets[i] + (Avg - clocks[i])]
+          /\ epsilon' = epsilon
+        /\ \A j \in 1..N :
+          /\ clocks'[j] = clocks[j] + offsets[j]
+          /\ offsets'[j] = offsets[j] + (Avg - clocks[j])
+          /\ epsilon' = epsilon
+
+Spec == Init /\ [][Next]_<<clocks, offsets, epsilon>>
+
+===="
+chattla:20b,BM015,Peterson's Algorithm,scheduling,2,1,0,0.778,silver,97.56,"---- MODULE Peterson2 ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES flag, turn
+
+Init == /\ flag = [i \in 1..2 |-> FALSE]
+        /\ turn = 1
+
+Next == \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag[1] = TRUE
+          /\ turn' = 2
+          /\ flag' = [flag EXCEPT ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag[2] = TRUE
+          /\ turn' = 1
+          /\ flag' = [flag EXCEPT ![1] = FALSE]
+        \/ /\ flag[1] = TRUE
+          /\ turn[1] = 1
+          /\ flag[2] = TRUE
+          /\ turn[2] = 2
+          /\ flag' = flag
+        \/ /\ flag[1] = TRUE
+          /\ turn[1] = 2
+          /\ flag[2] = TRUE
+          /\ turn[2] = 1
+          /\ flag' = flag
+
+Spec == Init /\ [][Next]_<<flag, turn>>
+
+===="
+chattla:20b,BM016,Gossip Protocol,networking,3,1,0,0.778,silver,84.5,"---- MODULE Gossip ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES known, infected
+
+Init == /\ known = <<>> 
+        /\ infected = <<>> 
+
+Next == /\ known' = Append(known, 1)
+        /\ infected' = Append(infected, 1)
+
+Spec == Init /\ [][Next]_<<known, infected>> 
+
+===="
+chattla:20b,BM017,Simple Allocator,storage,2,1,0,0.667,silver,27.76,"---- MODULE MemoryAllocator ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, Clients, Pages
+
+VARIABLE free, allocated
+
+Init == /\ free = Pages
+       /\ allocated = [c \in Clients |-> {}]
+
+Next == /\ \E c \in Clients:
+          /\ c \in free
+          /\ free' = free \ {c}
+          /\ allocated' = [allocated EXCEPT ![c] = @ \cup {c}]
+       \/ \E c \in Clients:
+          /\ c \in Pages
+          /\ c \in allocated
+          /\ free' = free \cup {c}
+          /\ allocated' = [allocated EXCEPT ![c] = @ \ {c}]
+
+Spec == Init /\ [][Next]_<<free, allocated>>
+
+===="
+chattla:20b,BM018,Publish-Subscribe Broker,networking,3,1,0,0.778,silver,57.73,"---- MODULE Broker ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES subscribers, messages, nextMsgId, nextSubId
+
+CONSTANTS Topics
+
+Init == /\ subscribers \in [Topics -> SUBSET Nat]
+        /\ messages \in [Topics -> Seq(Nat)]
+        /\ nextMsgId \in Nat
+        /\ nextSubId \in Nat
+
+Next == /\ nextMsgId' \in Nat
+        /\ nextSubId' \in Nat
+        /\ subscribers' \in [Topics -> SUBSET Nat]
+        /\ messages' \in [Topics -> Seq(Nat)]
+
+Spec == Init /\ [][Next]_<<subscribers, messages, nextMsgId, nextSubId>>
+
+===="
+chattla:20b,BM019,Dekker's Algorithm,scheduling,3,1,0,1.0,silver,53.15,"---- MODULE Dekker ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES turn, wants
+
+Init == /\ turn \in {0, 1}
+        /\ wants \in {0, 1}^2
+        /\ wants = [i \in {0, 1} |-> 0]
+
+Next == \/ /\ turn' = 0
+          /\ wants' = [i \in {0, 1} |-> IF i = 0 THEN 1 ELSE wants[i]]
+        \/ /\ turn' = 1
+          /\ wants' = [i \in {0, 1} |-> IF i = 1 THEN 1 ELSE wants[i]]
+        \/ /\ turn' = turn
+          /\ wants' = [i \in {0, 1} |-> IF wants[i] = 1 THEN 0 ELSE wants[i]]
+
+Spec == Init /\ [][Next]_<<turn, wants>>
+
+TypeOK == /\ turn \in {0, 1}
+          /\ wants \in {0, 1}^2
+
+===="
+chattla:20b,BM020,Eventually Consistent Counter,storage,3,0,0,1.0,bronze,77.47,"---- MODULE GCounter ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS Node
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+
+VARIABLES counts
+
+
+  (* --state Increment
+  counts[n][n] = counts[n][n] + 1
+  *)
+  (* --state Merge
+  counts[n][m] = Max(counts[n][m], counts[m][n])
+  *)
+end
+*)
+
+(* --state Init
+counts = [n \in Node |-> [m \in Node |-> 0]]
+*)
+
+(* --state Increment
+counts[n][n] = counts[n][n] + 1
+*)
+
+(* --state Merge
+counts[n][m] = Max(counts[n][m], counts[m][n])
+*)
+
+(* --state GlobalCount
+globalCount = Sum([n \in Node |-> Max({counts[n][m] : m \in Node})])
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq Nat
+        /\ counts \in [Node -> [Node -> Nat]]
+        /\ globalCount \in Nat
+*)
+
+Init == /\ counts = [n \in Node |-> [m \in Node |-> 0]]
+Next == \/ /\ n \in Node
+        /\ counts[n][n] = counts[n][n] + 1
+      \/ /\ n \in Node
+        /\ m \in Node
+        /\ counts[n][m] = Max(counts[n][m], counts[m][n])
+
+Spec == Init /\ [][Next]_<<counts>>
+
+===="

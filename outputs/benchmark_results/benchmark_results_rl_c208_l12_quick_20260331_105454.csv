@@ -1,0 +1,334 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,0,0.444,silver,21.09,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,1,0,0.444,silver,47.44,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES participants, votes, decision, messages
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,0,0,1.0,bronze,39.47,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS N
+
+VARIABLES forks, states
+
+
+
+(* State variables *)
+forks == [i \in 1..N |-> -> FALSE];
+states == [i \in 1..N |-> -> ""thinking""];
+
+(* Helper functions *)
+left(i) == IF i = 1 THEN N ELSE i - 1;
+right(i) == IF i = N THEN 1 ELSE i + 1;
+
+(* Actions *)
+PickUp(i) == 
+  /\ forks[i] = FALSE
+  /\ forks[left(i)] = FALSE
+  /\ forks' = [forks EXCEPT ![i] = TRUE, ![left(i)] = TRUE]
+  /\ states' = [states EXCEPT ![i] = ""eating""];
+
+PutDown(i) == 
+  /\ forks[i] = TRUE
+  /\ forks[left(i)] = TRUE
+  /\ forks' = [forks EXCEPT ![i] = FALSE, ![left(i)] = FALSE]
+  /\ states' = [states EXCEPT ![i] = ""thinking""];
+
+(* Next action *)
+Next == 
+  \E i \in 1..N : 
+    /\ states[i] = ""thinking""
+    /\ forks[i] = FALSE
+    /\ forks[left(i)] = FALSE
+    /\ forks' = [forks EXCEPT ![i] = TRUE, ![left(i)] = TRUE]
+    /\ states' = [states EXCEPT ![i] = ""eating""]
+
+  \/ \E i \in 1..N : 
+    /\ states[i] = ""eating""
+    /\ forks[i] = TRUE
+    /\ forks[left(i)] = TRUE
+    /\ forks' = [forks EXCEPT ![i] = FALSE, ![left(i)] = FALSE]
+    /\ states' = [states EXCEPT ![i] = ""thinking""];
+
+(* Initial state *)
+Init == 
+  /\ forks = [i \in 1..N |-> -> FALSE]
+  /\ states = [i \in 1..N |-> -> ""thinking""];
+
+(* Specification *)
+Spec == Init /\ [][Next]_<<forks, states>>;
+
+(* Type invariant *)
+TypeOK == 
+  /\ forks \in [1..N -> BOOLEAN]
+  /\ states \in [1..N -> {""thinking"", ""hungry"", ""eating""}];
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,1,0,0.778,silver,290.9,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES num, flag
+
+Init == /\ num = 0
+      /\ flag = <<>>
+
+
+Next == /\ num' = num + 1
+      /\ flag' = Append(flag, num + 1)
+
+Spec == Init /\ [][Next]_<<num, flag>>
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,0,0,1.0,bronze,31.4,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail, count
+
+Init == /\ q = <<>>
+        /\ head = 0
+        /\ tail = 0
+        /\ count = 0
+
+ProducerAction == /\ count < K
+                 /\ head' = head
+                 /\ tail' = (tail + 1) \mod K
+                 /\ q' = Append(q, head)
+                 /\ count' = count + 1
+
+ConsumerAction == /\ count > 0
+                 /\ head' = (head + 1) \mod K
+                 /\ tail' = tail
+                 /\ q' = Tail(q)
+                 /\ count' = count - 1
+
+Next == ProducerAction \/ ConsumerAction
+
+Spec == Init /\ [][Next]_<<q, head, tail, count>>
+
+TypeOK == /\ K \in Nat
+         /\ q \in Seq(0..K-1)
+         /\ head \in 0..K-1
+         /\ tail \in 0..K-1
+         /\ count \in 0..K
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,1,0,0.444,silver,90.3,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,0,0,0.778,bronze,23.07,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES readers, writer_active, r
+
+Init == /\ readers = <<>> \\
+       /\ writer_active = FALSE
+
+Next == \/ /\ writer_active = FALSE \\
+          /\ \E r \in 1..10 : /\ r \notin readers \\
+          /\ r' = r \\
+             /\ writer_active' = FALSE \\
+             /\ readers' = Append(readers, r) \\
+          \/ /\ writer_active = FALSE \\
+             /\ \E r \in 1..10 : /\ r \in readers \\
+             /\ r' = r \\
+                /\ writer_active' = TRUE \\
+                /\ readers' = <<>> \\
+          \/ /\ writer_active = TRUE \\
+             /\ \E r \in 1..10 : /\ r \in readers \\
+             /\ r' = r \\
+                /\ writer_active' = FALSE \\
+                /\ readers' = Tail(readers)
+
+Spec == Init /\ [][Next]_<<readers, writer_active>>
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,1,0,0.444,silver,17.01,"---- MODULE DistributedSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, channel, snapshot, marker, finished
+
+===="
+chattla:20b,BM009,Token Ring,networking,2,1,1,0.667,gold,2.16,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLE token
+
+Init == /\ token \in 1..N
+
+Next == /\ token' \in 1..N
+        /\ token' = IF token = N THEN 1 ELSE token + 1
+
+Spec == Init /\ [][Next]_<<token>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,0.778,silver,4.94,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, Values, NULL
+
+VARIABLES store
+
+Init == store = [k \in Keys |-> NULL]
+
+Next == \/ /\ \E k \in Keys : \E v \in Values : /\ store' = [store EXCEPT ![k] = v]
+      \/ /\ \E k \in Keys : /\ store' = [store EXCEPT ![k] = NULL]
+
+Spec == Init /\ [][Next]_<<store>>
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,1,0,0.444,silver,70.28,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES acceptors, proposers, promises, accepted, chosen, chosenBy
+
+===="
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,1,1,0.778,gold,50.66,"---- MODULE FileTransfer ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES file, fileSize, filePos
+
+Init == /\ fileSize = 0
+        /\ filePos = 0
+        /\ file = <<>>
+
+Next == /\ fileSize' = fileSize
+        /\ filePos' = filePos
+        /\ file' = file
+
+Spec == Init /\ [][Next]_<<file, fileSize, filePos>>
+
+===="

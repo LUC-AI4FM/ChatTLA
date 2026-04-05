@@ -1,0 +1,210 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,0,0,0.444,bronze,110.71,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            /\ state[i] = ""idle""
+            /\ state' = [state EXCEPT ![i] = ""trying""]
+          \/ \E i \in 1..N :
+            /\ state[i] = ""trying""
+            /\ \A j \in 1..N : j # i => state[j] # ""critical""
+            /\
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,0,0,1.0,bronze,30.67,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS FiniteSet
+
+VARIABLES participants, votes, decision
+
+TypeOK == /\ participants \in FiniteSet
+          /\ votes \in FiniteSet
+          /\ decision \in {""Commit"", ""Abort"", ""Pending""}
+
+Init == /\ participants = {}
+        /\ votes = {}
+        /\ decision = ""Pending""
+
+Prepare == /\ decision = ""Pending""
+          /\ votes = {}
+
+VoteYes == /\ decision = ""Pending""
+          /\ votes' = Append(votes, ""Yes"")
+
+VoteNo == /\ decision = ""Pending""
+          /\ votes' = Append(votes, ""No"")
+
+Commit == /\ decision = ""Pending""
+          /\ votes = << ""Yes"", ""Yes"", ..., ""Yes"" >>  (* all participants voted yes *)
+          /\ decision' = ""Commit""
+
+Abort == /\ decision = ""Pending""
+          /\ votes \in FiniteSet
+          /\ decision' = ""Abort""
+
+Next == /\ Prepare
+        \/ VoteYes
+        \/ VoteNo
+        \/ Commit
+        \/ Abort
+
+Spec == Init /\ [][Next]_<<participants, votes, decision>> ==
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,0,0,0.778,bronze,32.24,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLES forks, states
+
+(* Fork ownership: forks[i] = j means fork i is held by philosopher j; 0 means free *)
+Init == /\ forks = [i \in 1..N |-> -> 0]
+        /\ states = [i \in 1..N |-> -> ""thinking""]
+
+Next == \/ (* Philosopher i becomes hungry *)
+          /\ \E i \in 1..N : states[i] = ""thinking""
+          /\ states' = [states EXCEPT ![i] = ""hungry""]
+
+        \/ (* Philosopher i picks up forks if both are free *)
+          /\ \E i \in 1..N : states[i] = ""hungry""
+          /\ forks[i] = 0
+          /\ forks[%(i, N) + 1] = 0
+          /\ forks' = [forks EXCEPT ![i] = i, ![%(i, N) + 1] = i]
+          /\ states' = [states EXCEPT ![i] = ""eating""]
+
+        \/ (* Philosopher i puts down forks *)
+          /\ \E i \in 1..N : states[i] = ""eating""
+          /\ forks' = [forks EXCEPT ![i] = 0, ![%(i, N) + 1] = 0]
+          /\ states' = [states EXCEPT ![i] = ""thinking""]
+
+Spec == Init /\ [][Next]_<<forks, states>>
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,0,0,0.778,bronze,19.55,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+
+VARIABLES num, flag
+
+Init == /\ num = [i \in 1..N |-> 0]
+        /\ flag = [i \in 1..N |-> FALSE]
+
+Next == \E i \in 1..N :
+          /\ flag[i] = FALSE
+          /\ flag' = [flag EXCEPT ![i] = TRUE]
+          /\ num' = [num EXCEPT ![i] = 1 + Max({num[j] : j \in 1..N})]
+          /\ flag' = [flag EXCEPT ![i] = FALSE]
+
+Spec == Init /\ [][Next]_<<num, flag>>
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,1,1.0,gold,19.03,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail, count
+
+(* TypeOK ensures the queue is a sequence of length <= K *)
+TypeOK == 
+  /\ q \in Seq(1..K)
+  /\ head \in 1..K
+  /\ tail \in 1..K
+  /\ count \in 0..K
+
+(* Initial state: empty queue *)
+Init == 
+  /\ q = <<>>
+  /\ head = 1
+  /\ tail = 1
+  /\ count = 0
+
+(* Producer action: enqueues an element if not full *)
+Producer == 
+  /\ count < K
+  /\ q' = Append(q, 1)  (* placeholder for actual element *)
+  /\ tail' = IF tail = K THEN 1 ELSE tail + 1
+  /\ count' = count + 1
+  /\ head' = head
+
+(* Consumer action: dequeues an element if not empty *)
+Consumer == 
+  /\ count > 0
+  /\ q' = Tail(q)
+  /\ head' = IF head = K THEN 1 ELSE head + 1
+  /\ count' = count - 1
+  /\ tail' = tail
+
+(* Next action: either Producer or Consumer *)
+Next == 
+  \/ Producer
+  \/ Consumer
+
+Spec == Init /\ [][Next]_<<q, head, tail, count>>
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,0,0,0.889,bronze,18.88,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS None, ServerSet
+
+VARIABLES currentTerm, votedFor, state
+
+TypeOK == /\ currentTerm \in Nat
+          /\ votedFor \in {None} \/ [server \in ServerSet |-> None]
+          /\ state \in {Follower, Candidate, Leader}
+
+Init == /\ currentTerm = 0
+        /\ votedFor = [s \in ServerSet |-> None]
+        /\ state = Follower
+
+RequestVote == /\ state = Candidate
+              /\ currentTerm = currentTerm + 1
+              /\ votedFor = [votedFor EXCEPT ![self] = self]
+              /\ state' = Leader
+
+Spec == Init /\ [][Next]_<<currentTerm, votedFor, state>>
+
+===="

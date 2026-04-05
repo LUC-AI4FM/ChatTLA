@@ -1,0 +1,593 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,0,0.444,silver,11.53,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, turn, N
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,1,0,0.444,silver,20.11,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES participants, votes, decisions, coordinator, messages, finished
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,1,0,0.444,silver,61.57,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES forks, states
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,1,0,0.778,silver,58.36,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+Min(S) == CHOOSE x \in S : \A y \in S : x =< y
+
+VARIABLES num, flag, maxNum, minNum
+
+Init == /\ num = 0
+      /\ flag = FALSE
+      /\ maxNum = 0
+      /\ minNum = 0
+
+Next == /\ num' = IF flag' = FALSE THEN num ELSE num' + 1
+      /\ flag' = IF flag = FALSE THEN TRUE ELSE FALSE
+      /\ maxNum' = IF flag' = FALSE THEN maxNum ELSE maxNum' + 1
+      /\ minNum' = IF flag' = FALSE THEN minNum ELSE minNum' + 1
+
+Spec == Init /\ [][Next]_<<num, flag, maxNum, minNum>>
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,0,1.0,silver,16.59,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail, count
+
+Init == /\ q \in Seq(1..K) \land Len(q) = 0
+        /\ head = 1
+        /\ tail = 1
+        /\ count = 0
+
+Producer == /\ count < K
+           /\ q' = Append(q, 1)
+           /\ tail' = (tail % K) + 1
+           /\ count' = count + 1
+           /\ head' = head
+
+Consumer == /\ count > 0
+           /\ q' = Tail(q)
+           /\ head' = (head % K) + 1
+           /\ count' = count - 1
+           /\ tail' = tail
+
+Next == Producer \/ Consumer
+
+TypeOK == /\ q \in Seq(1..K)
+         /\ head \in 1..K
+         /\ tail \in 1..K
+         /\ count \in 0..K
+
+Spec == Init /\ [][Next]_<<q, head, tail, count>> /\ TypeOK
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,1,0,0.444,silver,55.57,"---- MODULE RaftElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,0,0,0.778,bronze,17.44,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES readers, writer_active
+
+Init == /\ readers = <<>>
+       /\ writer_active = FALSE
+
+Next == \/ /\ writer_active' = FALSE
+          /\ readers' = Append(readers, 1)
+        \/ /\ writer_active' = TRUE
+          /\ readers' = <<>>
+        \/ /\ writer_active' = FALSE
+          /\ readers' = Tail(readers)
+
+Spec == Init /\ [][Next]_<<readers, writer_active>> ==
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,1,0,0.444,silver,51.57,"---- MODULE ChandyLamportSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, channel, snapshot, channelSnapshot, markerSent, markerReceived, finished
+
+===="
+chattla:20b,BM009,Token Ring,networking,2,1,1,0.667,gold,2.18,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLE token
+
+Init == /\ token \in 1..N
+
+Next == /\ token' \in 1..N
+        /\ token' = IF token = N THEN 1 ELSE token + 1
+
+Spec == Init /\ [][Next]_<<token>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,0.778,silver,4.98,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, Values, NULL
+
+VARIABLES store
+
+Init == store = [k \in Keys |-> NULL]
+
+Next == \/ /\ \E k \in Keys : \E v \in Values : /\ store' = [store EXCEPT ![k] = v]
+      \/ /\ \E k \in Keys : /\ store' = [store EXCEPT ![k] = NULL]
+
+Spec == Init /\ [][Next]_<<store>>
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,1,0,0.444,silver,196.4,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES acceptors, proposers, promises, accepts, chosen
+
+===="
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,0,0,0.667,bronze,213.43,"---- MODULE FileTransfer ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS MAX_RETRIES, CHUNK_SIZE, FILE_SIZE, CHANNEL_CAPACITY, FiniteSet
+VARIABLES channel, chunks, file, retransmitCount, sentChunks
+
+    /\ file \in Seq
+    /\ chunks \in Seq
+    /\ sentChunks \in FiniteSet
+    /\ retransmitCount \in FiniteSet
+    /\ channel \in FiniteSet
+
+Init ==
+    /\ file = <<>>
+    /\ chunks = <<>>
+    /\ sentChunks = <<>>
+    /\ retransmitCount = <<>>
+    /\ channel = <<>>
+
+Next ==
+    /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ channel' = channel
+    \/ /\ file' = Append(file, <<>>)
+       /\ chunks' = Append(chunks, <<>>)
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = Append(sentChunks, <<>>)
+       /\ retransmitCount' = Append(retransmitCount, 0)
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = Append(retransmitCount, 0)
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = Append(retransmitCount, 0)
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = Append(retransmitCount, 0)
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = Append(retransmitCount, 0)
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = Append(retransmitCount, 0)
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = Append(retransmitCount, 0)
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = Append(retransmitCount, 0)
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = Append(retransmitCount, 0)
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = Append(retransmitCount, 0)
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = Append(retransmitCount, 0)
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = Append(retransmitCount, 0)
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = Append(retransmitCount, 0)
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = Append(retransmitCount, 0)
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = Append(retransmitCount, 0)
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = Append(retransmitCount, 0)
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = Append(retransmitCount, 0)
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = Append(retransmitCount, 0)
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = Append(retransmitCount, 0)
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = Append(retransmitCount, 0)
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = Append(retransmitCount, 0)
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = Append(retransmitCount, 0)
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = Append(retransmitCount, 0)
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = Append(retransmitCount, 0)
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = Append(retransmitCount, 0)
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = Append(retransmitCount, 0)
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = Append(retransmitCount, 0)
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = Append(retransmitCount, 0)
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = Append(retransmitCount, 0)
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = Append(retransmitCount, 0)
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = Append(retransmitCount, 0)
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = Append(retransmitCount, 0)
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = Append(retransmitCount, 0)
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = Append(retransmitCount, 0)
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = Append(retransmitCount, 0)
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = Append(retransmitCount, 0)
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = Append(retransmitCount, 0)
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = Append(retransmitCount, 0)
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = Append(retransmitCount, 0)
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = Append(retransmitCount, 0)
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = Append(retransmitCount, 0)
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = Append(retransmitCount, 0)
+       /\ channel' = channel
+    \/ /\ file' = fil"

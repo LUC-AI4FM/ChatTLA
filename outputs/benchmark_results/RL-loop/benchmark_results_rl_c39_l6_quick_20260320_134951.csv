@@ -1,0 +1,254 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,1,1.0,gold,3.18,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS N
+
+VARIABLES state, turn
+
+Init == /\ state = [p \in 1..N |-> ""idle""]
+        /\ turn = 1
+
+Next == \/ /\ turn' = turn + 1
+          /\ turn' <= N
+          /\ state' = [state EXCEPT ![turn] = ""critical""]
+        \/ /\ turn' = turn
+          /\ state' = [state EXCEPT ![turn] = ""idle""]
+
+Spec == Init /\ [][Next]_<<state, turn>>
+
+TypeOK == /\ state \in [1..N -> {""idle"", ""trying"", ""critical""}]
+        /\ turn \in 1..N
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,0,0,1.0,bronze,77.27,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLES participants, coordinator, messages
+
+(* Participants are numbered 1..N *)
+Participants == 1..N
+
+(* Coordinator is a single process *)
+Coordinator == 1
+
+(* Message types *)
+Prepare == ""Prepare""
+VoteYes == ""VoteYes""
+VoteNo == ""VoteNo""
+Commit == ""Commit""
+Abort == ""Abort""
+
+(* Message structure: [sender \in Participants \/ Coordinator, receiver \in Participants \/ Coordinator, type \in {Prepare, VoteYes, VoteNo, Commit, Abort}] *)
+Message == [sender \in Participants \/ Coordinator, receiver \in Participants \/ Coordinator, type \in {Prepare, VoteYes, VoteNo, Commit, Abort}]
+
+(* All messages are stored in a sequence *)
+Messages == Sequence(Message)
+
+(* Initial state: all participants are in the ""Init"" state, coordinator is in ""Start"" state, no messages *)
+Init ==
+  /\ participants = [p \in Participants |-> ""Init""]
+  /\ coordinator = ""Start""
+  /\ messages = <<>>
+
+(* Coordinator sends Prepare to all participants *)
+CoordinatorPrepare ==
+  /\ coordinator = ""Start""
+  /\ coordinator' = ""PrepareSent""
+  /\ participants' = [p \in Participants |-> ""Init""]
+  /\ messages' = Append(messages, [sender |-> Coordinator, receiver |-> p, type |-> Prepare]) \* for each participant p
+
+(* Participants respond with VoteYes or VoteNo *)
+ParticipantVote ==
+  /\ \E p \in Participants :
+       /\ participants[p] = ""Init""
+       /\ \E msg \in messages :
+            /\ msg.type = Prepare
+            /\ msg.receiver = p
+            /\ msg.sender = Coordinator
+       /\ participants' = [participants EXCEPT ![p] = ""VotedYes""]
+       /\ messages' = Append(messages, [sender |-> p, receiver |-> Coordinator, type |-> VoteYes])
+
+(* Coordinator decides to Commit if all participants voted yes *)
+CoordinatorCommit ==
+  /\ coordinator = ""PrepareSent""
+  /\ \A p \in Participants : participants[p] = ""VotedYes""
+  /\ coordinator' = ""CommitSent""
+  /\ participants' = [p \in Participants |-> ""Committed""]
+  /\ messages' = Append(messages, [sender |-> Coordinator, receiver |-> p, type |-> Commit]) \* for each participant p
+
+(* Coordinator decides to Abort if any participant voted no *)
+CoordinatorAbort ==
+  /\ coordinator = ""PrepareSent""
+  /\ \E p \in Participants : participants[p] = ""VotedNo""
+  /\ coordinator' = ""AbortSent""
+  /\ participants' = [p \in Participants |-> ""Aborted""]
+  /\ messages' = Append(messages, [sender |-> Coordinator, receiver |-> p, type |-> Abort]) \* for each participant p
+
+(* Participants abort upon receiving Abort *)
+ParticipantAbort ==
+  /\ \E p \in Participants :
+       /\ participants[p] = ""VotedYes""
+       /\ \E msg \in messages :
+            /\ msg.type = Abort
+            /\ msg.receiver = p
+            /\ msg.sender = Coordinator
+       /\ participants' = [participants EXCEPT ![p] = ""Aborted""]
+       /\ messages' = Append(messages, [sender |-> p, receiver |-> Coordinator, type |-> Abort])
+
+(* Participants commit upon receiving Commit *)
+ParticipantCommit ==
+  /\ \E p \in Participants :
+       /\ participants[p] = ""VotedYes""
+       /\ \E msg \in messages :
+            /\ msg.type = Commit
+            /\ msg.receiver = p
+            /\ msg.sender = Coordinator
+       /\ participants' = [participants EXCEPT ![p] = ""Committed""]
+       /\ messages' = Append(messages, [sender |-> p, receiver |-> Coordinator, type |-> Commit])
+
+(* Next-state relation *)
+Next ==
+  \/ CoordinatorPrepare
+  \/ ParticipantVote
+  \/ CoordinatorCommit
+  \/ CoordinatorAbort
+  \/ ParticipantAbort
+  \/ ParticipantCommit
+
+(* Type invariant *)
+TypeOK ==
+  /\ participants \in [Participants -> {""Init"", ""VotedYes"", ""VotedNo"", ""Committed"", ""Aborted""}]
+  /\ coordinator \in {""Start"", ""PrepareSent"", ""CommitSent"", ""AbortSent""}
+  /\ messages \in Messages
+
+Spec == Init /\ [][Next]_<<participants, coordinator, messages>>
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,1,0,0.778,silver,27.12,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLES forks, state
+
+Left(i) == IF i = 1 THEN N ELSE i - 1
+Right(i) == IF i = N THEN 1 ELSE i + 1
+
+Hungry(i) == state[i] = ""hungry""
+
+CanEat(i) == forks[i] = -1 /\ forks[Left(i)] = -1 /\ forks[Right(i)] = -1
+
+TakeForks(i) == /\ forks' = [forks EXCEPT ![i] = Left(i), ![Left(i)] = i]
+               /\ state' = [state EXCEPT ![i] = ""eating""]
+
+PutForks(i) == /\ forks' = [forks EXCEPT ![i] = -1, ![Left(i)] = -1]
+              /\ state' = [state EXCEPT ![i] = ""thinking""]
+
+Init == /\ forks = [i \in 1..N |-> -1]
+        /\ state = [i \in 1..N |-> ""thinking""]
+
+Next == \E i \in 1..N :
+          (state[i] = ""thinking"" /\ state'[i] = ""hungry"" /\ forks' = forks /\ state' = [state EXCEPT ![i] = ""hungry""])
+        \/ (Hungry(i) /\ CanEat(i) /\ TakeForks(i))
+        \/ (state[i] = ""eating"" /\ PutForks(i))
+
+Spec == Init /\ [][Next]_<<forks, state>>
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,1,0,0.778,silver,6.55,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+
+CONSTANT N
+
+VARIABLES num, flag
+
+Init == /\ num = [i \in 1..N |-> 0]
+        /\ flag = [i \in 1..N |-> FALSE]
+
+Next == \E i \in 1..N :
+          /\ flag[i] = FALSE
+          /\ flag' = [flag EXCEPT ![i] = TRUE]
+          /\ num' = [num EXCEPT ![i] = 1 + Max({IF flag[j] THEN num[j] ELSE 0 : j \in 1..N})]
+          /\ flag' = [flag EXCEPT ![i] = FALSE]
+
+Spec == Init /\ [][Next]_<<num, flag>>
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,0,1.0,silver,69.04,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail, size
+
+(* Type invariant *)
+TypeOK == 
+    /\ q \in Seq(1..K)
+    /\ head \in 1..K
+    /\ tail \in 1..K
+    /\ size \in 0..K
+
+(* Initial state: empty queue *)
+Init == 
+    /\ q = <<>>
+    /\ head = 1
+    /\ tail = 1
+    /\ size = 0
+
+(* Producer action: enqueue an element *)
+Enqueue(x) == 
+    /\ size < K
+    /\ q' = Append(q, x)
+    /\ tail' = IF tail = K THEN 1 ELSE tail + 1
+    /\ size' = size + 1
+    /\ UNCHANGED head
+
+(* Consumer action: dequeue an element *)
+Dequeue == 
+    /\ size > 0
+    /\ head' = IF head = K THEN 1 ELSE head + 1
+    /\ size' = size - 1
+    /\ UNCHANGED <<q, tail>>
+
+(* Next-state relation: either enqueue or dequeue *)
+Next == 
+    \E x \in Nat : Enqueue(x)
+    \/ Dequeue
+
+Spec == Init /\ [][Next]_<<q, head, tail, size>>
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,1,0,0.778,silver,13.52,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+Init ==
+    /\ currentTerm = 0
+    /\ votedFor = {}
+    /\ state = ""Follower""
+
+Next ==
+    \/ \E term \in Nat :
+        /\ state = ""Follower""
+        /\ currentTerm' = term
+        /\ votedFor' = {}
+        /\ state' = ""Follower""
+    \/ \E term \in Nat : \E candidate \in Nat :
+        /\ state = ""Follower""
+        /\ currentTerm' = term
+        /\ votedFor' = {candidate}
+        /\ state' = ""Candidate""
+    \/ \E term \in Nat : \E candidate \in Nat :
+        /\ state = ""Candidate""
+        /\ currentTerm' = term
+        /\ votedFor' = {candidate}
+        /\ state' = ""Leader""
+
+Spec == Init /\ [][Next]_<<currentTerm, votedFor, state>>
+
+===="

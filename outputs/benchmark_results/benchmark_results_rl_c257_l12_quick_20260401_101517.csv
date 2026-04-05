@@ -1,0 +1,600 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,0,0,1.0,bronze,27.78,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS N
+
+VARIABLES state, turn
+StateSpace == [p \in 1..N |-> state[p] \in {idle, trying, critical}]
+
+(* Type invariant *)
+TypeOK == /\ N \in Nat
+        /\ N > 0
+        /\ state \in [1..N -> {idle, trying, critical}]
+        /\ turn \in 1..N
+
+(* Initial condition *)
+Init == /\ turn \in 1..N
+        /\ \A p \in 1..N : state[p] = idle
+
+(* Next-state relation *)
+Next == \E p \in 1..N :
+          /\ state' = [state EXCEPT ![p] = \*]
+          /\ turn' = \*  \* turn may change arbitrarily
+
+Spec == Init /\ [][Next]_<<state, turn>>
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,1,0,0.444,silver,24.38,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES participants, votes, decision, messages, state
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,0,0,1.0,bronze,35.02,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLES forks, states
+
+(* Fork ownership: forks[i] = j means fork i is held by philosopher j; forks[i] = -1 means fork i is free *)
+Init == /\ forks = [i \in 1..N |-> -> -1]
+        /\ states = [i \in 1..N |-> -> ""thinking""]
+
+Next == \/ (* Philosopher i becomes hungry *)
+          /\ states' = [states EXCEPT ![i] = ""hungry""]
+        \/ (* Philosopher i picks up forks if both are free *)
+          /\ states[i] = ""hungry""
+          /\ forks[i] = -1
+          /\ forks[%(i, N) + 1] = -1
+          /\ forks' = [forks EXCEPT ![i] = i, ![%(i, N) + 1] = i]
+          /\ states' = [states EXCEPT ![i] = ""eating""]
+        \/ (* Philosopher i puts down forks after eating *)
+          /\ states[i] = ""eating""
+          /\ forks' = [forks EXCEPT ![i] = -1, ![%(i, N) + 1] = -1]
+          /\ states' = [states EXCEPT ![i] = ""thinking""]
+
+TypeOK == /\ forks \in [1..N -> 1..N \cup {-1}]
+          /\ states \in [1..N -> {""thinking"", ""hungry"", ""eating""}]
+
+Spec == Init /\ [][Next]_<<forks, states>>
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,0,0,0.444,bronze,245.4,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES num, flag
+
+
+          /\ flag = [i \in 1..N |-> FALSE]
+  Next == \/ /\ flag[i] = FALSE
+          /\ flag[i] := TRUE
+          /\ max := [j \in 1..N |-> num[j]]
+          /\ max := [j \in 1..N |-> IF num[j] > max[j] THEN num[j] ELSE max[j]]
+          /\ num[i] := max[i] + 1
+          /\ flag[i] := FALSE
+          /\ flag[j] = TRUE
+          /\ num[j] > 0
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+          /\ num[j] < num[i]
+"
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,1,1.0,gold,48.33,"---- MODULE BoundedFIFO ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail
+
+Init == /\ q = <<>>
+        /\ head = 0
+        /\ tail = 0
+
+Next == 
+  \/ /\ head < tail
+      /\ head < K
+      /\ head' = head + 1
+      /\ tail' = tail
+      /\ q' = Append(q, 0)
+  \/ /\ head = tail
+      /\ head' = head
+      /\ tail' = tail
+      /\ q' = q
+
+Spec == Init /\ [][Next]_<<q, head, tail>>
+
+TypeOK == /\ head \in Nat
+          /\ tail \in Nat
+          /\ Len(q) = tail - head
+          /\ q \in Seq(0..K)
+          /\ head <= tail
+          /\ tail <= K
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,1,0,0.444,silver,57.61,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,0,0,0.778,bronze,32.8,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES readers, writer_active, r
+
+Init == /\ readers = <<>> \\
+       /\ writer_active = FALSE
+
+Next == \/ /\ writer_active = FALSE \\
+          /\ \E r \in 1..10 : /\ r \notin readers \\
+          /\ r' \in 1..10 \\
+             /\ r' \notin readers \\
+             /\ writer_active' = FALSE \\
+             /\ readers' = Append(readers, r') \\
+          \/ /\ writer_active = FALSE \\
+             /\ \E r \in 1..10 : /\ r \in readers \\
+             /\ r' \in 1..10 \\
+                /\ r' \notin readers \\
+                /\ writer_active' = FALSE \\
+                /\ readers' = Remove(readers, r') \\
+          \/ /\ writer_active = FALSE \\
+             /\ \E r \in 1..10 : /\ r \in readers \\
+             /\ r' \in 1..10 \\
+                /\ r' \notin readers \\
+                /\ writer_active' = TRUE \\
+                /\ readers' = readers \\
+          \/ /\ writer_active = TRUE \\
+             /\ \E r \in 1..10 : /\ r \in readers \\
+             /\ r' \in 1..10 \\
+                /\ r' \notin readers \\
+                /\ writer_active' = TRUE \\
+                /\ readers' = Remove(readers, r') \\
+          \/ /\ writer_active = TRUE \\
+             /\ \E r \in 1..10 : /\ r \in readers \\
+             /\ r' \in 1..10 \\
+                /\ r' \notin readers \\
+                /\ writer_active' = TRUE \\
+                /\ readers' = readers
+
+Spec == Init /\ [][Next]_<<readers, writer_active>>
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,1,0,0.444,silver,45.66,"---- MODULE ChandyLamportSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, channel, snapshot, channelState, markerReceived, finished
+
+===="
+chattla:20b,BM009,Token Ring,networking,2,1,1,0.667,gold,2.18,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLE token
+
+Init == /\ token \in 1..N
+
+Next == /\ token' \in 1..N
+        /\ token' = IF token = N THEN 1 ELSE token + 1
+
+Spec == Init /\ [][Next]_<<token>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,0.778,silver,4.98,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, Values, NULL
+
+VARIABLES store
+
+Init == store = [k \in Keys |-> NULL]
+
+Next == \/ /\ \E k \in Keys : \E v \in Values : /\ store' = [store EXCEPT ![k] = v]
+      \/ /\ \E k \in Keys : /\ store' = [store EXCEPT ![k] = NULL]
+
+Spec == Init /\ [][Next]_<<store>>
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,1,0,0.444,silver,196.07,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES acceptors, proposers, promises, accepted, chosen, chosenVal, chosenBallot
+
+===="
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,1,0,0.778,silver,123.04,"---- MODULE FileTransfer ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS MAX_RETRIES, CHUNK_SIZE, FILE_SIZE, CHANNEL_CAPACITY
+VARIABLES channel, chunks, file, retransmitCount, sentChunks
+
+Init ==
+    /\ file = <<>>
+    /\ chunks = <<>>
+    /\ sentChunks = <<>>
+    /\ retransmitCount = <<>>
+    /\ channel = <<>>
+
+Next ==
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ channel' = channel
+    \/ /\ file' = Append(file, <<>>)
+       /\ chunks' = Append(chunks, <<>>)
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = Append(sentChunks, <<>>)
+       /\ retransmitCount' = Append(retransmitCount, 0)
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = Append(retransmitCount, 0)
+       /\ channel' = Append(channel, <<>>)
+
+Spec == Init /\ [][Next]_<<channel, chunks, file, retransmitCount, sentChunks>>
+
+===="

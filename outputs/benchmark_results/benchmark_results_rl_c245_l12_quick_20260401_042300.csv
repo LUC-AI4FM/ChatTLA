@@ -1,0 +1,406 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,1,1.0,gold,10.68,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N
+VARIABLES state, turn
+
+
+(* State variables *)
+
+(* Initial state *)
+Init == /\ state = [p \in 1..N |-> ""idle""]
+        /\ turn \in 1..N
+
+(* Next-state relation *)
+Next == \/ (* Process p attempts to enter critical section *)
+          /\ \E p \in 1..N : /\ state[p] = ""idle""
+                            /\ state' = [state EXCEPT ![p] = ""trying""]
+                            /\ turn' = turn
+          \/ (* Process p enters critical section *)
+          /\ \E p \in 1..N : /\ state[p] = ""trying""
+                            /\ turn = p
+                            /\ state' = [state EXCEPT ![p] = ""critical""]
+                            /\ turn' = turn
+          \/ (* Process p exits critical section *)
+          /\ \E p \in 1..N : /\ state[p] = ""critical""
+                            /\ state' = [state EXCEPT ![p] = ""idle""]
+                            /\ turn' = turn
+
+(* Invariant: at most one process is in critical section *)
+TypeOK == /\ state \in [1..N -> {""idle"", ""trying"", ""critical""}]
+          /\ turn \in 1..N
+          /\ \A p, q \in 1..N : (p # q) => ~(state[p] = ""critical"" /\ state[q] = ""critical"")
+
+Spec == Init /\ [][Next]_<<state, turn>>
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,0,0,1.0,bronze,133.91,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES participants, coordinator, state, messages, decision
+State == [p \in participants |-> [phase \in {""init"", ""prepared"", ""committed"", ""aborted""} |-> p.phase,
+                                 vote \in {""yes"", ""no"", ""none""} |-> p.vote,
+                                 decision \in {""commit"", ""abort"", ""none""} |-> p.decision]]
+
+(* Message types *)
+Message == [sender \in participants \cup {coordinator},
+            receiver \in participants \cup {coordinator},
+            type \in {""Prepare"", ""VoteYes"", ""VoteNo"", ""Commit"", ""Abort""},
+            content \in {""none""}]
+
+(* Initial state *)
+Init == /\ participants = {1, 2, ..., N}
+      /\ coordinator = N+1
+      /\ state = [p \in participants |-> [phase |-> ""init"",
+                                            vote |-> ""none"",
+                                            decision |-> ""none""]]
+      /\ messages = {}
+      /\ decision = ""none""
+
+(* Next-state relation *)
+Next ==
+  \/ /\ messages = {}
+     /\ decision = ""none""
+     /\ \E p \in participants:
+          /\ state[p].phase = ""init""
+          /\ messages' = Append(messages, [sender |-> coordinator,
+                                            receiver |-> p,
+                                            type |-> ""Prepare"",
+                                            content |-> ""none""])
+          /\ state' = [state EXCEPT ![p].phase = ""prepared""]
+     \/ /\ \E m \in messages:
+          /\ m.type = ""Prepare""
+          /\ state[m.receiver].phase = ""prepared""
+          /\ state[m.receiver].vote = ""none""
+          /\ messages' = messages \ {m}
+          /\ \E v \in {""yes"", ""no""}:
+               /\ state' = [state EXCEPT ![m.receiver].vote = v]
+               /\ IF v = ""yes"" THEN
+                    /\ messages' = Append(messages', [sender |-> m.receiver,
+                                                      receiver |-> coordinator,
+                                                      type |-> ""VoteYes"",
+                                                      content |-> ""none""])
+
+                    /\ messages' = Append(messages', [sender |-> m.receiver,
+                                                      receiver |-> coordinator,
+                                                      type |-> ""VoteNo"",
+                                                      content |-> ""none""])
+     \/ /\ \E m \in messages:
+          /\ m.type = ""VoteYes""
+          /\ state[m.receiver].phase = ""prepared""
+          /\ state[m.receiver].vote = ""yes""
+          /\ messages' = messages \ {m}
+          /\ IF \A p \in participants: state[p].vote = ""yes"" THEN
+               /\ messages' = Append(messages', [sender |-> coordinator,
+                                                 receiver |-> p,
+                                                 type |-> ""Commit"",
+                                                 content |-> ""none""])
+               /\ state' = [state EXCEPT ![p].phase = ""committed"",
+                                      ![p].decision = ""commit""]
+
+               /\ state' = state
+     \/ /\ \E m \in messages:
+          /\ m.type = ""VoteNo""
+          /\ state[m.receiver].phase = ""prepared""
+          /\ state[m.receiver].vote = ""no""
+          /\ messages' = messages \ {m}
+          /\ messages' = Append(messages', [sender |-> coordinator,
+                                            receiver |-> p,
+                                            type |-> ""Abort"",
+                                            content |-> ""none""])
+          /\ state' = [state EXCEPT ![p].phase = ""aborted"",
+                                      ![p].decision = ""abort""]
+     \/ /\ \E m \in messages:
+          /\ m.type = ""Commit""
+          /\ state[m.receiver].phase = ""prepared""
+          /\ state[m.receiver].vote = ""yes""
+          /\ messages' = messages \ {m}
+          /\ state' = [state EXCEPT ![m.receiver].phase = ""committed"",
+                                      ![m.receiver].decision = ""commit""]
+     \/ /\ \E m \in messages:
+          /\ m.type = ""Abort""
+          /\ state[m.receiver].phase = ""prepared""
+          /\ state[m.receiver].vote = ""no""
+          /\ messages' = messages \ {m}
+          /\ state' = [state EXCEPT ![m.receiver].phase = ""aborted"",
+                                      ![m.receiver].decision = ""abort""]
+
+(* Specification *)
+Spec == Init /\ [][Next]_<<participants, coordinator, state, messages, decision>>
+
+(* Type invariant *)
+TypeOK == /\ participants \subseteq Nat
+          /\ coordinator \in Nat
+          /\ state \in [participants -> [phase \in {""init"", ""prepared"", ""committed"", ""aborted""} |-> {""init"", ""prepared"", ""committed"", ""aborted""},
+                          vote \in {""yes"", ""no"", ""none""} |-> {""yes"", ""no"", ""none""},
+                          decision \in {""commit"", ""abort"", ""none""} |-> {""commit"", ""abort"", ""none""}]]
+          /\ messages \subseteq [sender \in participants \cup {coordinator},
+                                 receiver \in participants \cup {coordinator},
+                                 type \in {""Prepare"", ""VoteYes"", ""VoteNo"", ""Commit"", ""Abort""},
+                                 content \in {""none""}]
+          /\ decision \in {""commit"", ""abort"", ""none""}
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,0,0,1.0,bronze,36.55,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLES forks, states
+
+(* Fork ownership: forks[i] = j means fork i is held by philosopher j; forks[i] = -1 means fork i is free *)
+Init == /\ forks = [i \in 1..N |-> -> -1]
+        /\ states = [i \in 1..N |-> -> ""thinking""]
+
+Next == \/ (* Philosopher i becomes hungry *)
+          /\ states' = [states EXCEPT ![i] = ""hungry""]
+        \/ (* Philosopher i picks up forks if both are free *)
+          /\ states[i] = ""hungry""
+          /\ forks[i] = -1
+          /\ forks[%(i, N) + 1] = -1
+          /\ forks' = [forks EXCEPT ![i] = i, ![%(i, N) + 1] = i]
+          /\ states' = [states EXCEPT ![i] = ""eating""]
+        \/ (* Philosopher i puts down forks after eating *)
+          /\ states[i] = ""eating""
+          /\ forks' = [forks EXCEPT ![i] = -1, ![%(i, N) + 1] = -1]
+          /\ states' = [states EXCEPT ![i] = ""thinking""]
+
+Spec == Init /\ [][Next]_<<forks, states>>
+
+TypeOK == /\ forks \in [1..N -> 1..N \cup {-1}]
+          /\ states \in [1..N -> {""thinking"", ""hungry"", ""eating""}]
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : states[i] \in {""thinking"", ""hungry"", ""eating""}
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,1,0,0.778,silver,69.0,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+CONSTANT N
+
+VARIABLES num, flag
+
+Init == /\ num = [i \in 1..N |-> 0]
+        /\ flag = [i \in 1..N |-> FALSE]
+
+Next == \E i \in 1..N :
+          /\ flag' = [flag EXCEPT ![i] = TRUE]
+          /\ num' = [num EXCEPT ![i] = 1 + Max(num)]
+          /\ flag' = [flag EXCEPT ![i] = FALSE]
+          /\ \A j \in 1..N : (flag[j] /\ (num[j] < num[i] \/ (num[j] = num[i] /\ j < i))) => flag'[j] = flag[j]
+          /\ \A j \in 1..N : j # i => flag'[j] = flag[j]
+          /\ \A j \in 1..N : j # i => num'[j] = num[j]
+
+Spec == Init /\ [][Next]_<<num, flag>>
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,0,1.0,silver,9.48,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail, count
+
+(* The queue is represented as a sequence of length K. *)
+(* head and tail are indices into the sequence. *)
+(* count is the number of elements in the queue. *)
+
+(* The queue is empty when count = 0. *)
+(* The queue is full when count = K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The initial state: empty queue. *)
+Init == /\ q = [i \in 1..K |-> 0]
+        /\ head = 1
+        /\ tail = 1
+        /\ count = 0
+
+(* The producer action: add an element to the queue. *)
+Producer == /\ count < K
+           /\ q' = [q EXCEPT ![tail] = 1]
+           /\ tail' = IF tail = K THEN 1 ELSE tail + 1
+           /\ count' = count + 1
+           /\ head' = head
+
+(* The consumer action: remove an element from the queue. *)
+Consumer == /\ count > 0
+           /\ q' = [q EXCEPT ![head] = 0]
+           /\ head' = IF head = K THEN 1 ELSE head + 1
+           /\ count' = count - 1
+           /\ tail' = tail
+
+(* The next-state relation: either the producer or the consumer acts. *)
+Next == Producer \/ Consumer
+
+(* The type invariant: all variables have the correct type. *)
+TypeOK == /\ q \in [1..K -> 0..1]
+          /\ head \in 1..K
+          /\ tail \in 1..K
+          /\ count \in 0..K
+
+Spec == Init /\ [][Next]_<<q, head, tail, count>> /\ TypeOK
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,0,0,0.778,bronze,62.99,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+
+
+(* State definitions *)
+Follower == state = Follower
+Candidate == state = Candidate
+Leader == state = Leader
+
+(* Type definitions *)
+Server == 1..N
+None == 0
+
+(* Initial state *)
+Init == /\ currentTerm = 0
+        /\ votedFor = None
+        /\ state = Follower
+
+(* Candidate wins if majority of votes *)
+Majority == \E votes \in SUBSET Server : Cardinality(votes) > N \div 2
+
+(* Next-state relation *)
+Next == 
+  /\ \E newTerm \in Nat : 
+        /\ currentTerm' = newTerm
+        /\ votedFor' = None
+        /\ state' = Candidate
+  \/ /\ state' = Follower
+      /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+  \/ /\ state' = Leader
+      /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+  \/ /\ state' = Candidate
+      /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ \E votes \in SUBSET Server : 
+            /\ Majority(votes)
+            /\ state' = Leader
+
+Spec == Init /\ [][Next]_<<currentTerm, votedFor, state>> 
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,0,0,0.778,bronze,206.75,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES readers, writer_active, r
+
+Init == /\ readers = <<>> \\
+        /\ writer_active = FALSE
+
+Next == \/ /\ writer_active = FALSE \\
+          /\ \E r \in 1..10 : /\ r \notin readers \\
+          /\ r' = r \\
+             /\ writer_active' = FALSE \\
+          /\ r' \in readers' \\
+             /\ writer_active' = FALSE \\
+          /\ r' \notin readers' \\
+             /\ writer_active' = FALSE \\
+        \/ /\ writer_active = FALSE \\
+          /\ \E r \in 1..10 : /\ r \in readers \\
+          /\ r' = r \\
+             /\ writer_active' = FALSE \\
+        \/ /\ writer_active = FALSE \\
+          /\ \E r \in 1..10 : /\ r \notin readers \\
+          /\ r' = r \\
+             /\ writer_active' = TRUE \\
+        \/ /\ writer_active = TRUE \\
+          /\ \E r \in 1..10 : /\ r \in readers \\
+          /\ r' = r \\
+             /\ writer_active' = TRUE \\
+        \/ /\ writer_active = TRUE \\
+          /\ \E r \in 1..10 : /\ r \notin readers \\
+          /\ r' = r \\
+             /\ writer_active' = FALSE
+
+Spec == Init /\ [][Next]_<<readers, writer_active>>
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,1,0,0.444,silver,92.88,"---- MODULE ChandyLamportSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, channel, snapshot, channelState, markerSent, markerReceived, finished
+===="
+chattla:20b,BM009,Token Ring,networking,2,1,1,0.667,gold,2.22,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLE token
+
+Init == /\ token \in 1..N
+
+Next == /\ token' \in 1..N
+        /\ token' = IF token = N THEN 1 ELSE token + 1
+
+Spec == Init /\ [][Next]_<<token>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,1.0,silver,5.21,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, Values, NULL
+
+VARIABLES store
+
+Init == store = [k \in Keys |-> NULL]
+
+Next == \/ /\ \E k \in Keys : \E v \in Values : /\ store' = [store EXCEPT ![k] = v]
+      \/ /\ \E k \in Keys : /\ store' = [store EXCEPT ![k] = NULL]
+
+Spec == Init /\ [][Next]_<<store>>
+
+TypeOK == /\ store \in [Keys -> Values]
+          /\ \A k \in Keys : store[k] \in Values
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,1,0,0.444,silver,280.94,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES acceptors, proposers, promises, accepted, chosen, chosenBallot, chosenValue, chosenBallotValue, chosenBallotValueBallot, chosenBallotValueValue, chosenBallotValueValueBallot, chosenBallotValueValueBallotValue, chosenBallotValueValueBallotValueBallot, chosenBallotValueValueBallotValueBallotValue, chosenBallotValueValueBallotValueBallotValueBallot, chosenBallotValueValueBallotValueBallotValueBallotValue, chosenBallotValueValueBallotValueBallotValueBallotValueBallot, chosenBallotValueValueBallotValueBallotValueBallotValueBallotValue, chosenBallotValueValueBallotValueBallotValueBallotValueBallotValueBallot, chosenBallotValueValueBallotValueBallotValueBallotValueBallotValueBallotValue, chosenBallotValueValueBallotValueBallotValueBallotValueBallotValueBallotValueBallot, chosenBallotValueValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValue, chosenBallotValueValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallot, chosenBallotValueValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValue, chosenBallotValueValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallot, chosenBallotValueValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValue, chosenBallotValueValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallot, chosenBallotValueValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValue, chosenBallotValueValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallot, chosenBallotValueValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValue, chosenBallotValueValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallot, chosenBallotValueValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValue, chosenBallotValueValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallot, chosenBallotValueValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValue, chosenBallotValueValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallot, chosenBallotValueValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValue, chosenBallotValueValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallot, chosenBallotValueValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValue, chosenBallotValueValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallot, chosenBallotValueValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValue, chosenBallotValueValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallot, chosenBallotValueValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValue, chosenBallotValueValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallot, chosenBallotValueValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValue, chosenBallotValueValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallot, chosenBallotValueValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValue, chosenBallotValueValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallot, chosenBallotValueValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBal"
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,1,0,0.778,silver,25.6,"---- MODULE FileTransfer ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS MAX_RETRIES, CHUNK_SIZE, FILE_SIZE, CHANNEL_LOSS_PROBABILITY
+VARIABLES channelState, retransmitCount, sentChunks, fileChunks
+
+Init ==
+    /\ fileChunks = [i \in 1..FILE_SIZE |-> i]
+    /\ sentChunks = <<>>
+    /\ retransmitCount = [i \in 1..FILE_SIZE |-> 0]
+    /\ channelState = [i \in 1..FILE_SIZE |-> TRUE]
+
+Next ==
+    \/ \E i \in 1..FILE_SIZE :
+        /\ i \notin sentChunks
+        /\ retransmitCount[i] <= MAX_RETRIES
+        /\ channelState[i] = TRUE
+        /\ sentChunks' = Append(sentChunks, i)
+        /\ retransmitCount' = [retransmitCount EXCEPT ![i] = retransmitCount[i] + 1]
+        /\ channelState' = [channelState EXCEPT ![i] = FALSE]
+    \/ \E i \in 1..FILE_SIZE :
+        /\ i \in sentChunks
+        /\ retransmitCount[i] <= MAX_RETRIES
+        /\ channelState[i] = FALSE
+        /\ channelState' = [channelState EXCEPT ![i] = TRUE]
+    \/ \E i \in 1..FILE_SIZE :
+        /\ i \in sentChunks
+        /\ retransmitCount[i] > MAX_RETRIES
+        /\ channelState' = channelState
+
+Spec ==
+    Init /\ [][Next]_<<fileChunks, sentChunks, retransmitCount, channelState>>
+
+===="

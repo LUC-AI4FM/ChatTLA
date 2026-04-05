@@ -1,0 +1,908 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,0,0.444,silver,48.32,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,1,0,0.444,silver,50.96,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES participants, votes, decisions, coordinatorDecision
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,0,0,0.778,bronze,29.7,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLES forks, states
+
+(* Fork ownership: forks[i] = j means fork i is held by philosopher j; forks[i] = -1 means fork i is free *)
+Init == /\ forks = [i \in 1..N |-> -> -1]
+        /\ states = [i \in 1..N |-> -> ""thinking""]
+
+Next == \/ (* Philosopher i becomes hungry *)
+          /\ states' = [states EXCEPT ![i] = ""hungry""]
+          /\ UNCHANGED <<forks>>
+
+        \/ (* Philosopher i picks up forks if both are free *)
+          /\ states[i] = ""hungry""
+          /\ forks[i] = -1
+          /\ forks[%(i, N) + 1] = -1
+          /\ forks' = [forks EXCEPT ![i] = i, ![%(i, N) + 1] = i]
+          /\ states' = [states EXCEPT ![i] = ""eating""]
+          /\ UNCHANGED <<>>
+
+        \/ (* Philosopher i puts down forks after eating *)
+          /\ states[i] = ""eating""
+          /\ forks' = [forks EXCEPT ![i] = -1, ![%(i, N) + 1] = -1]
+          /\ states' = [states EXCEPT ![i] = ""thinking""]
+          /\ UNCHANGED <<>>
+
+Spec == Init /\ [][Next]_<<forks, states>>
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,1,0,0.778,silver,238.41,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+VARIABLES num, flag, maxFlag, maxNum
+
+Init == /\ num = 0
+       /\ flag = 0
+       /\ maxFlag = 0
+       /\ maxNum = 0
+
+Next == /\ num' = IF flag' THEN num ELSE num' + 1
+       /\ flag' = IF flag THEN flag ELSE flag' + 1
+       /\ maxNum' = IF maxFlag' THEN maxNum ELSE maxNum' + 1
+       /\ maxFlag' = IF maxFlag THEN maxFlag ELSE maxFlag' + 1
+
+Spec == Init /\ [][Next]_<<num, flag, maxFlag, maxNum>>
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,0,0,1.0,bronze,26.81,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail, size
+
+Init == /\ q = <<>>
+        /\ head = 0
+        /\ tail = 0
+        /\ size = 0
+
+ProducerAction == /\ size < K
+                 /\ head' = head
+                 /\ tail' = (tail + 1) \mod K
+                 /\ q' = Append(q, head)
+                 /\ size' = size + 1
+
+ConsumerAction == /\ size > 0
+                 /\ head' = (head + 1) \mod K
+                 /\ tail' = tail
+                 /\ q' = Tail(q)
+                 /\ size' = size - 1
+
+Next == ProducerAction \/ ConsumerAction
+
+Spec == Init /\ [][Next]_<<q, head, tail, size>>
+
+TypeOK == /\ K \in Nat
+         /\ q \in Seq(0..K-1)
+         /\ head \in 0..K-1
+         /\ tail \in 0..K-1
+         /\ size \in 0..K
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,1,0,0.444,silver,89.88,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,0,0,0.778,bronze,21.07,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES readers, writer_active
+
+Init == /\ readers = <<>>
+       /\ writer_active = FALSE
+
+Next == \/ /\ writer_active' = FALSE
+          /\ readers' = Append(readers, 1)
+        \/ /\ writer_active' = TRUE
+          /\ readers' = <<>>
+        \/ /\ writer_active' = FALSE
+          /\ readers' = Tail(readers)
+
+Spec == Init /\ [][Next]_<<readers, writer_active>> ==
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,1,0,0.444,silver,50.56,"---- MODULE ChandyLamportSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, channel, snapshot, channelSnapshot
+
+===="
+chattla:20b,BM009,Token Ring,networking,2,1,1,0.667,gold,2.26,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLE token
+
+Init == /\ token \in 1..N
+
+Next == /\ token' \in 1..N
+        /\ token' = IF token = N THEN 1 ELSE token + 1
+
+Spec == Init /\ [][Next]_<<token>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,1.0,silver,5.23,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, Values, NULL
+
+VARIABLES store
+
+Init == store = [k \in Keys |-> NULL]
+
+Next == \/ /\ \E k \in Keys : \E v \in Values : /\ store' = [store EXCEPT ![k] = v]
+      \/ /\ \E k \in Keys: /\ store' = [store EXCEPT ![k] = NULL]
+
+Spec == Init /\ [][Next]_<<store>>
+
+TypeOK == /\ store \in [Keys -> Values \/ {NULL}]
+          /\ \A k \in Keys: store[k] \in Values \/ {NULL}
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,1,0,0.444,silver,89.67,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES acceptors, proposers, promises, accepts, chosen, ballots, values
+===="
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,0,0,0.889,bronze,34.09,"---- MODULE FileTransfer ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS MAX_RETRIES, CHUNK_SIZE, FILE_SIZE, CHANNEL_LOSS_PROBABILITY
+VARIABLES channelState, retransmitCount, sentChunks
+
+    /\ fileChunks = [i \in 1..FILE_SIZE /-> i]
+    /\ sentChunks = <<>>
+    /\ retransmitCount = <<>>
+    /\ channelState = [i \in 1..FILE_SIZE /-> 0]
+
+Next ==
+    /\ \E i \in 1..FILE_SIZE :
+        /\ i \notin sentChunks
+        /\ channelState[i] = 0
+        /\ sentChunks' = Append(sentChunks, i)
+        /\ retransmitCount' = Append(retransmitCount, 0)
+        /\ channelState' = [channelState EXCEPT ![i] = 1]
+    \/ \E i \in 1..FILE_SIZE :
+        /\ i \in sentChunks
+        /\ channelState[i] = 1
+        /\ \E loss \in {0, 1} :
+            /\ channelState' = [channelState EXCEPT ![i] = loss]
+            /\ IF loss = 0 THEN
+                /\ sentChunks' = sentChunks
+                /\ retransmitCount' = [retransmitCount EXCEPT ![i] = retransmitCount[i] + 1]
+                /\ channelState' = [channelState EXCEPT ![i] = 0]
+
+                /\ sentChunks' = sentChunks
+                /\ retransmitCount' = [retransmitCount EXCEPT ![i] = retransmitCount[i] + 1]
+                /\ channelState' = channelState
+
+TypeOK ==
+    /\ fileChunks \in [1..FILE_SIZE -> 1..FILE_SIZE]
+    /\ sentChunks \in Seq(1..FILE_SIZE)
+    /\ retransmitCount \in Seq(1..FILE_SIZE)
+    /\ channelState \in [1..FILE_SIZE -> 0..1]
+
+Spec ==
+    Init /\ [][Next]_<<fileChunks, sentChunks, retransmitCount, channelState>>
+
+===="
+chattla:20b,BM013,Transaction Isolation (Snapshot Isolation),transaction,4,1,0,0.444,silver,55.77,"---- MODULE SnapshotIsolation ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES data, snapshot, txActive, txWrites, txReadSet, txWriteSet, txReadSetVals, txWriteSetVals, txCommitted, txAborted, txStartTime, txEndTime, time, txId
+===="
+chattla:20b,BM014,Clock Synchronisation,networking,3,1,0,0.444,silver,233.76,"---- MODULE ClockSync ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES clocks, offsets
+
+
+===="
+chattla:20b,BM015,Peterson's Algorithm,scheduling,2,1,1,0.778,gold,6.52,"---- MODULE Peterson2 ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES flag, turn
+
+Init == /\ flag = [i \in 1..2 |-> FALSE]
+        /\ turn = 1
+
+Next == \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ turn' = turn
+          /\ flag' = flag
+        \/ /\ flag[1] = TRUE
+          /\ flag[2] = FALSE
+          /\ turn' = 2
+          /\ flag' = [flag EXCEPT ![1] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = TRUE
+          /\ turn' = 1
+          /\ flag' = [flag EXCEPT ![2] = FALSE]
+        \/ /\ flag[1] = TRUE
+          /\ flag[2] = TRUE
+          /\ turn' = turn
+          /\ flag' = flag
+
+Spec == Init /\ [][Next]_<<flag, turn>>
+
+===="
+chattla:20b,BM016,Gossip Protocol,networking,3,1,0,0.778,silver,9.74,"---- MODULE GossipProtocol ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES known, infected
+
+Init == /\ known = <<>> 
+        /\ infected = <<>> 
+
+Next == /\ known' = known
+        /\ infected' = infected \cup known
+
+Spec == Init /\ [][Next]_<<known, infected>> 
+
+===="
+chattla:20b,BM017,Simple Allocator,storage,2,1,0,0.889,silver,16.72,"---- MODULE MemoryAllocator ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, Pages, Clients
+
+VARIABLE free, allocated
+
+Init == /\ free = Pages
+        /\ allocated = [c \in Clients |-> {}]
+
+Next == /\ \E c \in Clients:
+          /\ c \in free
+          /\ free' = free \ {c}
+          /\ allocated' = [allocated EXCEPT ![c] = @ \cup {c}]
+        \/ \E c \in Clients:
+          /\ c \in allocated
+          /\ free' = free \cup {c}
+          /\ allocated' = [allocated EXCEPT ![c] = @ \ {c}]
+
+TypeOK == /\ free \subseteq Pages
+          /\ \A c \in Clients: allocated[c] \subseteq Pages
+          /\ \A c \in Clients: allocated[c] \subseteq free
+          /\ \A c1, c2 \in Clients: c1 # c2 => allocated[c1] # allocated[c2]
+
+Spec == Init /\ [][Next]_<<free, allocated>>
+
+===="
+chattla:20b,BM018,Publish-Subscribe Broker,networking,3,1,0,0.444,silver,18.38,"---- MODULE Broker ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES subscribers, messages, nextMsgId, nextSubId
+
+===="
+chattla:20b,BM019,Dekker's Algorithm,scheduling,3,1,0,1.0,silver,13.38,"---- MODULE Dekker ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES turn, wants
+
+Init == /\ turn \in {0, 1}
+        /\ wants \in {0, 1}^2
+        /\ wants = [i \in {0, 1} |-> 0]
+
+Next == \/ /\ turn' = 1 - turn
+          /\ wants' = [wants EXCEPT ![turn] = 1]
+        \/ /\ turn' = turn
+          /\ wants' = [wants EXCEPT ![1 - turn] = 0]
+
+Spec == Init /\ [][Next]_<<turn, wants>>
+
+TypeOK == /\ turn \in {0, 1}
+          /\ wants \in {0, 1}^2
+
+===="
+chattla:20b,BM020,Eventually Consistent Counter,storage,3,0,0,0.889,bronze,117.02,"---- MODULE GCounter ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS Node
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+
+VARIABLES counts
+
+
+  (* --state Increment
+  counts[n] = [m \in Node |-> counts[n][m] + 1]
+  *)
+  (* --state Merge
+  counts = [n \in Node |-> [m \in Node |-> Max(counts[n][m], counts'[n][m])]]
+  *)
+end
+*)
+
+(* --state Init
+counts = [n \in Node |-> [m \in Node |-> 0]]
+*)
+
+(* --state Increment
+counts[n] = [m \in Node |-> counts[n][m] + 1]
+*)
+
+(* --state Merge
+counts = [n \in Node |-> [m \in Node |-> Max(counts[n][m], counts'[n][m])]]
+*)
+
+(* --state GlobalCount
+globalCount = Sum([n \in Node |-> Max({counts[n][m] : m \in Node})])
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq Nat
+        /\ counts \in [Node -> [Node -> Nat]]
+        /\ globalCount \in Nat
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state Next
+Next == \/ /\ n \in Node
+        /\ counts' = [n \in Node |-> [m \in Node |-> counts[n][m] + 1]]
+        \/ /\ n \in Node
+        /\ counts' = [n \in Node |-> [m \in Node |-> Max(counts[n][m], counts'[n][m])]]
+*)
+
+(* --state Invariant
+Invariant == /\ globalCount = Sum([n \in Node |-> Max({counts[n][m] : m \in Node})])
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq Nat
+        /\ counts \in [Node -> [Node -> Nat]]
+        /\ globalCount \in Nat
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state Invariant
+Invariant == /\ globalCount = Sum([n \in Node |-> Max({counts[n][m] : m \in Node})])
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq Nat
+        /\ counts \in [Node -> [Node -> Nat]]
+        /\ globalCount \in Nat
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state Invariant
+Invariant == /\ globalCount = Sum([n \in Node |-> Max({counts[n][m] : m \in Node})])
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq Nat
+        /\ counts \in [Node -> [Node -> Nat]]
+        /\ globalCount \in Nat
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state Invariant
+Invariant == /\ globalCount = Sum([n \in Node |-> Max({counts[n][m] : m \in Node})])
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq Nat
+        /\ counts \in [Node -> [Node -> Nat]]
+        /\ globalCount \in Nat
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state Invariant
+Invariant == /\ globalCount = Sum([n \in Node |-> Max({counts[n][m] : m \in Node})])
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq Nat
+        /\ counts \in [Node -> [Node -> Nat]]
+        /\ globalCount \in Nat
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state Invariant
+Invariant == /\ globalCount = Sum([n \in Node |-> Max({counts[n][m] : m \in Node})])
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq Nat
+        /\ counts \in [Node -> [Node -> Nat]]
+        /\ globalCount \in Nat
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state Invariant
+Invariant == /\ globalCount = Sum([n \in Node |-> Max({counts[n][m] : m \in Node})])
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq Nat
+        /\ counts \in [Node -> [Node -> Nat]]
+        /\ globalCount \in Nat
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state Invariant
+Invariant == /\ globalCount = Sum([n \in Node |-> Max({counts[n][m] : m \in Node})])
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq Nat
+        /\ counts \in [Node -> [Node -> Nat]]
+        /\ globalCount \in Nat
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state Invariant
+Invariant == /\ globalCount = Sum([n \in Node |-> Max({counts[n][m] : m \in Node})])
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq Nat
+        /\ counts \in [Node -> [Node -> Nat]]
+        /\ globalCount \in Nat
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state Invariant
+Invariant == /\ globalCount = Sum([n \in Node |-> Max({counts[n][m] : m \in Node})])
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq Nat
+        /\ counts \in [Node -> [Node -> Nat]]
+        /\ globalCount \in Nat
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state Invariant
+Invariant == /\ globalCount = Sum([n \in Node |-> Max({counts[n][m] : m \in Node})])
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq Nat
+        /\ counts \in [Node -> [Node -> Nat]]
+        /\ globalCount \in Nat
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state Invariant
+Invariant == /\ globalCount = Sum([n \in Node |-> Max({counts[n][m] : m \in Node})])
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq Nat
+        /\ counts \in [Node -> [Node -> Nat]]
+        /\ globalCount \in Nat
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state Invariant
+Invariant == /\ globalCount = Sum([n \in Node |-> Max({counts[n][m] : m \in Node})])
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq Nat
+        /\ counts \in [Node -> [Node -> Nat]]
+        /\ globalCount \in Nat
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state Invariant
+Invariant == /\ globalCount = Sum([n \in Node |-> Max({counts[n][m] : m \in Node})])
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq Nat
+        /\ counts \in [Node -> [Node -> Nat]]
+        /\ globalCount \in Nat
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state Invariant
+Invariant == /\ globalCount = Sum([n \in Node |-> Max({counts[n][m] : m \in Node})])
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq Nat
+        /\ counts \in [Node -> [Node -> Nat]]
+        /\ globalCount \in Nat
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state Invariant
+Invariant == /\ globalCount = Sum([n \in Node |-> Max({counts[n][m] : m \in Node})])
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq Nat
+        /\ counts \in [Node -> [Node -> Nat]]
+        /\ globalCount \in Nat
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state Invariant
+Invariant == /\ globalCount = Sum([n \in Node |-> Max({counts[n][m] : m \in Node})])
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq Nat
+        /\ counts \in [Node -> [Node -> Nat]]
+        /\ globalCount \in Nat
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state Invariant
+Invariant == /\ globalCount = Sum([n \in Node |-> Max({counts[n][m] : m \in Node})])
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq Nat
+        /\ counts \in [Node -> [Node -> Nat]]
+        /\ globalCount \in Nat
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state Invariant
+Invariant == /\ globalCount = Sum([n \in Node |-> Max({counts[n][m] : m \in Node})])
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq Nat
+        /\ counts \in [Node -> [Node -> Nat]]
+        /\ globalCount \in Nat
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state Invariant
+Invariant == /\ globalCount = Sum([n \in Node |-> Max({counts[n][m] : m \in Node})])
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq Nat
+        /\ counts \in [Node -> [Node -> Nat]]
+        /\ globalCount \in Nat
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state Invariant
+Invariant == /\ globalCount = Sum([n \in Node |-> Max({counts[n][m] : m \in Node})])"

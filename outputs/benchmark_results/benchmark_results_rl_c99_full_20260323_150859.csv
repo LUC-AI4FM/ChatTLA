@@ -1,0 +1,514 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,0,0.444,silver,59.24,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, turn, flag
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,1,0,0.444,silver,70.69,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES participants, votes, commit, messages, state
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,1,0,1.0,silver,52.01,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES forks, states
+
+(* Constants *)
+N == 5
+
+(* Helper functions *)
+LEFT(i) == IF i = 1 THEN N ELSE i - 1
+RIGHT(i) == IF i = N THEN 1 ELSE i + 1
+
+(* State definitions *)
+THINKING == 0
+HUNGRY == 1
+EATING == 2
+
+(* Initial state *)
+Init == /\ forks = [i \in 1..N |-> 0]  (* 0 indicates fork is free *)
+        /\ states = [i \in 1..N |-> THINKING]
+
+(* Next-state relation *)
+Next == 
+  (* Philosopher i becomes hungry *)
+  \/ \E i \in 1..N : /\ states[i] = THINKING
+                     /\ states' = [states EXCEPT ![i] = HUNGRY]
+  (* Philosopher i picks up forks if both are free *)
+  \/ \E i \in 1..N : /\ states[i] = HUNGRY
+                     /\ forks[LEFT(i)] = 0
+                     /\ forks[RIGHT(i)] = 0
+                     /\ forks' = [forks EXCEPT ![LEFT(i)] = i, ![RIGHT(i)] = i]
+                     /\ states' = [states EXCEPT ![i] = EATING]
+  (* Philosopher i puts down forks after eating *)
+  \/ \E i \in 1..N : /\ states[i] = EATING
+                     /\ forks' = [forks EXCEPT ![LEFT(i)] = 0, ![RIGHT(i)] = 0]
+                     /\ states' = [states EXCEPT ![i] = THINKING]
+  (* No state change *)
+  \/ forks' = forks
+      /\ states' = states
+
+(* Specification *)
+Spec == Init /\ [][Next]_<<forks, states>>
+
+(* Type invariant *)
+TypeOK == /\ forks \in [1..N -> 0..N]
+          /\ states \in [1..N -> {THINKING, HUNGRY, EATING}]
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,0,0,0.778,bronze,75.2,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+
+VARIABLES num, flag
+
+Init == /\ num = [i \in 1..N |-> 0]
+        /\ flag = [i \in 1..N |-> FALSE]
+
+Next == \E i \in 1..N :
+          /\ flag[i] = FALSE
+          /\ flag' = [flag EXCEPT ![i] = TRUE]
+          /\ num' = [num EXCEPT ![i] = 1 + Max({num[j] : j \in 1..N})]
+          /\ flag' = [flag EXCEPT ![i] = FALSE]
+
+Spec == Init /\ [][Next]_<<num, flag>>
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,0,0.778,silver,13.82,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail, size
+
+Init == /\ q \in Seq(1..K)
+        /\ head \in 1..K
+        /\ tail \in 1..K
+        /\ size \in 0..K
+        /\ head = 1
+        /\ tail = 1
+        /\ size = 0
+        /\ q = [i \in 1..K |-> 0]
+
+Producer == /\ size < K
+           /\ q' = [q EXCEPT ![tail] = 1]
+           /\ tail' = IF tail = K THEN 1 ELSE tail + 1
+           /\ size' = size + 1
+           /\ head' = head
+
+Consumer == /\ size > 0
+           /\ q' = [q EXCEPT ![head] = 0]
+           /\ head' = IF head = K THEN 1 ELSE head + 1
+           /\ size' = size - 1
+           /\ tail' = tail
+
+Next == Producer \/ Consumer
+
+Spec == Init /\ [][Next]_<<q, head, tail, size>>
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,1,0,0.444,silver,24.46,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS Servers
+
+VARIABLES currentTerm, votedFor, state
+
+
+(* --state Follower
+  state = Follower
+  currentTerm = 0
+  votedFor = None
+*)
+(* --state Candidate
+  state = Candidate
+  currentTerm = currentTerm + 1
+  votedFor = self
+*)
+(* --state Leader
+  state = Leader
+*)
+
+(* --type invariant
+  TypeOK == /\ state \in {Follower, Candidate, Leader}
+          /\ currentTerm \in Nat
+          /\ votedFor \in {None} \cup Servers
+*)
+
+(* --specification
+  Spec == Init /\ [][Next]_vars
+*)
+
+(* --init
+  Init == /\ state = Follower
+          /\ currentTerm = 0
+          /\ votedFor = None
+*)
+
+(* --next
+  Next == 
+    \/ /\ state = Follower
+       /\ currentTerm' = currentTerm
+       /\ votedFor' = votedFor
+       /\ state' = Candidate
+       /\ currentTerm' = currentTerm + 1
+       /\ votedFor' = self
+    \/ /\ state = Candidate
+       /\ currentTerm' = currentTerm
+       /\ votedFor' = votedFor
+       /\ state' = Leader
+    \/ /\ state = Leader
+       /\ currentTerm' = currentTerm
+       /\ votedFor' = votedFor
+       /\ state' = Leader
+*)
+
+(* --invariant
+  TypeOK
+*)
+
+(* --temporal property
+  Spec
+*)
+
+(* --configuration
+  SPECIFICATION Spec
+  INVARIANT TypeOK
+*)
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,0,0,0.667,bronze,574.83,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES readers, writer_active, r
+
+Init == /\ readers = <<>>
+        /\ writer_active = FALSE
+
+Next == \/ /\ writer_active = FALSE
+          /\ \E r \in 1..10 : /\ r \notin readers
+              /\ readers' = Append(readers, r)
+          \/ /\ writer_active = FALSE
+              /\ \E r \in readers : /\ r \notin readers'
+              /\ \E r \in 1..10 : /\ r \notin readers
+                  /\ \E r' \in 1..10 : /\ r' \notin readers
+                      /\ \E r'' \in 1..10 : /\ r'' \notin readers
+                          /\ \E r''' \in 1..10 : /\ r''' \notin readers
+                              /\ \E r'''' \in 1..10 : /\ r'''' \notin readers
+                                  /\ \E r''''' \in 1..10 : /\ r''''' \notin readers
+                                      /\ \E r'''''' \in 1..10 : /\ r'''''' \notin readers
+                                          /\ \E r''''''' \in 1..10 : /\ r''''''' \notin readers
+                                              /\ \E r'''''''' \in 1..10 : /\ r'''''''' \notin readers
+                                                  /\ \E r''''''''' \in 1..10 : /\ r''''''''' \notin readers
+                                                      /\ \E r'''''''''' \in 1..10 : /\ r'''''''''' \notin readers
+                                                          /\ \E r''''''''''' \in 1..10 : /\ r''''''''''' \notin readers
+                                                              /\ \E r'''''''''''' \in 1..10 : /\ r'''''''''''' \notin readers
+                                                                  /\ \E r''''''''''''' \in 1..10 : /\ r''''''''''''' \notin readers
+                                                                      /\ \E r'''''''''''''' \in 1..10 : /\ r'''''''''''''' \notin readers
+                                                                          /\ \E r''''''''''''''' \in 1..10 : /\ r''''''''''''''' \notin readers
+                                                                              /\ \E r'''''''''''''''' \in 1..10 : /\ r'''''''''''''''' \notin readers
+                                                                                  /\ \E r''''''''''''''''' \in 1..10 : /\ r''''''''''''''''' \notin readers
+                                                                                      /\ \E r'''''''''''''''''' \in 1..10 : /\ r'''''''''''''''''' \notin readers
+                                                                                          /\ \E r''''''''''''''''''' \in 1..10 : /\ r''''''''''''''''''' \notin readers
+                                                                                              /\ \E r'''''''''''''''''''' \in 1..10 : /\ r'''''''''''''''''''' \notin readers
+                                                                                                  /\ \E r''''''''''''''''''''' \in 1..10 : /\ r''''''''''''''''''''' \notin readers
+                                                                                                      /\ \E r'''''''''''''''''''''' \in 1..10 : /\ r'''''''''''''''''''''' \notin readers
+                                                                                                          /\ \E r''''''''''''''''''''''' \in 1..10 : /\ r''''''''''''''''''''''' \notin readers
+                                                                                                              /\ \E r'''''''''''''''''''''''' \in 1..10 : /\ r'''''''''''''''''''''''' \notin readers
+                                                                                                                  /\ \E r''''''''''''''''''''''''' \in 1..10 : /\ r''''''''''''''''''''''''' \notin readers
+                                                                                                                      /\ \E r'''''''''''''''''''''''' \in 1..10 : /\ r'''''''''''''''''''''''' \notin readers
+                                                                                                                          /\ \E r''''''''''''''''''''''''' \in 1..10 : /\ r''''''''''''''''''''''''' \notin readers
+                                                                                                                              /\ \E r'''''''''''''''''''''''' \in 1..10 : /\ r'''''''''''''''''''''''' \notin readers
+                                                                                                                                  /\ \E r''''''''''''''''''''''''' \in 1..10 : /\ r''''''''''''''''''''''''' \notin readers
+                                                                                                                                      /\ \E r'''''''''''''''''''''''' \in 1..10 : /\ r'''''''''''''''''''''''' \notin readers
+                                                                                                                                          /\ \E r''''''''''''''''''''''''' \in 1..10 : /\ r''''''''''''''''''''''''' \notin readers
+                                                                                                                                              /\ \E r'''''''''''''''''''''''' \in 1..10 : /\ r'''''''''''''''''''''''' \notin readers
+                                                                                                                                                  /\ \E r''''''''''''''''''''''''' \in 1..10 : /\ r''''''''''''''''''''''''' \notin readers
+                                                                                                                                                      /\ \E r'''''''''''''''''''''''' \in 1..10 : /\ r'''''''''''''''''''''''' \notin readers
+                                                                                                                                                          /\ \E r''''''''''''''''''''''''' \in 1..10 : /\ r''''''''''''''''''''''''' \notin readers
+                                                                                                                                                              /\ \E r'''''''''''''''''''''''' \in 1..10 : /\ r'''''''''''''''''''''''' \notin readers
+                                                                                                                                                                  /\ \E r''''''''''''''''''''''''' \in 1..10 : /\ r''''''''''''''''''''''''' \notin readers
+                                                                                                                                                                      /\ \E r'''''''''''''''''''''''' \in 1..10 : /\ r'''''''''''''''''''''''' \notin readers
+                                                                                                                                                                          /\ \E r''''''''''''''''''''''''' \in 1..10 : /\ r''''''''''''''''''''''''' \notin readers
+                                                                                                                                                                              /\ \E r'''''''''''''''''''''''' \in 1..10 : /\ r'''''''''''''''''''''''' \notin readers
+                                                                                                                                                                                  /\ \E r''''''''''''''''''''''''' \in 1..10 : /\ r''''''''''''''''''''''''' \notin readers
+                                                                                                                                                                                      /\ \E r'''''''''''''''''''''''' \in 1..10 : /\ r'''''''''''''''''''''''' \notin readers
+                                                                                                                                                                                          /"
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,1,0,0.444,silver,308.69,"---- MODULE DistributedSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, channel, snapshot, channelState, marker, finished
+
+===="
+chattla:20b,BM009,Token Ring,networking,2,1,1,0.667,gold,2.48,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLE token
+
+Init == /\ token \in 1..N
+
+Next == /\ token' \in 1..N
+        /\ token' = IF token = N THEN 1 ELSE token + 1
+
+Spec == Init /\ [][Next]_<<token>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,0.778,silver,105.62,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, Values
+
+VARIABLES store
+
+Init == /\ store \in [Keys -> Values]
+Next == /\ store' \in [Keys -> Values]
+      /\ \E k \in Keys : \E v \in Values : store' = [store EXCEPT ![k] = v]
+
+Spec == Init /\ [][Next]_<<store>>
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,1,0,0.444,silver,242.94,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES acceptors, proposers, promises, accepts, chosen, chosenBallot
+===="
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,1,0,0.444,silver,234.52,"---- MODULE FileTransfer ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES file, chunkSize, maxRetries, sentChunks, retransmitCount, ackedChunks, lostChunks
+
+===="
+chattla:20b,BM013,Transaction Isolation (Snapshot Isolation),transaction,4,1,0,0.444,silver,106.33,"---- MODULE SnapshotIsolation ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES db, txns, nextTxId, committed, aborted, snapshot, writes, reads, status
+===="
+chattla:20b,BM014,Clock Synchronisation,networking,3,0,0,0.778,bronze,207.42,"---- MODULE ClockSync ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES clocks, offsets
+
+Init == /\ clocks = [i \in 1..N |-> 0]
+        /\ offsets = [i \in 1..N |-> 0]
+
+Next == /\ \E i \in 1..N : /\ clocks[i] = clocks[i] + offsets[i]
+        /\ \E i \in 1..N : /\ offsets[i] = offsets[i] + (RandomOffset)
+        /\ \E i \in 1..N : /\ clocks[i] = clocks[i] + (AverageOffset)
+        /\ \E i \in 1..N : /\ offsets[i] = offsets[i] + (RandomOffset)
+
+RandomOffset == CHOOSE delta \in -1..1 : delta
+AverageOffset == CHOOSE avg \in 1..N : (Sum([j \in 1..N |-> clocks[j]]) \div N) - clocks[i]
+
+Spec == Init /\ [][Next]_<<clocks, offsets>>
+
+===="
+chattla:20b,BM015,Peterson's Algorithm,scheduling,2,1,1,0.778,gold,197.28,"---- MODULE Peterson2 ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES flag, turn
+
+Init == /\ flag = [i \in 1..2 |-> FALSE]
+        /\ turn = 1
+
+Next == \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag[1] = TRUE
+          /\ turn' = 2
+          /\ flag' = [flag EXCEPT ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag[2] = TRUE
+          /\ turn' = 1
+          /\ flag' = [flag EXCEPT ![1] = FALSE]
+        \/ /\ flag[1] = TRUE
+          /\ flag[2] = TRUE
+          /\ turn = 1
+          /\ flag' = [flag EXCEPT ![2] = FALSE]
+        \/ /\ flag[1] = TRUE
+          /\ flag[2] = TRUE
+          /\ turn = 2
+          /\ flag' = [flag EXCEPT ![1] = FALSE]
+        \/ /\ flag[1] = TRUE
+          /\ flag[2] = FALSE
+          /\ turn = 2
+          /\ flag' = [flag EXCEPT ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = TRUE
+          /\ turn = 1
+          /\ flag' = [flag EXCEPT ![1] = FALSE]
+        \/ /\ flag[1] = TRUE
+          /\ flag[2] = TRUE
+          /\ turn = 1
+          /\ flag' = [flag EXCEPT ![2] = FALSE]
+        \/ /\ flag[1] = TRUE
+          /\ flag[2] = TRUE
+          /\ turn = 2
+          /\ flag' = [flag EXCEPT ![1] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = TRUE
+          /\ turn = 2
+          /\ flag' = [flag EXCEPT ![1] = FALSE]
+        \/ /\ flag[1] = TRUE
+          /\ flag[2] = FALSE
+          /\ turn = 1
+          /\ flag' = [flag EXCEPT ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag' = flag
+          /\ turn' = turn
+
+Spec == Init /\ [][Next]_<<flag, turn>>
+
+===="
+chattla:20b,BM016,Gossip Protocol,networking,3,1,0,0.778,silver,127.12,"---- MODULE GossipProtocol ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES known, infected
+
+Init == /\ known = <<>> /\ infected = <<>> /\ Len(known) = Len(infected)
+
+Next == /\ known' = known
+        /\ infected' = Append(infected, known)
+
+Spec == Init /\ [][Next]_<<known, infected>>
+
+===="
+chattla:20b,BM017,Simple Allocator,storage,2,1,0,0.778,silver,22.56,"---- MODULE MemoryAllocator ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, Pages, Client
+
+VARIABLES free, allocated
+
+Init == /\ free = Pages
+        /\ allocated = [c \in Client |-> {}]
+
+Next == /\ \E c \in Client:
+          /\ c \in free
+          /\ free' = free \ {c}
+          /\ allocated' = [allocated EXCEPT ![c] = @ \cup {c}]
+        \/ \E c \in Client:
+          /\ c \in Pages
+          /\ c \in allocated
+          /\ free' = free \cup {c}
+          /\ allocated' = [allocated EXCEPT ![c] = @ \ {c}]
+
+Spec == Init /\ [][Next]_<<free, allocated>>
+
+===="
+chattla:20b,BM018,Publish-Subscribe Broker,networking,3,1,0,0.444,silver,55.66,"---- MODULE Broker ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES subscribers, messages, nextMsgId, nextSubId
+
+===="
+chattla:20b,BM019,Dekker's Algorithm,scheduling,3,1,1,0.778,gold,15.0,"---- MODULE Dekker ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES turn, wants
+
+Init == /\ turn \in {0, 1}
+        /\ wants \in {0, 1}
+        /\ turn = 0
+        /\ wants = 0
+
+Next == 
+    \/ /\ turn = 0
+        /\ wants = 0
+        /\ turn' = 1
+        /\ wants' = 1
+    \/ /\ turn = 1
+        /\ wants = 0
+        /\ turn' = 0
+        /\ wants' = 1
+    \/ /\ turn = 0
+        /\ wants = 1
+        /\ turn' = 0
+        /\ wants' = 1
+    \/ /\ turn = 1
+        /\ wants = 1
+        /\ turn' = 1
+        /\ wants' = 0
+
+Spec == Init /\ [][Next]_<<turn, wants>>
+
+===="
+chattla:20b,BM020,Eventually Consistent Counter,storage,3,1,0,0.444,silver,251.55,"---- MODULE GCounter ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES counts
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+===="

@@ -1,0 +1,210 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,1,1.0,gold,3.37,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS N
+
+VARIABLES state, turn
+
+Init == /\ state = [p \in 1..N |-> ""idle""]
+        /\ turn = 1
+
+Next == \/ /\ turn' = turn + 1
+           /\ turn' <= N
+           /\ state' = [state EXCEPT ![turn] = ""critical""]
+       \/ /\ turn' = turn
+           /\ state' = [state EXCEPT ![turn] = ""idle""]
+
+Spec == Init /\ [][Next]_<<state, turn>>
+
+TypeOK == /\ state \in [1..N -> {""idle"", ""trying"", ""critical""}]
+         /\ turn \in 1..N
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,0,0,0.778,bronze,57.43,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLES participants, coordinator, messages, decision, state, vote
+
+Init ==
+  /\ participants = [i \in 1..N |-> [state |-> ""Init"", vote |-> ""None""]]
+  /\ coordinator = [state |-> ""Init"", decision |-> ""None""]
+  /\ messages = <<>>
+
+Next ==
+  \/ /\ coordinator.state = ""Init""
+     /\ coordinator.decision = ""None""
+        /\ coordinator.state' = ""Prepare""
+           /\ messages' = Append(messages, [type |-> ""Prepare"", to |-> ""All""])
+        /\ UNCHANGED <<participants, coordinator>>
+  \/ /\ coordinator.state = ""Prepare""
+     /\ coordinator.decision = ""None""
+        /\ coordinator.state' = ""Decide""
+           /\ coordinator.decision' = IF \A i \in 1..N : participants[i].vote = ""Yes""
+                                            THEN ""Commit""
+
+           /\ messages' = Append(messages, [type |-> coordinator.decision', to |-> ""All""])
+        /\ UNCHANGED <<participants, coordinator>>
+  \/ /\ \E i \in 1..N : participants[i].state = ""Init""
+     /\ participants[i].state' = ""Vote""
+        /\ participants[i].vote' = IF coordinator.state = ""Prepare"" /\ coordinator.decision = ""None""
+                                            THEN IF i \in 1..N THEN ""Yes"" ELSE ""No""
+
+        /\ messages' = Append(messages, [type |-> IF participants[i].vote' = ""Yes"" THEN ""VoteYes"" ELSE ""VoteNo"", to |-> ""Coordinator""])
+        /\ UNCHANGED <<participants, coordinator>>
+  \/ /\ coordinator.state = ""Decide""
+     /\ coordinator.decision' = ""Commit""
+        /\ messages' = Append(messages, [type |-> ""Commit"", to |-> ""All""])
+        /\ UNCHANGED <<participants, coordinator>>
+  \/ /\ coordinator.state = ""Decide""
+     /\ coordinator.decision' = ""Abort""
+        /\ messages' = Append(messages, [type |-> ""Abort"", to |-> ""All""])
+        /\ UNCHANGED <<participants, coordinator>>
+  \/ /\ \E i \in 1..N : participants[i].state = ""Vote""
+     /\ participants[i].state' = ""Done""
+        /\ messages' = Append(messages, [type |-> IF participants[i].vote = ""Yes"" THEN ""VoteYes"" ELSE ""VoteNo"", to |-> ""Coordinator""])
+        /\ UNCHANGED <<participants, coordinator>>
+  \/ /\ coordinator.state = ""Decide""
+     /\ coordinator.decision' = ""Commit""
+        /\ messages' = Append(messages, [type |-> ""Commit"", to |-> ""All""])
+        /\ UNCHANGED <<participants, coordinator>>
+  \/ /\ coordinator.state = ""Decide""
+     /\ coordinator.decision' = ""Abort""
+        /\ messages' = Append(messages, [type |-> ""Abort"", to |-> ""All""])
+        /\ UNCHANGED <<participants, coordinator>>
+  \/ /\ \E i \in 1..N : participants[i].state = ""Done""
+     /\ participants[i].state' = ""Finished""
+        /\ messages' = Append(messages, [type |-> IF participants[i].vote = ""Yes"" THEN ""VoteYes"" ELSE ""VoteNo"", to |-> ""Coordinator""])
+        /\ UNCHANGED <<participants, coordinator>>
+
+Spec == Init /\ [][Next]_<<participants, coordinator, messages>>
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,0,0,1.0,bronze,34.75,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N, Null
+
+VARIABLES forks, state
+
+(* Forks: forks[f] = p means fork f is held by philosopher p; forks[f] = Null means fork f is free *)
+(* State: state[p] = ""thinking"" | ""hungry"" | ""eating"" *)
+
+Init ==
+  /\ forks = [f \in 1..N |-> Null]
+  /\ state = [p \in 1..N |-> ""thinking""]
+
+Next ==
+  \/ (* Philosopher p picks up forks if hungry and forks are free *)
+     /\ \E p \in 1..N : state[p] = ""hungry""
+     /\ forks[Left(p)] = Null
+     /\ forks[Right(p)] = Null
+     /\ forks' = [forks EXCEPT ![Left(p)] = p, ![Right(p)] = p]
+     /\ state' = [state EXCEPT ![p] = ""eating""]
+  \/ (* Philosopher p puts down forks after eating *)
+     /\ \E p \in 1..N : state[p] = ""eating""
+     /\ forks' = [forks EXCEPT ![Left(p)] = Null, ![Right(p)] = Null]
+     /\ state' = [state EXCEPT ![p] = ""thinking""]
+
+Spec == Init /\ [][Next]_<<forks, state>>
+
+TypeOK ==
+  /\ forks \in [1..N -> 1..N \cup {Null}]
+  /\ state \in [1..N -> {""thinking"", ""hungry"", ""eating""}]
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,1,0,0.778,silver,6.44,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+
+CONSTANT N
+
+VARIABLES num, flag
+
+Init == /\ num = [i \in 1..N |-> 0]
+        /\ flag = [i \in 1..N |-> FALSE]
+
+Next == \E i \in 1..N :
+          /\ flag' = [flag EXCEPT ![i] = TRUE]
+          /\ num' = [num EXCEPT ![i] = 1 + Max({num[j] : j \in 1..N})]
+          /\ flag' = [flag EXCEPT ![i] = FALSE]
+
+Spec == Init /\ [][Next]_<<num, flag>>
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,0,0,1.0,bronze,28.44,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail, size, DequeuedItem
+
+(* q is a sequence of length K, holding the queue contents *)
+(* head is the index of the next element to dequeue *)
+(* tail is the index of the next slot to enqueue *)
+(* size is the current number of elements in the queue *)
+
+TypeOK == 
+  /\ q \in Seq(1..K)[Int]
+  /\ head \in 1..K
+  /\ tail \in 1..K
+  /\ size \in 0..K
+
+Init == 
+  /\ q = [i \in 1..K |-> 0]
+  /\ head = 1
+  /\ tail = 1
+  /\ size = 0
+
+ProducerAction == 
+  /\ size < K
+  /\ q' = [q EXCEPT ![tail] = NewItem]
+  /\ tail' = IF tail = K THEN 1 ELSE tail + 1
+  /\ size' = size + 1
+  /\ UNCHANGED <<head, q>>
+
+ConsumerAction == 
+  /\ size > 0
+  /\ DequeuedItem' = q[head]
+  /\ head' = IF head = K THEN 1 ELSE head + 1
+  /\ size' = size - 1
+  /\ UNCHANGED <<tail, q>>
+
+Next == ProducerAction \/ ConsumerAction
+
+Spec == Init /\ [][Next]_<<q, head, tail, size>>
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,0,0,0.778,bronze,27.11,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS Servers
+
+VARIABLES currentTerm, votedFor, state
+
+Init ==
+  /\ currentTerm = 0
+  /\ votedFor = [s \in Servers |-> -> NULL]
+  /\ state = [s \in Servers |-> -> Follower]
+
+Next ==
+  \/ \E s \in Servers :
+        /\ state[s] = Follower
+        /\ state' = [state EXCEPT ![s] = Candidate]
+        /\ currentTerm' = currentTerm
+        /\ votedFor' = [votedFor EXCEPT ![s] = s]
+  \/ \E s \in Servers :
+        /\ state[s] = Candidate
+        /\ state' = [state EXCEPT ![s] = Leader]
+        /\ currentTerm' = currentTerm
+        /\ votedFor' = votedFor
+  \/ \E s \in Servers :
+        /\ state[s] = Follower
+        /\ state' = [state EXCEPT ![s] = Follower]
+        /\ currentTerm' = currentTerm
+        /\ votedFor' = votedFor
+
+Spec == Init /\ [][Next]_<<currentTerm, votedFor, state>>
+
+===="

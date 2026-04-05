@@ -1,0 +1,1039 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,1,1.0,gold,23.89,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLES state
+
+
+
+TypeOK == /\ state \in [1..N -> {""idle"", ""trying"", ""critical""}]
+           /\ \A i \in 1..N: state[i] \in {""idle"", ""trying"", ""critical""}
+
+Init == /\ state = [i \in 1..N |-> ""idle""]
+
+Next == \E i \in 1..N:
+          /\ state' = [state EXCEPT ![i] = ""trying""]
+          \/ state' = [state EXCEPT ![i] = ""critical""]
+          \/ state' = [state EXCEPT ![i] = ""idle""]
+
+Spec == Init /\ [][Next]_<<state>>
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,0,0,1.0,bronze,6.33,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N, Participants
+
+VARIABLES state, votes, messages
+
+TypeOK ==
+  /\ state \in {""INIT"", ""PREPARED"", ""COMMITTED"", ""ABORTED""}
+  /\ votes \in [Participants -> {""YES"", ""NO"", ""UNDECIDED""}]
+  /\ messages \in [Participants -> Seq({[""type"" |-> {""Prepare"")]
+
+Init ==
+  /\ state = ""INIT""
+  /\ votes = [p \in Participants |-> ""UNDECIDED""]
+  /\ messages = [p \in Participants |-> <<[""type"" |-> ""Prepare"", ""content"" |-> ""YES""]>>]
+
+Prepare ==
+  /\ state = ""INIT""
+  /\ state' = ""PREPARED""
+
+VoteYes ==
+  /\ state = ""PREPARED""
+  /\ \E p \in Participants : votes[p] = ""UNDECIDED""
+  /\ votes' = [votes EXCEPT ![p] = ""YES""]
+  /\ messages' = [messages EXCEPT ![p] = Append(messages[p], [""type"" |-> ""VoteYes"", ""content"" |-> ""YES""])]
+
+VoteNo ==
+  /\ state = ""PREPARED""
+  /\ \E p \in Participants : votes[p] = ""UNDECIDED""
+  /\ votes' = [votes EXCEPT ![p] = ""NO""]
+  /\ messages' = [messages EXCEPT ![p] = Append(messages[p], [""type"" |-> ""VoteNo"", ""content"" |-> ""NO""])]
+
+Commit ==
+  /\ state = ""PREPARED""
+  /\ \A p \in Participants : votes[p] = ""YES""
+  /\ state' = ""COMMITTED""
+  /\ messages' = [messages EXCEPT ![p] = Append(messages[p], [""type"" |-> ""Commit"", ""content"" |-> ""COMMIT""])]
+
+Abort ==
+  /\ state = ""PREPARED""
+  /\ \E p \in Participants : votes[p] = ""NO""
+  /\ state' = ""ABORTED""
+  /\ messages' = [messages EXCEPT ![p] = Append(messages[p], [""type"" |-> ""Abort"", ""content"" |-> ""ABORT""])]
+
+Next ==
+  \/ Prepare
+  \/ VoteYes
+  \/ VoteNo
+  \/ Commit
+  \/ Abort
+
+Spec == Init /\ [][Next]_<<state, votes, messages>>
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,0,0,1.0,bronze,4.71,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLES forks, state
+
+(* Forks: forks[i] = i if fork i is free, otherwise forks[i] = j if philosopher j holds fork i *)
+(* State: state[i] = ""thinking"", ""hungry"", or ""eating"" *)
+
+TypeOK == 
+  /\ forks \in [1..N -> 1..N]
+  /\ state \in [1..N -> {""thinking"", ""hungry"", ""eating""}]
+
+Init == 
+  /\ forks = [i \in 1..N |-> i]
+  /\ state = [i \in 1..N |-> ""thinking""]
+
+Left(i) == IF i = 1 THEN N ELSE i - 1
+Right(i) == IF i = N THEN 1 ELSE i + 1
+
+CanEat(i) == forks[Left(i)] = i /\ forks[Right(i)] = i
+
+TakeForks(i) == 
+  /\ forks' = [forks EXCEPT ![Left(i)] = i, ![Right(i)] = i]
+  /\ state' = [state EXCEPT ![i] = ""eating""]
+
+PutForks(i) == 
+  /\ forks' = [forks EXCEPT ![Left(i)] = Left(i), ![Right(i)] = Right(i)]
+  /\ state' = [state EXCEPT ![i] = ""thinking""]
+
+Hungry(i) == state[i] = ""hungry""
+
+Next == 
+  \E i \in 1..N :
+    /\ state[i] = ""hungry""
+    /\ CanEat(i)
+    /\ TakeForks(i)
+  \/ \E i \in 1..N :
+    /\ state[i] = ""eating""
+    /\ PutForks(i)
+
+Spec == Init /\ [][Next]_<<forks, state>>
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,0,0,0.778,bronze,4.34,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLES num, flag
+
+
+
+TypeOK == /\ num \in [1..N -> 1..N]
+          /\ flag \in [1..N -> BOOLEAN]
+
+Spec == Init /\ [][Next]_<<num, flag>>
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,0,0,1.0,bronze,3.74,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail, count, ConsumedItem
+
+(* q is a sequence of length K, holding the queue contents *)
+(* head and tail are indices into q *)
+(* count is the number of items in the queue *)
+
+TypeOK == 
+    /\ q \in Seq[1..K][Int]
+    /\ head \in 1..K
+    /\ tail \in 1..K
+    /\ count \in 0..K
+
+Init == 
+    /\ q = [i \in 1..K |-> 0]
+    /\ head = 1
+    /\ tail = 1
+    /\ count = 0
+
+ProducerAction == 
+    /\ count < K
+    /\ q' = [q EXCEPT ![tail] = NewItem]
+    /\ tail' = IF tail = K THEN 1 ELSE tail + 1
+    /\ count' = count + 1
+    /\ UNCHANGED <<head, q>>
+
+ConsumerAction == 
+    /\ count > 0
+    /\ ConsumedItem' = q[head]
+    /\ head' = IF head = K THEN 1 ELSE head + 1
+    /\ count' = count - 1
+    /\ UNCHANGED <<tail, q>>
+
+Next == 
+    \/ ProducerAction
+    \/ ConsumerAction
+
+Spec == Init /\ [][Next]_<<q, head, tail, count>>
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,0,0,1.0,bronze,4.03,"---- MODULE RaftElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+
+
+TypeOK ==
+  /\ currentTerm \in Nat
+  /\ votedFor \in {None} \cup Servers
+  /\ state \in {""Follower"", ""Candidate"", ""Leader""}
+
+Init ==
+  /\ currentTerm = 0
+  /\ votedFor = None
+  /\ state = ""Follower""
+
+(* Candidate starts election *)
+StartElection ==
+  /\ state = ""Follower""
+  /\ currentTerm' = currentTerm + 1
+  /\ votedFor' = Self
+  /\ state' = ""Candidate""
+
+(* Receive vote request *)
+ReceiveVoteRequest ==
+  /\ state' = state
+  /\ currentTerm' = currentTerm
+  /\ votedFor' = votedFor
+
+(* Receive vote response *)
+ReceiveVoteResponse ==
+  /\ state' = state
+  /\ currentTerm' = currentTerm
+  /\ votedFor' = votedFor
+
+(* Become leader after majority *)
+BecomeLeader ==
+  /\ state = ""Candidate""
+  /\ state' = ""Leader""
+
+Next ==
+  \/ StartElection
+  \/ ReceiveVoteRequest
+  \/ ReceiveVoteResponse
+  \/ BecomeLeader
+
+Spec ==
+  Init /\ [][Next]_<<currentTerm, votedFor, state>>
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,1,0,1.0,silver,63.11,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES readers, writer_active
+
+TypeOK == 
+  /\ readers \in Nat
+  /\ writer_active \in BOOLEAN
+
+Init == 
+  /\ readers = 0
+  /\ writer_active = FALSE
+
+AcquireRead == 
+  /\ writer_active = FALSE
+  /\ readers' = readers + 1
+  /\ UNCHANGED writer_active
+
+ReleaseRead == 
+  /\ readers > 0
+  /\ readers' = readers - 1
+  /\ UNCHANGED writer_active
+
+AcquireWrite == 
+  /\ writer_active = FALSE
+  /\ readers = 0
+  /\ writer_active' = TRUE
+  /\ UNCHANGED readers
+
+ReleaseWrite == 
+  /\ writer_active = TRUE
+  /\ writer_active' = FALSE
+  /\ UNCHANGED readers
+
+Next == 
+  \/ AcquireRead
+  \/ ReleaseRead
+  \/ AcquireWrite
+  \/ ReleaseWrite
+
+Spec == Init /\ [][Next]_<<readers, writer_active>>
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,0,0,1.0,bronze,10.81,"---- MODULE ChandyLamportSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, Channels
+
+VARIABLES state, channelState, markerSent, markerReceived, recorded
+State == [data: Nat, snapshot: BOOLEAN]
+ChannelState == [data: Seq(Nat), snapshot: BOOLEAN]
+
+(* Initial state *)
+Init ==
+    /\ state = [i \in 1..N |-> [data |-> 0, snapshot |-> FALSE]]
+    /\ channelState = [c \in Channels |-> [data |-> <<>>, snapshot |-> FALSE]]
+    /\ markerSent = [c \in Channels |-> FALSE]
+    /\ markerReceived = [c \in Channels |-> FALSE]
+    /\ recorded = [i \in 1..N |-> FALSE]
+
+(* Sending a data message from process i to process j *)
+SendData(i, j) ==
+    /\ i \in 1..N
+    /\ j \in 1..N
+    /\ i # j
+    /\ \E msg \in 1..N : /\ msg \in 1..N
+                         /\ channelState[(i, j)].data = Append(channelState[(i, j)].data, msg)
+                         /\ state[i].data' = state[i].data + 1
+                         /\ UNCHANGED <<state, channelState, markerSent, markerReceived, recorded>>
+
+(* Sending a marker from process i to process j *)
+SendMarker(i, j) ==
+    /\ i \in 1..N
+    /\ j \in 1..N
+    /\ i # j
+    /\ markerSent[(i, j)] = FALSE
+    /\ markerSent'[(i, j)] = TRUE
+    /\ UNCHANGED <<state, channelState, markerReceived, recorded>>
+
+(* Receiving a data message on channel (i, j) *)
+ReceiveData(i, j) ==
+    /\ i \in 1..N
+    /\ j \in 1..N
+    /\ i # j
+    /\ channelState[(i, j)].data # <<>>
+    /\ \E msg \in 1..N : /\ msg = Head(channelState[(i, j)].data)
+                         /\ channelState[(i, j)].data' = Tail(channelState[(i, j)].data)
+                         /\ state[j].data' = state[j].data + 1
+                         /\ UNCHANGED <<state, channelState, markerSent, markerReceived, recorded>>
+
+(* Receiving a marker on channel (i, j) *)
+ReceiveMarker(i, j) ==
+    /\ i \in 1..N
+    /\ j \in 1..N
+    /\ i # j
+    /\ markerReceived[(i, j)] = FALSE
+    /\ markerReceived'[(i, j)] = TRUE
+    /\ IF recorded[j] = FALSE
+       THEN /\ recorded' = [ recorded EXCEPT ![j] = TRUE ]
+            /\ channelState'[(i, j)] = [ channelState[(i, j)] EXCEPT !.snapshot = TRUE ]
+            /\ \E k \in 1..N : /\ k # j
+                               /\ SendMarker(j, k)
+
+    /\ UNCHANGED <<state, channelState, markerSent, markerReceived, recorded>>
+
+(* Next-state relation *)
+Next ==
+    \/ \E i, j \in 1..N : /\ i # j
+                           /\ SendData(i, j)
+    \/ \E i, j \in 1..N : /\ i # j
+                           /\ SendMarker(i, j)
+    \/ \E i, j \in 1..N : /\ i # j
+                           /\ ReceiveData(i, j)
+    \/ \E i, j \in 1..N : /\ i # j
+                           /\ ReceiveMarker(i, j)
+
+(* Specification *)
+Spec == Init /\ [][Next]_<<state, channelState, markerSent, markerReceived, recorded>>
+
+(* Type invariant *)
+TypeOK ==
+    /\ state \in [1..N -> State]
+    /\ channelState \in [Channels -> ChannelState]
+    /\ markerSent \in [Channels -> BOOLEAN]
+    /\ markerReceived \in [Channels -> BOOLEAN]
+    /\ recorded \in [1..N -> BOOLEAN]
+
+===="
+chattla:20b,BM009,Token Ring,networking,2,1,1,0.667,gold,1.81,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLE token
+
+Init == token \in 1..N
+
+Next == token' = IF token = N THEN 1 ELSE token + 1
+
+Spec == Init /\ [][Next]_<<token>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,0,0,1.0,bronze,1.61,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, Values
+
+VARIABLES store
+
+TypeOK == store \in [Keys -> Values]
+
+Init == store = [k \in Keys |-> NULL]
+
+Next == 
+  \E k \in Keys : \E v \in Values :
+    /\ store' = [store EXCEPT ![k] = v]
+    /\ UNCHANGED <<>>
+
+Spec == Init /\ [][Next]_<<store>>
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,0,0,1.0,bronze,6.33,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N, M
+
+VARIABLES acceptors, proposers, ballot, chosen, value
+
+TypeOK ==
+  /\ acceptors \in [1..N -> [ballot : Nat, value : Nat, chosen : BOOLEAN]]
+  /\ proposers \in [1..M -> [ballot : Nat, value : Nat, chosen : BOOLEAN]]
+
+Init ==
+  /\ acceptors = [i \in 1..N |-> [ballot |-> 0, value |-> 0, chosen |-> FALSE]]
+  /\ proposers = [j \in 1..M |-> [ballot |-> 0, value |-> 0, chosen |-> FALSE]]
+
+Prepare(j) ==
+  /\ proposers[j].ballot' = proposers[j].ballot + 1
+  /\ proposers[j].value' = proposers[j].value
+  /\ proposers[j].chosen' = proposers[j].chosen
+  /\ acceptors' = [i \in 1..N |-> 
+
+          [ballot |-> proposers[j].ballot', value |-> proposers[j].value, chosen |-> proposers[j].chosen]
+
+          acceptors[i]]
+  /\ proposers' = [j \in 1..M |-> proposers[j] \ {ballot, value, chosen} \cup 
+        [ballot |-> proposers[j].ballot', value |-> proposers[j].value', chosen |-> proposers[j].chosen']]
+
+Accept(j) ==
+  /\ proposers[j].chosen' = proposers[j].chosen
+  /\ proposers[j].ballot' = proposers[j].ballot
+  /\ proposers[j].value' = proposers[j].value
+  /\ acceptors' = [i \in 1..N |-> 
+
+          [ballot |-> acceptors[i].ballot, value |-> proposers[j].value, chosen |-> TRUE]
+
+          acceptors[i]]
+  /\ proposers' = [j \in 1..M |-> proposers[j] \ {ballot, value, chosen} \cup 
+        [ballot |-> proposers[j].ballot', value |-> proposers[j].value', chosen |-> proposers[j].chosen']]
+
+Next ==
+  \/ \E j \in 1..M : Prepare(j)
+  \/ \E j \in 1..M : Accept(j)
+
+Spec == Init /\ [][Next]_<<acceptors, proposers>>
+
+===="
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,0,0,0.778,bronze,6.09,"---- MODULE FileTransfer ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS FileSize
+VARIABLES ackedChunks, chunks, file, lostChunks, retransmitCount, sentChunks
+
+    /\ file \in Seq(1..FileSize)
+    /\ chunks \in Seq(1..ChunkSize)
+    /\ sentChunks \in FiniteSet(1..FileSize)
+    /\ retransmitCount \in FiniteSet(1..FileSize)
+    /\ ackedChunks \in FiniteSet(1..FileSize)
+    /\ lostChunks \in FiniteSet(1..FileSize)
+
+Init ==
+    /\ file = [i \in 1..FileSize |-> i]
+    /\ chunks = [i \in 1..ChunkSize |-> i]
+    /\ sentChunks = {}
+    /\ retransmitCount = {}
+    /\ ackedChunks = {}
+    /\ lostChunks = {}
+
+SendChunk ==
+    /\ sentChunks' = sentChunks \cup {chunk}
+    /\ retransmitCount' = [retransmitCount EXCEPT ![chunk] = 1]
+    /\ UNCHANGED <<file, chunks, ackedChunks, lostChunks>>
+
+RetransmitChunk ==
+    /\ chunk \in sentChunks
+    /\ retransmitCount[chunk] < MAX_RETRIES
+    /\ retransmitCount' = [retransmitCount EXCEPT ![chunk] = retransmitCount[chunk] + 1]
+    /\ UNCHANGED <<file, chunks, ackedChunks, lostChunks>>
+
+AckChunk ==
+    /\ chunk \in sentChunks
+    /\ chunk \notin ackedChunks
+    /\ ackedChunks' = ackedChunks \cup {chunk}
+    /\ UNCHANGED <<file, chunks, retransmitCount, lostChunks>>
+
+LoseChunk ==
+    /\ chunk \in sentChunks
+    /\ chunk \notin ackedChunks
+    /\ lostChunks' = lostChunks \cup {chunk}
+    /\ UNCHANGED <<file, chunks, ackedChunks, retransmitCount>>
+
+Next ==
+    /\ \E chunk \in 1..FileSize :
+        /\ chunk \notin sentChunks
+        /\ SendChunk
+    \/ \E chunk \in sentChunks :
+        /\ chunk \notin ackedChunks
+        /\ \E action \in {RetransmitChunk, AckChunk, LoseChunk} :
+            action
+
+Spec == Init /\ [][Next]_<<file, chunks, sentChunks, retransmitCount, ackedChunks, lostChunks>>
+
+===="
+chattla:20b,BM013,Transaction Isolation (Snapshot Isolation),transaction,4,0,0,0.444,bronze,43.68,"---- MODULE SnapshotIsolationDB ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES data, txns, nextTxId
+
+
+  txns = <<>>;  (* sequence of transaction records *)
+  nextTxId = 1; (* next transaction ID *)
+
+define
+  Txn = [id: Int, status: {""started"", ""committed"", ""aborted""}, snapshot: Seq, writes: Seq]
+  TxnId = [id: Int, status: {""started"", ""committed"", ""aborted""}, snapshot: Seq, writes: Seq]
+  TxnStatus = {""started"", ""committed"", ""aborted""}
+  TxnWrites = Seq
+  TxnSnapshot = Seq
+  TxnRecord = [id: Int, status: TxnStatus, snapshot: TxnSnapshot, writes: TxnWrites]
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq = Seq
+  TxnRecordSeq "
+chattla:20b,BM014,Clock Synchronisation,networking,3,1,0,0.444,silver,44.22,"---- MODULE ClockSync ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES clocks, offsets
+
+(* --algorithm ClockSync *)
+===="
+chattla:20b,BM015,Peterson's Algorithm,scheduling,2,0,0,0.667,bronze,3.48,"---- MODULE Peterson ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLE flag, turn
+
+  (* non-critical section *)
+od
+
+
+
+  (* critical section *)
+
+  (* non-critical section *)
+od
+*)
+
+Init == /\ flag = [i \in 1..2 |-> -> FALSE]
+        /\ turn \in 1..2
+
+Next == 
+  \/ /\ flag' = [flag EXCEPT ![1] = TRUE]
+      /\ turn' = 2
+      /\ flag' = [flag EXCEPT ![1] = FALSE]
+  \/ /\ flag' = [flag EXCEPT ![2] = TRUE]
+      /\ turn' = 1
+      /\ flag' = [flag EXCEPT ![2] = FALSE]
+
+Spec == Init /\ [][Next]_<<flag, turn>>
+
+===="
+chattla:20b,BM016,Gossip Protocol,networking,3,0,0,0.778,bronze,2.01,"---- MODULE Gossip ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLES known, infected
+
+Init == /\ known = <<>> 
+        /\ infected = <<>> 
+
+Next == 
+  /\ known' = known
+  /\ infected' = 
+        IF Len(infected) = 0 THEN <<>>
+
+          LET 
+            i == CHOOSE i \in 1..N : i \notin infected
+            j == CHOOSE j \in 1..N : j \notin infected
+          IN 
+            Append(infected, <<i, j>>)
+
+Spec == Init /\ [][Next]_<<known, infected>>
+
+===="
+chattla:20b,BM017,Simple Allocator,storage,2,1,0,0.889,silver,3.44,"---- MODULE MemoryAllocator ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, Client
+
+Pages == 1..N
+
+VARIABLE free, allocated
+
+Init == /\ free = Pages
+       /\ allocated = [c \in Client |-> {}]
+
+Next == /\ \E c \in Client:
+          /\ c \in free
+          /\ free' = free \ {c}
+          /\ allocated' = [allocated EXCEPT ![c] = @ \cup {c}]
+       \/ \E c \in Client:
+          /\ c \in Pages
+          /\ c \in allocated
+          /\ free' = free \cup {c}
+          /\ allocated' = [allocated EXCEPT ![c] = @ \ {c}]
+
+TypeOK == /\ free \subseteq Pages
+          /\ \A c \in Client: allocated[c] \subseteq Pages
+          /\ \A c \in Client: allocated[c] \subseteq free
+
+Spec == Init /\ [][Next]_<<free, allocated>>
+
+===="
+chattla:20b,BM018,Publish-Subscribe Broker,networking,3,0,0,1.0,bronze,2.93,"---- MODULE Broker ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES subscribers, messages, broker
+
+(* TypeOK ensures all variables have the correct type *)
+TypeOK == 
+    subscribers \in [Topic -> SUBSET Subscriber] /\
+    messages \in [Topic -> Seq(Message)]
+
+(* Init sets up an empty broker *)
+Init == 
+    subscribers = [t \in Topic |-> {}] /\
+    messages = [t \in Topic |-> <<>>]
+
+(* Next describes the broker's behavior *)
+Next == 
+    \/ (* A subscriber registers for a topic *)
+        \E s \in Subscriber : \E t \in Topic :
+            subscribers' = [subscribers EXCEPT ![t] = subscribers[t] \cup {s}] /\
+            messages' = messages
+    \/ (* A publisher posts a message on a topic *)
+        \E m \in Message : \E t \in Topic :
+            subscribers' = subscribers /\
+            messages' = [messages EXCEPT ![t] = Append(messages[t], m)]
+
+Spec == Init /\ [][Next]_<<subscribers, messages>>
+
+===="
+chattla:20b,BM019,Dekker's Algorithm,scheduling,3,1,1,1.0,gold,3.8,"---- MODULE Dekker ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES turn, wants
+
+Init == /\ turn \in {0,1}
+        /\ wants = [i \in {0,1} |-> FALSE]
+
+Next == 
+  \/ /\ wants[0] = FALSE
+      /\ wants[1] = FALSE
+      /\ turn' = turn
+      /\ wants' = wants
+  \/ /\ wants[0] = FALSE
+      /\ wants[1] = TRUE
+      /\ turn' = 1
+      /\ wants' = [wants EXCEPT ![1] = FALSE]
+  \/ /\ wants[0] = TRUE
+      /\ wants[1] = FALSE
+      /\ turn' = 0
+      /\ wants' = [wants EXCEPT ![0] = FALSE]
+  \/ /\ wants[0] = TRUE
+      /\ wants[1] = TRUE
+      /\ turn' = turn
+      /\ wants' = wants
+
+Spec == Init /\ [][Next]_<<turn, wants>>
+
+TypeOK == /\ turn \in {0,1}
+          /\ wants \in [ {0,1} -> BOOLEAN ]
+
+===="
+chattla:20b,BM020,Eventually Consistent Counter,storage,3,0,0,0.778,bronze,1.94,"---- MODULE GCounter ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, Node
+
+VARIABLES counts
+
+Init ==
+  /\ counts = [n \in Node |-> [m \in Node |-> 0]]
+
+Next ==
+  \E n \in Node :
+    /\ counts' = [counts EXCEPT ![n] = [m \in Node |-> IF m = n THEN counts[n][n] + 1 ELSE counts[n][m]]]
+    /\ UNCHANGED <<counts>>
+
+Total(n) ==
+  Sum(counts[][n])
+
+Spec ==
+  Init /\ [][Next]_<<counts>>
+
+===="

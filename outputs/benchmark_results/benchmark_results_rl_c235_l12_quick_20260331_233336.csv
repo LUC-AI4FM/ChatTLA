@@ -1,0 +1,1527 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,0,0.444,silver,89.7,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state
+
+
+  \* Each process i
+  \* [i \in 1..N] -> BEGIN
+  \*   \* Trying to enter critical section
+  \*   state[i] := trying
+  \*   \* Wait until no other process is in critical section
+  \*   \* [i \in 1..N] -> BEGIN
+  \*   \*   \* Wait until no other process is in critical section
+  \*   \*   \* [i \in 1..N] -> BEGIN
+  \*   \*   \*   \* Enter critical section
+  \*   \*   \*   state[i] := critical
+  \*   \*   \*   \* Do critical section
+  \*   \*   \*   \* Exit critical section
+  \*   \*   \*   state[i] := idle
+  \*   \*   \* END
+  \*   \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+  \* END
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,0,0,1.0,bronze,69.19,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES participants, coordinator, state, messages, decision
+State == {""init"", ""prepared"", ""committed"", ""aborted""}
+
+(* Message structure: [type \in {""Prepare"", ""VoteYes"", ""VoteNo"", ""Commit"", ""Abort""},
+                      from \in participants \cup {coordinator},
+                      to \in participants \cup {coordinator}] *)
+
+Message == [type \in {""Prepare"", ""VoteYes"", ""VoteNo"", ""Commit"", ""Abort""},
+            from \in participants \cup {coordinator},
+            to \in participants \cup {coordinator}]
+
+(* Initial state: all participants are in ""init"" state, no messages in transit, decision is undefined *)
+Init == /\ participants = {1, 2, 3}  \* Example set of participants
+       /\ coordinator = 0
+       /\ state = [p \in participants \cup {coordinator} |-> ""init""]
+       /\ messages = {}
+       /\ decision = ""undefined""
+
+(* Coordinator sends Prepare to all participants *)
+SendPrepare == /\ messages' = messages \cup { [type |-> ""Prepare"", from |-> coordinator, to |-> p] : p \in participants }
+               /\ state' = state
+               /\ decision' = decision
+
+(* Participant receives Prepare and votes Yes or No *)
+ReceivePrepare == /\ \E p \in participants :
+                    /\ [type |-> ""Prepare"", from |-> coordinator, to |-> p] \in messages
+                    /\ state[p] = ""init""
+                    /\ state' = [state EXCEPT ![p] = ""prepared""]
+                    /\ messages' = messages \ { [type |-> ""Prepare"", from |-> coordinator, to |-> p] }
+                    /\ decision' = decision
+
+(* Participant sends VoteYes or VoteNo *)
+SendVoteYes == /\ \E p \in participants :
+                 /\ state[p] = ""prepared""
+                 /\ messages' = messages \cup { [type |-> ""VoteYes"", from |-> p, to |-> coordinator] }
+                 /\ state' = state
+                 /\ decision' = decision
+
+SendVoteNo == /\ \E p \in participants :
+                /\ state[p] = ""prepared""
+                /\ messages' = messages \cup { [type |-> ""VoteNo"", from |-> p, to |-> coordinator] }
+                /\ state' = state
+                /\ decision' = decision
+
+(* Coordinator receives all VoteYes and decides to commit *)
+ReceiveAllVoteYes == /\ \E p \in participants :
+                       /\ [type |-> ""VoteYes"", from |-> p, to |-> coordinator] \in messages
+                       /\ state[p] = ""prepared""
+                       /\ decision = ""undefined""
+                       /\ decision' = ""commit""
+                       /\ messages' = messages \ { [type |-> ""VoteYes"", from |-> p, to |-> coordinator] }
+                       /\ state' = state
+
+(* Coordinator receives any VoteNo and decides to abort *)
+ReceiveVoteNo == /\ \E p \in participants :
+                   /\ [type |-> ""VoteNo"", from |-> p, to |-> coordinator] \in messages
+                   /\ state[p] = ""prepared""
+                   /\ decision = ""undefined""
+                   /\ decision' = ""abort""
+                   /\ messages' = messages \ { [type |-> ""VoteNo"", from |-> p, to |-> coordinator] }
+                   /\ state' = state
+
+(* Coordinator sends Commit or Abort to all participants *)
+SendCommit == /\ decision = ""commit""
+              /\ messages' = messages \cup { [type |-> ""Commit"", from |-> coordinator, to |-> p] : p \in participants }
+              /\ state' = state
+              /\ decision' = decision
+
+SendAbort == /\ decision = ""abort""
+             /\ messages' = messages \cup { [type |-> ""Abort"", from |-> coordinator, to |-> p] : p \in participants }
+             /\ state' = state
+             /\ decision' = decision
+
+(* Participant receives Commit and updates state *)
+ReceiveCommit == /\ \E p \in participants :
+                   /\ [type |-> ""Commit"", from |-> coordinator, to |-> p] \in messages
+                   /\ state[p] = ""prepared""
+                   /\ state' = [state EXCEPT ![p] = ""committed""]
+                   /\ messages' = messages \ { [type |-> ""Commit"", from |-> coordinator, to |-> p] }
+                   /\ decision' = decision
+
+(* Participant receives Abort and updates state *)
+ReceiveAbort == /\ \E p \in participants :
+                  /\ [type |-> ""Abort"", from |-> coordinator, to |-> p] \in messages
+                  /\ state[p] = ""prepared""
+                  /\ state' = [state EXCEPT ![p] = ""aborted""]
+                  /\ messages' = messages \ { [type |-> ""Abort"", from |-> coordinator, to |-> p] }
+                  /\ decision' = decision
+
+(* Next action: any of the above actions can occur *)
+Next == \/ SendPrepare
+      \/ ReceivePrepare
+      \/ SendVoteYes
+      \/ SendVoteNo
+      \/ ReceiveAllVoteYes
+      \/ ReceiveVoteNo
+      \/ SendCommit
+      \/ SendAbort
+      \/ ReceiveCommit
+      \/ ReceiveAbort
+
+(* Type invariant: all variables have correct types *)
+TypeOK == /\ participants \subseteq Nat
+          /\ coordinator \in Nat
+          /\ state \in [participants \cup {coordinator} -> State]
+          /\ messages \subseteq [type \in {""Prepare"", ""VoteYes"", ""VoteNo"", ""Commit"", ""Abort""},
+                                 from \in participants \cup {coordinator},
+                                 to \in participants \cup {coordinator}]
+          /\ decision \in {""commit"", ""abort"", ""undefined""}
+
+Spec == Init /\ [][Next]_<<participants, coordinator, state, messages, decision>>
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,0,0,1.0,bronze,206.35,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLES forks, states
+
+(* Fork ownership: forks[i] = j means fork i is held by philosopher j; forks[i] = -1 means fork i is free *)
+Init == /\ forks = [i \in 1..N |-> -1]
+        /\ states = [i \in 1..N |-> ""thinking""]
+
+Next == \/ (* Philosopher i becomes hungry *)
+          /\ i \in 1..N
+          /\ states[i] = ""thinking""
+          /\ states' = [states EXCEPT ![i] = ""hungry""]
+        \/ (* Philosopher i picks up forks if both are free *)
+          /\ i \in 1..N
+          /\ states[i] = ""hungry""
+          /\ forks[i] = -1
+          /\ forks[%(i, N) + 1] = -1
+          /\ forks' = [forks EXCEPT ![i] = i, ![%(i, N) + 1] = i]
+          /\ states' = [states EXCEPT ![i] = ""eating""]
+        \/ (* Philosopher i puts down forks after eating *)
+          /\ i \in 1..N
+          /\ states[i] = ""eating""
+          /\ forks' = [forks EXCEPT ![i] = -1, ![%(i, N) + 1] = -1]
+          /\ states' = [states EXCEPT ![i] = ""thinking""]
+
+Spec == Init /\ [][Next]_<<forks, states>>
+
+TypeOK == /\ forks \in [1..N -> 1..N \cup {-1}]
+          /\ states \in [1..N -> {""thinking"", ""hungry"", ""eating""}]
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] = i
+          /\ \A i \in 1."
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,1,0,0.444,silver,134.73,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES num, flag
+
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,1,0.778,gold,15.76,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail, size
+
+Init == /\ q = <<>>
+        /\ head = 1
+        /\ tail = 1
+        /\ size = 0
+
+ProducerAction == /\ size < K
+                 /\ head' = head
+                 /\ tail' = tail
+                 /\ size' = size + 1
+                 /\ q' = Append(q, head)
+
+ConsumerAction == /\ size > 0
+                 /\ head' = head
+                 /\ tail' = tail
+                 /\ size' = size - 1
+                 /\ q' = Tail(q)
+
+Next == ProducerAction \/ ConsumerAction
+
+Spec == Init /\ [][Next]_<<q, head, tail, size>>
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,1,0,0.444,silver,58.95,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,0,0,0.778,bronze,195.86,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES readers, writer_active
+
+Init == /\ readers = <<>>
+       /\ writer_active = FALSE
+
+Next == \/ /\ writer_active' = FALSE
+          /\ readers' = Append(readers, 1)
+        \/ /\ writer_active' = TRUE
+          /\ readers' = <<>>
+        \/ /\ writer_active' = FALSE
+          /\ readers' = Tail(readers)
+
+Spec == Init /\ [][Next]_<<readers, writer_active>> ==
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,1,0,0.444,silver,55.16,"---- MODULE DistributedSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, channel, snapshot, markerSent, markerReceived, finished
+
+===="
+chattla:20b,BM009,Token Ring,networking,2,1,1,0.667,gold,2.15,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLE token
+
+Init == /\ token \in 1..N
+
+Next == /\ token' \in 1..N
+        /\ token' = IF token = N THEN 1 ELSE token + 1
+
+Spec == Init /\ [][Next]_<<token>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,0.778,silver,4.85,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, Values, NULL
+
+VARIABLES store
+
+Init == store = [k \in Keys |-> NULL]
+
+Next == \/ /\ \E k \in Keys : \E v \in Values : /\ store' = [store EXCEPT ![k] = v]
+      \/ /\ \E k \in Keys : /\ store' = [store EXCEPT ![k] = NULL]
+
+Spec == Init /\ [][Next]_<<store>>
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,1,0,0.444,silver,51.65,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES acceptors, proposers, promises, accepts, chosen, chosenBy
+===="
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,1,0,0.667,silver,283.26,"---- MODULE FileTransfer ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS MAX_RETRIES, CHUNK_SIZE, FILE_SIZE, CHANNEL_LOSS_PROBABILITY
+VARIABLES channel, chunks, file, retransmitCount, sentChunks
+
+Init ==
+    /\ file = <<>>
+    /\ chunks = <<>>
+    /\ sentChunks = <<>>
+    /\ retransmitCount = <<>>
+    /\ channel = <<>>
+
+Next ==
+    /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ channel' = channel
+    \/ /\ file' = Append(file, <<>>)
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = Append(sentChunks, <<>>)
+       /\ retransmitCount' = retransmitCount
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = Append(retransmitCount, 0)
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ channel' = ch"

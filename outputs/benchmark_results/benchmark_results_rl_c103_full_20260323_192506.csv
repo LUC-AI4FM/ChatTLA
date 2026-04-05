@@ -1,0 +1,780 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,0,0.444,silver,8.58,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, turn
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,1,0,0.444,silver,96.48,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES participants, coordinator, messages, state, votes
+
+(* --specification TwoPhaseCommit
+
+  (* Coordinator sends Prepare to all participants *)
+  sendPrepare() == 
+    /\ coordinator.state = ""Init""
+    /\ messages' = Append(messages, [sender : ""Coordinator"", receiver : ""Participant"", type : ""Prepare""])
+    /\ coordinator.state' = ""WaitingForVotes""
+    /\ UNCHANGED <<participants, coordinator>>
+  (* Participant receives Prepare and votes *)
+  receivePrepare(i) == 
+    /\ messages = <<>>
+    /\ participants[i].state = ""Init""
+    /\ messages' = <<[sender : ""Participant"", receiver : ""Coordinator"", type : ""VoteYes""]>>
+    /\ participants[i].state' = ""VotedYes""
+    /\ UNCHANGED <<participants, coordinator>>
+  (* Coordinator receives VoteYes from all participants *)
+  receiveVoteYes(i) == 
+    /\ messages = <<>>
+    /\ coordinator.state = ""WaitingForVotes""
+    /\ messages' = <<[sender : ""Participant"", receiver : ""Coordinator"", type : ""VoteYes""]>>
+    /\ coordinator.votes' = Append(coordinator.votes, ""Yes"")
+    /\ UNCHANGED <<participants, coordinator>>
+  (* Coordinator decides to commit *)
+  decideCommit() == 
+    /\ coordinator.state = ""WaitingForVotes""
+    /\ Len(coordinator.votes) = N
+    /\ ALL i \in 1..N : coordinator.votes[i] = ""Yes""
+    /\ messages' = <<[sender : ""Coordinator"", receiver : ""Participant"", type : ""Commit""]>>
+    /\ coordinator.state' = ""Committed""
+    /\ UNCHANGED <<participants, coordinator>>
+  (* Coordinator decides to abort *)
+  decideAbort() == 
+    /\ coordinator.state = ""WaitingForVotes""
+    /\ Len(coordinator.votes) = N
+    /\ EXISTS i \in 1..N : coordinator.votes[i] = ""No""
+    /\ messages' = <<[sender : ""Coordinator"", receiver : ""Participant"", type : ""Abort""]>>
+    /\ coordinator.state' = ""Aborted""
+    /\ UNCHANGED <<participants, coordinator>>
+  (* Participant receives Commit *)
+  receiveCommit(i) == 
+    /\ messages = <<>>
+    /\ participants[i].state = ""VotedYes""
+    /\ messages' = <<[sender : ""Participant"", receiver : ""Coordinator"", type : ""Commit""]>>
+    /\ participants[i].state' = ""Committed""
+    /\ UNCHANGED <<participants, coordinator>>
+  (* Participant receives Abort *)
+  receiveAbort(i) == 
+    /\ messages = <<>>
+    /\ participants[i].state = ""VotedYes""
+    /\ messages' = <<[sender : ""Participant"", receiver : ""Coordinator"", type : ""Abort""]>>
+    /\ participants[i].state' = ""Aborted""
+    /\ UNCHANGED <<participants, coordinator>>
+  (* Coordinator receives Commit from all participants *)
+  receiveCommitFromAll() == 
+    /\ messages = <<>>
+    /\ coordinator.state = ""Committed""
+    /\ ALL i \in 1..N : participants[i].state = ""Committed""
+    /\ UNCHANGED <<participants, coordinator>>
+  (* Coordinator receives Abort from all participants *)
+  receiveAbortFromAll() == 
+    /\ messages = <<>>
+    /\ coordinator.state = ""Aborted""
+    /\ ALL i \in 1..N : participants[i].state = ""Aborted""
+    /\ UNCHANGED <<participants, coordinator>>
+  (* Next action *)
+  Next == 
+    \/ sendPrepare()
+    \/ receivePrepare(i) \in 1..N
+    \/ receiveVoteYes(i) \in 1..N
+    \/ decideCommit()
+    \/ decideAbort()
+    \/ receiveCommit(i) \in 1..N
+    \/ receiveAbort(i) \in 1..N
+    \/ receiveCommitFromAll()
+    \/ receiveAbortFromAll()
+end specification *)
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,1,0,0.444,silver,84.07,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES forks, states
+
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,0,0,0.778,bronze,133.55,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+
+VARIABLES num, flag
+
+Init == /\ num = [i \in 1..N |-> 0]
+        /\ flag = [i \in 1..N |-> FALSE]
+
+Next == \E i \in 1..N : /\ flag[i] = FALSE
+                    /\ flag' = [flag EXCEPT ![i] = TRUE]
+                    /\ num' = [num EXCEPT ![i] = Max([num[j] | j \in 1..N]) + 1]
+                    /\ flag' = [flag EXCEPT ![i] = FALSE]
+                    /\ UNCHANGED <<num, flag>>
+
+Spec == Init /\ [][Next]_<<num, flag>>
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,0,1.0,silver,23.75,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail, size
+
+Init == /\ q \in Seq(1..K)
+        /\ head \in 1..K
+        /\ tail \in 1..K
+        /\ size \in 0..K
+        /\ q = <<>>
+        /\ head = 1
+        /\ tail = 1
+        /\ size = 0
+
+Producer == /\ size < K
+           /\ head' = head
+           /\ tail' = IF tail = K THEN 1 ELSE tail + 1
+           /\ size' = size + 1
+           /\ q' = Append(q, head)
+
+Consumer == /\ size > 0
+           /\ head' = IF head = K THEN 1 ELSE head + 1
+           /\ tail' = tail
+           /\ size' = size - 1
+           /\ q' = Tail(q)
+
+Next == Producer \/ Consumer
+
+Spec == Init /\ [][Next]_<<q, head, tail, size>>
+
+TypeOK == /\ q \in Seq(1..K)
+          /\ head \in 1..K
+          /\ tail \in 1..K
+          /\ size \in 0..K
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,0,0,0.778,bronze,29.78,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+Init == /\ currentTerm = 0
+        /\ votedFor = NULL
+        /\ state = ""Follower""
+
+Next == \/ /\ state = ""Follower""
+        /\ currentTerm' = currentTerm
+           /\ votedFor' = votedFor
+           /\ state' = ""Follower""
+        \/ /\ state = ""Candidate""
+        /\ currentTerm' = currentTerm + 1
+           /\ votedFor' = NULL
+           /\ state' = ""Candidate""
+        \/ /\ state = ""Leader""
+        /\ currentTerm' = currentTerm
+           /\ votedFor' = votedFor
+           /\ state' = ""Leader""
+
+Spec == Init /\ [][Next]_<<currentTerm, votedFor, state>>
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,0,0,0.667,bronze,572.12,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES readers, writer_active
+
+Init == /\ readers = <<>>
+        /\ writer_active = FALSE
+
+Next == \/ /\ writer_active = FALSE
+          /\ \E r \in 1..10 : /\ r \notin readers
+              /\ readers' = Append(readers, r)
+          \/ /\ writer_active = FALSE
+              /\ \E r \in readers : /\ r \in readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin readers
+              /\ \E r \in 1..10 : /\ r \notin read"
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,1,0,0.444,silver,103.25,"---- MODULE DistributedSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, channel, markerSent, markerReceived, snapshotTaken
+===="
+chattla:20b,BM009,Token Ring,networking,2,1,1,0.667,gold,10.43,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLE token
+
+Init == /\ token \in 1..N
+
+Next == /\ token' \in 1..N
+        /\ token' = IF token = N THEN 1 ELSE token + 1
+
+Spec == Init /\ [][Next]_<<token>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,1.0,silver,18.16,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, Values, FiniteSet, NULL
+
+VARIABLES store
+
+Init == store = [k \in Keys |-> NULL]
+
+Next == \E k \in Keys : \E v \in Values :
+          /\ store' = [store EXCEPT ![k] = v]
+          /\ UNCHANGED <<>>
+
+Spec == Init /\ [][Next]_<<store>>
+
+TypeOK == /\ store \in [Keys -> Values]
+          /\ Values \in FiniteSet
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,1,0,0.556,silver,329.14,"---- MODULE SingleDecreePaxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES acceptors, proposers, promises, accepted, chosen, chosenBy, chosenBallot, chosenByBallot, chosenBallotBy
+
+Ballot == [p \in proposers, n \in Nat |-> [p |-> p, n |-> n]]
+HighestBallot == [p \in proposers, n \in Nat |-> [p |-> p, n |-> n]]
+\* Ballot ordering: higher n wins; if equal, higher p wins
+BallotGt == [p1 \in proposers, n1 \in Nat, p2 \in proposers, n2 \in Nat |-> 
+              (n1 > n2) \/ ((n1 = n2) /\ (p1 > p2))]
+
+\* Initial state
+Init == /\ acceptors = {1, 2, 3}
+       /\ proposers = {1, 2}
+       /\ promises = [a \in acceptors |-> [b \in Ballot |-> [v \in Nat |-> 0]]]
+       /\ accepted = [a \in acceptors |-> [b \in Ballot |-> [v \in Nat |-> 0]]]
+       /\ chosen = {}
+       /\ chosenBy = [v \in Nat |-> 0]
+       /\ chosenBallot = [v \in Nat |-> [b \in Ballot |-> 0]]
+       /\ chosenByBallot = [p \in proposers |-> 0]
+       /\ chosenBallotBy = [v \in Nat |-> 0]
+
+\* Proposer sends Prepare with ballot b
+Prepare(b) == /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] = [v \in Nat |-> 0]
+              /\ \E a \in acceptors : promises[a][b] "
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,1,0,0.667,silver,420.02,"---- MODULE FileTransfer ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS MAX_RETRIES, CHUNK_SIZE, FILE_SIZE, LOSS_PROB
+VARIABLES ackedChunks, chunks, file, lostChunks, retransCount, sentChunks
+
+(* Helper definitions *)
+chunkSize == CHUNK_SIZE
+fileSize == FILE_SIZE
+maxRetries == MAX_RETRIES
+
+(* Define the initial state *)
+Init ==
+    /\ file = <<>>  (* file is initially empty *)
+    /\ chunks = <<>>  (* no chunks to send *)
+    /\ sentChunks = {}  (* no chunks have been sent *)
+    /\ ackedChunks = {}  (* no chunks have been acknowledged *)
+    /\ retransCount = [i \in 1..Len(chunks) |-> 0]  (* no retransmissions yet *)
+    /\ lostChunks = {}  (* no chunks have been lost *)
+
+(* Define the next-state relation *)
+Next ==
+    (* Simulate file arrival *)
+    /\ file = <<>>  (* file is initially empty *)
+    /\ chunks = <<>>  (* no chunks to send *)
+    /\ sentChunks = {}  (* no chunks have been sent *)
+    /\ ackedChunks = {}  (* no chunks have been acknowledged *)
+    /\ retransCount = [i \in 1..Len(chunks) |-> 0]  (* no retransmissions yet *)
+    /\ lostChunks = {}  (* no chunks have been lost *)
+
+===="
+chattla:20b,BM013,Transaction Isolation (Snapshot Isolation),transaction,4,1,0,0.444,silver,86.25,"---- MODULE SnapshotIsolation ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES db, txns, snapshot, writes, aborts, commits, nextTxId, keys, values
+
+===="
+chattla:20b,BM014,Clock Synchronisation,networking,3,0,0,0.778,bronze,73.44,"---- MODULE ClockSync ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS N
+
+VARIABLES clocks, epsilon
+
+Init == /\ clocks \in [1..N -> Int]
+        /\ epsilon \in Nat
+        /\ \A i \in 1..N : clocks[i] = 0
+
+Next == /\ \A i \in 1..N : clocks[i] = clocks[i] + 1
+        /\ \A i \in 1..N : clocks[i] = clocks[i] + (i \in 1..N : 1)  \* Drift modelled as integer offset
+        /\ \A i \in 1..N : clocks[i] = (1/N) * \Sum j \in 1..N : clocks[j]  \* Average-based sync
+
+Spec == Init /\ [][Next]_<<clocks, epsilon>>
+
+===="
+chattla:20b,BM015,Peterson's Algorithm,scheduling,2,1,0,0.778,silver,14.4,"---- MODULE Peterson2 ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES flag, turn
+
+Init == /\ flag = [i \in 1..2 |-> FALSE]
+        /\ turn = 1
+
+Next == \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag[1] = TRUE
+          /\ turn' = 2
+          /\ flag' = [flag EXCEPT ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag[2] = TRUE
+          /\ turn' = 1
+          /\ flag' = [flag EXCEPT ![1] = FALSE]
+        \/ /\ flag[1] = TRUE
+          /\ turn[1] = 1
+          /\ flag[2] = TRUE
+          /\ turn[2] = 2
+          /\ flag' = flag
+        \/ /\ flag[1] = TRUE
+          /\ turn[1] = 2
+          /\ flag[2] = TRUE
+          /\ turn[2] = 1
+          /\ flag' = flag
+
+Spec == Init /\ [][Next]_<<flag, turn>>
+
+===="
+chattla:20b,BM016,Gossip Protocol,networking,3,1,0,0.778,silver,255.39,"---- MODULE Gossip ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES known, infected
+
+Init == /\ known = <<>> /\ infected = <<>> /\ Len(known) = Len(infected)
+
+Next == /\ known' = known
+      /\ infected' = Append(infected, known)
+
+Spec == Init /\ [][Next]_<<known, infected>>
+
+===="
+chattla:20b,BM017,Simple Allocator,storage,2,1,0,1.0,silver,162.09,"---- MODULE MemoryAllocator ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, Clients, Pages
+
+VARIABLES free, allocated
+
+Init == /\ free = Pages
+        /\ allocated = [c \in Clients |-> {}]
+
+Next == /\ \E c \in Clients :
+            /\ c \in free
+            /\ free' = free \ {c}
+            /\ allocated' = [allocated EXCEPT ![c] = @ \cup {c}]
+        \/ \E c \in Clients :
+            /\ c \in Pages
+            /\ c \in allocated
+            /\ free' = free \cup {c}
+            /\ allocated' = [allocated EXCEPT ![c] = @ \ {c}]
+
+TypeOK == /\ free \subseteq Pages
+          /\ \A c \in Clients : allocated[c] \subseteq Pages
+          /\ \A c \in Clients : allocated[c] \in SUBSET Pages
+
+Spec == Init /\ [][Next]_<<free, allocated>>
+
+===="
+chattla:20b,BM018,Publish-Subscribe Broker,networking,3,1,0,0.444,silver,199.18,"---- MODULE Broker ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES subscribers, messages, nextMsgId, nextSubId
+
+===="
+chattla:20b,BM019,Dekker's Algorithm,scheduling,3,1,0,0.778,silver,32.98,"---- MODULE Dekker ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES turn, wants
+
+Init == /\ turn \in {1, 2}
+        /\ wants \in {1, 2} \cup {1, 2} \cup {1, 2} \cup {1, 2}
+        /\ wants[1] = 0
+        /\ wants[2] = 0
+        /\ wants[3] = 0
+        /\ wants[4] = 0
+
+Next == \/ /\ turn = 1
+          /\ wants[1] = 0
+          /\ wants[2] = 0
+          /\ wants[3] = 0
+          /\ wants[4] = 0
+          /\ turn' = 2
+          /\ wants' = [wants EXCEPT ![1] = 1, ![2] = 0, ![3] = 0, ![4] = 0]
+        \/ /\ turn = 2
+          /\ wants[1] = 0
+          /\ wants[2] = 0
+          /\ wants[3] = 0
+          /\ wants[4] = 0
+          /\ turn' = 1
+          /\ wants' = [wants EXCEPT ![1] = 0, ![2] = 1, ![3] = 0, ![4] = 0]
+        \/ /\ turn = 1
+          /\ wants[1] = 1
+          /\ wants[2] = 0
+          /\ wants[3] = 0
+          /\ wants[4] = 0
+          /\ turn' = 2
+          /\ wants' = [wants EXCEPT ![1] = 0, ![2] = 1, ![3] = 0, ![4] = 0]
+        \/ /\ turn = 2
+          /\ wants[1] = 0
+          /\ wants[2] = 1
+          /\ wants[3] = 0
+          /\ wants[4] = 0
+          /\ turn' = 1
+          /\ wants' = [wants EXCEPT ![1] = 0, ![2] = 0, ![3] = 1, ![4] = 0]
+        \/ /\ turn = 1
+          /\ wants[1] = 0
+          /\ wants[2] = 1
+          /\ wants[3] = 0
+          /\ wants[4] = 0
+          /\ turn' = 2
+          /\ wants' = [wants EXCEPT ![1] = 0, ![2] = 0, ![3] = 1, ![4] = 0]
+        \/ /\ turn = 2
+          /\ wants[1] = 0
+          /\ wants[2] = 0
+          /\ wants[3] = 1
+          /\ wants[4] = 0
+          /\ turn' = 1
+          /\ wants' = [wants EXCEPT ![1] = 0, ![2] = 0, ![3] = 0, ![4] = 1]
+        \/ /\ turn = 1
+          /\ wants[1] = 0
+          /\ wants[2] = 0
+          /\ wants[3] = 1
+          /\ wants[4] = 0
+          /\ turn' = 2
+          /\ wants' = [wants EXCEPT ![1] = 0, ![2] = 0, ![3] = 0, ![4] = 1]
+        \/ /\ turn = 2
+          /\ wants[1] = 0
+          /\ wants[2] = 0
+          /\ wants[3] = 0
+          /\ wants[4] = 1
+          /\ turn' = 1
+          /\ wants' = [wants EXCEPT ![1] = 0, ![2] = 0, ![3] = 0, ![4] = 0]
+        \/ /\ turn = 1
+          /\ wants[1] = 0
+          /\ wants[2] = 0
+          /\ wants[3] = 0
+          /\ wants[4] = 1
+          /\ turn' = 2
+          /\ wants' = [wants EXCEPT ![1] = 0, ![2] = 0, ![3] = 0, ![4] = 0]
+        \/ /\ turn = 2
+          /\ wants[1] = 0
+          /\ wants[2] = 0
+          /\ wants[3] = 0
+          /\ wants[4] = 0
+          /\ turn' = 1
+          /\ wants' = [wants EXCEPT ![1] = 0, ![2] = 0, ![3] = 0, ![4] = 0]
+
+Spec == Init /\ [][Next]_<<turn, wants>>
+
+===="
+chattla:20b,BM020,Eventually Consistent Counter,storage,3,1,0,0.444,silver,100.26,"---- MODULE GCounter ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES counts
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+===="

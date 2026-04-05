@@ -1,0 +1,867 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,0,0.444,silver,76.9,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, turn, N, variables
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,1,0,0.444,silver,102.26,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES participants, votes, decision, messages, state
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,0,0,1.0,bronze,36.49,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLES forks, states
+
+(* Forks: a sequence of length N where each element is either 0 (free) or the index of the philosopher holding it *)
+(* States: a sequence of length N where each element is one of {""thinking"", ""hungry"", ""eating""} *)
+
+(* Helper functions *)
+LEFT(i) == IF i = 0 THEN N - 1 ELSE i - 1
+RIGHT(i) == IF i = N - 1 THEN 0 ELSE i + 1
+
+(* Initial condition: all forks are free, all philosophers are thinking *)
+Init == /\ forks = [i \in 0..N-1 |-> 0]
+        /\ states = [i \in 0..N-1 |-> ""thinking""]
+
+(* Next action: a philosopher can pick up forks if hungry and both forks are free, or put down forks if eating *)
+Next == \/ \E i \in 0..N-1 :
+          /\ states[i] = ""hungry""
+          /\ forks[i] = 0
+          /\ forks[LEFT(i)] = 0
+          /\ forks' = [forks EXCEPT ![i] = i, ![LEFT(i)] = i]
+          /\ states' = [states EXCEPT ![i] = ""eating""]
+        \/ \E i \in 0..N-1 :
+          /\ states[i] = ""eating""
+          /\ forks' = [forks EXCEPT ![i] = 0, ![LEFT(i)] = 0]
+          /\ states' = [states EXCEPT ![i] = ""thinking""]
+        \/ \E i \in 0..N-1 :
+          /\ states[i] = ""thinking""
+          /\ states' = [states EXCEPT ![i] = ""hungry""]
+          /\ forks' = forks
+
+Spec == Init /\ [][Next]_<<forks, states>>
+
+(* Type invariant: forks is a sequence of length N with each element in 0..N-1 or 0; states is a sequence of length N with each element in {""thinking"", ""hungry"", ""eating""} *)
+TypeOK == /\ forks \in Seq(0..N-1)
+          /\ states \in Seq({""thinking"")
+          /\ Len(forks) = N
+          /\ Len(states) = N
+          /\ \A i \in 0..N-1 : forks[i] \in 0..N-1
+          /\ \A i \in 0..N-1 : states[i] \in {""thinking"", ""hungry"", ""eating""}
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,1,0,0.778,silver,171.31,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLES num, flag
+
+Init == /\ num = 0
+      /\ flag = <<[x \in 1..N |-> FALSE]>>
+
+
+Next == /\ num' = num + 1
+      /\ flag' = <<[x \in 1..N |-> FALSE]>>
+
+
+Spec == Init /\ [][Next]_<<num, flag>>
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,0,0,1.0,bronze,36.06,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail, count
+
+(* The queue is represented as a sequence of length K. *)
+(* head points to the next element to be dequeued. *)
+(* tail points to the next position to be enqueued. *)
+(* count is the number of elements in the queue. *)
+
+(* Helper functions *)
+IsFull == count = K
+IsEmpty == count = 0
+
+(* The queue is a sequence of length K, initialized to the empty sequence. *)
+Init == /\ q = <<>>
+       /\ head = 1
+       /\ tail = 1
+       /\ count = 0
+
+(* The producer enqueues an element x when the queue is not full. *)
+Enqueue(x) == /\ NOT IsFull
+              /\ q' = Append(q, x)
+              /\ tail' = IF tail = K THEN 1 ELSE tail + 1
+              /\ count' = count + 1
+              /\ head' = head
+
+(* The consumer dequeues an element when the queue is not empty. *)
+Dequeue == /\ NOT IsEmpty
+           /\ head' = IF head = K THEN 1 ELSE head + 1
+           /\ tail' = tail
+           /\ count' = count - 1
+           /\ q' = q
+
+(* The next-state relation allows either enqueue or dequeue. *)
+Next == Enqueue(x) \/ Dequeue
+
+(* Type invariants *)
+TypeOK == /\ K \in Nat
+          /\ q \in Seq(1..K)
+          /\ head \in 1..K
+          /\ tail \in 1..K
+          /\ count \in 0..K
+
+Spec == Init /\ [][Next]_<<q, head, tail, count>> /\ TypeOK
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,1,0,0.444,silver,89.82,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,1,0,0.778,silver,187.62,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES readers, writer_active
+
+Init == /\ readers = <<>>
+       /\ writer_active = FALSE
+
+Next == \/ /\ writer_active' = FALSE
+          /\ readers' = Append(readers, 1)
+        \/ /\ writer_active' = TRUE
+          /\ readers' = <<>>
+        \/ /\ writer_active' = FALSE
+          /\ readers' = Tail(readers)
+
+Spec == Init /\ [][Next]_<<readers, writer_active>> ===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,1,0,0.444,silver,231.61,"---- MODULE DistributedSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, channel, markerSent, markerReceived, snapshotDone
+===="
+chattla:20b,BM009,Token Ring,networking,2,1,1,0.667,gold,2.26,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLE token
+
+Init == /\ token \in 1..N
+
+Next == /\ token' \in 1..N
+        /\ token' = IF token = N THEN 1 ELSE token + 1
+
+Spec == Init /\ [][Next]_<<token>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,1.0,silver,5.01,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, Values, NULL
+
+VARIABLES store
+
+Init == store = [k \in Keys |-> NULL]
+
+Next == \E k \in Keys : \E v \in Values :
+          /\ store' = [store EXCEPT ![k] = v]
+          /\ UNCHANGED <<>>
+
+Spec == Init /\ [][Next]_<<store>>
+
+TypeOK == /\ store \in [Keys -> Values]
+          /\ \A k \in Keys : store[k] \in Values
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,1,1,0.778,gold,48.44,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES acceptors, proposers, promises, accepted, chosen, chosenBy, chosenByVal
+
+Init == /\ acceptors = <<>>
+       /\ proposers = <<>>
+       /\ promises = <<>>
+       /\ accepted = <<>>
+       /\ chosen = <<>>
+       /\ chosenBy = <<>>
+       /\ chosenByVal = <<>>
+
+Next == /\ acceptors' = acceptors
+       /\ proposers' = proposers
+       /\ promises' = promises
+       /\ accepted' = accepted
+       /\ chosen' = chosen
+       /\ chosenBy' = chosenBy
+       /\ chosenByVal' = chosenByVal
+
+Spec == Init /\ [][Next]_<<acceptors, proposers, promises, accepted, chosen, chosenBy, chosenByVal>>
+
+===="
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,1,0,0.444,silver,29.62,"---- MODULE Sender ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES file, chunks, sent, received, retransmitCount, MAX_RETRIES, channel
+
+===="
+chattla:20b,BM013,Transaction Isolation (Snapshot Isolation),transaction,4,0,0,0.444,bronze,87.81,"---- MODULE SnapshotIsolationDB ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES db, txns, nextTxId
+
+
+    /\ nextTxId' = nextTxId + 1
+    /\ txns' = Append(txns, [state -> ""begin"",
+                            snapshot -> db,
+                            writes -> [i \in 1..10 |-> -> 0]])
+    /\ UNCHANGED <<db, nextTxId>>;
+
+  writeTx == 
+    /\ txns' = Append(txns, [state -> ""commit"",
+                            snapshot -> db,
+                            writes -> [i \in 1..10 |-> -> 0]])
+    /\ UNCHANGED <<db, nextTxId>>;
+
+  abortTx == 
+    /\ txns' = Append(txns, [state -> ""abort"",
+                            snapshot -> db,
+                            writes -> [i \in 1..10 |-> -> 0]])
+    /\ UNCHANGED <<db, nextTxId>>;
+
+  commitTx == 
+    /\ txns' = Append(txns, [state -> ""commit"",
+                            snapshot -> db,
+                            writes -> [i \in 1..10 |-> -> 0]])
+    /\ UNCHANGED <<db, nextTxId>>;
+
+  nextTxId' = nextTxId + 1
+  /\ UNCHANGED <<db, txns>>;
+
+  db' = [i \in 1..10 |-> -> 
+          IF txns' = <<>> THEN db[i]
+
+
+  /\ UNCHANGED <<txns, nextTxId>>;
+
+  nextTxId' = nextTxId + 1
+  /\ UNCHANGED <<db, txns>>;
+
+  db' = [i \in 1..10 |-> -> 
+          IF txns' = <<>> THEN db[i]
+
+
+  /\ UNCHANGED <<txns, nextTxId>>;
+
+  nextTxId' = nextTxId + 1
+  /\ UNCHANGED <<db, txns>>;
+
+  db' = [i \in 1..10 |-> -> 
+          IF txns' = <<>> THEN db[i]
+
+
+  /\ UNCHANGED <<txns, nextTxId>>;
+
+  nextTxId' = nextTxId + 1
+  /\ UNCHANGED <<db, txns>>;
+
+  db' = [i \in 1..10 |-> -> 
+          IF txns' = <<>> THEN db[i]
+
+
+  /\ UNCHANGED <<txns, nextTxId>>;
+
+  nextTxId' = nextTxId + 1
+  /\ UNCHANGED <<db, txns>>;
+
+  db' = [i \in 1..10 |-> -> 
+          IF txns' = <<>> THEN db[i]
+
+
+  /\ UNCHANGED <<txns, nextTxId>>;
+
+  nextTxId' = nextTxId + 1
+  /\ UNCHANGED <<db, txns>>;
+
+  db' = [i \in 1..10 |-> -> 
+          IF txns' = <<>> THEN db[i]
+
+
+  /\ UNCHANGED <<txns, nextTxId>>;
+
+  nextTxId' = nextTxId + 1
+  /\ UNCHANGED <<db, txns>>;
+
+  db' = [i \in 1..10 |-> -> 
+          IF txns' = <<>> THEN db[i]
+
+
+  /\ UNCHANGED <<txns, nextTxId>>;
+
+  nextTxId' = nextTxId + 1
+  /\ UNCHANGED <<db, txns>>;
+
+  db' = [i \in 1..10 |-> -> 
+          IF txns' = <<>> THEN db[i]
+
+
+  /\ UNCHANGED <<txns, nextTxId>>;
+
+  nextTxId' = nextTxId + 1
+  /\ UNCHANGED <<db, txns>>;
+
+  db' = [i \in 1..10 |-> -> 
+          IF txns' = <<>> THEN db[i]
+
+
+  /\ UNCHANGED <<txns, nextTxId>>;
+
+  nextTxId' = nextTxId + 1
+  /\ UNCHANGED <<db, txns>>;
+
+  db' = [i \in 1..10 |-> -> 
+          IF txns' = <<>> THEN db[i]
+
+
+  /\ UNCHANGED <<txns, nextTxId>>;
+
+  nextTxId' = nextTxId + 1
+  /\ UNCHANGED <<db, txns>>;
+
+  db' = [i \in 1..10 |-> -> 
+          IF txns' = <<>> THEN db[i]
+
+
+  /\ UNCHANGED <<txns, nextTxId>>;
+
+  nextTxId' = nextTxId + 1
+  /\ UNCHANGED <<db, txns>>;
+
+  db' = [i \in 1..10 |-> -> 
+          IF txns' = <<>> THEN db[i]
+
+
+  /\ UNCHANGED <<txns, nextTxId>>;
+
+  nextTxId' = nextTxId + 1
+  /\ UNCHANGED <<db, txns>>;
+
+  db' = [i \in 1..10 |-> -> 
+          IF txns' = <<>> THEN db[i]
+
+
+  /\ UNCHANGED <<txns, nextTxId>>;
+
+  nextTxId' = nextTxId + 1
+  /\ UNCHANGED <<db, txns>>;
+
+  db' = [i \in 1..10 |-> -> 
+          IF txns' = <<>> THEN db[i]
+
+
+  /\ UNCHANGED <<txns, nextTxId>>;
+
+  nextTxId' = nextTxId + 1
+  /\ UNCHANGED <<db, txns>>;
+
+  db' = [i \in 1..10 |-> -> 
+          IF txns' = <<>> THEN db[i]
+
+
+  /\ UNCHANGED <<txns, nextTxId>>;
+
+  nextTxId' = nextTxId + 1
+  /\ UNCHANGED <<db, txns>>;
+
+  db' = [i \in 1..10 |-> -> 
+          IF txns' = <<>> THEN db[i]
+
+
+  /\ UNCHANGED <<txns, nextTxId>>;
+
+  nextTxId' = nextTxId + 1
+  /\ UNCHANGED <<db, txns>>;
+
+  db' = [i \in 1..10 |-> -> 
+          IF txns' = <<>> THEN db[i]
+
+
+  /\ UNCHANGED <<txns, nextTxId>>;
+
+  nextTxId' = nextTxId + 1
+  /\ UNCHANGED <<db, txns>>;
+
+  db' = [i \in 1..10 |-> -> 
+          IF txns' = <<>> THEN db[i]
+
+
+  /\ UNCHANGED <<txns, nextTxId>>;
+
+  nextTxId' = nextTxId + 1
+  /\ UNCHANGED <<db, txns>>;
+
+  db' = [i \in 1..10 |-> -> 
+          IF txns' = <<>> THEN db[i]
+
+
+  /\ UNCHANGED <<txns, nextTxId>>;
+
+  nextTxId' = nextTxId + 1
+  /\ UNCHANGED <<db, txns>>;
+
+  db' = [i \in 1..10 |-> -> 
+          IF txns' = <<>> THEN db[i]
+
+
+  /\ UNCHANGED <<txns, nextTxId>>;
+
+  nextTxId' = nextTxId + 1
+  /\ UNCHANGED <<db, txns>>;
+
+  db' = [i \in 1..10 |-> -> 
+          IF txns' = <<>> THEN db[i]
+
+
+  /\ UNCHANGED <<txns, nextTxId>>;
+
+  nextTxId' = nextTxId + 1
+  /\ UNCHANGED <<db, txns>>;
+
+  db' = [i \in 1..10 |-> -> 
+          IF txns' = <<>> THEN db[i]
+
+
+  /\ UNCHANGED <<txns, nextTxId>>;
+
+  nextTxId' = nextTxId + 1
+  /\ UNCHANGED <<db, txns>>;
+
+  db' = [i \in 1..10 |-> -> 
+          IF txns' = <<>> THEN db[i]
+
+
+  /\ UNCHANGED <<txns, nextTxId>>;
+
+  nextTxId' = nextTxId + 1
+  /\ UNCHANGED <<db, txns>>;
+
+  db' = [i \in 1..10 |-> -> 
+          IF txns' = <<>> THEN db[i]
+
+
+  /\ UNCHANGED <<txns, nextTxId>>;
+
+  nextTxId' = nextTxId + 1
+  /\ UNCHANGED <<db, txns>>;
+
+  db' = [i \in 1..10 |-> -> 
+          IF txns' = <<>> THEN db[i]
+
+
+  /\ UNCHANGED <<txns, nextTxId>>;
+
+  nextTxId' = nextTxId + 1
+  /\ UNCHANGED <<db, txns>>;
+
+  db' = [i \in 1..10 |-> -> 
+          IF txns' = <<>> THEN db[i]
+
+
+  /\ UNCHANGED <<txns, nextTxId>>;
+
+  nextTxId' = nextTxId + 1
+  /\ UNCHANGED <<db, txns>>;
+
+  db' = [i \in 1..10 |-> -> 
+          IF txns' = <<>> THEN db[i]
+
+
+  /\ UNCHANGED <<txns, nextTxId>>;
+
+  nextTxId' = nextTxId + 1
+  /\ UNCHANGED <<db, txns>>;
+
+  db' = [i \in 1..10 |-> -> 
+          IF txns' = <<>> THEN db[i]
+
+
+  /\ UNCHANGED <<txns, nextTxId>>;
+
+  nextTxId' = nextTxId + 1
+  /\ UNCHANGED <<db, txns>>;
+
+  db' = [i \in 1..10 |-> -> 
+          IF txns' = <<>> THEN db[i]
+
+
+  /\ UNCHANGED <<txns, nextTxId>>;
+
+  nextTxId' = nextTxId + 1
+  /\ UNCHANGED <<db, txns>>;
+
+  db' = [i \in 1..10 |-> -> 
+          IF txns' = <<>> THEN db[i]
+
+
+  /\ UNCHANGED <<txns, nextTxId>>;
+
+  nextTxId' = nextTxId + 1
+  /\ UNCHANGED <<db, txns>>;
+
+  db' = [i \in 1..10 |-> -> 
+          IF txns' = <<>> THEN db[i]
+
+
+  /\ UNCHANGED <<txns, nextTxId>>;
+
+  nextTxId' = nextTxId + 1
+  /\ UNCHANGED <<db, txns>>;
+
+  db' = [i \in 1..10 |-> -> 
+          IF txns' = <<>> THEN db[i]
+
+
+  /\ UNCHANGED <<txns, nextTxId>>;
+
+  nextTxId' = nextTxId + 1
+  /\ UNCHANGED <<db, txns>>;
+
+  db' = [i \in 1..10 |-> -> 
+          IF txns' = <<>> THEN db[i]
+
+
+  /\ UNCHANGED <<txns, nextTxId>>;
+
+  nextTxId' = nextTxId + 1
+  /\ UNCHANGED <<db, txns>>;
+
+  db' = [i \in 1..10 |-> -> 
+          IF txns' = <<>> THEN db[i]
+
+
+  /\ UNCHANGED <<txns, nextTxId>>;
+
+  nextTxId' = nextTxId + 1
+  /\ UNCHANGED <<db, txns>>;
+
+  db' = [i \in 1..10 |-> -> 
+          IF txns' = <<>> THEN db[i]
+
+
+  /\ UNCHANGED <<txns, nextTxId>>;
+
+  nextTxId' = nextTxId + 1
+  /\ UNCHANGED <<db, txns>>;
+
+  db' = [i \in 1..10 |-> -> 
+          IF txns' = <<>> THEN db[i]
+
+
+  /\ UNCHANGED <<txns, nextTxId>>;
+
+  nextTxId' = nextTxId + 1
+  /\ UNCHANGED <<db, txns>>;
+
+  db' = [i \in 1..10 |-> -> 
+          IF txns' = <<>> THEN db[i]
+
+
+  /\ UNCHANGED <<txns, nextTxId>>;
+
+  nextTxId' = nextTxId + 1
+  /\ UNCHANGED <<db, txns>>;
+
+  db' = [i \in 1..10 |-> -> 
+          IF txns' = <<>> THEN db[i]
+
+
+  /\ UNCHANGED <<txns, nextTxId>>;
+
+  nextTxId' = nextTxId + 1
+  /\ UNCHANGED <<db, txns>>;
+
+  db' = [i \in 1..10 |-> -> 
+          IF txns' = <<>> THEN db[i]
+
+
+  /\ UNCHANGED <<txns, nextTxId>>;
+
+  nextTxId' = nextTxId + 1
+  /\ UNCHANGED <<db, txns>>;
+
+  db' = [i \in 1..10 |-> -> 
+          IF txns' = <<>> THEN db[i]
+
+
+  /\ UNCHANGED <<
+===="
+chattla:20b,BM014,Clock Synchronisation,networking,3,1,0,0.444,silver,56.92,"---- MODULE ClockSync ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES clocks, offsets
+
+
+
+===="
+chattla:20b,BM015,Peterson's Algorithm,scheduling,2,1,1,0.778,gold,3.05,"---- MODULE Peterson2 ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES flag, turn
+
+Init == /\ flag = [i \in 1..2 |-> FALSE]
+        /\ turn = 1
+
+Next == \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ turn' = turn
+          /\ flag' = flag
+        \/ /\ flag[1] = TRUE
+          /\ turn' = 2
+          /\ flag' = [flag EXCEPT ![2] = FALSE]
+        \/ /\ flag[2] = TRUE
+          /\ turn' = 1
+          /\ flag' = [flag EXCEPT ![1] = FALSE]
+
+Spec == Init /\ [][Next]_<<flag, turn>>
+
+===="
+chattla:20b,BM016,Gossip Protocol,networking,3,0,0,0.778,bronze,199.09,"---- MODULE GossipProtocol ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES known, infected
+
+Init == /\ known = <<>> /\ infected = <<>> /\ \A i \in 1..N : known[i] = <<>> /\ infected[i] = <<>> /\ \A j \in 1..N : j \in 1..N
+
+Next == /\ \A i \in 1..N : known[i] = known[i] \/ infected[i]
+        /\ \A i \in 1..N : infected[i] = <<>> /\ \A j \in 1..N : j \in 1..N
+
+Spec == Init /\ [][Next]_<<known, infected>>
+
+===="
+chattla:20b,BM017,Simple Allocator,storage,2,0,0,0.889,bronze,71.98,"---- MODULE MemoryAllocator ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, Pages, Clients
+
+VARIABLE free, allocated
+
+Init == /\ free = Pages
+        /\ allocated = [c \in Clients |-> {}]
+
+Next == \/ /\ free # {}
+          /\ free' = free \ {p}
+          /\ allocated' = [c \in Clients |-> IF c = client
+                                            THEN allocated[c] \cup {p}
+
+          /\ client \in Clients
+          /\ p \in free
+        \/ /\ free' = free
+          /\ allocated' = [c \in Clients |-> IF c = client
+                                            THEN allocated[c] \ {p}
+
+          /\ client \in Clients
+          /\ p \in allocated[client]
+          /\ allocated[client] # {}
+
+TypeOK == /\ free \subseteq Pages
+          /\ \A c \in Clients: allocated[c] \subseteq Pages
+          /\ \A c \in Clients: \A p \in allocated[c]: p \in Pages
+          /\ \A c \in Clients: \A p \in allocated[c]: p \in free
+          /\ \A c1, c2 \in Clients: c1 # c2
+          /\ allocated[c1] \cap allocated[c2] = {}
+
+Spec == Init /\ [][Next]_<<free, allocated>>
+
+===="
+chattla:20b,BM018,Publish-Subscribe Broker,networking,3,1,0,0.778,silver,14.5,"---- MODULE Broker ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES subscribers, messages, nextMsgId, nextSubId
+
+Init == /\ subscribers = <<>>
+        /\ messages = <<>>
+        /\ nextMsgId = 0
+        /\ nextSubId = 0
+
+Next == /\ UNCHANGED <<subscribers, nextMsgId>>
+        /\ messages' = Append(messages, [id |-> nextMsgId, content |-> ""New Message""])
+        /\ nextMsgId' = nextMsgId + 1
+        /\ nextSubId' = nextSubId
+
+Spec == Init /\ [][Next]_<<subscribers, messages, nextMsgId, nextSubId>>
+
+===="
+chattla:20b,BM019,Dekker's Algorithm,scheduling,3,1,0,1.0,silver,21.58,"---- MODULE Dekker ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES turn, wants
+
+Init == /\ turn \in {0, 1}
+        /\ wants \in {0, 1}^2
+        /\ wants = [i \in {0, 1} |-> 0]
+
+Next == \/ /\ turn' = 1 - turn
+          /\ wants' = [wants EXCEPT ![turn] = 1]
+        \/ /\ turn' = turn
+          /\ wants' = [wants EXCEPT ![1 - turn] = 0]
+
+Spec == Init /\ [][Next]_<<turn, wants>>
+
+TypeOK == /\ turn \in {0, 1}
+          /\ wants \in {0, 1}^2
+
+===="
+chattla:20b,BM020,Eventually Consistent Counter,storage,3,0,0,0.778,bronze,203.65,"---- MODULE GCounter ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS Node
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+
+VARIABLES counts
+
+
+  (* --state Increment
+
+  *)
+  (* --state Merge
+
+  *)
+end
+*)
+
+(* --state Init
+counts = [n \in Node |-> [m \in Node |-> 0]]
+*)
+
+(* --state Increment
+counts[n][n] := counts[n][n] + 1
+*)
+
+(* --state Merge
+counts[n][m] := Max(counts[n][m], counts[m][n])
+*)
+
+(* --state GlobalCount
+globalCount = Sum([n \in Node |-> Max({counts[n][m] : m \in Node})])
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+(* --state TypeOK
+TypeOK == /\ Node \subseteq Nat
+        /\ counts \in [Node -> [Node -> Nat]]
+*)
+
+===="

@@ -20,7 +20,14 @@ env/
 *.ipynb~
 
 # Training artefacts (large — don't commit to repo)
-outputs/
+outputs/gguf/
+outputs/gguf_backup/
+outputs/merged_model/
+outputs/merged-llama3b/
+outputs/checkpoints_8b_archive/
+outputs/checkpoints-llama3b/
+outputs/llama.cpp/
+outputs/toy-math/
 
 # Upstream git mirrors (re-harvest anytime; commits recorded in tla_descriptions*.json)
 data/external/
@@ -57,4 +64,3 @@ Thumbs.db
 # Byte-compiled / optimized
 *.pyc
 train.log
-outputs/gguf_backup/chattla-20b-pre-c39.gguf

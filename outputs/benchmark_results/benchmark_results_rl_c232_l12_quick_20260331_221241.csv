@@ -1,0 +1,537 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,0,0.444,silver,25.12,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, turn, N
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,1,0,0.444,silver,13.55,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES participants, votes, decisions, coordinator
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,0,0,1.0,bronze,77.66,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLES forks, states
+
+(* Fork ownership: forks[i] = j means fork i is held by philosopher j; forks[i] = -1 means fork i is free *)
+Init == /\ forks = [i \in 1..N |-> -> -1]
+        /\ states = [i \in 1..N |-> -> ""thinking""]
+
+Next == \/ (* Philosopher i becomes hungry *)
+          /\ states' = [states EXCEPT ![i] = ""hungry""]
+        \/ (* Philosopher i picks up forks if both are free *)
+          /\ states[i] = ""hungry""
+          /\ forks[i] = -1
+          /\ forks[%(i, N) + 1] = -1
+          /\ forks' = [forks EXCEPT ![i] = i, ![%(i, N) + 1] = i]
+          /\ states' = [states EXCEPT ![i] = ""eating""]
+        \/ (* Philosopher i puts down forks after eating *)
+          /\ states[i] = ""eating""
+          /\ forks' = [forks EXCEPT ![i] = -1, ![%(i, N) + 1] = -1]
+          /\ states' = [states EXCEPT ![i] = ""thinking""]
+
+Spec == Init /\ [][Next]_<<forks, states>>
+
+TypeOK == /\ forks \in [1..N -> 1..N \cup {-1}]
+          /\ states \in [1..N -> {""thinking"", ""hungry"", ""eating""}]
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+         "
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,1,1,0.778,gold,172.61,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES num, flag
+
+Init == /\ num = <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0>>
+       /\ flag = <<FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE>>
+
+Next == \/ /\ flag[1] = FALSE
+          /\ flag' = <<TRUE, flag[2], flag[3], flag[4], flag[5], flag[6], flag[7], flag[8], flag[9], flag[10]>>
+          /\ num' = <<1, num[2], num[3], num[4], num[5], num[6], num[7], num[8], num[9], num[10]>>
+        \/ /\ flag[2] = FALSE
+          /\ flag' = <<flag[1], TRUE, flag[3], flag[4], flag[5], flag[6], flag[7], flag[8], flag[9], flag[10]>>
+          /\ num' = <<num[1], 2, num[3], num[4], num[5], num[6], num[7], num[8], num[9], num[10]>>
+        \/ /\ flag[3] = FALSE
+          /\ flag' = <<flag[1], flag[2], TRUE, flag[4], flag[5], flag[6], flag[7], flag[8], flag[9], flag[10]>>
+          /\ num' = <<num[1], num[2], 3, num[4], num[5], num[6], num[7], num[8], num[9], num[10]>>
+        \/ /\ flag[4] = FALSE
+          /\ flag' = <<flag[1], flag[2], flag[3], TRUE, flag[5], flag[6], flag[7], flag[8], flag[9], flag[10]>>
+          /\ num' = <<num[1], num[2], num[3], 4, num[5], num[6], num[7], num[8], num[9], num[10]>>
+        \/ /\ flag[5] = FALSE
+          /\ flag' = <<flag[1], flag[2], flag[3], flag[4], TRUE, flag[6], flag[7], flag[8], flag[9], flag[10]>>
+          /\ num' = <<num[1], num[2], num[3], num[4], 5, num[6], num[7], num[8], num[9], num[10]>>
+        \/ /\ flag[6] = FALSE
+          /\ flag' = <<flag[1], flag[2], flag[3], flag[4], flag[5], TRUE, flag[7], flag[8], flag[9], flag[10]>>
+          /\ num' = <<num[1], num[2], num[3], num[4], num[5], 6, num[7], num[8], num[9], num[10]>>
+        \/ /\ flag[7] = FALSE
+          /\ flag' = <<flag[1], flag[2], flag[3], flag[4], flag[5], flag[6], TRUE, flag[8], flag[9], flag[10]>>
+          /\ num' = <<num[1], num[2], num[3], num[4], num[5], num[6], 7, num[8], num[9], num[10]>>
+        \/ /\ flag[8] = FALSE
+          /\ flag' = <<flag[1], flag[2], flag[3], flag[4], flag[5], flag[6], flag[7], TRUE, flag[9], flag[10]>>
+          /\ num' = <<num[1], num[2], num[3], num[4], num[5], num[6], num[7], 8, num[9], num[10]>>
+        \/ /\ flag[9] = FALSE
+          /\ flag' = <<flag[1], flag[2], flag[3], flag[4], flag[5], flag[6], flag[7], flag[8], TRUE, flag[10]>>
+          /\ num' = <<num[1], num[2], num[3], num[4], num[5], num[6], num[7], num[8], 9, num[10]>>
+        \/ /\ flag[10] = FALSE
+          /\ flag' = <<flag[1], flag[2], flag[3], flag[4], flag[5], flag[6], flag[7], flag[8], flag[9], TRUE>>
+          /\ num' = <<num[1], num[2], num[3], num[4], num[5], num[6], num[7], num[8], num[9], 10>>
+        \/ /\ flag[1] = TRUE
+          /\ flag[2] = TRUE
+          /\ flag[3] = TRUE
+          /\ flag[4] = TRUE
+          /\ flag[5] = TRUE
+          /\ flag[6] = TRUE
+          /\ flag[7] = TRUE
+          /\ flag[8] = TRUE
+          /\ flag[9] = TRUE
+          /\ flag[10] = TRUE
+          /\ flag' = <<FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE>>
+          /\ num' = <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0>>
+
+Spec == Init /\ [][Next]_<<num, flag>>
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,0,0,1.0,bronze,29.48,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail, count
+
+Init == /\ q = <<>>
+        /\ head = 0
+        /\ tail = 0
+        /\ count = 0
+
+ProducerAction == /\ count < K
+                 /\ head' = head
+                 /\ tail' = (tail + 1) \mod K
+                 /\ q' = Append(q, head)
+                 /\ count' = count + 1
+
+ConsumerAction == /\ count > 0
+                 /\ head' = (head + 1) \mod K
+                 /\ tail' = tail
+                 /\ q' = Tail(q)
+                 /\ count' = count - 1
+
+Next == ProducerAction \/ ConsumerAction
+
+Spec == Init /\ [][Next]_<<q, head, tail, count>>
+
+TypeOK == /\ K \in Nat
+         /\ q \in Seq(0..K-1)
+         /\ head \in 0..K-1
+         /\ tail \in 0..K-1
+         /\ count \in 0..K
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,1,0,0.444,silver,89.72,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,0,0,0.778,bronze,25.43,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES readers, writer_active, r
+
+Init == /\ readers = <<>> \\
+       /\ writer_active = FALSE
+
+Next == \/ /\ writer_active = FALSE \\
+          /\ \E r \in 1..10 : /\ r \notin readers \\
+          /\ r' = r \\
+             /\ writer_active' = FALSE \\
+             /\ readers' = Append(readers, r) \\
+          \/ /\ writer_active = FALSE \\
+             /\ \E r \in 1..10 : /\ r \in readers \\
+             /\ r' = r \\
+                /\ writer_active' = TRUE \\
+                /\ readers' = <<>> \\
+          \/ /\ writer_active = TRUE \\
+             /\ \E r \in 1..10 : /\ r \notin readers \\
+             /\ r' = r \\
+                /\ writer_active' = TRUE \\
+                /\ readers' = readers \\
+          \/ /\ writer_active = TRUE \\
+             /\ \E r \in 1..10 : /\ r \in readers \\
+             /\ r' = r \\
+                /\ writer_active' = TRUE \\
+                /\ readers' = Tail(readers)
+
+Spec == Init /\ [][Next]_<<readers, writer_active>>
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,0,0,1.0,bronze,221.71,"---- MODULE ChandyLamportSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, channel, snapshot, channelState, markerSent, markerReceived, finished
+ProcessSet == {1, 2, ..., N}
+
+\* Assume a fixed set of channels
+ChannelSet == {<<p, q>> \in ProcessSet \X ProcessSet : p # q}
+
+\* Initial state: all processes have initial state, all channels empty, no markers sent or received
+Init == /\ state \in [ProcessSet -> InitState]
+       /\ channel \in [ChannelSet -> {}]
+       /\ snapshot \in [ProcessSet -> {}]
+       /\ channelState \in [ChannelSet -> {}]
+       /\ markerSent \in [ChannelSet -> FALSE]
+       /\ markerReceived \in [ChannelSet -> FALSE]
+       /\ finished \in [ProcessSet -> FALSE]
+
+\* Next action: either send a message, send a marker, or receive a message
+SendMsg == \E p, q \in ProcessSet : /\ p # q
+          /\ channel[p][q] \in [ProcessSet -> Message]
+          /\ channel' = [channel EXCEPT ![p][q] = Append(channel[p][q], msg)]
+          /\ UNCHANGED <<state, snapshot, channelState, markerSent, markerReceived, finished>>
+
+SendMarker == \E p, q \in ProcessSet : /\ p # q
+             /\ markerSent[p][q] = FALSE
+             /\ channel' = [channel EXCEPT ![p][q] = Append(channel[p][q], marker)]
+             /\ markerSent' = [markerSent EXCEPT ![p][q] = TRUE]
+             /\ UNCHANGED <<state, snapshot, channelState, markerReceived, finished>>
+
+ReceiveMsg == \E p, q \in ProcessSet : /\ p # q
+             /\ channel[p][q] \in [ProcessSet -> Message]
+             /\ msg \in channel[p][q]
+             /\ channel' = [channel EXCEPT ![p][q] = Tail(channel[p][q])]
+             /\ UNCHANGED <<state, snapshot, channelState, markerSent, markerReceived, finished>>
+
+ReceiveMarker == \E p, q \in ProcessSet : /\ p # q
+                /\ markerReceived[p][q] = FALSE
+                /\ channel[p][q] \in [ProcessSet -> Message]
+                /\ marker \in channel[p][q]
+                /\ channel' = [channel EXCEPT ![p][q] = Tail(channel[p][q])]
+                /\ markerReceived' = [markerReceived EXCEPT ![p][q] = TRUE]
+                /\ IF finished[p] = FALSE
+                   THEN /\ snapshot' = [snapshot EXCEPT ![p] = state[p]]
+                        /\ channelState' = [channelState EXCEPT ![p][q] = {}]
+                        /\ finished' = [finished EXCEPT ![p] = TRUE]
+
+                /\ UNCHANGED <<markerSent, markerReceived>>
+
+Next == \/ SendMsg
+        \/ SendMarker
+        \/ ReceiveMsg
+        \/ ReceiveMarker
+
+Spec == Init /\ [][Next]_<<state, snapshot, channelState, markerSent, markerReceived, finished>>
+
+TypeOK == /\ state \in [ProcessSet -> InitState]
+          /\ channel \in [ChannelSet -> [ProcessSet -> Message]]
+          /\ snapshot \in [ProcessSet -> InitState]
+          /\ channelState \in [ChannelSet -> [ProcessSet -> Message]]
+          /\ markerSent \in [ChannelSet -> BOOLEAN]
+          /\ markerReceived \in [ChannelSet -> BOOLEAN]
+          /\ finished \in [ProcessSet -> BOOLEAN]
+
+===="
+chattla:20b,BM009,Token Ring,networking,2,1,1,0.667,gold,2.22,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLE token
+
+Init == /\ token \in 1..N
+
+Next == /\ token' \in 1..N
+        /\ token' = IF token = N THEN 1 ELSE token + 1
+
+Spec == Init /\ [][Next]_<<token>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,0.778,silver,190.65,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, Values, NULL
+
+VARIABLES store
+
+Init == store = [k \in Keys |-> NULL]
+
+Next == \/ /\ \E k \in Keys : \E v \in Values : /\ store' = [store EXCEPT ![k] = v]
+      \/ /\ \E k \in Keys : /\ store' = [store EXCEPT ![k] = NULL]
+
+Spec == Init /\ [][Next]_<<store>>
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,1,0,0.444,silver,196.67,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES acceptors, proposers, promises, accepts, chosen, chosenBy
+
+===="
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,0,0,0.667,bronze,209.53,"---- MODULE FileTransfer ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS MAX_RETRIES, CHUNK_SIZE, FILE_SIZE, CHANNEL_LOSS_PROBABILITY
+VARIABLES channelState, retransmitCount, sentChunks
+
+    /\ fileChunks = [i \in 1..FILE_SIZE /-> i]
+    /\ sentChunks = <<>>
+    /\ retransmitCount = <<>>
+    /\ channelState = [i \in 1..FILE_SIZE /-> 0]
+
+Next ==
+    /\ \E i \in 1..FILE_SIZE :
+        /\ i \notin sentChunks
+        /\ channelState[i] = 0
+        /\ sentChunks' = Append(sentChunks, i)
+        /\ retransmitCount' = Append(retransmitCount, 0)
+        /\ channelState' = [channelState EXCEPT ![i] = 1]
+    \/ \E i \in 1..FILE_SIZE :
+        /\ i \in sentChunks
+        /\ channelState[i] = 1
+        /\ \E loss \in {0, 1} :
+            /\ channelState' = [channelState EXCEPT ![i] = loss]
+            /\ IF loss = 0 THEN
+                /\ sentChunks' = sentChunks
+                /\ retransmitCount' = [retransmitCount EXCEPT ![i] = 0]
+
+                /\ sentChunks' = sentChunks
+                /\ retransmitCount' = [retransmitCount EXCEPT ![i] = retransmitCount[i] + 1]
+            /\ IF retransmitCount[i] + 1 > MAX_RETRIES THEN
+                /\ sentChunks' = [sentChunks EXCEPT ![i] = 0]
+                /\ retransmitCount' = [retransmitCount EXCEPT ![i] = 0]
+            /\ channelState' = [channelState EXCEPT ![i] = 1]
+
+Spec ==
+    Init /\ [][Next]_<<fileChunks, sentChunks, retransmitCount, channelState>>
+
+===="

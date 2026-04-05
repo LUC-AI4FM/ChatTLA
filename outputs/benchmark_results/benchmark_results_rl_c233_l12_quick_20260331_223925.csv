@@ -1,0 +1,400 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,0,0,1.0,bronze,31.64,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS N
+
+VARIABLES state, turn
+N \in Nat
+N > 0
+
+(* State variables *)
+state \in [1..N -> {""idle"", ""trying"", ""critical""}]
+turn \in 1..N
+
+(* Initial state *)
+Init == /\ state = [p \in 1..N |-> ""idle""]
+        /\ turn \in 1..N
+
+(* Next-state relation *)
+Next == \/ (* Process p attempts to enter critical section *)
+        /\ \E p \in 1..N :
+           /\ state[p] = ""idle""
+           /\ state' = [state EXCEPT ![p] = ""trying""]
+           /\ turn' = turn
+        \/ (* Process p enters critical section *)
+        /\ \E p \in 1..N :
+           /\ state[p] = ""trying""
+           /\ turn = p
+           /\ state' = [state EXCEPT ![p] = ""critical""]
+           /\ turn' = turn
+        \/ (* Process p exits critical section *)
+        /\ \E p \in 1..N :
+           /\ state[p] = ""critical""
+           /\ state' = [state EXCEPT ![p] = ""idle""]
+           /\ turn' = turn
+
+(* Invariant: at most one process is in critical section *)
+TypeOK == /\ state \in [1..N -> {""idle"", ""trying"", ""critical""}]
+           /\ turn \in 1..N
+           /\ Cardinality({p \in 1..N : state[p] = ""critical""}) <= 1
+
+Spec == Init /\ [][Next]_<<state, turn>>
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,1,0,0.444,silver,25.21,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES participants, votes, decision, messages, state
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,1,1,1.0,gold,9.28,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS N
+
+VARIABLES forks, states
+
+
+
+(* State variables *)
+(* forks: [1..N -> 0..N] 0 means fork is free, otherwise holds philosopher number who holds it *)
+(* states: [1..N -> {""thinking"", ""hungry"", ""eating""}] *)
+
+(* Helper predicates *)
+ForkFree(i) == forks[i] = 0
+ForkHeldBy(i, p) == forks[i] = p
+PhilosopherHungry(i) == states[i] = ""hungry""
+PhilosopherEating(i) == states[i] = ""eating""
+PhilosopherThinking(i) == states[i] = ""thinking""
+
+(* Initial state *)
+Init == /\ forks = [i \in 1..N |-> 0]
+        /\ states = [i \in 1..N |-> ""thinking""]
+
+(* Next-state relation *)
+Next == \/ \E i \in 1..N :
+          /\ states[i] = ""hungry""
+          /\ ForkFree(i)
+          /\ ForkFree(%(i, N)+1)
+          /\ forks' = [forks EXCEPT ![i] = i, ![%(i, N)+1] = i]
+          /\ states' = [states EXCEPT ![i] = ""eating""]
+        \/ \E i \in 1..N :
+          /\ states[i] = ""eating""
+          /\ forks' = [forks EXCEPT ![i] = 0, ![%(i, N)+1] = 0]
+          /\ states' = [states EXCEPT ![i] = ""thinking""]
+        \/ \E i \in 1..N :
+          /\ states[i] = ""thinking""
+          /\ states' = [states EXCEPT ![i] = ""hungry""]
+          /\ forks' = forks
+
+(* Invariant: No two philosophers hold the same fork *)
+TypeOK == /\ forks \in [1..N -> 0..N]
+          /\ states \in [1..N -> {""thinking"", ""hungry"", ""eating""}]
+          /\ \A i \in 1..N : forks[i] = 0 \/ forks[i] \in 1..N
+          /\ \A i \in 1..N : states[i] \in {""thinking"", ""hungry"", ""eating""}
+
+Spec == Init /\ [][Next]_<<forks, states>>
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,1,0,0.778,silver,122.88,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES num, flag
+
+Init == /\ num = 0
+      /\ flag = <<>>
+
+
+Next == /\ num' = num + 1
+      /\ flag' = Append(flag, num + 1)
+
+Spec == Init /\ [][Next]_<<num, flag>>
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,0,1.0,silver,49.16,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail, count
+
+Init == /\ q \in Seq(1..K)  /\ head \in 1..K  /\ tail \in 1..K  /\ count \in 0..K
+      /\ q = [i \in 1..K |-> 0]  /\ head = 1  /\ tail = 1  /\ count = 0
+
+ProducerAction == /\ count < K
+                /\ q' = [q EXCEPT ![tail] = 1]
+                /\ tail' = IF tail = K THEN 1 ELSE tail + 1
+                /\ count' = count + 1
+                /\ head' = head
+
+ConsumerAction == /\ count > 0
+                /\ q' = [q EXCEPT ![head] = 0]
+                /\ head' = IF head = K THEN 1 ELSE head + 1
+                /\ count' = count - 1
+                /\ tail' = tail
+
+Next == ProducerAction \/ ConsumerAction
+
+Spec == Init /\ [][Next]_<<q, head, tail, count>>
+
+TypeOK == /\ q \in Seq(1..K)
+        /\ head \in 1..K
+        /\ tail \in 1..K
+        /\ count \in 0..K
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,1,0,0.444,silver,233.97,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,0,0,0.778,bronze,38.19,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES readers, writer_active, r
+
+Init == /\ readers = <<>> \\
+       /\ writer_active = FALSE
+
+Next == \/ /\ writer_active = FALSE \\
+          /\ \E r \in 1..10 : /\ r \notin readers \\
+          /\ r' = r \\
+             /\ writer_active' = FALSE \\
+          \/ /\ writer_active = FALSE \\
+             /\ \E r \in 1..10 : /\ r \in readers \\
+             /\ r' = r \\
+                /\ writer_active' = FALSE \\
+          \/ /\ writer_active = FALSE \\
+             /\ \E r \in 1..10 : /\ r \notin readers \\
+             /\ r' = r \\
+                /\ writer_active' = TRUE \\
+          \/ /\ writer_active = TRUE \\
+             /\ \E r \in 1..10 : /\ r \in readers \\
+             /\ r' = r \\
+                /\ writer_active' = TRUE \\
+          \/ /\ writer_active = TRUE \\
+             /\ \E r \in 1..10 : /\ r \notin readers \\
+             /\ r' = r \\
+                /\ writer_active' = FALSE
+
+Spec == Init /\ [][Next]_<<readers, writer_active>>
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,1,0,0.444,silver,41.87,"---- MODULE ChandyLamportSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, channel, snapshot, channelSnapshot, markerSent, markerReceived, finished
+
+===="
+chattla:20b,BM009,Token Ring,networking,2,1,1,0.667,gold,2.11,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLE token
+
+Init == /\ token \in 1..N
+
+Next == /\ token' \in 1..N
+        /\ token' = %(token, N) + 1
+
+Spec == Init /\ [][Next]_<<token>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,0.778,silver,9.95,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, Values, NULL
+
+VARIABLES store
+
+Init == store = [k \in Keys |-> NULL]
+
+Next == \/ /\ \E k \in Keys : \E v \in Values : /\ store' = [store EXCEPT ![k] = v]
+      \/ /\ \E k \in Keys : /\ store' = [store EXCEPT ![k] = NULL]
+
+Spec == Init /\ [][Next]_<<store>>
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,1,0,1.0,silver,14.94,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, M, V, NULL
+
+VARIABLES
+  acceptors, proposers, promises, accepted, chosen, ballot, value
+
+TypeOK ==
+  /\ acceptors \in [1..N -> [ballot : Int, value : V]]
+  /\ proposers \in [1..M -> [ballot : Int, value : V]]
+  /\ promises \in [1..N -> [ballot : Int, value : V]]
+  /\ accepted \in [1..N -> [ballot : Int, value : V]]
+  /\ chosen \in [1..N -> [ballot : Int, value : V]]
+
+Init ==
+  /\ acceptors = [i \in 1..N |-> [ballot |-> 0, value |-> NULL]]
+  /\ proposers = [j \in 1..M |-> [ballot |-> 0, value |-> NULL]]
+  /\ promises = [i \in 1..N |-> [ballot |-> 0, value |-> NULL]]
+  /\ accepted = [i \in 1..N |-> [ballot |-> 0, value |-> NULL]]
+  /\ chosen = [i \in 1..N |-> [ballot |-> 0, value |-> NULL]]
+
+Prepare(j) ==
+  /\ proposers[j].ballot' = proposers[j].ballot + 1
+  /\ proposers[j].value' = proposers[j].value
+  /\ acceptors' = acceptors
+  /\ promises' = [i \in 1..N |-> [ballot |-> proposers[j].ballot', value |-> NULL]]
+  /\ accepted' = accepted
+  /\ chosen' = chosen
+
+Accept(j) ==
+  /\ proposers[j].ballot' = proposers[j].ballot
+  /\ proposers[j].value' = proposers[j].value
+  /\ acceptors' = acceptors
+  /\ promises' = promises
+  /\ accepted' = [i \in 1..N |-> [ballot |-> proposers[j].ballot', value |-> proposers[j].value]]
+  /\ chosen' = chosen
+
+Chosen(i) ==
+  /\ acceptors[i].ballot' = acceptors[i].ballot
+  /\ acceptors[i].value' = acceptors[i].value
+  /\ proposers' = proposers
+  /\ promises' = promises
+  /\ accepted' = accepted
+  /\ chosen' = [j \in 1..N |-> [ballot |-> acceptors[i].ballot, value |-> acceptors[i].value]]
+
+Next ==
+  \/ \E j \in 1..M : Prepare(j)
+  \/ \E j \in 1..M : Accept(j)
+  \/ \E i \in 1..N : Chosen(i)
+
+Spec ==
+  Init /\ [][Next]_<<acceptors, proposers, promises, accepted, chosen>>
+
+===="
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,1,0,0.444,silver,24.35,"---- MODULE Sender ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES file, chunkSize, maxRetries, sentChunks, retransmitCount, channel, ackReceived
+
+===="

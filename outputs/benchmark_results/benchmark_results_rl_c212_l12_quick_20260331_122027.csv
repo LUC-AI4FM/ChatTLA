@@ -1,0 +1,814 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,1,1.0,gold,10.74,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N
+VARIABLES state, turn
+
+
+(* State variables *)
+
+(* Initial state *)
+Init == /\ state = [p \in 1..N |-> ""idle""]
+        /\ turn \in 1..N
+
+(* Next-state relation *)
+Next == \/ (* Process p attempts to enter critical section *)
+          /\ \E p \in 1..N : /\ state[p] = ""idle""
+                            /\ state' = [state EXCEPT ![p] = ""trying""]
+                            /\ turn' = turn
+          \/ (* Process p enters critical section *)
+          /\ \E p \in 1..N : /\ state[p] = ""trying""
+                            /\ turn = p
+                            /\ state' = [state EXCEPT ![p] = ""critical""]
+                            /\ turn' = turn
+          \/ (* Process p exits critical section *)
+          /\ \E p \in 1..N : /\ state[p] = ""critical""
+                            /\ state' = [state EXCEPT ![p] = ""idle""]
+                            /\ turn' = turn
+
+(* Invariant: at most one process is in critical section *)
+TypeOK == /\ state \in [1..N -> {""idle"", ""trying"", ""critical""}]
+          /\ turn \in 1..N
+          /\ \A p, q \in 1..N : (p # q) => (state[p] = ""critical"" => state[q] # ""critical"")
+
+Spec == Init /\ [][Next]_<<state, turn>>
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,1,0,0.444,silver,44.91,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES participants, votes, decision, messages, coordinator, state
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,0,0,0.778,bronze,76.91,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N
+
+VARIABLES forks, state
+
+
+
+Next(i) == IF i = N THEN 1 ELSE i + 1
+
+Init == /\ forks = [i \in 1..N |-> -> FALSE]
+        /\ state = [i \in 1..N |-> -> ""thinking""]
+
+Next == /\ \E i \in 1..N :
+          /\ state[i] = ""hungry""
+          /\ forks[i] = FALSE
+          /\ forks[Next(i)] = FALSE
+          /\ forks' = [forks EXCEPT ![i] = TRUE, ![Next(i)] = TRUE]
+          /\ state' = [state EXCEPT ![i] = ""eating""]
+        \/ \E i \in 1..N :
+          /\ state[i] = ""eating""
+          /\ forks' = [forks EXCEPT ![i] = FALSE, ![Next(i)] = FALSE]
+          /\ state' = [state EXCEPT ![i] = ""thinking""]
+        \/ \E i \in 1..N :
+          /\ state[i] = ""thinking""
+          /\ state' = [state EXCEPT ![i] = ""hungry""]
+          /\ forks' = forks
+
+Spec == Init /\ [][Next]_<<forks, state>>
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,0,0,0.444,bronze,106.48,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+
+VARIABLES num, flag
+
+
+actions
+  Init == /\ num = [i \in 1..N |-> 0]
+          /\ flag = [i \in 1..N |-> FALSE]
+  Next == \* choose a number
+          /\ \E i \in 1..N : /\ flag[i] = TRUE
+          /\ flag[i] := TRUE
+          /\ num[i] := 1 + Max({num[j] : j \in 1..N})
+          /\ flag[i] := FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+          /\ \E i \in 1..N : /\ flag[i] = FALSE
+   "
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,0,0.444,silver,90.4,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail, count
+
+(* The queue is represented as a sequence of length K. *)
+(* head and tail are indices into the sequence. *)
+(* count is the number of elements in the queue. *)
+
+(* The queue is empty when count = 0. *)
+(* The queue is full when count = K. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The elements are stored in positions head .. tail-1 (mod K). *)
+
+(* The queue is empty when count = 0. *)
+(* The queue is full when count = K. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The elements are stored in positions head .. tail-1 (mod K). *)
+
+(* The queue is empty when count = 0. *)
+(* The queue is full when count = K. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The elements are stored in positions head .. tail-1 (mod K). *)
+
+(* The queue is empty when count = 0. *)
+(* The queue is full when count = K. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The elements are stored in positions head .. tail-1 (mod K). *)
+
+(* The queue is empty when count = 0. *)
+(* The queue is full when count = K. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The elements are stored in positions head .. tail-1 (mod K). *)
+
+(* The queue is empty when count = 0. *)
+(* The queue is full when count = K. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The elements are stored in positions head .. tail-1 (mod K). *)
+
+(* The queue is empty when count = 0. *)
+(* The queue is full when count = K. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The elements are stored in positions head .. tail-1 (mod K). *)
+
+(* The queue is empty when count = 0. *)
+(* The queue is full when count = K. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The elements are stored in positions head .. tail-1 (mod K). *)
+
+(* The queue is empty when count = 0. *)
+(* The queue is full when count = K. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The elements are stored in positions head .. tail-1 (mod K). *)
+
+(* The queue is empty when count = 0. *)
+(* The queue is full when count = K. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The elements are stored in positions head .. tail-1 (mod K). *)
+
+(* The queue is empty when count = 0. *)
+(* The queue is full when count = K. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The elements are stored in positions head .. tail-1 (mod K). *)
+
+(* The queue is empty when count = 0. *)
+(* The queue is full when count = K. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The elements are stored in positions head .. tail-1 (mod K). *)
+
+(* The queue is empty when count = 0. *)
+(* The queue is full when count = K. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The elements are stored in positions head .. tail-1 (mod K). *)
+
+(* The queue is empty when count = 0. *)
+(* The queue is full when count = K. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The elements are stored in positions head .. tail-1 (mod K). *)
+
+(* The queue is empty when count = 0. *)
+(* The queue is full when count = K. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The elements are stored in positions head .. tail-1 (mod K). *)
+
+(* The queue is empty when count = 0. *)
+(* The queue is full when count = K. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The elements are stored in positions head .. tail-1 (mod K). *)
+
+(* The queue is empty when count = 0. *)
+(* The queue is full when count = K. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The elements are stored in positions head .. tail-1 (mod K). *)
+
+(* The queue is empty when count = 0. *)
+(* The queue is full when count = K. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The elements are stored in positions head .. tail-1 (mod K). *)
+
+(* The queue is empty when count = 0. *)
+(* The queue is full when count = K. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The elements are stored in positions head .. tail-1 (mod K). *)
+
+(* The queue is empty when count = 0. *)
+(* The queue is full when count = K. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The elements are stored in positions head .. tail-1 (mod K). *)
+
+(* The queue is empty when count = 0. *)
+(* The queue is full when count = K. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The elements are stored in positions head .. tail-1 (mod K). *)
+
+(* The queue is empty when count = 0. *)
+(* The queue is full when count = K. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The elements are stored in positions head .. tail-1 (mod K). *)
+
+(* The queue is empty when count = 0. *)
+(* The queue is full when count = K. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The elements are stored in positions head .. tail-1 (mod K). *)
+
+(* The queue is empty when count = 0. *)
+(* The queue is full when count = K. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The elements are stored in positions head .. tail-1 (mod K). *)
+
+(* The queue is empty when count = 0. *)
+(* The queue is full when count = K. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The elements are stored in positions head .. tail-1 (mod K). *)
+
+(* The queue is empty when count = 0. *)
+(* The queue is full when count = K. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The elements are stored in positions head .. tail-1 (mod K). *)
+
+(* The queue is empty when count = 0. *)
+(* The queue is full when count = K. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The elements are stored in positions head .. tail-1 (mod K). *)
+
+(* The queue is empty when count = 0. *)
+(* The queue is full when count = K. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The elements are stored in positions head .. tail-1 (mod K). *)
+
+(* The queue is empty when count = 0. *)
+(* The queue is full when count = K. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The elements are stored in positions head .. tail-1 (mod K). *)
+
+(* The queue is empty when count = 0. *)
+(* The queue is full when count = K. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The elements are stored in positions head .. tail-1 (mod K). *)
+
+(* The queue is empty when count = 0. *)
+(* The queue is full when count = K. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The elements are stored in positions head .. tail-1 (mod K). *)
+
+(* The queue is empty when count = 0. *)
+(* The queue is full when count = K. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The elements are stored in positions head .. tail-1 (mod K). *)
+
+(* The queue is empty when count = 0. *)
+(* The queue is full when count = K. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The elements are stored in positions head .. tail-1 (mod K). *)
+
+(* The queue is empty when count = 0. *)
+(* The queue is full when count = K. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The elements are stored in positions head .. tail-1 (mod K). *)
+
+(* The queue is empty when count = 0. *)
+(* The queue is full when count = K. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The elements are stored in positions head .. tail-1 (mod K). *)
+
+(* The queue is empty when count = 0. *)
+(* The queue is full when count = K. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The elements are stored in positions head .. tail-1 (mod K). *)
+
+(* The queue is empty when count = 0. *)
+(* The queue is full when count = K. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The elements are stored in positions head .. tail-1 (mod K). *)
+
+(* The queue is empty w"
+chattla:20b,BM006,Raft Leader Election,consensus,4,1,0,0.444,silver,55.78,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,0,0,0.778,bronze,201.74,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS Readers
+
+VARIABLES readers, writer_active
+
+Init == /\ readers = <<>> \\
+       /\ writer_active = FALSE
+
+Next == \/ /\ writer_active = FALSE \\
+          /\ \E r \in Readers \in Seq \\
+             /\ r \in readers \\
+             /\ writer_active' = FALSE \\
+             /\ readers' = Remove(r, readers) \\
+          \/ /\ writer_active = FALSE \\
+             /\ \E r \in Readers \in Seq \\
+                /\ r \notin readers \\
+                /\ writer_active' = TRUE \\
+                /\ readers' = readers \\
+          \/ /\ writer_active = TRUE \\
+             /\ \E r \in Readers \in Seq \\
+                /\ r \in readers \\
+                /\ writer_active' = TRUE \\
+                /\ readers' = Remove(r, readers)
+
+Spec == Init /\ [][Next]_<<readers, writer_active>>
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,1,0,0.444,silver,33.83,"---- MODULE ChandyLamportSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, channel, snapshot, channelSnapshot
+
+===="
+chattla:20b,BM009,Token Ring,networking,2,1,1,0.667,gold,2.18,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLE token
+
+Init == /\ token \in 1..N
+
+Next == /\ token' \in 1..N
+        /\ token' = IF token = N THEN 1 ELSE token + 1
+
+Spec == Init /\ [][Next]_<<token>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,1.0,silver,5.51,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, Values
+VARIABLES store
+
+
+(* Type invariant *)
+TypeOK == 
+  /\ store \in [Keys -> Values]
+  /\ \A k \in Keys : store[k] \in Values
+
+(* Initial state *)
+Init == 
+  /\ store \in [Keys -> Values]
+  /\ \A k \in Keys : store[k] = 0
+
+(* Next-state relation *)
+Next == 
+  \/ \E k \in Keys : \E v \in Values : 
+       /\ store' = [store EXCEPT ![k] = v]
+  \/ \E k \in Keys : 
+       /\ store' = store
+
+Spec == Init /\ [][Next]_<<store>>
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,1,0,0.444,silver,200.05,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES acceptors, proposers, promises, accepts, chosen, chosenBy
+
+===="
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,1,0,0.778,silver,232.99,"---- MODULE FileTransfer ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS MAX_RETRIES, CHUNK_SIZE, FILE_SIZE, CHANNEL_CAPACITY
+VARIABLES channel, chunks, file, retransmitCount, sentChunks
+
+Init ==
+    /\ file = <<>>
+    /\ chunks = <<>>
+    /\ sentChunks = <<>>
+    /\ retransmitCount = <<>>
+    /\ channel = <<>>
+
+Next ==
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ channel' = channel
+    \/ /\ file' = Append(file, <<>>)
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = Append(sentChunks, <<>>)
+       /\ retransmitCount' = retransmitCount
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = Append(retransmitCount, 0)
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ channel' = Append(channel, <<>>)
+
+Spec == Init /\ [][Next]_<<channel, chunks, file, retransmitCount, sentChunks>>
+===="
