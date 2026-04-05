@@ -63,3 +63,4 @@ Thumbs.db
 # Byte-compiled / optimized
 *.pyc
 train.log
+outputs/gguf_backup/chattla-20b-pre-c39.gguf

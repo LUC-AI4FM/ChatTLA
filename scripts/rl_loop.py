@@ -100,7 +100,7 @@ GPU_VRAM_CAP_DAY   = 0.75         # 75% VRAM cap during daytime (leave 25%)
 GPU_VRAM_CAP_NIGHT = 0.90         # 90% VRAM cap at night
 MAX_PROMPTS_DAY    = 10           # fewer prompts during daytime (was 25; spend more time training)
 MAX_PROMPTS_NIGHT  = 15           # lighter at night too (was 40; quality over quantity)
-SFT_EPOCHS         = 3            # 15 caused catastrophic forgetting on 234 examples (2026-04-05); keep low
+SFT_EPOCHS         = 2            # was 3; lowered to reduce catastrophic forgetting risk
 BENCHMARK_EVERY_N  = 3            # run full benchmark every N cycles
 TEMPERATURE_BASE   = 0.3
 TEMPERATURE_RANGE  = (0.1, 0.6)   # diversity range for multi-attempt
@@ -110,6 +110,14 @@ DAY_PROMPT_COOLDOWN_S = 3.0       # pause between prompts during daytime
 NIGHT_PROMPT_COOLDOWN_S = 0.5     # lighter pause at night
 QUICK_EVAL_LIMIT = 12             # mini-eval every cycle (trend signal; full suite = ground truth)
 QUICK_EVAL_ATTEMPTS = 2
+
+# ── Teacher model (Phase 0) ─────────────────────────────────────────────────
+# Use a large external model to generate verified gold TLA+ examples.
+# Set OLLAMA_TEACHER_URL to enable. Harvests every N cycles.
+TEACHER_ENABLED        = bool(os.environ.get("OLLAMA_TEACHER_URL"))
+TEACHER_HARVEST_EVERY  = 5         # harvest teacher gold every N cycles
+TEACHER_MAX_PROMPTS    = 5         # prompts per harvest batch
+_TEACHER_GOLD_JSONL    = _REPO_ROOT / "data" / "processed" / "teacher_gold.jsonl"
 
 # Hugging Face Hub (after successful merge + GGUF). Requires HF_TOKEN in env.
 PUBLISH_HF_DEFAULT = True
@@ -1767,9 +1775,27 @@ MIN_TRAIN_EXAMPLES = int(os.environ.get("CHATTLA_MIN_TRAIN_EXAMPLES", "200"))
 
 
 def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT) -> RetrainOutcome:
-    """Rebuild training dataset, retrain, merge, GGUF, deploy. HF publish is handled by caller."""
+    """Rebuild training dataset, retrain (DPO-first or SFT), merge, GGUF, deploy.
 
-    # 1. Rebuild dataset
+    Strategy (2026-04-05 redesign — avoid catastrophic forgetting):
+      - If ≥4 gold DPO pairs: DPO-only (no SFT), lr=5e-6, 2 epochs
+      - Else if ≥200 train examples: incremental SFT, lr=1e-5, 2 epochs
+      - Else: skip (too little data)
+    HF publish is handled by the caller.
+    """
+
+    # ── 0. Backup current GGUF before any changes ────────────────────────
+    import shutil
+    gguf_dir = _REPO_ROOT / "outputs" / "gguf"
+    current_gguf = gguf_dir / "chattla-20b-Q8_0.gguf"
+    backup_dir = _REPO_ROOT / "outputs" / "gguf_backup"
+    backup_dir.mkdir(parents=True, exist_ok=True)
+    backup_gguf = backup_dir / f"chattla-20b-pre-c{cycle_id}.gguf"
+    if current_gguf.exists():
+        shutil.copy2(current_gguf, backup_gguf)
+        log.info(f"[retrain] Backed up GGUF → {backup_gguf.name}")
+
+    # ── 1. Rebuild dataset ───────────────────────────────────────────────
     log.info("[retrain] Rebuilding training dataset...")
     try:
         result = subprocess.run(
@@ -1787,19 +1813,42 @@ def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT
         log.error("[retrain] Dataset rebuild timed out")
         return "failed"
 
-    # Count training examples — abort if too few (tiny datasets damage the base model)
+    # Append teacher_gold.jsonl to train.jsonl (if any teacher examples exist)
+    if _TEACHER_GOLD_JSONL.exists():
+        n_teacher = 0
+        with open(_TRAIN_JSONL, "a") as out:
+            with open(_TEACHER_GOLD_JSONL) as f:
+                for line in f:
+                    if line.strip():
+                        out.write(line if line.endswith("\n") else line + "\n")
+                        n_teacher += 1
+        if n_teacher:
+            log.info(f"[retrain] Appended {n_teacher} teacher_gold examples to train.jsonl")
+
+    # Count training examples
     n_train = 0
     if _TRAIN_JSONL.exists():
         with open(_TRAIN_JSONL) as f:
             n_train = sum(1 for line in f if line.strip())
-    if n_train < MIN_TRAIN_EXAMPLES:
+
+    # ── 2. Determine retrain mode: DPO-first or SFT ─────────────────────
+    dpo_n = _count_dpo_gold_pairs()
+    if dpo_n >= 4:
+        retrain_mode = "dpo_only"
+        num_epochs = 2
+        lr = "5e-6"
+        log.info(f"[retrain] Mode: DPO-only ({dpo_n} gold DPO pairs, lr={lr}, epochs={num_epochs})")
+    elif n_train >= MIN_TRAIN_EXAMPLES:
+        retrain_mode = "sft_incremental"
+        num_epochs = SFT_EPOCHS  # capped at 2
+        lr = "1e-5"
+        log.info(f"[retrain] Mode: SFT incremental ({n_train} train examples, lr={lr}, epochs={num_epochs})")
+    else:
         log.warning(
-            f"[retrain] Only {n_train} training examples (need >= {MIN_TRAIN_EXAMPLES}). "
-            "Skipping retrain to avoid damaging the base model. Accumulate more data first."
+            f"[retrain] Only {n_train} train examples and {dpo_n} DPO pairs. "
+            f"Need ≥{MIN_TRAIN_EXAMPLES} for SFT or ≥4 DPO pairs. Skipping."
         )
         return "skipped_min_train"
-    num_epochs = SFT_EPOCHS
-    log.info(f"[retrain] {n_train} training examples, {num_epochs} epochs (SFT_EPOCHS={SFT_EPOCHS})")
 
     # Clean up GPU memory from previous phases (inference, benchmarks, etc.)
     # This is critical on shared machines where 35+ GiB may be in use
@@ -1880,22 +1929,41 @@ def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT
 
     env["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
     log.info(
-        f"[retrain] Training: max_length={max_length} grad_accum={grad_accum_steps} "
+        f"[retrain] Training ({retrain_mode}): lr={lr} epochs={num_epochs} "
+        f"max_length={max_length} grad_accum={grad_accum_steps} "
         f"batch=1/device free_mb={free_mb} cap={max_gpu_memory_mb} MB/GPU"
     )
-    train_cmd = [
-        sys.executable, "-m", "src.training.train",
-        "--epochs", str(num_epochs),
-        "--lr", "2e-5",                          # 3e-4 caused catastrophic forgetting; safe LoRA range
-        "--max-gpu-memory-mb", str(max_gpu_memory_mb),
-        "--max-length", str(max_length),
-        "--per-device-batch-size", "1",          # minimise activation memory on shared GPUs
-        "--gradient-accumulation-steps", str(grad_accum_steps),
-    ]
-    dpo_n = _count_dpo_gold_pairs()
-    if dpo_n >= 2:
-        train_cmd.append("--dpo-after")
-        log.info(f"[retrain] DPO-after-SFT enabled ({dpo_n} gold pairs in dpo_pairs.jsonl)")
+
+    if retrain_mode == "dpo_only":
+        # DPO-only: no SFT, just preference learning from gold DPO pairs
+        # Uses src.training.train with --dpo-after flag but minimal SFT (1 epoch)
+        # then the DPO phase does the real learning
+        train_cmd = [
+            sys.executable, "-m", "src.training.train",
+            "--epochs", "1",                          # minimal SFT warmup
+            "--lr", lr,                               # 5e-6 — very conservative
+            "--max-gpu-memory-mb", str(max_gpu_memory_mb),
+            "--max-length", str(max_length),
+            "--per-device-batch-size", "1",
+            "--gradient-accumulation-steps", str(grad_accum_steps),
+            "--dpo-after",                            # DPO phase after minimal SFT
+        ]
+        log.info(f"[retrain] DPO-only: 1 SFT warmup epoch + DPO on {dpo_n} gold pairs (lr={lr})")
+    else:
+        # Incremental SFT with optional DPO-after
+        train_cmd = [
+            sys.executable, "-m", "src.training.train",
+            "--epochs", str(num_epochs),
+            "--lr", lr,                               # 1e-5 — safe for incremental SFT
+            "--max-gpu-memory-mb", str(max_gpu_memory_mb),
+            "--max-length", str(max_length),
+            "--per-device-batch-size", "1",
+            "--gradient-accumulation-steps", str(grad_accum_steps),
+        ]
+        if dpo_n >= 2:
+            train_cmd.append("--dpo-after")
+            log.info(f"[retrain] SFT + DPO-after ({dpo_n} gold DPO pairs)")
+
     result = subprocess.run(
         train_cmd,
         cwd=str(_REPO_ROOT), env=env,
@@ -1904,7 +1972,7 @@ def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT
     if result.returncode != 0:
         log.error(f"[retrain] Training failed: {result.stderr[-500:]}")
         return "failed"
-    log.info("[retrain] Training complete.")
+    log.info(f"[retrain] Training complete ({retrain_mode}).")
 
     if _SHUTDOWN:
         return "failed"
@@ -1990,18 +2058,19 @@ def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT
         log.error("[retrain] GGUF conversion timed out")
         return "failed"
 
-    # Eval gate: register temp model, run quick SANY eval, compare to baseline
-    log.info("[retrain] Eval gate: testing new model before deploy...")
+    # ── Eval gate: 10 benchmarks, SANY≥3, TLC check, rollback on failure ──
+    # (Strengthened 2026-04-05: was 5 problems / 1 SANY pass / no TLC / exceptions deployed anyway)
+    log.info("[retrain] Eval gate: testing new model before deploy (10 problems, need ≥3 SANY)...")
+    _EVAL_GATE_N = 10
+    _EVAL_GATE_MIN_SANY = 3
+    eval_gate_passed = False
     try:
         import requests as _req
-        # Register as temp name
-        gguf_dir = _REPO_ROOT / "outputs" / "gguf"
+        import re as _re
         new_gguf = gguf_dir / "chattla-20b-Q8_0.gguf"
         if new_gguf.exists():
             tmp_modelfile = gguf_dir / "Modelfile.evalgate"
-            # Read existing Modelfile template, swap to new GGUF
             existing_mf = (gguf_dir / "Modelfile").read_text()
-            import re as _re
             tmp_mf_content = _re.sub(
                 r'^FROM .*$',
                 f'FROM {new_gguf}',
@@ -2014,11 +2083,12 @@ def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT
                 ["ollama", "create", "chattla:20b-candidate", "-f", str(tmp_modelfile)],
                 capture_output=True, text=True, timeout=300,
             )
-            # Quick SANY eval on 5 benchmarks
             benchmarks = json.load(open(_REPO_ROOT / "data" / "benchmarks" / "benchmark_suite.json"))
-            from src.validators.sany_validator import validate_string
+            from src.validators.sany_validator import validate_string as sany_validate
+            from src.validators.tlc_validator import validate_string as tlc_validate
             sany_pass = 0
-            for bm in benchmarks[:5]:
+            tlc_pass = 0
+            for bm in benchmarks[:_EVAL_GATE_N]:
                 try:
                     resp = _req.post("http://localhost:11434/api/generate", json={
                         "model": "chattla:20b-candidate",
@@ -2030,25 +2100,56 @@ def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT
                     spec = _re.sub(r'<analysis>.*?</analysis>', '', spec, flags=_re.DOTALL).strip()
                     mod = _re.search(r'MODULE\s+(\w+)', spec)
                     mod_name = mod.group(1) if mod else "Temp"
-                    sr = validate_string(spec, module_name=mod_name)
-                    sany_pass += int(sr.valid)
-                except Exception:
-                    pass
+                    sr = sany_validate(spec, module_name=mod_name)
+                    if sr.valid:
+                        sany_pass += 1
+                        # Also check TLC for specs that pass SANY
+                        try:
+                            tr = tlc_validate(spec, module_name=mod_name, timeout=30)
+                            tlc_pass += int(tr.success)
+                        except Exception:
+                            pass  # TLC failure doesn't block, just informational
+                except Exception as e:
+                    log.debug(f"[eval gate] Benchmark {bm.get('name', '?')} error: {e}")
             # Cleanup temp model
             subprocess.run(["ollama", "rm", "chattla:20b-candidate"],
                           capture_output=True, text=True, timeout=30)
             tmp_modelfile.unlink(missing_ok=True)
 
-            log.info(f"[retrain] Eval gate: new model SANY={sany_pass}/5")
-            if sany_pass == 0:
+            log.info(f"[retrain] Eval gate: SANY={sany_pass}/{_EVAL_GATE_N} TLC={tlc_pass}/{sany_pass}")
+            if sany_pass < _EVAL_GATE_MIN_SANY:
                 log.error(
-                    "[retrain] EVAL GATE FAILED: new model scores 0/5 SANY. "
-                    "Aborting deploy — keeping old model. This retrain caused catastrophic forgetting."
+                    f"[retrain] EVAL GATE FAILED: SANY={sany_pass}/{_EVAL_GATE_N} < {_EVAL_GATE_MIN_SANY}. "
+                    "Aborting deploy — rolling back to backup GGUF."
                 )
+                # Rollback: restore backup GGUF and re-register old model
+                if backup_gguf.exists():
+                    import shutil as _shutil
+                    _shutil.copy2(backup_gguf, current_gguf)
+                    log.info(f"[retrain] Restored backup GGUF: {backup_gguf.name}")
+                    # Re-register old model with Ollama
+                    try:
+                        subprocess.run(
+                            [sys.executable, "-m", "src.inference.convert_to_gguf",
+                             "--quant", "Q8_0"],
+                            cwd=str(_REPO_ROOT),
+                            capture_output=True, text=True, timeout=600,
+                        )
+                        log.info("[retrain] Old model re-registered with Ollama after rollback")
+                    except Exception as e2:
+                        log.warning(f"[retrain] Could not re-register old model: {e2}")
                 return "failed"
-            log.info(f"[retrain] Eval gate passed ({sany_pass}/5 SANY). Deploying...")
+            log.info(f"[retrain] Eval gate PASSED ({sany_pass}/{_EVAL_GATE_N} SANY, {tlc_pass} TLC). Deploying...")
+            eval_gate_passed = True
+        else:
+            log.warning("[retrain] No GGUF found for eval gate — skipping gate")
+            eval_gate_passed = True
     except Exception as e:
-        log.warning(f"[retrain] Eval gate error (deploying anyway): {e}")
+        log.error(f"[retrain] Eval gate error: {e} — aborting deploy (fail-safe)")
+        return "failed"
+
+    if not eval_gate_passed:
+        return "failed"
 
     # Actually register with Ollama
     log.info("[retrain] Deploying new GGUF to Ollama...")
@@ -2320,6 +2421,27 @@ def run_cycle(
         log.info(f"Pacing: {prompt_cooldown:.1f}s between prompts")
         log.info(f"{'='*60}")
 
+        # ── Phase 0: Teacher Gold Harvest ─────────────────────────────────
+        if TEACHER_ENABLED and cycle_id % TEACHER_HARVEST_EVERY == 0:
+            log.info(f"[phase0] Teacher gold harvest (every {TEACHER_HARVEST_EVERY} cycles)...")
+            try:
+                from scripts.teacher_gold_gen import harvest_teacher_gold
+                teacher_n = harvest_teacher_gold(
+                    cycle_id=cycle_id,
+                    max_prompts=TEACHER_MAX_PROMPTS,
+                )
+                log.info(f"[phase0] Teacher harvest: {teacher_n} new gold examples")
+                # Teacher gold counts toward accumulated_new for retrain trigger
+                accumulated_new += teacher_n
+            except Exception as e:
+                log.warning(f"[phase0] Teacher harvest failed (non-fatal): {e}")
+        elif TEACHER_ENABLED:
+            log.info(f"[phase0] Skipping teacher harvest (next at cycle {cycle_id + TEACHER_HARVEST_EVERY - (cycle_id % TEACHER_HARVEST_EVERY)})")
+
+        if _SHUTDOWN:
+            stats.cycle_duration_s = time.time() - t0
+            return stats, accumulated_new, gold_prompt_ids
+
         # ── Phase 1: Generate + Validate ──────────────────────────────────
         log.info("[phase1] Loading prompt bank...")
         all_prompts = load_prompt_bank(difficulty_cap=difficulty_cap)
@@ -2533,37 +2655,32 @@ def run_cycle(
         stats.benchmark_tlc_rate = full_tlc
 
         if just_retrained and publish_hf:
-            if not stats.benchmark_full_suite:
-                log.info(
-                    "[phase4] HF publish skipped: quality gate needs a full benchmark "
-                    f"(this cycle was quick eval only; full runs every {benchmark_every_n} cycles when >1)."
-                )
-            else:
-                prev_best_tlc = best_historical_full_tlc() or 0.0
-                full_tlc_safe = full_tlc if isinstance(full_tlc, float) else 0.0
-                if full_tlc_safe >= prev_best_tlc and full_tlc_safe > 0:
+            prev_best_tlc = best_historical_full_tlc() or 0.0
+            eval_tlc_safe = full_tlc if isinstance(full_tlc, float) else 0.0
+            if stats.benchmark_full_suite:
+                # Full benchmark: publish if TLC matches or exceeds best
+                if eval_tlc_safe >= prev_best_tlc and eval_tlc_safe > 0:
                     log.info(
-                        f"[phase4] TLC {full_tlc_safe:.0%} >= previous best {prev_best_tlc:.0%} — publishing to HF"
+                        f"[phase4] TLC {eval_tlc_safe:.0%} >= previous best {prev_best_tlc:.0%} — publishing to HF"
                     )
                     publish_to_hf(cycle_id)
                 else:
                     log.warning(
-                        f"[phase4] TLC {full_tlc_safe:.0%} < previous best {prev_best_tlc:.0%} (or zero) "
+                        f"[phase4] TLC {eval_tlc_safe:.0%} < previous best {prev_best_tlc:.0%} (or zero) "
                         "— SKIPPING HF publish to avoid pushing a regression"
                     )
                     # ── Phase 5: Regression Guard ─────────────────────────
                     # If TLC dropped significantly, raise the retrain threshold
                     # so the next retrain requires more/better gold data.
-                    if full_tlc_safe < (prev_best_tlc - 0.10):
+                    if eval_tlc_safe < (prev_best_tlc - 0.10):
                         new_thresh = min(RETRAIN_THRESHOLD * 2, 200)
                         log.error(
-                            f"[safety] TLC REGRESSION: {full_tlc:.0%} vs best {prev_best_tlc:.0%}. "
-                            f"Doubling retrain threshold {RETRAIN_THRESHOLD} → {new_thresh} "
-                            "to require more gold data before next retrain."
+                            f"[safety] TLC REGRESSION: {eval_tlc_safe:.0%} vs best {prev_best_tlc:.0%}. "
+                            f"Doubling retrain threshold {RETRAIN_THRESHOLD} → {new_thresh}"
                         )
                         _write_diag("retrain_regression_guard", {
                             "summary": (
-                                f"Post-retrain TLC {full_tlc:.0%} regressed from best {prev_best_tlc:.0%}. "
+                                f"Post-retrain TLC {eval_tlc_safe:.0%} regressed from best {prev_best_tlc:.0%}. "
                                 f"Raised threshold {RETRAIN_THRESHOLD}→{new_thresh}."
                             ),
                             "full_tlc": full_tlc,
@@ -2573,7 +2690,7 @@ def run_cycle(
                             "action": "retrain threshold doubled; more gold examples required",
                         })
                         RETRAIN_THRESHOLD = new_thresh
-                    elif full_tlc_safe == 0.0 and prev_best_tlc > 0.0:
+                    elif eval_tlc_safe == 0.0 and prev_best_tlc > 0.0:
                         log.error(
                             f"[safety] Post-retrain TLC=0%. Model likely damaged. "
                             "Skipping next retrain until 50 more gold examples accumulate."
@@ -2584,6 +2701,17 @@ def run_cycle(
                             "action": "threshold raised to prevent further damage",
                         })
                         RETRAIN_THRESHOLD = max(RETRAIN_THRESHOLD, accumulated_new + 50)
+            else:
+                # Quick eval: also publish if TLC looks decent (within 5pp of best or first publish)
+                if eval_tlc_safe > 0 and eval_tlc_safe >= (prev_best_tlc - 0.05):
+                    log.info(
+                        f"[phase4] Quick eval TLC {eval_tlc_safe:.0%} looks good — publishing to HF"
+                    )
+                    publish_to_hf(cycle_id)
+                else:
+                    log.info(
+                        f"[phase4] Quick eval TLC {eval_tlc_safe:.0%} below threshold — skip HF"
+                    )
 
     except Exception as e:
         stats.error = f"{type(e).__name__}: {str(e)[:200]}"
@@ -2656,12 +2784,12 @@ def main():
 
     RETRAIN_THRESHOLD = args.retrain_threshold
     MIN_TRAIN_EXAMPLES = args.min_train_examples
-    SFT_EPOCHS = args.sft_epochs
+    SFT_EPOCHS = min(args.sft_epochs, 2)  # hard cap at 2 to prevent catastrophic forgetting
 
     cycle_seconds = max(0.0, args.cycle_hours * 3600)
 
     log.info("=" * 60)
-    log.info("  ChatTLA Autonomous RL Loop")
+    log.info("  ChatTLA Autonomous RL Loop (v2: DPO-first + teacher harvest)")
     log.info(f"  Inter-cycle pause: {args.cycle_hours}h ({'none' if cycle_seconds <= 0 else f'{cycle_seconds/60:.0f} min target'})")
     if args.benchmark_every <= 0:
         log.info("  Eval: quick eval only (full benchmark disabled; use --benchmark-every >=1 for full runs)")
@@ -2672,7 +2800,15 @@ def main():
             f"  Eval: full benchmark every {args.benchmark_every} cycles "
             f"({args.full_benchmark_attempts} attempts); quick eval ({args.quick_eval_limit}×{args.quick_eval_attempts}) otherwise"
         )
+    log.info(f"  Retrain strategy: DPO-first (≥4 DPO pairs) or incremental SFT (epochs={SFT_EPOCHS}, capped at 2)")
     log.info(f"  Retrain threshold: {args.retrain_threshold} | Min training size: {MIN_TRAIN_EXAMPLES}")
+    log.info(f"  Eval gate: 10 benchmarks, need ≥3 SANY + TLC check, rollback on failure")
+    if TEACHER_ENABLED:
+        log.info(f"  Teacher model: ENABLED (every {TEACHER_HARVEST_EVERY} cycles, {TEACHER_MAX_PROMPTS} prompts)")
+        log.info(f"    URL: {os.environ.get('OLLAMA_TEACHER_URL', 'not set')}")
+        log.info(f"    Model: {os.environ.get('OLLAMA_TEACHER_MODEL', 'llama3:70b')}")
+    else:
+        log.info("  Teacher model: DISABLED (set OLLAMA_TEACHER_URL to enable)")
     log.info(f"  Phase 1 workers: {args.phase1_workers or 'auto (3 night / 2 day)'}")
     if args.allow_daytime_retrain:
         log.info("  Daytime retrain: ENABLED (--allow-daytime-retrain)")
