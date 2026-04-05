@@ -1850,3 +1850,17 @@ KeyboardInterrupt
 2026-04-05 14:08:52 INFO   [RL012] tier=bronze sany=False tlc=False struct=0.89 attempts=2 (best of 2)
 2026-04-05 14:08:55 INFO   [SYN007] tier=bronze sany=False tlc=False struct=0.89 attempts=2 (best of 2)
 2026-04-05 14:10:47 INFO   [BM014] tier=bronze sany=False tlc=False struct=0.89 attempts=2 (best of 2)
+2026-04-05 14:10:54 INFO   [BM020] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-04-05 14:11:06 INFO   [RL016] tier=bronze sany=False tlc=False struct=0.89 attempts=2 (best of 2)
+2026-04-05 14:11:06 WARNING [phase1] PROMPT REGRESSIONS: 1 prompts degraded: RL012: silver→bronze
+2026-04-05 14:11:06 INFO [gold_cache] Added 1 new gold specs to cross-cycle cache
+2026-04-05 14:11:06 INFO [phase1] Error taxonomy: {'syntax': 11, 'other': 2}
+2026-04-05 14:11:06 INFO [phase1] Results: gold=2 silver=2 bronze=11 sany=4/15 tlc=2/15
+2026-04-05 14:11:06 INFO [phase1] Semantic: avg_score=0.20 coverage=0% mutation_caught=0/1 trivial_inv=0
+2026-04-05 14:11:06 INFO [phase1] Self-critiques applied: 4
+2026-04-05 14:11:06 INFO [phase2] Building training data from results...
+2026-04-05 14:11:06 INFO [phase2] Built 4 SFT examples, 3 DPO pairs (from 15 results, 7 prompts)
+2026-04-05 14:11:06 INFO [phase2] Tracking 41 prompts with gold results (skip in future cycles)
+2026-04-05 14:11:06 INFO [phase2] Persisted 2 SFT examples, 1 DPO pairs. Accumulated: 193
+2026-04-05 14:11:06 INFO [phase3] Skipping retrain (193/9999 examples accumulated)
+2026-04-05 14:11:06 INFO [benchmark] Running 12-problem quick eval (cycle 41, attempts=2)...
