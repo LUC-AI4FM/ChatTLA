@@ -112,16 +112,21 @@ def load_lora_config() -> LoraConfig:
     )
 
 
-def load_model_and_tokenizer(device_map: str = "auto", max_gpu_memory_mb: int | None = None):
+def load_model_and_tokenizer(device_map: str = "auto", max_gpu_memory_mb: int | None = None,
+                              base_model: str | None = None):
     """
-    Load gpt-oss-20b with BitsAndBytes 8-bit quantization for fine-tuning.
+    Load model with optional base_model override for incremental training.
+    - `base_model`: path or HF ID to load instead of the default MODEL_ID.
+      Use this to load from a previously merged model (e.g. outputs/merged_model/)
+      so DPO builds on existing TLA+ knowledge instead of starting from scratch.
     - `device_map`: passed through to `from_pretrained` ("auto" | "cpu" | "cuda").
     - `max_gpu_memory_mb`: when provided and `device_map=="auto"`, it's used to
       cap the memory assigned to `cuda:0` by the accelerate dispatcher.
 
     gradient_checkpointing requires use_cache=False.
     """
-    print(f"[train] Loading model: {MODEL_ID} (device_map={device_map})")
+    model_id = base_model or MODEL_ID
+    print(f"[train] Loading model: {model_id} (device_map={device_map})")
     print(f"[train] CUDA_VISIBLE_DEVICES: {os.environ.get('CUDA_VISIBLE_DEVICES', 'auto')}")
     try:
         vram_gb = torch.cuda.get_device_properties(0).total_memory / 1e9
@@ -184,7 +189,7 @@ def load_model_and_tokenizer(device_map: str = "auto", max_gpu_memory_mb: int | 
 
     try:
         model = AutoModelForCausalLM.from_pretrained(
-            MODEL_ID,
+            model_id,
             attn_implementation="eager",
             use_cache=False,           # required for gradient checkpointing
             device_map=device_map,
@@ -196,7 +201,11 @@ def load_model_and_tokenizer(device_map: str = "auto", max_gpu_memory_mb: int | 
         print("[train] ERROR loading model:", exc)
         raise
 
-    tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
+    # For merged models, tokenizer may be in the same dir; fall back to MODEL_ID
+    try:
+        tokenizer = AutoTokenizer.from_pretrained(model_id)
+    except Exception:
+        tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
 
@@ -291,6 +300,7 @@ def main(
     gradient_accumulation_steps: int | None = None,
     max_steps: int | None = None,
     learning_rate: float | None = None,
+    base_model: str | None = None,
 ) -> None:
     mlflow.set_experiment("ChatTLA-gpt-oss-20b")
 
@@ -327,7 +337,9 @@ def main(
         print(f"[train] Smoke test mode: {len(train_dataset)} train, {len(eval_dataset)} eval examples.")
 
     # --- Model + LoRA -------------------------------------------------------
-    model, tokenizer = load_model_and_tokenizer(device_map=device_map, max_gpu_memory_mb=max_gpu_memory_mb)
+    model, tokenizer = load_model_and_tokenizer(
+        device_map=device_map, max_gpu_memory_mb=max_gpu_memory_mb, base_model=base_model,
+    )
 
     # Determine which transformer layers are resident on the GPU and restrict
     # LoRA to those layers. This avoids creating a split adapter state where
@@ -570,6 +582,9 @@ if __name__ == "__main__":
                         help="Override learning rate (default: 1e-4)")
     parser.add_argument("--dpo-after", action="store_true",
                         help="After SFT, run DPO on gold pairs in data/processed/rl/dpo_pairs.jsonl (if >=2 rows)")
+    parser.add_argument("--base-model", default=None,
+                        help="Path or HF ID to load instead of openai/gpt-oss-20b "
+                             "(e.g. outputs/merged_model/ for incremental DPO on a previously trained model)")
     args = parser.parse_args()
 
     # parse lora_layers override
@@ -591,4 +606,5 @@ if __name__ == "__main__":
         gradient_accumulation_steps=args.gradient_accumulation_steps,
         max_steps=args.max_steps,
         learning_rate=args.lr,
+        base_model=args.base_model,
     )

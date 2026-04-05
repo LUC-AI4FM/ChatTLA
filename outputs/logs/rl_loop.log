@@ -1451,3 +1451,402 @@ OSError: [Errno 28] No space left on device: '/home/espencer2/ChatTLA/outputs/gg
 2026-04-05 11:33:40 INFO [retrain] Merging LoRA weights (GPU)...
 2026-04-05 11:35:02 INFO [retrain] LoRA merged.
 2026-04-05 11:35:02 INFO [retrain] Converting to GGUF (temp) for eval gate...
+2026-04-05 11:42:36 INFO [retrain] Eval gate: testing new model before deploy (10 problems, need ≥3 SANY)...
+2026-04-05 11:47:24 INFO [retrain] Eval gate: SANY=2/10 TLC=0/2
+2026-04-05 11:47:24 ERROR [retrain] EVAL GATE FAILED: SANY=2/10 < 3. Aborting deploy — rolling back to backup GGUF.
+2026-04-05 11:47:26 INFO [retrain] Restored backup GGUF: chattla-20b-pre-c39.gguf (moved back)
+2026-04-05 11:55:53 INFO [retrain] Old model re-registered with Ollama after rollback
+2026-04-05 11:55:53 WARNING [phase3] Retrain skipped or failed. Will retry next cycle.
+2026-04-05 11:55:53 INFO [benchmark] Full suite timeout 14400s (20 problems × 2 attempts; override with --full-benchmark-timeout)
+2026-04-05 11:55:53 INFO [benchmark] Running full benchmark suite (cycle 39, attempts=2)...
+2026-04-05 12:01:02 INFO Received signal 2. Will shut down after current phase completes.
+2026-04-05 12:01:03 ERROR [benchmark] Failed: A/.venv/lib/python3.10/site-packages/httpcore/_sync/http11.py", line 217, in _receive_event
+    data = self._network_stream.read(
+  File "/home/espencer2/ChatTLA/.venv/lib/python3.10/site-packages/httpcore/_backends/sync.py", line 128, in read
+    return self._sock.recv(max_bytes)
+KeyboardInterrupt
+
+2026-04-05 12:01:03 INFO 
+────────────────────────────────────────────────────────────
+2026-04-05 12:01:03 INFO CYCLE 39 SUMMARY (35.1 min)
+2026-04-05 12:01:03 INFO   Specs: 13 | SANY: 3 | TLC: 2
+2026-04-05 12:01:03 INFO   Gold: 2 | Silver: 1 | Bronze: 10
+2026-04-05 12:01:03 INFO   New SFT: 2 | New DPO: 2
+2026-04-05 12:01:03 INFO   Retrained: False | Deployed: False
+2026-04-05 12:01:03 INFO   Errors: syntax=10 | other=1
+2026-04-05 12:01:03 INFO   Self-critiques applied: 5
+2026-04-05 12:01:03 INFO   Prompt deltas: +1 improved, -0 regressed
+2026-04-05 12:01:03 INFO   Benchmark (FULL): SANY=0% TLC=0%
+2026-04-05 12:01:03 INFO ────────────────────────────────────────────────────────────
+
+2026-04-05 12:01:03 INFO RL loop terminated gracefully.
+2026-04-05 12:01:03 INFO Lifetime: 39 cycles, 90 gold, 353 silver, 0 retrains
+2026-04-05 12:06:08 INFO ============================================================
+2026-04-05 12:06:08 INFO   ChatTLA Autonomous RL Loop (v2: DPO-first + teacher harvest)
+2026-04-05 12:06:08 INFO   Inter-cycle pause: 0.0h (none)
+2026-04-05 12:06:08 INFO   Eval: full benchmark every 3 cycles (2 attempts); quick eval (12×2) otherwise
+2026-04-05 12:06:08 INFO   Retrain strategy: DPO-first (≥4 DPO pairs) or incremental SFT (epochs=2, capped at 2)
+2026-04-05 12:06:08 INFO   Retrain threshold: 10 | Min training size: 200
+2026-04-05 12:06:08 INFO   Eval gate: 10 benchmarks, need ≥3 SANY + TLC check, rollback on failure
+2026-04-05 12:06:08 INFO   Teacher model: ENABLED (every 5 cycles, 5 prompts)
+2026-04-05 12:06:08 INFO     URL: http://localhost:11434
+2026-04-05 12:06:08 INFO     Model: gpt-oss:120b
+2026-04-05 12:06:08 INFO   Phase 1 workers: auto (3 night / 2 day)
+2026-04-05 12:06:08 INFO   Daytime retrain: ENABLED (--allow-daytime-retrain)
+2026-04-05 12:06:08 INFO   Hugging Face publish: ENABLED → EricSpencer00/chattla-20b (quality-gated: TLC must match/exceed best)
+2026-04-05 12:06:08 INFO   Max cycles: infinite
+2026-04-05 12:06:08 INFO   PID: 2211830
+2026-04-05 12:06:08 INFO ============================================================
+2026-04-05 12:06:08 INFO [startup] Loaded 13 gold prompts from benchmark results
+2026-04-05 12:06:08 INFO [startup] Total 40 gold prompts (including state cache)
+2026-04-05 12:06:08 INFO Resuming with accumulated_new=189 (from state)
+2026-04-05 12:06:08 INFO Resuming from cycle 40
+2026-04-05 12:06:08 INFO ============================================================
+2026-04-05 12:06:08 INFO CYCLE 40 | DAYTIME | difficulty_cap=3 | max_prompts=10
+2026-04-05 12:06:08 INFO Pacing: 3.0s between prompts
+2026-04-05 12:06:08 INFO ============================================================
+2026-04-05 12:06:08 INFO [phase0] Teacher gold harvest (every 5 cycles)...
+2026-04-05 12:29:00 INFO Received signal 2. Will shut down after current phase completes.
+2026-04-05 12:29:14 INFO Received signal 2. Will shut down after current phase completes.
+2026-04-05 12:29:17 INFO Received signal 2. Will shut down after current phase completes.
+2026-04-05 12:29:39 INFO ============================================================
+2026-04-05 12:29:39 INFO   ChatTLA Autonomous RL Loop (v2: DPO-first + teacher harvest)
+2026-04-05 12:29:39 INFO   Inter-cycle pause: 0.0h (none)
+2026-04-05 12:29:39 INFO   Eval: full benchmark every 3 cycles (2 attempts); quick eval (12×2) otherwise
+2026-04-05 12:29:39 INFO   Retrain strategy: DPO-first (≥4 DPO pairs) or incremental SFT (epochs=2, capped at 2)
+2026-04-05 12:29:39 INFO   Retrain threshold: 10 | Min training size: 200
+2026-04-05 12:29:39 INFO   Eval gate: 10 benchmarks, need ≥3 SANY + TLC check, rollback on failure
+2026-04-05 12:29:39 INFO   Teacher model: ENABLED (every 5 cycles, 5 prompts)
+2026-04-05 12:29:39 INFO     URL: http://localhost:11434
+2026-04-05 12:29:39 INFO     Model: gpt-oss:120b
+2026-04-05 12:29:39 INFO   Phase 1 workers: auto (3 night / 2 day)
+2026-04-05 12:29:39 INFO   Daytime retrain: ENABLED (--allow-daytime-retrain)
+2026-04-05 12:29:39 INFO   Hugging Face publish: ENABLED → EricSpencer00/chattla-20b (quality-gated: TLC must match/exceed best)
+2026-04-05 12:29:39 INFO   Max cycles: infinite
+2026-04-05 12:29:39 INFO   PID: 2230944
+2026-04-05 12:29:39 INFO ============================================================
+2026-04-05 12:29:39 INFO [startup] Loaded 13 gold prompts from benchmark results
+2026-04-05 12:29:39 INFO [startup] Total 40 gold prompts (including state cache)
+2026-04-05 12:29:39 INFO Resuming with accumulated_new=189 (from state)
+2026-04-05 12:29:39 INFO Resuming from cycle 40
+2026-04-05 12:29:39 INFO ============================================================
+2026-04-05 12:29:39 INFO CYCLE 40 | DAYTIME | difficulty_cap=3 | max_prompts=10
+2026-04-05 12:29:39 INFO Pacing: 3.0s between prompts
+2026-04-05 12:29:39 INFO ============================================================
+2026-04-05 12:29:39 INFO [phase0] Teacher gold harvest (every 5 cycles)...
+2026-04-05 12:30:03 WARNING [phase0] Teacher harvest failed (non-fatal): 'TLCResult' object has no attribute 'success'
+2026-04-05 12:30:03 INFO [phase1] Loading prompt bank...
+2026-04-05 12:30:03 INFO [prompt_bank] Injected condensed descriptions for 11 benchmark prompt(s)
+2026-04-05 12:30:03 INFO [phase1] Stratified: anchors=2 hard=0 random=5
+2026-04-05 12:30:03 INFO [phase1] Generating and validating 7 specs...
+2026-04-05 12:30:03 INFO [phase1] Parallel generation: 4 workers for 7 prompts
+2026-04-05 12:32:21 INFO   [SYN018] RLVR repair round 1: GOLD — verifier-guided fix succeeded
+2026-04-05 12:32:21 INFO   [SYN018] tier=gold sany=True tlc=True struct=0.78 attempts=2 (best of 2)
+2026-04-05 12:33:09 INFO   [BM003] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-04-05 12:33:35 INFO ============================================================
+2026-04-05 12:33:35 INFO   ChatTLA Autonomous RL Loop (v2: DPO-first + teacher harvest)
+2026-04-05 12:33:35 INFO   Inter-cycle pause: 0.0h (none)
+2026-04-05 12:33:35 INFO   Eval: full benchmark every 3 cycles (2 attempts); quick eval (12×2) otherwise
+2026-04-05 12:33:35 INFO   Retrain strategy: DPO-first (≥4 DPO pairs) or incremental SFT (epochs=2, capped at 2)
+2026-04-05 12:33:35 INFO   Retrain threshold: 10 | Min training size: 200
+2026-04-05 12:33:35 INFO   Eval gate: 10 benchmarks, need ≥3 SANY + TLC check, rollback on failure
+2026-04-05 12:33:35 INFO   Teacher model: ENABLED (every 5 cycles, 5 prompts)
+2026-04-05 12:33:35 INFO     URL: http://localhost:11434
+2026-04-05 12:33:35 INFO     Model: gpt-oss:120b
+2026-04-05 12:33:35 INFO   Phase 1 workers: auto (3 night / 2 day)
+2026-04-05 12:33:35 INFO   Daytime retrain: ENABLED (--allow-daytime-retrain)
+2026-04-05 12:33:35 INFO   Hugging Face publish: ENABLED → EricSpencer00/chattla-20b (quality-gated: TLC must match/exceed best)
+2026-04-05 12:33:35 INFO   Max cycles: infinite
+2026-04-05 12:33:35 INFO   PID: 2235042
+2026-04-05 12:33:35 INFO ============================================================
+2026-04-05 12:33:35 INFO [startup] Loaded 13 gold prompts from benchmark results
+2026-04-05 12:33:35 INFO [startup] Total 40 gold prompts (including state cache)
+2026-04-05 12:33:35 INFO Resuming with accumulated_new=189 (from state)
+2026-04-05 12:33:35 INFO Resuming from cycle 40
+2026-04-05 12:33:35 INFO ============================================================
+2026-04-05 12:33:35 INFO CYCLE 40 | DAYTIME | difficulty_cap=3 | max_prompts=10
+2026-04-05 12:33:35 INFO Pacing: 3.0s between prompts
+2026-04-05 12:33:35 INFO ============================================================
+2026-04-05 12:33:35 INFO [phase0] Teacher gold harvest (every 5 cycles)...
+2026-04-05 12:33:37 INFO [phase0] Teacher harvest: 0 new gold examples
+2026-04-05 12:33:37 INFO [phase1] Loading prompt bank...
+2026-04-05 12:33:37 INFO [prompt_bank] Injected condensed descriptions for 11 benchmark prompt(s)
+2026-04-05 12:33:37 INFO [phase1] Stratified: anchors=2 hard=0 random=5
+2026-04-05 12:33:37 INFO [phase1] Generating and validating 7 specs...
+2026-04-05 12:33:37 INFO [phase1] Parallel generation: 4 workers for 7 prompts
+2026-04-05 12:35:28 INFO   [RL016] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-04-05 12:35:41 INFO   [SYN001] RLVR repair round 1: GOLD — verifier-guided fix succeeded
+2026-04-05 12:35:41 INFO   [SYN001] tier=gold sany=True tlc=True struct=0.89 attempts=3 (best of 3)
+2026-04-05 12:35:50 INFO   [BM010] tier=bronze sany=False tlc=False struct=0.78 attempts=2 (best of 2)
+2026-04-05 12:36:42 INFO   [RL010] tier=bronze sany=False tlc=False struct=0.89 attempts=2 (best of 2)
+2026-04-05 12:37:49 INFO   [SYN019] SANY repair round 2: silver — SANY fixed, TLC silver
+2026-04-05 12:37:58 INFO   [SYN019] RLVR repair round 1: GOLD — verifier-guided fix succeeded
+2026-04-05 12:38:20 INFO   [SYN019] RLVR repair round 1: GOLD — verifier-guided fix succeeded
+2026-04-05 12:38:20 INFO   [SYN019] tier=gold sany=True tlc=True struct=0.89 attempts=5 (best of 5)
+2026-04-05 12:38:26 INFO   [BM014] tier=bronze sany=False tlc=False struct=0.67 attempts=2 (best of 2)
+2026-04-05 12:38:31 INFO   [BM017] tier=bronze sany=False tlc=False struct=0.78 attempts=2 (best of 2)
+2026-04-05 12:38:31 WARNING [phase1] PROMPT REGRESSIONS: 1 prompts degraded: RL010: gold→bronze
+2026-04-05 12:38:31 INFO [phase1] Prompt improvements: 3 prompts upgraded tier
+2026-04-05 12:38:31 INFO [gold_cache] Added 2 new gold specs to cross-cycle cache
+2026-04-05 12:38:31 INFO [phase1] Error taxonomy: {'syntax': 11, 'undefined_op': 1, 'other': 2}
+2026-04-05 12:38:31 INFO [phase1] Results: gold=3 silver=4 bronze=11 sany=7/18 tlc=3/18
+2026-04-05 12:38:31 INFO [phase1] SANY repairs: 1/1 succeeded
+2026-04-05 12:38:31 INFO [phase1] Self-critiques applied: 6
+2026-04-05 12:38:31 INFO [phase2] Building training data from results...
+2026-04-05 12:38:31 INFO [phase2] Built 8 SFT examples, 5 DPO pairs (from 18 results, 7 prompts)
+2026-04-05 12:38:31 INFO [phase2] Tracking 41 prompts with gold results (skip in future cycles)
+2026-04-05 12:38:31 INFO [phase2] Persisted 3 SFT examples, 3 DPO pairs. Accumulated: 192
+2026-04-05 12:38:31 INFO [phase3] Retrain threshold reached (daytime (--allow-daytime-retrain)) (192 >= 10)
+2026-04-05 12:38:31 INFO [retrain] Moved GGUF → chattla-20b-pre-c40.gguf (zero-copy rename)
+2026-04-05 12:38:31 INFO [retrain] Disk free: 55.1 GB
+2026-04-05 12:38:31 INFO [retrain] Rebuilding training dataset...
+2026-04-05 12:38:38 INFO [retrain] Dataset rebuilt. [dataset_builder] eval =4  examples → /home/espencer2/ChatTLA/data/processed/eval.jsonl
+2026-04-05 12:38:38 INFO [retrain] Mode: DPO-only (42 gold DPO pairs, lr=5e-6, epochs=2)
+2026-04-05 12:38:38 INFO [retrain] GPU memory cleaned (empty_cache + gc)
+2026-04-05 12:38:41 INFO [retrain] Unloaded Ollama model to free GPU VRAM
+2026-04-05 12:38:41 INFO [retrain] Per-GPU free VRAM: [47461] MB → cap=33222 MB/GPU
+2026-04-05 12:38:41 INFO [retrain] VRAM 47461MB free. grad_accum=8
+2026-04-05 12:38:41 INFO [retrain] Training (dpo_only): lr=5e-6 epochs=2 max_length=2048 grad_accum=8 batch=1/device free_mb=47461 cap=33222 MB/GPU
+2026-04-05 12:38:41 INFO [retrain] DPO-only: loading from merged model (/home/espencer2/ChatTLA/outputs/merged_model) + DPO on 42 gold pairs (lr=5e-6)
+2026-04-05 12:45:03 INFO [retrain] Training complete (dpo_only).
+2026-04-05 12:45:03 INFO [retrain] Merging LoRA weights (GPU)...
+2026-04-05 12:46:35 INFO [retrain] LoRA merged.
+2026-04-05 12:46:35 INFO [retrain] Converting to GGUF (temp) for eval gate...
+2026-04-05 12:53:22 INFO [retrain] Eval gate: testing new model before deploy (10 problems, need ≥3 SANY)...
+2026-04-05 12:58:04 INFO [retrain] Eval gate: SANY=1/10 TLC=0/1
+2026-04-05 12:58:04 ERROR [retrain] EVAL GATE FAILED: SANY=1/10 < 3. Aborting deploy — rolling back to backup GGUF.
+2026-04-05 12:58:07 INFO [retrain] Restored backup GGUF: chattla-20b-pre-c40.gguf (moved back)
+2026-04-05 13:01:19 INFO ============================================================
+2026-04-05 13:01:19 INFO   ChatTLA Autonomous RL Loop (v2: DPO-first + teacher harvest)
+2026-04-05 13:01:19 INFO   Inter-cycle pause: 0.0h (none)
+2026-04-05 13:01:19 INFO   Eval: full benchmark every 3 cycles (2 attempts); quick eval (12×2) otherwise
+2026-04-05 13:01:19 INFO   Retrain strategy: DPO-first (≥4 DPO pairs) or incremental SFT (epochs=2, capped at 2)
+2026-04-05 13:01:19 INFO   Retrain threshold: 10 | Min training size: 200
+2026-04-05 13:01:19 INFO   Eval gate: 10 benchmarks, need ≥3 SANY + TLC check, rollback on failure
+2026-04-05 13:01:19 INFO   Teacher model: ENABLED (every 5 cycles, 5 prompts)
+2026-04-05 13:01:19 INFO     URL: http://localhost:11434
+2026-04-05 13:01:19 INFO     Model: gpt-oss:120b
+2026-04-05 13:01:19 INFO   Phase 1 workers: auto (3 night / 2 day)
+2026-04-05 13:01:19 INFO   Daytime retrain: ENABLED (--allow-daytime-retrain)
+2026-04-05 13:01:19 INFO   Hugging Face publish: ENABLED → EricSpencer00/chattla-20b (quality-gated: TLC must match/exceed best)
+2026-04-05 13:01:19 INFO   Max cycles: infinite
+2026-04-05 13:01:19 INFO   PID: 2260856
+2026-04-05 13:01:19 INFO ============================================================
+2026-04-05 13:01:19 INFO [startup] Loaded 13 gold prompts from benchmark results
+2026-04-05 13:01:19 INFO [startup] Total 40 gold prompts (including state cache)
+2026-04-05 13:01:19 INFO Resuming with accumulated_new=189 (from state)
+2026-04-05 13:01:19 INFO Resuming from cycle 40
+2026-04-05 13:01:19 INFO ============================================================
+2026-04-05 13:01:19 INFO CYCLE 40 | DAYTIME | difficulty_cap=3 | max_prompts=10
+2026-04-05 13:01:19 INFO Pacing: 3.0s between prompts
+2026-04-05 13:01:19 INFO ============================================================
+2026-04-05 13:01:19 INFO [phase0] Teacher gold harvest (every 5 cycles)...
+2026-04-05 13:01:21 INFO [phase0] Teacher harvest: 0 new gold examples
+2026-04-05 13:01:21 INFO [phase1] Loading prompt bank...
+2026-04-05 13:01:21 INFO [prompt_bank] Injected condensed descriptions for 11 benchmark prompt(s)
+2026-04-05 13:01:21 INFO [phase1] Stratified: anchors=2 hard=0 random=5
+2026-04-05 13:01:21 INFO [phase1] Generating and validating 7 specs...
+2026-04-05 13:01:21 INFO [phase1] Parallel generation: 4 workers for 7 prompts
+2026-04-05 13:03:37 INFO   [BM004] tier=gold sany=True tlc=True struct=0.78 attempts=1 (best of 1)
+2026-04-05 13:04:28 INFO   [RL003] tier=gold sany=True tlc=True struct=0.78 attempts=2 (best of 2)
+2026-04-05 13:05:48 INFO   [SYN010] tier=bronze sany=False tlc=False struct=0.89 attempts=2 (best of 2)
+2026-04-05 13:06:01 INFO   [BM007] tier=bronze sany=False tlc=False struct=0.44 attempts=2 (best of 2)
+2026-04-05 13:06:56 INFO   [SYN009] tier=silver sany=True tlc=False struct=0.89 attempts=3 (best of 3)
+2026-04-05 13:07:36 INFO   [RL012] tier=bronze sany=False tlc=False struct=0.89 attempts=2 (best of 2)
+2026-04-05 13:07:52 INFO   [BM017] tier=bronze sany=False tlc=False struct=0.67 attempts=2 (best of 2)
+2026-04-05 13:07:52 WARNING [phase1] PROMPT REGRESSIONS: 1 prompts degraded: RL012: silver→bronze
+2026-04-05 13:07:52 INFO [phase1] Prompt improvements: 1 prompts upgraded tier
+2026-04-05 13:07:52 INFO [phase1] Error taxonomy: {'syntax': 10, 'other': 1}
+2026-04-05 13:07:52 INFO [phase1] Results: gold=2 silver=2 bronze=10 sany=4/14 tlc=2/14
+2026-04-05 13:07:52 INFO [phase1] Self-critiques applied: 6
+2026-04-05 13:07:52 INFO [phase2] Building training data from results...
+2026-04-05 13:07:52 INFO [phase2] Built 3 SFT examples, 1 DPO pairs (from 14 results, 7 prompts)
+2026-04-05 13:07:52 INFO [phase2] Tracking 41 prompts with gold results (skip in future cycles)
+2026-04-05 13:07:52 INFO [phase2] Persisted 3 SFT examples, 0 DPO pairs. Accumulated: 192
+2026-04-05 13:07:52 INFO [phase3] Retrain threshold reached (daytime (--allow-daytime-retrain)) (192 >= 10)
+2026-04-05 13:07:52 INFO [retrain] Moved GGUF → chattla-20b-pre-c40.gguf (zero-copy rename)
+2026-04-05 13:07:52 INFO [retrain] Disk free: 66.2 GB
+2026-04-05 13:07:52 INFO [retrain] Rebuilding training dataset...
+2026-04-05 13:07:59 INFO [retrain] Dataset rebuilt. [dataset_builder] eval =4  examples → /home/espencer2/ChatTLA/data/processed/eval.jsonl
+2026-04-05 13:08:00 INFO [retrain] Mode: DPO-only (42 gold DPO pairs, lr=5e-6, epochs=2)
+2026-04-05 13:08:00 INFO [retrain] GPU memory cleaned (empty_cache + gc)
+2026-04-05 13:08:03 INFO [retrain] Unloaded Ollama model to free GPU VRAM
+2026-04-05 13:08:03 INFO [retrain] Per-GPU free VRAM: [47461] MB → cap=33222 MB/GPU
+2026-04-05 13:08:03 INFO [retrain] VRAM 47461MB free. grad_accum=8
+2026-04-05 13:08:03 INFO [retrain] Training (dpo_only): lr=5e-6 epochs=2 max_length=2048 grad_accum=8 batch=1/device free_mb=47461 cap=33222 MB/GPU
+2026-04-05 13:08:03 INFO [retrain] DPO-only: loading from merged model (/home/espencer2/ChatTLA/outputs/merged_model) + DPO on 42 gold pairs (lr=5e-6)
+2026-04-05 13:14:26 INFO [retrain] Training complete (dpo_only).
+2026-04-05 13:14:26 INFO [retrain] Merge will use base: /home/espencer2/ChatTLA/outputs/merged_model
+2026-04-05 13:14:26 INFO [retrain] Merging LoRA weights (GPU)...
+2026-04-05 13:16:22 INFO [retrain] LoRA merged.
+2026-04-05 13:16:22 INFO [retrain] Converting to GGUF (temp) for eval gate...
+2026-04-05 13:22:29 INFO [retrain] Eval gate: testing new model before deploy (10 problems, need ≥3 SANY)...
+2026-04-05 13:27:53 INFO [retrain] Eval gate: SANY=0/10 TLC=0/0
+2026-04-05 13:27:53 ERROR [retrain] EVAL GATE FAILED: SANY=0/10 < 3. Aborting deploy — rolling back to backup GGUF.
+2026-04-05 13:27:55 INFO [retrain] Restored backup GGUF: chattla-20b-pre-c40.gguf (moved back)
+2026-04-05 13:33:48 INFO ============================================================
+2026-04-05 13:33:48 INFO   ChatTLA Autonomous RL Loop (v2: DPO-first + teacher harvest)
+2026-04-05 13:33:48 INFO   Inter-cycle pause: 0.0h (none)
+2026-04-05 13:33:48 INFO   Eval: full benchmark every 3 cycles (2 attempts); quick eval (12×2) otherwise
+2026-04-05 13:33:48 INFO   Retrain strategy: DPO-first (≥4 DPO pairs) or incremental SFT (epochs=2, capped at 2)
+2026-04-05 13:33:48 INFO   Retrain threshold: 10 | Min training size: 200
+2026-04-05 13:33:48 INFO   Eval gate: 10 benchmarks, need ≥3 SANY + TLC check, rollback on failure
+2026-04-05 13:33:48 INFO   Teacher model: ENABLED (every 5 cycles, 5 prompts)
+2026-04-05 13:33:48 INFO     URL: http://localhost:11434
+2026-04-05 13:33:48 INFO     Model: gpt-oss:120b
+2026-04-05 13:33:48 INFO   Phase 1 workers: auto (3 night / 2 day)
+2026-04-05 13:33:48 INFO   Daytime retrain: ENABLED (--allow-daytime-retrain)
+2026-04-05 13:33:48 INFO   Hugging Face publish: ENABLED → EricSpencer00/chattla-20b (quality-gated: TLC must match/exceed best)
+2026-04-05 13:33:48 INFO   Max cycles: infinite
+2026-04-05 13:33:48 INFO   PID: 2289480
+2026-04-05 13:33:48 INFO ============================================================
+2026-04-05 13:33:48 INFO [startup] Loaded 13 gold prompts from benchmark results
+2026-04-05 13:33:48 INFO [startup] Total 40 gold prompts (including state cache)
+2026-04-05 13:33:48 INFO Resuming with accumulated_new=189 (from state)
+2026-04-05 13:33:48 INFO Resuming from cycle 40
+2026-04-05 13:33:48 INFO ============================================================
+2026-04-05 13:33:48 INFO CYCLE 40 | DAYTIME | difficulty_cap=3 | max_prompts=10
+2026-04-05 13:33:48 INFO Pacing: 3.0s between prompts
+2026-04-05 13:33:48 INFO ============================================================
+2026-04-05 13:33:48 INFO [phase0] Teacher gold harvest (every 5 cycles)...
+2026-04-05 13:33:51 INFO [phase0] Teacher harvest: 0 new gold examples
+2026-04-05 13:33:51 INFO [phase1] Loading prompt bank...
+2026-04-05 13:33:51 INFO [prompt_bank] Injected condensed descriptions for 11 benchmark prompt(s)
+2026-04-05 13:33:51 INFO [phase1] Stratified: anchors=2 hard=0 random=5
+2026-04-05 13:33:51 INFO [phase1] Generating and validating 7 specs...
+2026-04-05 13:33:51 INFO [phase1] Parallel generation: 4 workers for 7 prompts
+2026-04-05 13:35:01 INFO   [RL014] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-04-05 13:35:21 INFO   [SYN011] tier=silver sany=True tlc=False struct=0.78 attempts=4 (best of 4)
+2026-04-05 13:35:28 INFO   [RL010] tier=silver sany=True tlc=False struct=0.89 attempts=3 (best of 3)
+2026-04-05 13:35:30 INFO   [SYN019] RLVR repair round 1: GOLD — verifier-guided fix succeeded
+2026-04-05 13:35:30 INFO   [SYN019] tier=gold sany=True tlc=True struct=0.89 attempts=2 (best of 2)
+2026-04-05 13:36:17 INFO   [BM010] tier=bronze sany=False tlc=False struct=0.78 attempts=2 (best of 2)
+2026-04-05 13:40:11 INFO   [BM017] tier=silver sany=True tlc=False struct=0.56 attempts=2 (best of 2)
+2026-04-05 13:40:16 INFO   [BM020] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-04-05 13:40:16 INFO [phase1] Prompt improvements: 3 prompts upgraded tier
+2026-04-05 13:40:16 INFO [phase1] Error taxonomy: {'syntax': 5, 'other': 5, 'deadlock': 3}
+2026-04-05 13:40:16 INFO [phase1] Results: gold=1 silver=11 bronze=5 sany=12/17 tlc=1/17
+2026-04-05 13:40:16 INFO [phase1] Self-critiques applied: 2
+2026-04-05 13:40:16 INFO [phase2] Building training data from results...
+2026-04-05 13:40:16 INFO [phase2] Built 5 SFT examples, 2 DPO pairs (from 17 results, 7 prompts)
+2026-04-05 13:40:16 INFO [phase2] Tracking 41 prompts with gold results (skip in future cycles)
+2026-04-05 13:40:16 INFO [phase2] Persisted 2 SFT examples, 0 DPO pairs. Accumulated: 191
+2026-04-05 13:40:16 INFO [phase3] Retrain threshold reached (daytime (--allow-daytime-retrain)) (191 >= 10)
+2026-04-05 13:40:16 INFO [retrain] Moved GGUF → chattla-20b-pre-c40.gguf (zero-copy rename)
+2026-04-05 13:40:16 INFO [retrain] Disk free: 17.5 GB
+2026-04-05 13:40:16 WARNING [retrain] Low disk (17.5 GB < 25 GB). Cleaning old checkpoints...
+2026-04-05 13:40:16 ERROR [retrain] Still only 17.8 GB free after cleanup. Skipping retrain.
+2026-04-05 13:40:16 WARNING [phase3] Retrain skipped or failed. Will retry next cycle.
+2026-04-05 13:40:16 INFO [benchmark] Running 12-problem quick eval (cycle 40, attempts=2)...
+2026-04-05 13:52:31 INFO [benchmark] Results: sany=42% (5/12) tlc=17% (2/12)
+2026-04-05 13:52:31 INFO [benchmark] Quick eval is noisy; full-suite TLC rate is the primary metric (compare across retrains).
+2026-04-05 13:52:31 INFO 
+────────────────────────────────────────────────────────────
+2026-04-05 13:52:31 INFO CYCLE 40 SUMMARY (18.7 min)
+2026-04-05 13:52:31 INFO   Specs: 17 | SANY: 12 | TLC: 1
+2026-04-05 13:52:31 INFO   Gold: 1 | Silver: 11 | Bronze: 5
+2026-04-05 13:52:31 INFO   New SFT: 2 | New DPO: 0
+2026-04-05 13:52:31 INFO   Retrained: False | Deployed: False
+2026-04-05 13:52:31 INFO   Errors: syntax=5 | deadlock=3 | other=5
+2026-04-05 13:52:31 INFO   Self-critiques applied: 2
+2026-04-05 13:52:31 INFO   Prompt deltas: +3 improved, -0 regressed
+2026-04-05 13:52:31 INFO   Benchmark (quick): SANY=42% TLC=17%
+2026-04-05 13:52:31 INFO ────────────────────────────────────────────────────────────
+
+2026-04-05 13:52:31 INFO ============================================================
+2026-04-05 13:52:31 INFO CYCLE 41 | DAYTIME | difficulty_cap=3 | max_prompts=10
+2026-04-05 13:52:31 INFO Pacing: 3.0s between prompts
+2026-04-05 13:52:31 INFO ============================================================
+2026-04-05 13:52:31 INFO [phase0] Skipping teacher harvest (next at cycle 45)
+2026-04-05 13:52:31 INFO [phase1] Loading prompt bank...
+2026-04-05 13:52:31 INFO [prompt_bank] Injected condensed descriptions for 11 benchmark prompt(s)
+2026-04-05 13:52:31 INFO [phase1] Stratified: anchors=2 hard=0 random=5
+2026-04-05 13:52:31 INFO [phase1] Generating and validating 7 specs...
+2026-04-05 13:52:31 INFO [phase1] Parallel generation: 4 workers for 7 prompts
+2026-04-05 13:54:42 INFO   [RL015] tier=silver sany=True tlc=False struct=0.44 attempts=3 (best of 3)
+2026-04-05 13:55:27 INFO   [RL013] tier=silver sany=True tlc=False struct=0.89 attempts=3 (best of 3)
+2026-04-05 13:55:35 INFO   [BM007] tier=bronze sany=False tlc=False struct=0.89 attempts=2 (best of 2)
+2026-04-05 13:55:48 INFO ============================================================
+2026-04-05 13:55:48 INFO   ChatTLA Autonomous RL Loop (v2: DPO-first + teacher harvest)
+2026-04-05 13:55:48 INFO   Inter-cycle pause: 0.0h (none)
+2026-04-05 13:55:48 INFO   Eval: full benchmark every 3 cycles (2 attempts); quick eval (12×2) otherwise
+2026-04-05 13:55:48 INFO   Retrain strategy: DPO-first (≥4 DPO pairs) or incremental SFT (epochs=2, capped at 2)
+2026-04-05 13:55:48 INFO   Retrain threshold: 9999 | Min training size: 200
+2026-04-05 13:55:48 INFO   Eval gate: 10 benchmarks, need ≥3 SANY + TLC check, rollback on failure
+2026-04-05 13:55:48 INFO   Teacher model: ENABLED (every 5 cycles, 5 prompts)
+2026-04-05 13:55:48 INFO     URL: http://localhost:11434
+2026-04-05 13:55:48 INFO     Model: gpt-oss:120b
+2026-04-05 13:55:48 INFO   Phase 1 workers: auto (3 night / 2 day)
+2026-04-05 13:55:48 INFO   Daytime retrain: ENABLED (--allow-daytime-retrain)
+2026-04-05 13:55:48 INFO   Hugging Face publish: ENABLED → EricSpencer00/chattla-20b (quality-gated: TLC must match/exceed best)
+2026-04-05 13:55:48 INFO   Max cycles: infinite
+2026-04-05 13:55:48 INFO   PID: 2313037
+2026-04-05 13:55:48 INFO ============================================================
+2026-04-05 13:55:48 INFO [startup] Loaded 13 gold prompts from benchmark results
+2026-04-05 13:55:48 INFO [startup] Total 41 gold prompts (including state cache)
+2026-04-05 13:55:48 INFO Resuming with accumulated_new=191 (from state)
+2026-04-05 13:55:48 INFO Resuming from cycle 41
+2026-04-05 13:55:48 INFO ============================================================
+2026-04-05 13:55:48 INFO CYCLE 41 | DAYTIME | difficulty_cap=3 | max_prompts=10
+2026-04-05 13:55:48 INFO Pacing: 3.0s between prompts
+2026-04-05 13:55:48 INFO ============================================================
+2026-04-05 13:55:48 INFO [phase0] Skipping teacher harvest (next at cycle 45)
+2026-04-05 13:55:48 INFO [phase1] Loading prompt bank...
+2026-04-05 13:55:48 INFO [prompt_bank] Injected condensed descriptions for 11 benchmark prompt(s)
+2026-04-05 13:55:48 INFO [phase1] Stratified: anchors=2 hard=0 random=5
+2026-04-05 13:55:48 INFO [phase1] Generating and validating 7 specs...
+2026-04-05 13:55:48 INFO [phase1] Parallel generation: 4 workers for 7 prompts
+2026-04-05 13:58:25 INFO   [RL015] tier=silver sany=True tlc=False struct=0.89 attempts=2 (best of 2)
+2026-04-05 14:00:15 INFO   [BM007] tier=bronze sany=False tlc=False struct=0.89 attempts=2 (best of 2)
+2026-04-05 14:00:21 INFO   [BM018] tier=bronze sany=False tlc=False struct=0.89 attempts=2 (best of 2)
+2026-04-05 14:00:29 INFO   [SYN007] tier=bronze sany=False tlc=False struct=0.89 attempts=2 (best of 2)
+2026-04-05 14:02:12 INFO   [BM014] tier=bronze sany=False tlc=False struct=0.89 attempts=2 (best of 2)
+2026-04-05 14:02:19 INFO   [RL016] tier=bronze sany=False tlc=False struct=0.89 attempts=2 (best of 2)
+2026-04-05 14:03:13 INFO   [RL012] tier=silver sany=True tlc=False struct=0.78 attempts=2 (best of 2)
+2026-04-05 14:03:13 WARNING [phase1] PROMPT REGRESSIONS: 2 prompts degraded: SYN007: silver→bronze, RL016: silver→bronze
+2026-04-05 14:03:13 INFO [phase1] Prompt improvements: 1 prompts upgraded tier
+2026-04-05 14:03:13 INFO [phase1] Error taxonomy: {'syntax': 10, 'other': 2, 'unbounded_state': 1, 'timeout': 1}
+2026-04-05 14:03:13 INFO [phase1] Results: gold=0 silver=4 bronze=10 sany=4/14 tlc=0/14
+2026-04-05 14:03:13 INFO [phase1] Self-critiques applied: 6
+2026-04-05 14:03:13 INFO [phase2] Building training data from results...
+2026-04-05 14:03:13 INFO [phase2] Built 1 SFT examples, 0 DPO pairs (from 14 results, 7 prompts)
+2026-04-05 14:03:13 INFO [phase2] Tracking 41 prompts with gold results (skip in future cycles)
+2026-04-05 14:03:13 INFO [phase2] Persisted 1 SFT examples, 0 DPO pairs. Accumulated: 192
+2026-04-05 14:03:13 INFO [phase3] Skipping retrain (192/9999 examples accumulated)
+2026-04-05 14:03:13 INFO [benchmark] Running 12-problem quick eval (cycle 41, attempts=2)...
+2026-04-05 14:07:10 INFO ============================================================
+2026-04-05 14:07:10 INFO   ChatTLA Autonomous RL Loop (v2: DPO-first + teacher harvest)
+2026-04-05 14:07:10 INFO   Inter-cycle pause: 0.0h (none)
+2026-04-05 14:07:10 INFO   Eval: full benchmark every 3 cycles (2 attempts); quick eval (12×2) otherwise
+2026-04-05 14:07:10 INFO   Retrain strategy: DPO-first (≥4 DPO pairs) or incremental SFT (epochs=2, capped at 2)
+2026-04-05 14:07:10 INFO   Retrain threshold: 9999 | Min training size: 200
+2026-04-05 14:07:10 INFO   Eval gate: 10 benchmarks, need ≥3 SANY + TLC check, rollback on failure
+2026-04-05 14:07:10 INFO   Teacher model: ENABLED (every 5 cycles, 5 prompts)
+2026-04-05 14:07:10 INFO     URL: http://localhost:11434
+2026-04-05 14:07:10 INFO     Model: gpt-oss:120b
+2026-04-05 14:07:10 INFO   Phase 1 workers: auto (3 night / 2 day)
+2026-04-05 14:07:10 INFO   Daytime retrain: ENABLED (--allow-daytime-retrain)
+2026-04-05 14:07:10 INFO   Hugging Face publish: ENABLED → EricSpencer00/chattla-20b (quality-gated: TLC must match/exceed best)
+2026-04-05 14:07:10 INFO   Max cycles: infinite
+2026-04-05 14:07:10 INFO   PID: 2324136
+2026-04-05 14:07:10 INFO ============================================================
+2026-04-05 14:07:10 INFO [startup] Loaded 13 gold prompts from benchmark results
+2026-04-05 14:07:10 INFO [startup] Total 41 gold prompts (including state cache)
+2026-04-05 14:07:10 INFO Resuming with accumulated_new=191 (from state)
+2026-04-05 14:07:10 INFO Resuming from cycle 41
+2026-04-05 14:07:10 INFO ============================================================
+2026-04-05 14:07:10 INFO CYCLE 41 | DAYTIME | difficulty_cap=3 | max_prompts=10
+2026-04-05 14:07:10 INFO Pacing: 3.0s between prompts
+2026-04-05 14:07:10 INFO ============================================================
+2026-04-05 14:07:10 INFO [phase0] Skipping teacher harvest (next at cycle 45)
+2026-04-05 14:07:10 INFO [phase1] Loading prompt bank...
+2026-04-05 14:07:10 INFO [prompt_bank] Injected condensed descriptions for 11 benchmark prompt(s)
+2026-04-05 14:07:10 INFO [phase1] Stratified: anchors=2 hard=0 random=5
+2026-04-05 14:07:10 INFO [phase1] Generating and validating 7 specs...
+2026-04-05 14:07:10 INFO [phase1] Parallel generation: 4 workers for 7 prompts
+2026-04-05 14:08:08 INFO   [SYN012] tier=gold sany=True tlc=True struct=0.89 sem=0.20 cov=0% attempts=2 (best of 2)
+2026-04-05 14:08:44 INFO   [SYN014] RLVR repair round 1: GOLD — verifier-guided fix succeeded
+2026-04-05 14:08:44 INFO   [SYN014] tier=gold sany=True tlc=True struct=0.78 attempts=3 (best of 3)
+2026-04-05 14:08:52 INFO   [RL012] tier=bronze sany=False tlc=False struct=0.89 attempts=2 (best of 2)
+2026-04-05 14:08:55 INFO   [SYN007] tier=bronze sany=False tlc=False struct=0.89 attempts=2 (best of 2)
+2026-04-05 14:10:47 INFO   [BM014] tier=bronze sany=False tlc=False struct=0.89 attempts=2 (best of 2)
