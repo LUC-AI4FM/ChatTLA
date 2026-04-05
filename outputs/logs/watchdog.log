@@ -1,0 +1,7 @@
+2026-04-05 14:30:01 INFO ========================================
+2026-04-05 14:30:01 INFO Watchdog check starting
+2026-04-05 14:30:01 INFO Heartbeat OK: log modified 0.5 min ago
+2026-04-05 14:30:02 INFO Process alive: PIDs 2324128, 2324136
+2026-04-05 14:30:02 INFO Disk OK: 55.6 GB free
+2026-04-05 14:30:02 INFO Watchdog check complete: HEALTHY
+2026-04-05 14:30:02 INFO ========================================

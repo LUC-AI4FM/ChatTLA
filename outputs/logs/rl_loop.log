@@ -1864,3 +1864,33 @@ KeyboardInterrupt
 2026-04-05 14:11:06 INFO [phase2] Persisted 2 SFT examples, 1 DPO pairs. Accumulated: 193
 2026-04-05 14:11:06 INFO [phase3] Skipping retrain (193/9999 examples accumulated)
 2026-04-05 14:11:06 INFO [benchmark] Running 12-problem quick eval (cycle 41, attempts=2)...
+2026-04-05 14:26:33 INFO [benchmark] Results: sany=25% (3/12) tlc=0% (0/12)
+2026-04-05 14:26:33 INFO [benchmark] Quick eval is noisy; full-suite TLC rate is the primary metric (compare across retrains).
+2026-04-05 14:26:33 WARNING [diag:tlc_regression] Benchmark TLC=0% but SANY=25% in cycle 41
+2026-04-05 14:26:33 INFO 
+────────────────────────────────────────────────────────────
+2026-04-05 14:26:33 INFO CYCLE 41 SUMMARY (19.4 min)
+2026-04-05 14:26:33 INFO   Specs: 15 | SANY: 4 | TLC: 2
+2026-04-05 14:26:33 INFO   Gold: 2 | Silver: 2 | Bronze: 11
+2026-04-05 14:26:33 INFO   New SFT: 2 | New DPO: 1
+2026-04-05 14:26:33 INFO   Retrained: False | Deployed: False
+2026-04-05 14:26:33 INFO   Errors: syntax=11 | other=2
+2026-04-05 14:26:33 INFO   Self-critiques applied: 4
+2026-04-05 14:26:33 INFO   Prompt deltas: +0 improved, -1 regressed
+2026-04-05 14:26:33 INFO   Benchmark (quick): SANY=25% TLC=0%
+2026-04-05 14:26:33 INFO ────────────────────────────────────────────────────────────
+
+2026-04-05 14:26:33 INFO ============================================================
+2026-04-05 14:26:33 INFO CYCLE 42 | DAYTIME | difficulty_cap=3 | max_prompts=10
+2026-04-05 14:26:33 INFO Pacing: 3.0s between prompts
+2026-04-05 14:26:33 INFO ============================================================
+2026-04-05 14:26:33 INFO [phase0] Skipping teacher harvest (next at cycle 45)
+2026-04-05 14:26:33 INFO [phase1] Loading prompt bank...
+2026-04-05 14:26:33 INFO [prompt_bank] Injected condensed descriptions for 11 benchmark prompt(s)
+2026-04-05 14:26:33 INFO [phase1] Stratified: anchors=2 hard=0 random=5
+2026-04-05 14:26:33 INFO [phase1] Generating and validating 7 specs...
+2026-04-05 14:26:33 INFO [phase1] Parallel generation: 4 workers for 7 prompts
+2026-04-05 14:27:49 INFO   [BM009] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-04-05 14:28:56 INFO   [BM020] tier=silver sany=True tlc=False struct=0.44 attempts=2 (best of 2)
+2026-04-05 14:29:26 INFO   [SYN007] tier=bronze sany=False tlc=False struct=0.89 attempts=2 (best of 2)
+2026-04-05 14:29:29 INFO   [BM015] tier=bronze sany=False tlc=False struct=0.67 attempts=2 (best of 2)

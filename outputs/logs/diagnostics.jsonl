@@ -67,3 +67,4 @@
 {"timestamp": "2026-04-02T11:56:56.309632", "kind": "tlc_regression", "summary": "Benchmark TLC=0% but SANY=40% in cycle 21", "retrained_this_cycle": false, "action": "retrain may have hurt TLC; consider reverting or skipping next retrain"}
 {"timestamp": "2026-04-04T13:16:41.038330", "kind": "zero_gold_cycle", "summary": "Zero gold specs in cycle 34 (11 specs tried)", "sany_pass": 6, "bronze_count": 5, "action": "model may have regressed; check recent retrain"}
 {"timestamp": "2026-04-04T13:29:16.070719", "kind": "zero_gold_cycle", "summary": "Zero gold specs in cycle 35 (10 specs tried)", "sany_pass": 4, "bronze_count": 6, "action": "model may have regressed; check recent retrain"}
+{"timestamp": "2026-04-05T14:26:33.808743", "kind": "tlc_regression", "summary": "Benchmark TLC=0% but SANY=25% in cycle 41", "retrained_this_cycle": false, "action": "retrain may have hurt TLC; consider reverting or skipping next retrain"}
