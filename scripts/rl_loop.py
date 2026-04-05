@@ -244,9 +244,12 @@ def _self_heal(error_msg: str, tb: str):
         "status": "pending_analysis"
     }
     
-    with open(heal_log, "a") as f:
-        f.write(json.dumps(entry) + "\n")
-    
+    try:
+        with open(heal_log, "a") as f:
+            f.write(json.dumps(entry) + "\n")
+    except OSError:
+        pass  # disk full — can't log, but don't crash the crash handler
+
     log.info(f"[self-heal] Logged loop crash for autonomous repair: {error_msg}")
 
 
@@ -1785,15 +1788,49 @@ def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT
     """
 
     # ── 0. Backup current GGUF before any changes ────────────────────────
+    # Use MOVE (rename) instead of copy to avoid needing 21GB+ extra disk space.
+    # Same filesystem = instant rename; rollback moves it back.
     import shutil
     gguf_dir = _REPO_ROOT / "outputs" / "gguf"
     current_gguf = gguf_dir / "chattla-20b-Q8_0.gguf"
     backup_dir = _REPO_ROOT / "outputs" / "gguf_backup"
     backup_dir.mkdir(parents=True, exist_ok=True)
+    # Clean old backups (keep only 1 to save disk)
+    for old_bak in sorted(backup_dir.glob("chattla-20b-pre-c*.gguf"))[:-1]:
+        try:
+            old_bak.unlink()
+            log.info(f"[retrain] Removed old backup: {old_bak.name}")
+        except OSError:
+            pass
     backup_gguf = backup_dir / f"chattla-20b-pre-c{cycle_id}.gguf"
     if current_gguf.exists():
-        shutil.copy2(current_gguf, backup_gguf)
-        log.info(f"[retrain] Backed up GGUF → {backup_gguf.name}")
+        shutil.move(str(current_gguf), str(backup_gguf))
+        log.info(f"[retrain] Moved GGUF → {backup_gguf.name} (zero-copy rename)")
+
+    # ── 0b. Check disk space (need ~25GB free for GGUF convert + training) ──
+    try:
+        disk_stat = os.statvfs(str(gguf_dir))
+        free_gb = (disk_stat.f_bavail * disk_stat.f_frsize) / (1024 ** 3)
+        log.info(f"[retrain] Disk free: {free_gb:.1f} GB")
+        if free_gb < 25:
+            log.warning(f"[retrain] Low disk ({free_gb:.1f} GB < 25 GB). Cleaning old checkpoints...")
+            for ckpt_dir in [_REPO_ROOT / "outputs" / "checkpoints",
+                             _REPO_ROOT / "outputs" / "checkpoints_dpo"]:
+                if ckpt_dir.exists():
+                    import shutil as _shutil_clean
+                    _shutil_clean.rmtree(ckpt_dir, ignore_errors=True)
+                    ckpt_dir.mkdir(parents=True, exist_ok=True)
+            # Re-check
+            disk_stat = os.statvfs(str(gguf_dir))
+            free_gb = (disk_stat.f_bavail * disk_stat.f_frsize) / (1024 ** 3)
+            if free_gb < 25:
+                log.error(f"[retrain] Still only {free_gb:.1f} GB free after cleanup. Skipping retrain.")
+                # Move backup back if we moved it
+                if backup_gguf.exists() and not current_gguf.exists():
+                    shutil.move(str(backup_gguf), str(current_gguf))
+                return "failed"
+    except OSError as e:
+        log.warning(f"[retrain] Could not check disk space: {e}")
 
     # ── 1. Rebuild dataset ───────────────────────────────────────────────
     log.info("[retrain] Rebuilding training dataset...")
@@ -1935,12 +1972,13 @@ def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT
     )
 
     if retrain_mode == "dpo_only":
-        # DPO-only: no SFT, just preference learning from gold DPO pairs
-        # Uses src.training.train with --dpo-after flag but minimal SFT (1 epoch)
-        # then the DPO phase does the real learning
+        # DPO-only: skip SFT, just preference learning from gold DPO pairs.
+        # We still need train.py to load the model + LoRA, so pass --max-steps 2
+        # (essentially a no-op SFT warmup: 2 gradient steps) then DPO does the real work.
         train_cmd = [
             sys.executable, "-m", "src.training.train",
-            "--epochs", "1",                          # minimal SFT warmup
+            "--epochs", "1",                          # needed but capped by max-steps
+            "--max-steps", "2",                       # ~no-op: 2 grad steps, not a full epoch
             "--lr", lr,                               # 5e-6 — very conservative
             "--max-gpu-memory-mb", str(max_gpu_memory_mb),
             "--max-length", str(max_length),
@@ -1948,7 +1986,7 @@ def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT
             "--gradient-accumulation-steps", str(grad_accum_steps),
             "--dpo-after",                            # DPO phase after minimal SFT
         ]
-        log.info(f"[retrain] DPO-only: 1 SFT warmup epoch + DPO on {dpo_n} gold pairs (lr={lr})")
+        log.info(f"[retrain] DPO-only: 2-step SFT warmup (no-op) + DPO on {dpo_n} gold pairs (lr={lr})")
     else:
         # Incremental SFT with optional DPO-after
         train_cmd = [
@@ -1964,13 +2002,24 @@ def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT
             train_cmd.append("--dpo-after")
             log.info(f"[retrain] SFT + DPO-after ({dpo_n} gold DPO pairs)")
 
-    result = subprocess.run(
-        train_cmd,
-        cwd=str(_REPO_ROOT), env=env,
-        capture_output=True, text=True,
-    )
+    try:
+        result = subprocess.run(
+            train_cmd,
+            cwd=str(_REPO_ROOT), env=env,
+            capture_output=True, text=True,
+            timeout=10800,  # 3 hour hard limit to prevent hangs
+        )
+    except subprocess.TimeoutExpired:
+        log.error("[retrain] Training timed out after 3 hours")
+        # Restore backup GGUF if we moved it
+        if backup_gguf.exists() and not current_gguf.exists():
+            shutil.move(str(backup_gguf), str(current_gguf))
+        return "failed"
     if result.returncode != 0:
         log.error(f"[retrain] Training failed: {result.stderr[-500:]}")
+        # Restore backup GGUF if we moved it
+        if backup_gguf.exists() and not current_gguf.exists():
+            shutil.move(str(backup_gguf), str(current_gguf))
         return "failed"
     log.info(f"[retrain] Training complete ({retrain_mode}).")
 
@@ -2122,11 +2171,14 @@ def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT
                     f"[retrain] EVAL GATE FAILED: SANY={sany_pass}/{_EVAL_GATE_N} < {_EVAL_GATE_MIN_SANY}. "
                     "Aborting deploy — rolling back to backup GGUF."
                 )
-                # Rollback: restore backup GGUF and re-register old model
+                # Rollback: move backup GGUF back (zero-copy rename)
                 if backup_gguf.exists():
                     import shutil as _shutil
-                    _shutil.copy2(backup_gguf, current_gguf)
-                    log.info(f"[retrain] Restored backup GGUF: {backup_gguf.name}")
+                    # Remove failed new GGUF if it exists
+                    if current_gguf.exists():
+                        current_gguf.unlink()
+                    _shutil.move(str(backup_gguf), str(current_gguf))
+                    log.info(f"[retrain] Restored backup GGUF: {backup_gguf.name} (moved back)")
                     # Re-register old model with Ollama
                     try:
                         subprocess.run(
