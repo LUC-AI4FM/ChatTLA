@@ -100,7 +100,7 @@ GPU_VRAM_CAP_DAY   = 0.75         # 75% VRAM cap during daytime (leave 25%)
 GPU_VRAM_CAP_NIGHT = 0.90         # 90% VRAM cap at night
 MAX_PROMPTS_DAY    = 10           # fewer prompts during daytime (was 25; spend more time training)
 MAX_PROMPTS_NIGHT  = 15           # lighter at night too (was 40; quality over quantity)
-SFT_EPOCHS         = 15           # training epochs per retrain (toy showed 20 epochs → 80% gold)
+SFT_EPOCHS         = 3            # 15 caused catastrophic forgetting on 234 examples (2026-04-05); keep low
 BENCHMARK_EVERY_N  = 3            # run full benchmark every N cycles
 TEMPERATURE_BASE   = 0.3
 TEMPERATURE_RANGE  = (0.1, 0.6)   # diversity range for multi-attempt
@@ -1886,7 +1886,7 @@ def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT
     train_cmd = [
         sys.executable, "-m", "src.training.train",
         "--epochs", str(num_epochs),
-        "--lr", "3e-4",                          # higher LR for faster convergence (toy validated)
+        "--lr", "2e-5",                          # 3e-4 caused catastrophic forgetting; safe LoRA range
         "--max-gpu-memory-mb", str(max_gpu_memory_mb),
         "--max-length", str(max_length),
         "--per-device-batch-size", "1",          # minimise activation memory on shared GPUs
@@ -1973,7 +1973,85 @@ def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT
         return "failed"
 
     # 4. Convert to GGUF + register with Ollama
-    log.info("[retrain] Converting to GGUF and deploying to Ollama...")
+    #    BUT FIRST: eval-gate — quick SANY check on merged model before deploying.
+    #    If the new model is worse than the old one, abort deploy and keep the old GGUF.
+    log.info("[retrain] Converting to GGUF (temp) for eval gate...")
+    try:
+        result = subprocess.run(
+            [sys.executable, "-m", "src.inference.convert_to_gguf", "--quant", "Q8_0",
+             "--no-ollama-register"],
+            cwd=str(_REPO_ROOT),
+            capture_output=True, text=True, timeout=1800,
+        )
+        if result.returncode != 0:
+            log.error(f"[retrain] GGUF conversion failed: {result.stderr[-300:]}")
+            return "failed"
+    except subprocess.TimeoutExpired:
+        log.error("[retrain] GGUF conversion timed out")
+        return "failed"
+
+    # Eval gate: register temp model, run quick SANY eval, compare to baseline
+    log.info("[retrain] Eval gate: testing new model before deploy...")
+    try:
+        import requests as _req
+        # Register as temp name
+        gguf_dir = _REPO_ROOT / "outputs" / "gguf"
+        new_gguf = gguf_dir / "chattla-20b-Q8_0.gguf"
+        if new_gguf.exists():
+            tmp_modelfile = gguf_dir / "Modelfile.evalgate"
+            # Read existing Modelfile template, swap to new GGUF
+            existing_mf = (gguf_dir / "Modelfile").read_text()
+            import re as _re
+            tmp_mf_content = _re.sub(
+                r'^FROM .*$',
+                f'FROM {new_gguf}',
+                existing_mf,
+                count=1,
+                flags=_re.MULTILINE,
+            )
+            tmp_modelfile.write_text(tmp_mf_content)
+            subprocess.run(
+                ["ollama", "create", "chattla:20b-candidate", "-f", str(tmp_modelfile)],
+                capture_output=True, text=True, timeout=300,
+            )
+            # Quick SANY eval on 5 benchmarks
+            benchmarks = json.load(open(_REPO_ROOT / "data" / "benchmarks" / "benchmark_suite.json"))
+            from src.validators.sany_validator import validate_string
+            sany_pass = 0
+            for bm in benchmarks[:5]:
+                try:
+                    resp = _req.post("http://localhost:11434/api/generate", json={
+                        "model": "chattla:20b-candidate",
+                        "prompt": f"Write a TLA+ specification for: {bm['name']}: {bm['description']}",
+                        "stream": False,
+                        "options": {"temperature": 0.3, "num_predict": 2048},
+                    }, timeout=120)
+                    spec = resp.json()["response"]
+                    spec = _re.sub(r'<analysis>.*?</analysis>', '', spec, flags=_re.DOTALL).strip()
+                    mod = _re.search(r'MODULE\s+(\w+)', spec)
+                    mod_name = mod.group(1) if mod else "Temp"
+                    sr = validate_string(spec, module_name=mod_name)
+                    sany_pass += int(sr.valid)
+                except Exception:
+                    pass
+            # Cleanup temp model
+            subprocess.run(["ollama", "rm", "chattla:20b-candidate"],
+                          capture_output=True, text=True, timeout=30)
+            tmp_modelfile.unlink(missing_ok=True)
+
+            log.info(f"[retrain] Eval gate: new model SANY={sany_pass}/5")
+            if sany_pass == 0:
+                log.error(
+                    "[retrain] EVAL GATE FAILED: new model scores 0/5 SANY. "
+                    "Aborting deploy — keeping old model. This retrain caused catastrophic forgetting."
+                )
+                return "failed"
+            log.info(f"[retrain] Eval gate passed ({sany_pass}/5 SANY). Deploying...")
+    except Exception as e:
+        log.warning(f"[retrain] Eval gate error (deploying anyway): {e}")
+
+    # Actually register with Ollama
+    log.info("[retrain] Deploying new GGUF to Ollama...")
     try:
         result = subprocess.run(
             [sys.executable, "-m", "src.inference.convert_to_gguf", "--quant", "Q8_0"],
@@ -1981,11 +2059,11 @@ def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT
             capture_output=True, text=True, timeout=1800,
         )
         if result.returncode != 0:
-            log.error(f"[retrain] GGUF conversion failed: {result.stderr[-300:]}")
+            log.error(f"[retrain] GGUF deploy failed: {result.stderr[-300:]}")
             return "failed"
         log.info("[retrain] GGUF deployed to Ollama.")
     except subprocess.TimeoutExpired:
-        log.error("[retrain] GGUF conversion timed out")
+        log.error("[retrain] GGUF deploy timed out")
         return "failed"
 
     # HF publish is now handled by the caller after a full benchmark quality gate.
