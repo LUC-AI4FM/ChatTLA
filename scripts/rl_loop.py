@@ -1863,7 +1863,8 @@ def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT
             import shutil as _shutil_clean
             # 1. Clear old checkpoints
             for ckpt_dir in [_REPO_ROOT / "outputs" / "checkpoints",
-                             _REPO_ROOT / "outputs" / "checkpoints_dpo"]:
+                             _REPO_ROOT / "outputs" / "checkpoints_dpo",
+                             _REPO_ROOT / "outputs" / "checkpoints_kto"]:
                 if ckpt_dir.exists():
                     _shutil_clean.rmtree(ckpt_dir, ignore_errors=True)
                     ckpt_dir.mkdir(parents=True, exist_ok=True)
@@ -1925,19 +1926,57 @@ def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT
         if n_teacher:
             log.info(f"[retrain] Appended {n_teacher} teacher_gold examples to train.jsonl")
 
+    # Ingest diamond specs from the generate-specifications pipeline.
+    # These are semantically verified (invariants matter, mutation testing, liveness).
+    _DIAMOND_SFT_DIR = _REPO_ROOT.parent / "generate-specifications" / "output"
+    if _DIAMOND_SFT_DIR.exists():
+        n_diamond = 0
+        for sft_file in sorted(_DIAMOND_SFT_DIR.glob("training_sft_*.jsonl")):
+            with open(sft_file) as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        rec = json.loads(line)
+                        # Only ingest diamond-tier specs (semantically verified)
+                        if rec.get("tier") == "diamond":
+                            # Write in SFT format expected by train.jsonl
+                            sft_row = {"messages": rec["messages"]}
+                            with open(_TRAIN_JSONL, "a") as out:
+                                out.write(json.dumps(sft_row) + "\n")
+                            n_diamond += 1
+                    except (json.JSONDecodeError, KeyError):
+                        continue
+        if n_diamond:
+            log.info(f"[retrain] Appended {n_diamond} diamond specs from generate-specifications")
+
     # Count training examples
     n_train = 0
     if _TRAIN_JSONL.exists():
         with open(_TRAIN_JSONL) as f:
             n_train = sum(1 for line in f if line.strip())
 
-    # ── 2. Determine retrain mode: DPO-first or SFT ─────────────────────
+    # ── 2. Determine retrain mode ──────────────────────────────────────
+    # Priority: KTO > SFT+DPO-after > skip
+    # KTO is preferred because:
+    #   - SFT on vacuously-correct gold specs teaches bad patterns
+    #   - DPO-only causes catastrophic forgetting on small pair counts
+    #   - KTO uses unpaired binary feedback (good/bad) + replay buffer,
+    #     which is more stable and doesn't reward vacuous correctness
     dpo_n = _count_dpo_gold_pairs()
-    if dpo_n >= 4:
-        retrain_mode = "dpo_only"
-        num_epochs = 2
-        lr = "5e-6"
-        log.info(f"[retrain] Mode: DPO-only ({dpo_n} gold DPO pairs, lr={lr}, epochs={num_epochs})")
+    kto_available = False
+    try:
+        from trl import KTOTrainer, KTOConfig
+        kto_available = True
+    except ImportError:
+        pass
+
+    if kto_available and (dpo_n >= 2 or n_train >= 50):
+        retrain_mode = "kto"
+        num_epochs = 1
+        lr = "5e-7"
+        log.info(f"[retrain] Mode: KTO ({dpo_n} DPO pairs + {n_train} SFT as replay, lr={lr}, epochs={num_epochs})")
     elif n_train >= MIN_TRAIN_EXAMPLES:
         retrain_mode = "sft_incremental"
         num_epochs = SFT_EPOCHS  # capped at 2
@@ -2064,6 +2103,28 @@ def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT
                 f"falling back to base model (DPO may regress!)"
             )
             log.info(f"[retrain] DPO-only: 2-step SFT warmup + DPO on {dpo_n} gold pairs (lr={lr})")
+    elif retrain_mode == "kto":
+        # KTO: unpaired binary feedback with replay buffer
+        # Uses merged model as base to preserve TLA+ knowledge
+        # Clean old SFT/DPO checkpoints so merge_lora picks up KTO checkpoint
+        for old_dir in [_REPO_ROOT / "outputs" / "checkpoints",
+                        _REPO_ROOT / "outputs" / "checkpoints_dpo",
+                        _REPO_ROOT / "outputs" / "checkpoints_kto"]:
+            if old_dir.exists():
+                shutil.rmtree(old_dir, ignore_errors=True)
+                old_dir.mkdir(parents=True, exist_ok=True)
+        log.info("[retrain] Cleared old checkpoints for clean KTO run")
+        train_cmd = [
+            sys.executable, "-m", "src.training.train_kto",
+            "--lr", lr,
+            "--epochs", str(num_epochs),
+            "--max-length", str(max_length),
+        ]
+        if merged_model_dir.exists() and (merged_model_dir / "config.json").exists():
+            train_cmd.extend(["--base-model", str(merged_model_dir)])
+            log.info(f"[retrain] KTO: loading from merged model + {dpo_n} pairs + {n_train} replay (lr={lr})")
+        else:
+            log.info(f"[retrain] KTO: from base model + {dpo_n} pairs + {n_train} replay (lr={lr})")
     else:
         # Incremental SFT with optional DPO-after
         train_cmd = [
@@ -2117,7 +2178,7 @@ def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT
     # load from the merged model (LoRA deltas are relative to whatever base
     # was used during training).
     merge_base_args: list[str] = []
-    if retrain_mode == "dpo_only" and merged_model_dir.exists():
+    if retrain_mode in ("dpo_only", "kto") and merged_model_dir.exists():
         merge_base_args = ["--base-model", str(merged_model_dir)]
         log.info(f"[retrain] Merge will use base: {merged_model_dir}")
 
