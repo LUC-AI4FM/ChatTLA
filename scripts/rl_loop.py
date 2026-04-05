@@ -118,8 +118,8 @@ SFT_EPOCHS         = 2            # was 3; lowered to reduce catastrophic forget
 BENCHMARK_EVERY_N  = 3            # run full benchmark every N cycles
 TEMPERATURE_BASE   = 0.3
 TEMPERATURE_RANGE  = (0.1, 0.6)   # diversity range for multi-attempt
-MAX_REPAIR_ROUNDS  = 1             # RLVR: verifier-guided repair attempts per silver spec
-MAX_SANY_REPAIR_ROUNDS = 2        # SANY: error-guided repair attempts for bronze specs
+MAX_REPAIR_ROUNDS  = 3             # RLVR: verifier-guided repair attempts per silver spec
+MAX_SANY_REPAIR_ROUNDS = 3        # SANY: error-guided repair attempts for bronze specs
 DAY_PROMPT_COOLDOWN_S = 3.0       # pause between prompts during daytime
 NIGHT_PROMPT_COOLDOWN_S = 0.5     # lighter pause at night
 QUICK_EVAL_LIMIT = 12             # mini-eval every cycle (trend signal; full suite = ground truth)
@@ -2713,7 +2713,7 @@ def run_cycle(
         results = generate_and_validate(
             prompts,
             model="chattla:20b",
-            max_attempts=2,
+            max_attempts=3,
             prompt_cooldown_s=prompt_cooldown,
             phase1_max_workers=phase1_max_workers,
         )
