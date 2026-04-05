@@ -1,0 +1,394 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,0,0.444,silver,7.36,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,0,0,1.0,bronze,227.41,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLES participants, state, messages, coordinator
+ParticipantState == {""INIT"", ""PREPARED"", ""COMMITTED"", ""ABORTED""}
+
+(* Message types *)
+MessageType == {""Prepare"", ""VoteYes"", ""VoteNo"", ""Commit"", ""Abort""}
+
+(* Message structure *)
+Message == [sender \in participants \cup {coordinator},
+           receiver \in participants \cup {coordinator},
+           type \in MessageType,
+           payload \in BOOLEAN]
+
+(* Initial state *)
+Init == /\ participants = {1, 2, ..., N}
+      /\ state = [p \in participants |-> ""INIT""]
+      /\ messages = {}
+      /\ coordinator = ""INIT""
+
+(* Next-state relation *)
+Next == \/ CoordinatorAction
+      \/ ParticipantAction
+
+(* Coordinator actions *)
+CoordinatorAction == 
+  /\ coordinator = ""INIT""
+  /\ messages' = messages \cup { [sender |-> coordinator,
+                                 receiver |-> p,
+                                 type |-> ""Prepare"",
+                                 payload |-> TRUE] : p \in participants }
+  /\ state' = state
+  /\ coordinator' = ""PREPARING""
+
+  \/ coordinator = ""PREPARING""
+  /\ \E p \in participants : state[p] = ""PREPARED""
+  /\ messages' = messages \cup { [sender |-> coordinator,
+                                 receiver |-> p,
+                                 type |-> ""Commit"",
+                                 payload |-> TRUE] : p \in participants }
+  /\ state' = [p \in participants |-> ""COMMITTED""]
+  /\ coordinator' = ""COMMITTED""
+
+  \/ coordinator = ""PREPARING""
+  /\ \E p \in participants : state[p] = ""ABORTED""
+  /\ messages' = messages \cup { [sender |-> coordinator,
+                                 receiver |-> p,
+                                 type |-> ""Abort"",
+                                 payload |-> TRUE] : p \in participants }
+  /\ state' = [p \in participants |-> ""ABORTED""]
+  /\ coordinator' = ""ABORTED""
+
+(* Participant actions *)
+ParticipantAction == 
+  /\ \E m \in messages : m.type = ""Prepare"" /\ m.receiver \in participants
+  /\ state[m.receiver] = ""INIT""
+  /\ messages' = messages \cup { [sender |-> m.receiver,
+                                 receiver |-> coordinator,
+                                 type |-> IF m.payload THEN ""VoteYes"" ELSE ""VoteNo"",
+                                 payload |-> m.payload] }
+  /\ state' = [p \in participants |-> IF p = m.receiver THEN ""PREPARED"" ELSE state[p]]
+  /\ coordinator' = coordinator
+
+  \/ \E m \in messages : m.type = ""Commit"" /\ m.receiver \in participants
+  /\ state[m.receiver] = ""PREPARED""
+  /\ messages' = messages \cup { [sender |-> m.receiver,
+                                 receiver |-> coordinator,
+                                 type |-> ""CommitAck"",
+                                 payload |-> TRUE] }
+  /\ state' = [p \in participants |-> IF p = m.receiver THEN ""COMMITTED"" ELSE state[p]]
+  /\ coordinator' = coordinator
+
+  \/ \E m \in messages : m.type = ""Abort"" /\ m.receiver \in participants
+  /\ state[m.receiver] = ""PREPARED""
+  /\ messages' = messages \cup { [sender |-> m.receiver,
+                                 receiver |-> coordinator,
+                                 type |-> ""AbortAck"",
+                                 payload |-> TRUE] }
+  /\ state' = [p \in participants |-> IF p = m.receiver THEN ""ABORTED"" ELSE state[p]]
+  /\ coordinator' = coordinator
+
+(* Invariant: All participants are in the same terminal state *)
+TypeOK == /\ \A p \in participants : state[p] \in ParticipantState
+          /\ coordinator \in {""INIT"", ""PREPARING"", ""COMMITTED"", ""ABORTED""}
+
+Spec == Init /\ [][Next]_<<participants, state, messages, coordinator>>
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,1,0,0.444,silver,108.82,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES forks, states
+
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,1,1,0.778,gold,49.33,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+Min(S) == CHOOSE x \in S : \A y \in S : x =< y
+
+VARIABLES num, flag
+
+Init == /\ num = <<1, 2, 3>>
+      /\ flag = <<TRUE, FALSE, TRUE>>
+
+Next == /\ num' = <<1, 2, 3>>
+      /\ flag' = <<TRUE, FALSE, TRUE>>
+
+Spec == Init /\ [][Next]_<<num, flag>>
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,0,0,1.0,bronze,25.38,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail, size
+
+Init == /\ q = <<>>
+        /\ head = 0
+        /\ tail = 0
+        /\ size = 0
+
+ProducerAction == /\ size < K
+                 /\ head' = head
+                 /\ tail' = (tail + 1) \mod K
+                 /\ q' = Append(q, head)
+                 /\ size' = size + 1
+
+ConsumerAction == /\ size > 0
+                 /\ head' = (head + 1) \mod K
+                 /\ tail' = tail
+                 /\ q' = Tail(q)
+                 /\ size' = size - 1
+
+Next == ProducerAction \/ ConsumerAction
+
+Spec == Init /\ [][Next]_<<q, head, tail, size>>
+
+TypeOK == /\ K \in Nat
+         /\ q \in Seq(0..K-1)
+         /\ head \in 0..K-1
+         /\ tail \in 0..K-1
+         /\ size \in 0..K
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,0,0,1.0,bronze,28.35,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+
+
+(* State definitions *)
+Follower == state = Follower
+Candidate == state = Candidate
+Leader == state = Leader
+
+(* Type definitions *)
+Server == 1..N
+None == 0
+
+(* TypeOK definition *)
+TypeOK == /\ currentTerm \in Nat
+          /\ votedFor \in {None} \cup Server
+          /\ state \in {Follower, Candidate, Leader}
+
+(* Init action *)
+Init == /\ currentTerm = 0
+        /\ votedFor = None
+        /\ state = Follower
+
+(* Next action *)
+Next == 
+  \/ (* Follower transitions *)
+     /\ state = Follower
+     /\ currentTerm' = currentTerm
+     /\ votedFor' = votedFor
+     /\ state' = Candidate
+  \/ (* Candidate transitions *)
+     /\ state = Candidate
+     /\ currentTerm' = currentTerm + 1
+     /\ votedFor' = None
+     /\ state' = Leader
+  \/ (* Leader transitions *)
+     /\ state = Leader
+     /\ currentTerm' = currentTerm
+     /\ votedFor' = votedFor
+     /\ state' = Leader
+
+Spec == Init /\ [][Next]_<<currentTerm, votedFor, state>>
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,1,0,0.667,silver,57.29,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES readers, writer_active
+
+Init == /\ readers = <<>>
+       /\ writer_active = FALSE
+
+Next == \/ /\ writer_active = FALSE
+          /\ \E r \in 1..10 : /\ ~(r \in readers)
+              /\ r \in 1..10
+                 /\ ~(r \in readers)
+                 /\ r \in 1..10
+                    /\ ~(r \in readers)
+                    /\ r \in 1..10
+                       /\ ~(r \in readers)
+                       /\ r \in 1..10
+                          /\ ~(r \in readers)
+                          /\ r \in 1..10
+                             /\ ~(r \in readers)
+                             /\ r \in 1..10
+                                /\ ~(r \in readers)
+                                /\ r \in 1..10
+                                   /\ ~(r \in readers)
+                                   /\ r \in 1..10
+                                      /\ ~(r \in readers)
+                                      /\ r \in 1..10
+                                         /\ ~(r \in readers)
+                                         /\ r \in 1..10
+                                            /\ ~(r \in readers)
+                                            /\ r \in 1..10
+                                               /\ ~(r \in readers)
+                                               /\ r \in 1..10
+                                                  /\ ~(r \in readers)
+                                                  /\ r \in 1..10
+                                                     /\ ~(r \in readers)
+                                                     /\ r \in 1..10
+                                                        /\ ~(r \in readers)
+                                                        /\ r \in 1..10
+                                                           /\ ~(r \in readers)
+                                                           /\ r \in 1..10
+                                                              /\ ~(r \in readers)
+                                                              /\ r \in 1..10
+                                                                 /\ ~(r \in readers)
+                                                                 /\ r \in 1..10
+                                                                    /\ ~(r \in readers)
+                                                                    /\ r \in 1..10
+                                                                       /\ ~(r \in readers)
+                                                                       /\ r \in 1..10
+                                                                          /\ ~(r \in readers)
+                                                                          /\ r \in 1..10
+                                                                             /\ ~(r \in readers)
+                                                                             /\ r \in 1..10
+                                                                                /\ ~(r \in readers)
+                                                                                /\ r \in 1..10
+                                                                                   /\ ~(r \in readers)
+                                                                                   /\ r \in 1..10
+                                                                                      /\ ~(r \in readers)
+                                                                                      /\ r \in 1..10
+                                                                                         /\ ~(r \in readers)
+                                                                                         /\ r \in 1..10
+                                                                                            /\ ~(r \in readers)
+                                                                                            /\ r \in 1..10
+                                                                                               /\ ~(r \in readers)
+                                                                                               /\ r \in 1..10
+                                                                                                  /\ ~(r \in readers)
+                                                                                                  /\ r \in 1..10
+                                                                                                     /\ ~(r \in readers)
+                                                                                                     /\ r \in 1..10
+                                                                                                        /\ ~(r \in readers)
+                                                                                                        /\ r \in 1..10
+                                                                                                           /\ ~(r \in readers)
+                                                                                                           /\ r \in 1..10
+                                                                                                              /\ ~(r \in readers)
+                                                                                                              /\ r \in 1..10
+                                                                                                                 /\ ~(r \in readers)
+                                                                                                                 /\ r \in 1..10
+                                                                                                                    /\ ~(r \in readers)
+                                                                                                                    /\ r \in 1..10
+                                                                                                                       /\ ~(r \in readers)
+                                                                                                                       /\ r \in 1..10
+                                                                                                                          /\ ~(r \in readers)
+                                                                                                                          /\ r \in 1..10
+                                                                                                                             /\ ~(r \in readers)
+                                                                                                                             /\ r \in 1..10
+                                                                                                                                /\ ~(r \in readers)
+                                                                                                                                /\ r \in 1..10
+                                                                                                                                   /\ ~(r \in readers)
+                                                                                                                                   /\ r \in 1..10
+                                                                                                                                    /\ ~(r \in readers)
+                                                                                                                                    /\ r \in 1..10
+                                                                                                                                       /\ ~(r \in readers)
+                                                                                                                                 "
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,1,0,0.444,silver,63.93,"---- MODULE ChandyLamportSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, channel, marker, recorded, channelState, markerReceived, markerSent
+===="
+chattla:20b,BM009,Token Ring,networking,2,1,1,0.667,gold,2.26,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLE token
+
+Init == /\ token \in 1..N
+
+Next == /\ token' \in 1..N
+        /\ token' = IF token = N THEN 1 ELSE token + 1
+
+Spec == Init /\ [][Next]_<<token>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,0.778,silver,4.92,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, Values, NULL
+
+VARIABLES store
+
+Init == store = [k \in Keys |-> NULL]
+
+Next == \/ /\ \E k \in Keys : \E v \in Values : /\ store' = [store EXCEPT ![k] = v]
+      \/ /\ \E k \in Keys : /\ store' = [store EXCEPT ![k] = NULL]
+
+Spec == Init /\ [][Next]_<<store>>
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,1,0,0.444,silver,89.89,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES acceptors, proposers, promises, accepts, chosen, ballots, values
+===="
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,0,0,0.778,bronze,212.56,"---- MODULE FileTransfer ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS MAX_RETRIES, CHUNK_SIZE, FILE_SIZE, CHANNEL_LOSS_PROBABILITY, FiniteSet, Subset
+VARIABLES channel, chunks, file, retransmit_count, sent_chunks
+
+    /\ file \in Seq
+    /\ chunks \in Seq
+    /\ sent_chunks \in FiniteSet
+    /\ retransmit_count \in FiniteSet
+    /\ channel \in FiniteSet
+
+Init ==
+    /\ file = <<>>
+    /\ chunks = <<>>
+    /\ sent_chunks = <<>>
+    /\ retransmit_count = <<>>
+    /\ channel = <<>>
+
+Next ==
+    /\ \E chunk \in Seq :
+        /\ chunk \in Subset(CHUNK_SIZE)
+        /\ chunk \notin sent_chunks
+        /\ \E loss \in BOOLEAN :
+            /\ loss = TRUE
+            /\ channel' = channel \cup <<chunk>>
+            /\ sent_chunks' = sent_chunks \cup <<chunk>>
+            /\ retransmit_count' = retransmit_count \cup <<chunk>>
+    \/ \E chunk \in sent_chunks :
+        /\ \E loss \in BOOLEAN :
+            /\ loss = FALSE
+            /\ channel' = channel \cup <<chunk>>
+            /\ sent_chunks' = sent_chunks
+            /\ retransmit_count' = retransmit_count
+    \/ \E chunk \in sent_chunks :
+        /\ \E loss \in BOOLEAN :
+            /\ loss = TRUE
+            /\ \E retries \in Int :
+                /\ retries \in retransmit_count
+                /\ retries < MAX_RETRIES
+                /\ channel' = channel \cup <<chunk>>
+                /\ sent_chunks' = sent_chunks
+                /\ retransmit_count' = retransmit_count \cup <<chunk>>
+    \/ \E chunk \in sent_chunks :
+        /\ \E loss \in BOOLEAN :
+            /\ loss = TRUE
+            /\ \E retries \in Int :
+                /\ retries \in retransmit_count
+                /\ retries >= MAX_RETRIES
+                /\ channel' = channel
+                /\ sent_chunks' = sent_chunks
+                /\ retransmit_count' = retransmit_count
+
+Spec ==
+    Init /\ [][Next]_<<file, chunks, sent_chunks, retransmit_count, channel>>
+
+===="

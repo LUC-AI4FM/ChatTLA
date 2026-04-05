@@ -1,0 +1,824 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,0,0.444,silver,23.75,"---- MODULE MutualExclusion ----
+EXTENDS Naturals, TLC
+
+VARIABLES state
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,0,0,1.0,bronze,13.63,"---- MODULE TwoPhaseCommit ----
+EXTENDS Naturals, Sequences, TLC
+
+VARIABLES participants, coordinator, messages
+
+(* --type definitions-- *)
+CONSTANT N
+CONSTANT ParticipantIds
+CONSTANT CoordinatorId
+
+(* --state definitions-- *)
+TypeOK == 
+  /\ participants \in [ParticipantIds -> [state : {""INIT"", ""PREPARED"", ""COMMITTED"", ""ABORTED""}, 
+                                         vote : {""YES"", ""NO"", ""NONE""}]]
+  /\ coordinator \in [state : {""INIT"", ""PREPARED"", ""COMMITTED"", ""ABORTED""}, 
+                       decision : {""COMMIT"", ""ABORT"", ""NONE""}]
+  /\ messages \in Seq([sender : ParticipantIds \cup {CoordinatorId}, 
+                       receiver : ParticipantIds \cup {CoordinatorId}, 
+                       type : {""PREPARE"", ""VOTE_YES"", ""VOTE_NO"", ""COMMIT"", ""ABORT""}, 
+                       content : {""YES"", ""NO"", ""NONE""}])
+
+(* --initialization-- *)
+Init == 
+  /\ participants = [p \in ParticipantIds |-> [state |-> ""INIT"", vote |-> ""NONE""]]
+  /\ coordinator = [state |-> ""INIT"", decision |-> ""NONE""]
+  /\ messages = <<>>
+
+(* --message sending-- *)
+SendMsg(msg) == 
+  /\ messages' = Append(messages, msg)
+  /\ UNCHANGED <<participants, coordinator>>
+
+(* --message receiving-- *)
+ReceiveMsg(msg) == 
+  /\ messages' = Remove(messages, msg)
+  /\ UNCHANGED <<participants, coordinator>>
+
+(* --coordinator actions-- *)
+CoordinatorPrepare == 
+  /\ coordinator.state = ""INIT""
+  /\ coordinator.decision = ""NONE""
+  /\ \E p \in ParticipantIds: 
+       /\ participants[p].state = ""INIT""
+       /\ participants[p].vote = ""NONE""
+       /\ SendMsg([sender |-> CoordinatorId, receiver |-> p, type |-> ""PREPARE"", content |-> ""NONE""])
+  /\ coordinator.state' = ""PREPARED""
+  /\ UNCHANGED <<participants, messages>>
+
+CoordinatorCommit == 
+  /\ coordinator.state = ""PREPARED""
+  /\ coordinator.decision = ""NONE""
+  /\ \E p \in ParticipantIds: 
+       /\ participants[p].state = ""PREPARED""
+       /\ participants[p].vote = ""YES""
+       /\ SendMsg([sender |-> CoordinatorId, receiver |-> p, type |-> ""COMMIT"", conten"
+chattla:20b,BM003,Dining Philosophers,scheduling,2,0,0,1.0,bronze,5.71,"---- MODULE DiningPhilosophers ----
+EXTENDS Naturals, Sequences, TLC
+
+CONSTANTS N
+
+VARIABLES forks, state
+
+(* fork ownership: forks[i] = j means fork i is owned by philosopher j; forks[i] = -1 means free *)
+(* philosopher state: state[i] ∈ {""thinking"", ""hungry"", ""eating""} *)
+
+TypeOK == 
+  /\ forks ∈ [1..N -> 1..N \/ -1]
+  /\ state ∈ [1..N -> {""thinking"", ""hungry"", ""eating""}]
+
+(* Helper functions *)
+LeftFork(i) == IF i = 1 THEN N ELSE i - 1
+RightFork(i) == IF i = N THEN 1 ELSE i + 1
+
+Hungry(i) == state[i] = ""hungry""
+Eating(i) == state[i] = ""eating""
+Thinking(i) == state[i] = ""thinking""
+
+FreeFork(i) == forks[i] = -1
+
+CanEat(i) == 
+  /\ Hungry(i)
+  /\ FreeFork(LeftFork(i))
+  /\ FreeFork(RightFork(i))
+
+(* Actions *)
+Think(i) == 
+  /\ Thinking(i)
+  /\ state' = [state EXCEPT ![i] = ""hungry""]
+
+TakeForks(i) == 
+  /\ CanEat(i)
+  /\ forks' = [forks EXCEPT ![LeftFork(i)] = i, ![RightFork(i)] = i]
+  /\ state' = [state EXCEPT ![i] = ""eating""]
+
+PutForks(i) == 
+  /\ Eating(i)
+  /\ forks' = [forks EXCEPT ![LeftFork(i)] = -1, ![RightFork(i)] = -1]
+  /\ state' = [state EXCEPT ![i] = ""thinking""]
+
+Next == 
+  \/ ∃ i ∈ 1..N: Think(i)
+  \/ ∃ i ∈ 1..N: TakeForks(i)
+  \/ ∃ i ∈ 1..N: PutForks(i)
+
+Init == 
+  /\ forks = [i ∈ 1..N |-> -1]
+  /\ state = [i ∈ 1..N |-> ""thinking""]
+
+Spec == Init /\ [][Next]_<<forks, state>> /\ TypeOK
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,0,0,0.444,bronze,21.86,"---- MODULE Bakery ----
+EXTENDS Naturals, Sequences, TLC
+
+VARIABLES num, flag
+
+(* --algorithm Bakery *)
+   VARIABLES num, flag
+
+   Init == /\ num \in [1..N -> 0]
+          /\ flag \in [1..N -> FALSE]
+
+   Next == \E i \in 1..N:
+            /\ flag[i] = FALSE
+            /\ flag[i] := TRUE
+            /\ num[i] := 1 + Max(num)
+            /\ flag[i] := FALSE
+            /\ \A j \in 1..N:
+                j /= i
+                /\ \E k \in 1..N:
+                    k /= i
+                    /\ k /= j
+                    /\ \E l \in 1..N:
+                        l /= i
+                        /\ l /= j
+                        /\ l /= k
+                        /\ \E m \in 1..N:
+                            m /= i
+                            /\ m /= j
+                            /\ m /= k
+                            /\ m /= l
+                            /\ \E n \in 1..N:
+                                n /= i
+                                /\ n /= j
+                                /\ n /= k
+                                /\ n /= l
+                                /\ n /= m
+                                /\ \E o \in 1..N:
+                                    o /= i
+                                    /\ o /= j
+                                    /\ o /= k
+                                    /\ o /= l
+                                    /\ o /= m
+                                    /\ o /= n
+                                    /\ \E p \in 1..N:
+                                        p /= i
+                                        /\ p /= j
+                                        /\ p /= k
+                                        /\ p /= l
+                                        /\ p /= m
+                                        /\ p /= n
+                                        /\ p /= o
+                                        /\ \E q \in 1..N:
+                                            q /= i
+                                            /\ q /= j
+                             "
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,0,0.444,silver,5.39,"---- MODULE BoundedFIFO ----
+EXTENDS Naturals, Sequences
+
+CONSTANT K
+
+VARIABLES q, prod, cons
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,0,0,0.556,bronze,5.01,"---- MODULE RaftLeaderElection ----
+EXTENDS Naturals, Sequences, TLC
+
+VARIABLES currentTerm, votedFor, state
+
+
+
+(* --operator
+  Server == 1..N
+*)
+
+(* --operator
+  Majority == (N \div 2) + 1
+*)
+
+(* --operator
+  TypeOK == /\ currentTerm \in Nat
+           /\ votedFor \in {None} \cup Server
+           /\ state \in {Follower, Candidate, Leader}
+*)
+
+(* --operator
+  Init == /\ currentTerm = 0
+         /\ votedFor = None
+         /\ state = Follower
+*)
+
+(* --operator
+  RequestVote(s) == /\ state = Candidate
+                    /\ currentTerm = s.currentTerm
+                    /\ votedFor = None
+                    /\ votedFor' = s.server
+*)
+
+(* --operator
+  VoteGranted(s) == /\ state = Candidate
+                    /\ currentTerm = s.currentTerm
+                    /\ votedFor = s.server
+*)
+
+(* --operator
+  VoteCount(s) == /\ state = Candidate
+                  /\ currentTerm = s.currentTerm
+                  /\ votedFor = s.server
+*)
+
+(* --operator
+  BecomeLeader(s) == /\ state = Candidate
+                    /\ currentTerm = s.currentTerm
+                    /\ votedFor = s.server
+                    /\ state' = Leader
+*)
+
+(* --operator
+  Next == \/ /\ state = Follower
+           /\ state' = Candidate
+           /\ currentTerm' = currentTerm + 1
+           /\ votedFor' = None
+        \/ /\ state = Candidate
+           /\ votedFor' = None
+           /\ state' = Follower
+        \/ /\ state = Candidate
+           /\ votedFor' = votedFor
+           /\ state' = Leader
+*)
+
+Spec == Init /\ [][Next]_<<currentTerm, votedFor, state>> /\ TypeOK
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,0,0,0.778,bronze,2.23,"---- MODULE ReadWriteLock ----
+EXTENDS Naturals, TLC
+
+VARIABLES readers, writer_active
+
+
+
+TypeOK == 
+  /\ readers \in Nat
+  /\ writer_active \in BOOLEAN
+
+Spec == Init /\ [][Next]_<<readers, writer_active>> 
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,0,0,0.889,bronze,14.51,"---- MODULE ChandyLamportSnapshot ----
+EXTENDS Naturals, Sequences, TLC
+
+CONSTANTS N, Channels
+
+(* Type checking *)
+TypeOK ==
+    /\ state \in [1..N -> [localState: Nat, channelState: [1..N -> Seq(Nat)]]]
+    /\ markerSent \in [1..N -> [1..N -> BOOLEAN]]
+    /\ markerReceived \in [1..N -> [1..N -> BOOLEAN]]
+    /\ channelBuffer \in [1..N -> [1..N -> Seq(Nat)]]
+    /\ snapshotRecorded \in [1..N -> BOOLEAN]
+    /\ \A i \in 1..N: 
+        /\ state[i].channelState \in [1..N -> Seq(Nat)]
+        /\ markerSent[i] \in [1..N -> BOOLEAN]
+        /\ markerReceived[i] \in [1..N -> BOOLEAN]
+        /\ channelBuffer[i] \in [1..N -> Seq(Nat)]
+
+(* Initial state *)
+Init ==
+    /\ \A i \in 1..N: 
+        /\ state[i] = [localState |-> 0, channelState |-> [j \in 1..N |-> <<>>]]
+        /\ markerSent[i] = [j \in 1..N |-> FALSE]
+        /\ markerReceived[i] = [j \in 1..N |-> FALSE]
+        /\ channelBuffer[i] = [j \in 1..N |-> <<>>]
+        /\ snapshotRecorded[i] = FALSE
+
+(* Sending a marker along an outgoing channel *)
+SendMarker(i, j) ==
+    /\ Channels[i] = j
+    /\ markerSent[i][j] = FALSE
+    /\ channelBuffer[i][j] = Append(channelBuffer[i][j], ""marker"")
+    /\ markerSent' = [markerSent EXCEPT ![i][j] = TRUE]
+    /\ UNCHANGED <<state, markerReceived, channelBuffer, snapshotRecorded>>
+
+(* Receiving a marker along an incoming channel *)
+ReceiveMarker(i, j) ==
+    /\ Channels[j] = i
+    /\ markerReceived[i][j] = FALSE
+    /\ channelBuffer[i][j] = <<>>  (* No marker in buffer *)
+    /\ markerReceived' = [markerReceived EXCEPT ![i][j] = TRUE]
+    /\ UNCHANGED <<state, markerSent, channelBuffer, snapshotRecorded>>
+
+(* Recording local state and channel state *)
+RecordState(i) ==
+    /\ snapshotRecorded[i] = FALSE
+    /\ snapshotRecorded' = [snapshotRecorded EXCEPT ![i] = TRUE]
+    /\ state' = [state EXCEPT ![i].localState = state[i].localState + 1]
+    /\ state' = [state EXCEPT ![i].channelState = [j \in 1..N |-> channelBuffer[i][j]]]
+    /\ UNCHANGED <<markerSent, markerReceived, channel"
+chattla:20b,BM009,Token Ring,networking,2,1,1,0.667,gold,1.85,"---- MODULE TokenRing ----
+EXTENDS Naturals, Sequences, TLC
+
+CONSTANT N
+
+VARIABLE token
+
+Init == 
+  /\ token \in 1..N
+
+Next == 
+  /\ token' = IF token = N THEN 1 ELSE token + 1
+
+Spec == 
+  Init /\ [][Next]_token
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,0,0,1.0,bronze,2.73,"---- MODULE KeyValueStore ----
+EXTENDS Naturals, Sequences, TLC
+
+CONSTANTS Keys, Values
+
+VARIABLES store
+
+(* Type invariant *)
+TypeOK == /\ store \in [Keys -> Values]
+
+(* Initial state: all keys map to some default value *)
+Init == /\ store \in [Keys -> Values]
+        /\ store = [k \in Keys |-> defaultValue]
+
+(* Put operation: updates the value for a key *)
+Put(k, v) == /\ k \in Keys
+              /\ v \in Values
+              /\ store' = [store EXCEPT ![k] = v]
+
+(* Get operation: reads the value for a key *)
+Get(k) == /\ k \in Keys
+          /\ store' = store
+
+(* Next-state relation: either a Put or a Get *)
+Next == \/ \E k \in Keys, v \in Values: Put(k, v)
+      \/ \E k \in Keys: Get(k)
+
+Spec == Init /\ [][Next]_store
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,1,0,0.444,silver,8.85,"---- MODULE SingleDecreePaxos ----
+EXTENDS Naturals, Sequences, TLC
+
+CONSTANTS N, M
+
+VARIABLES acceptors, proposers, chosen, promises, accepts
+
+===="
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,0,0,0.889,bronze,6.39,"---- MODULE FileSender ----
+EXTENDS Naturals, Sequences, TLC
+
+CONSTANTS MAX_RETRIES, CHUNK_SIZE, FILE_SIZE
+
+(* Type definitions *)
+TypeOK == 
+    /\ fileData \in Seq(1..CHUNK_SIZE)
+    /\ sentChunks \in Seq(1..CHUNK_SIZE)
+    /\ retransmitCount \in Nat
+    /\ channel \in Seq(1..CHUNK_SIZE)
+
+(* Initial state *)
+Init == 
+    /\ fileData = SubSeq(1..CHUNK_SIZE, 1..FILE_SIZE)
+    /\ sentChunks = <<>>
+    /\ retransmitCount = 0
+    /\ channel = <<>>
+
+(* Sending a chunk *)
+SendChunk == 
+    /\ sentChunks' = Append(sentChunks, SubSeq(fileData, Length(sentChunks)+1, Length(sentChunks)+CHUNK_SIZE))
+    /\ channel' = Append(channel, SubSeq(fileData, Length(sentChunks)+1, Length(sentChunks)+CHUNK_SIZE))
+    /\ retransmitCount' = 0
+
+(* Retransmitting a chunk *)
+RetransmitChunk == 
+    /\ sentChunks' = sentChunks
+    /\ channel' = Append(channel, SubSeq(fileData, Length(sentChunks)+1, Length(sentChunks)+CHUNK_SIZE))
+    /\ retransmitCount' = retransmitCount + 1
+
+(* Receiving a chunk *)
+ReceiveChunk == 
+    /\ channel' = SubSeq(channel, 2, Length(channel))
+    /\ sentChunks' = sentChunks
+    /\ retransmitCount' = 0
+
+(* Next state *)
+Next == 
+    \/ /\ Length(sentChunks) < Length(fileData)
+       /\ sentChunks' = Append(sentChunks, SubSeq(fileData, Length(sentChunks)+1, Length(sentChunks)+CHUNK_SIZE))
+       /\ channel' = Append(channel, SubSeq(fileData, Length(sentChunks)+1, Length(sentChunks)+CHUNK_SIZE))
+       /\ retransmitCount' = 0
+    \/ /\ Length(sentChunks) = Length(fileData)
+       /\ channel' = SubSeq(channel, 2, Length(channel))
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = 0
+    \/ /\ Length(sentChunks) = Length(fileData)
+       /\ retransmitCount < MAX_RETRIES
+       /\ channel' = Append(channel, SubSeq(fileData, Length(sentChunks)+1, Length(sentChunks)+CHUNK_SIZE))
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount + 1
+
+Spec == Init /\ [][Next]_<<fileData, sentChunks, retransmitCount, channel>>
+
+===="
+chattla:20b,BM013,Transaction Isolation (Snapshot Isolation),transaction,4,0,0,1.0,bronze,10.25,"---- MODULE SnapshotIsolationDB ----
+EXTENDS Naturals, Sequences, TLC
+
+VARIABLES db, txns, nextTxId, snapshot
+TxState == [id: Nat, status: {""active"", ""committed"", ""aborted""},
+           readSet: [key: Key, value: Value],
+           writeSet: [key: Key, value: Value]]
+
+(* Types *)
+Key == Nat
+Value == Nat
+
+(* Type predicates *)
+TypeOK == /\ db \in [Key -> Value]
+          /\ txns \in [Nat -> TxState]
+          /\ nextTxId \in Nat
+          /\ snapshot \in [Key -> Value]
+          /\ \A t \in DOMAIN txns: TxState \in txns[t]
+          /\ \A t \in DOMAIN txns: t \in txns[t].id
+          /\ \A t \in DOMAIN txns: txns[t].status \in {""active"", ""committed"", ""aborted""}
+          /\ \A t \in DOMAIN txns: txns[t].readSet \in [Key -> Value]
+          /\ \A t \in DOMAIN txns: txns[t].writeSet \in [Key -> Value]
+
+(* Initial state *)
+Init == /\ db = [k \in Key |-> 0]
+        /\ txns = [ ]
+        /\ nextTxId = 1
+        /\ snapshot = [k \in Key |-> 0]
+
+(* Begin a new transaction *)
+BeginTx == /\ txns' = [txns EXCEPT ![nextTxId] = [id |-> nextTxId,
+                                                   status |-> ""active"",
+                                                   readSet |-> [k \in Key |-> snapshot[k]],
+                                                   writeSet |-> [k \in Key |-> 0]]
+          /\ nextTxId' = nextTxId + 1
+          /\ snapshot' = snapshot
+          /\ db' = db
+
+(* Read a key within a transaction *)
+ReadTx(t, k) == /\ t \in DOMAIN txns
+                 /\ txns[t].status = ""active""
+                 /\ k \in Key
+                 /\ txns[t].readSet[k] = snapshot[k]
+                 /\ db' = db
+                 /\ snapshot' = snapshot
+                 /\ txns' = txns
+
+(* Write a key within a transaction *)
+WriteTx(t, k, v) == /\ t \in DOMAIN txns
+                    /\ txns[t].status = ""active""
+                    /\ k \in Key
+                    /\ v \in Value
+                    /\ txns' = [txns EXCEPT ![t].writeSet[k] = v]
+                    /\ db' = db
+      "
+chattla:20b,BM014,Clock Synchronisation,networking,3,0,0,0.889,bronze,4.46,"---- MODULE ClockSync ----
+EXTENDS Naturals, Sequences, TLC
+
+CONSTANTS N, epsilon, maxDrift
+
+(* Type invariant *)
+TypeOK == clocks \in [1..N -> Nat]
+
+(* Initial state: all clocks start at 0 *)
+Init == clocks = [i \in 1..N |-> 0]
+
+(* Drift: each node's clock may increase by up to maxDrift *)
+Drift == \E i \in 1..N:
+            \E d \in 0..maxDrift:
+                clocks' = [clocks EXCEPT ![i] = @ + d]
+
+(* Synchronisation: each node updates its clock to the average of all clocks *)
+Sync == \E avg \in Nat:
+            \E i \in 1..N:
+                clocks' = [clocks EXCEPT ![i] = avg]
+            /\ avg = (SUM i \in 1..N: clocks[i]) / N
+
+(* Next state: either drift or synchronise *)
+Next == Drift \/ Sync
+
+(* Specification: system runs for one round of drift followed by synchronisation *)
+Spec == Init /\ Next
+
+(* Invariant: after one round, all clocks are within epsilon of each other *)
+SyncInvariant == \A i, j \in 1..N: Abs(clocks[i] - clocks[j]) <= epsilon
+
+(* TLC configuration *)
+CONSTANTS N, epsilon, maxDrift, TypeOK
+
+===="
+chattla:20b,BM015,Peterson's Algorithm,scheduling,2,0,0,1.0,bronze,6.53,"---- MODULE Peterson2 ----
+EXTENDS Naturals, Sequences, TLC
+
+VARIABLES flag, turn
+
+
+    flag[0] := FALSE
+  od
+
+
+
+    flag[1] := TRUE
+    turn := 0
+    await flag[0] = FALSE \/ turn = 1
+    (* critical section *)
+    flag[1] := FALSE
+  od
+
+*)
+
+(* --operator definitions
+   --  flag[2] is a sequence of 2 booleans
+   --  turn is an integer 0 or 1
+*)
+
+(* --type invariant
+   --  flag[2] is a sequence of 2 booleans
+   --  turn is an integer 0 or 1
+*)
+TypeOK == 
+  /\ flag \in Seq(BOOLEAN, 2)
+  /\ turn \in 0..1
+
+(* --initial state
+   --  flag[2] is a sequence of 2 booleans
+   --  turn is an integer 0 or 1
+*)
+Init == 
+  /\ flag = <<FALSE, FALSE>>
+  /\ turn = 0
+
+(* --next state
+   --  flag[2] is a sequence of 2 booleans
+   --  turn is an integer 0 or 1
+*)
+Next == 
+  \/ /\ flag[0] = FALSE
+     /\ flag[1] = FALSE
+     /\ turn = 0
+  \/ /\ flag[0] = FALSE
+     /\ flag[1] = FALSE
+     /\ turn = 1
+  \/ /\ flag[0] = FALSE
+     /\ flag[1] = TRUE
+     /\ turn = 1
+  \/ /\ flag[0] = TRUE
+     /\ flag[1] = FALSE
+     /\ turn = 0
+  \/ /\ flag[0] = TRUE
+     /\ flag[1] = FALSE
+     /\ turn = 1
+  \/ /\ flag[0] = FALSE
+     /\ flag[1] = TRUE
+     /\ turn = 0
+
+(* --specification
+   --  flag[2] is a sequence of 2 booleans
+   --  turn is an integer 0 or 1
+*)
+Spec == Init /\ [][Next]_<<flag, turn>>
+
+===="
+chattla:20b,BM016,Gossip Protocol,networking,3,0,0,0.444,bronze,21.9,"---- MODULE GossipProtocol ----
+EXTENDS Naturals, Sequences, TLC
+
+VARIABLES known, infected
+
+(* --algorithm GossipProtocol *)
+define
+  Init == /\ known = [i \in 1..N |-> FALSE]
+          /\ infected = [i \in 1..N |-> FALSE]
+  Next == \E i \in 1..N :
+            /\ known[i] = FALSE
+            /\ known' = [known EXCEPT ![i] = TRUE]
+            /\ infected' = [infected EXCEPT ![i] = TRUE]
+          \/ \E i \in 1..N :
+            /\ known[i] = TRUE
+            /\ known' = known
+            /\ infected' = [infected EXCEPT ![i] = TRUE]
+          \/ \E i \in 1..N :
+            /\ known[i] = TRUE
+            /\ known' = known
+            /\ infected' = infected
+          \/ \E i \in 1..N :
+            /\ known[i] = FALSE
+            /\ known' = known
+            /\ infected' = infected
+          \/ \E i \in 1..N :
+            /\ known[i] = TRUE
+            /\ known' = known
+            /\ infected' = infected
+          \/ \E i \in 1..N :
+            /\ known[i] = FALSE
+            /\ known' = known
+            /\ infected' = infected
+          \/ \E i \in 1..N :
+            /\ known[i] = TRUE
+            /\ known' = known
+            /\ infected' = infected
+          \/ \E i \in 1..N :
+            /\ known[i] = FALSE
+            /\ known' = known
+            /\ infected' = infected
+          \/ \E i \in 1..N :
+            /\ known[i] = TRUE
+            /\ known' = known
+            /\ infected' = infected
+          \/ \E i \in 1..N :
+            /\ known[i] = FALSE
+            /\ known' = known
+            /\ infected' = infected
+          \/ \E i \in 1..N :
+            /\ known[i] = TRUE
+            /\ known' = known
+            /\ infected' = infected
+          \/ \E i \in 1..N :
+            /\ known[i] = FALSE
+            /\ known' = known
+            /\ infected' = infected
+          \/ \E i \in 1..N :
+            /\ known[i] = TRUE
+            /\ known' = known
+            /\ infected' = infected
+          \/ \E i \in 1..N :
+            /\ known[i] = FALSE
+           "
+chattla:20b,BM017,Simple Allocator,storage,2,0,0,0.333,bronze,21.94,"---- MODULE MemoryAllocator ----
+EXTENDS Naturals, Sequences, TLC
+
+CONSTANTS N, Pages, Clients
+
+VARIABLE free, allocated
+
+(* --algorithm MemoryAllocator
+           /\ allocated == [c \in Clients |-> {}]
+    Allocate(c, p) == /\ p \in free
+                      /\ allocated' == [allocated EXCEPT ![c] = @ \cup {p}]
+                      /\ free' == free \ {p}
+    Release(c, p) == /\ p \in allocated[c]
+                      /\ allocated' == [allocated EXCEPT ![c] = @ \ {p}]
+                      /\ free' == free \cup {p}
+
+
+(* --operator *)
+    Init == /\ free == Pages
+           /\ allocated == [c \in Clients |-> {}]
+    Next == \/ \E c \in Clients, p \in Pages : Allocate(c, p)
+           \/ \E c \in Clients, p \in Pages : Release(c, p)
+    Spec == Init /\ [][Next]_<<free, allocated>>
+    TypeOK == /\ free \subseteq Pages
+              /\ allocated \subseteq [Clients -> SUBSET Pages]
+              /\ \A c \in Clients : allocated[c] \subseteq Pages
+              /\ \A c \in Clients : allocated[c] \subseteq Pages
+              /\ \A c \in Clients : allocated[c] \subseteq Pages
+              /\ \A c \in Clients : allocated[c] \subseteq Pages
+              /\ \A c \in Clients : allocated[c] \subseteq Pages
+              /\ \A c \in Clients : allocated[c] \subseteq Pages
+              /\ \A c \in Clients : allocated[c] \subseteq Pages
+              /\ \A c \in Clients : allocated[c] \subseteq Pages
+              /\ \A c \in Clients : allocated[c] \subseteq Pages
+              /\ \A c \in Clients : allocated[c] \subseteq Pages
+              /\ \A c \in Clients : allocated[c] \subseteq Pages
+              /\ \A c \in Clients : allocated[c] \subseteq Pages
+              /\ \A c \in Clients : allocated[c] \subseteq Pages
+              /\ \A c \in Clients : allocated[c] \subseteq Pages
+              /\ \A c \in Clients : allocated[c] \subseteq Pages
+              /\ \A c \in Clients : allocated[c] \subseteq Pages
+              /\ \A c \in Clients : allocated[c] \subseteq Pages
+ "
+chattla:20b,BM018,Publish-Subscribe Broker,networking,3,0,0,1.0,bronze,6.67,"---- MODULE Broker ----
+EXTENDS Naturals, Sequences, TLC
+
+VARIABLES subscribers, messages, nextMsgId, nextSubId
+Topic == [topic: STRING]
+Message == [msgId: Nat, topic: STRING, payload: STRING]
+SubscriberId == Nat
+PublisherId == Nat
+
+(* Helper functions *)
+IsTopic(t) == t \in DOMAIN messages
+IsSubscriber(s) == s \in DOMAIN subscribers
+
+(* Initial state *)
+Init ==
+  /\ subscribers = [t \in {} -> {}]
+  /\ messages = [t \in {} -> <<>>]
+  /\ nextMsgId = 1
+  /\ nextSubId = 1
+
+(* Register a new subscriber for a topic *)
+Register(subId, topic) ==
+  /\ IsTopic(topic)
+  /\ subscribers[topic] = subscribers[topic] \cup {subId}
+
+(* Deregister a subscriber from a topic *)
+Deregister(subId, topic) ==
+  /\ IsTopic(topic)
+  /\ subscribers[topic] = subscribers[topic] \ {subId}
+
+(* Post a new message on a topic *)
+Post(pubId, topic, payload) ==
+  /\ IsTopic(topic)
+  /\ LET msg == [msgId |-> nextMsgId, topic |-> topic, payload |-> payload]
+     IN /\ messages[topic] = Append(messages[topic], msg)
+        /\ nextMsgId' = nextMsgId + 1
+        /\ UNCHANGED <<subscribers, nextSubId>>
+
+(* Deliver messages to subscribers *)
+Deliver(subId, topic) ==
+  /\ IsTopic(topic)
+  /\ IsSubscriber(subId)
+  /\ subscribers[topic] = subscribers[topic] \cup {subId}
+  /\ UNCHANGED <<messages, nextMsgId, nextSubId>>
+
+(* Next-state relation *)
+Next ==
+  \/ \E subId \in DOMAIN subscribers, topic \in DOMAIN subscribers:
+        Register(subId, topic)
+  \/ \E subId \in DOMAIN subscribers, topic \in DOMAIN subscribers:
+        Deregister(subId, topic)
+  \/ \E pubId \in DOMAIN messages, topic \in DOMAIN messages, payload \in STRING:
+        Post(pubId, topic, payload)
+  \/ \E subId \in DOMAIN subscribers, topic \in DOMAIN subscribers:
+        Deliver(subId, topic)
+
+(* Specification *)
+Spec ==
+  Init /\ [][Next]_<<subscribers, messages, nextMsgId, nextSubId>>
+
+(* Type invariant *)
+TypeOK ==
+  /\ subscribers \in [Topic -> SUBSET SubscriberId]
+  /\ messages \in [Topic -> Seq(Message)]
+  /\ nextMsgId \in Nat
+  /\ next"
+chattla:20b,BM019,Dekker's Algorithm,scheduling,3,0,0,0.444,bronze,10.23,"---- MODULE Dekker ----
+EXTENDS Naturals, Sequences, TLC
+
+VARIABLES turn, wants
+
+(* --algorithm Dekker *)
+   VARIABLES turn, wants
+   turn \in {0,1}
+   wants \in [0..1 -> BOOLEAN]
+   Init == /\ turn \in {0,1}
+          /\ wants \in [0..1 -> BOOLEAN]
+   Next == \/ /\ wants[0] = FALSE
+           /\ wants[1] = FALSE
+           /\ turn' = 0
+           /\ wants' = [0 |-> FALSE, 1 |-> FALSE]
+        \/ /\ wants[0] = FALSE
+           /\ wants[1] = TRUE
+           /\ turn' = 1
+           /\ wants' = [0 |-> FALSE, 1 |-> TRUE]
+        \/ /\ wants[0] = TRUE
+           /\ wants[1] = FALSE
+           /\ turn' = 0
+           /\ wants' = [0 |-> TRUE, 1 |-> FALSE]
+        \/ /\ wants[0] = TRUE
+           /\ wants[1] = TRUE
+           /\ turn' = turn
+           /\ wants' = [0 |-> TRUE, 1 |-> TRUE]
+   Spec == Init /\ [][Next]_<<turn,wants>>
+   Safety == \A i \in {0,1} : \A j \in {0,1} : (i # j) => (wants[i] = FALSE \/ wants[j] = FALSE)
+   Liveness == \A i \in {0,1} : (wants[i] = TRUE) => <> (wants[i] = FALSE)
+   TypeOK == /\ turn \in {0,1}
+            /\ wants \in [0..1 -> BOOLEAN]
+   Invariant == Safety /\ Liveness
+   Spec == Init /\ [][Next]_<<turn,wants>> /\ Invariant
+   ===="
+chattla:20b,BM020,Eventually Consistent Counter,storage,3,0,0,1.0,bronze,3.08,"---- MODULE GCounter ----
+EXTENDS Naturals, Sequences, TLC
+
+CONSTANTS N, Node
+
+VARIABLES counts
+
+(* TypeOK ensures that counts is a function from Node to a function from Node to Nat *)
+TypeOK == counts \in [Node -> [Node -> Nat]]
+
+(* Init: all counts are zero *)
+Init == counts = [n \in Node |-> [m \in Node |-> 0]]
+
+(* Increment: node n increments its own slot *)
+Increment(n) == counts' = [counts EXCEPT ![n][n] = @ + 1]
+
+(* Merge: element-wise max *)
+Merge(n, m) ==
+  counts' = [counts EXCEPT ![n][k] = Max(@, counts[m][k]) : k \in Node]
+
+(* Next: either an increment or a merge *)
+Next == \E n \in Node : Increment(n) \lor \E m \in Node : Merge(n, m)
+
+(* Total count: sum over all nodes of the max over each column *)
+Total == \Sum n \in Node : \Max_{m \in Node} counts[m][n]
+
+Spec == Init /\ [][Next]_counts
+
+===="

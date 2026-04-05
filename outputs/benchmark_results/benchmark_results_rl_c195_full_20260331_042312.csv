@@ -1,0 +1,687 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,0,0.444,silver,19.47,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,1,0,0.444,silver,103.01,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES participants, votes, decision, messages, state
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,0,0,1.0,bronze,40.88,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS N
+
+VARIABLES forks, states
+
+
+    [i \in 1..N] /\ states[i] = ""thinking"" => states[i] = ""hungry"";
+    (* Philosopher i picks up forks if both are free *)
+    [i \in 1..N] /\ states[i] = ""hungry"" /\ forks[i] = 0 /\ forks[%(i, N) + 1] = 0 => forks[i] = i /\ forks[%(i, N) + 1] = i /\ states[i] = ""eating"";
+    (* Philosopher i puts down forks *)
+    [i \in 1..N] /\ states[i] = ""eating"" => forks[i] = 0 /\ forks[%(i, N) + 1] = 0 /\ states[i] = ""thinking"";
+  end
+end
+*)
+
+(* State variables *)
+
+(* Type invariants *)
+TypeOK == 
+  /\ forks \in [1..N -> 0..N]
+  /\ states \in [1..N -> {""thinking"", ""hungry"", ""eating""}]
+
+(* Initial state *)
+Init == 
+  /\ forks = [i \in 1..N |-> 0]
+  /\ states = [i \in 1..N |-> ""thinking""]
+
+(* Next-state relation *)
+Next == 
+  \E i \in 1..N : 
+    /\ states[i] = ""thinking"" /\ forks[i] = 0 /\ forks[%(i, N) + 1] = 0
+    => states' = [states EXCEPT ![i] = ""hungry""]
+    /\ forks' = forks
+  \/ /\ states[i] = ""hungry"" /\ forks[i] = 0 /\ forks[%(i, N) + 1] = 0
+    => states' = [states EXCEPT ![i] = ""eating""]
+    /\ forks' = [forks EXCEPT ![i] = i, ![%(i, N) + 1] = i]
+  \/ /\ states[i] = ""eating"" /\ forks[i] = i /\ forks[%(i, N) + 1] = i
+    => states' = [states EXCEPT ![i] = ""thinking""]
+    /\ forks' = [forks EXCEPT ![i] = 0, ![%(i, N) + 1] = 0]
+  \/ /\ states' = states /\ forks' = forks
+
+(* Specification *)
+Spec == Init /\ [][Next]_<<forks, states>>
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,0,0,0.778,bronze,66.07,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES num, flag
+
+(* --algorithm Bakery
+    \* wait until all processes with smaller numbers have exited
+    \* or if numbers equal, wait until process with smaller index has exited
+    \* (i.e., if num[j] < num[i] or (num[j] = num[i] /\ j < i))
+    \* then enter critical section
+    \* (critical section omitted)
+
+  exit(i) == \* process i exits critical section
+
+
+  Next == \* any process can choose a number, enter, or exit
+    \E i \in 1..N:
+      \E action \in {choose(i), enter(i), exit(i)}:
+        action
+*)
+
+Init == /\ num = [i \in 1..N |-> 0]
+        /\ flag = [i \in 1..N |-> FALSE]
+
+Next == \E i \in 1..N:
+          \E action \in {choose(i), enter(i), exit(i)}:
+            action
+
+Spec == Init /\ [][Next]_<<num, flag>>
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,0,0,1.0,bronze,31.03,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail, count
+
+(* TypeOK ensures that q is a sequence of length K, head and tail are integers in 0..K-1, and count is an integer in 0..K *)
+TypeOK == 
+  /\ q \in Seq(K)
+  /\ head \in 0..K-1
+  /\ tail \in 0..K-1
+  /\ count \in 0..K
+
+(* The queue is represented as a sequence of length K, with head and tail indices indicating the positions for dequeue and enqueue, respectively. *)
+Init == 
+  /\ q = [i \in 0..K-1 |-> 0]
+  /\ head = 0
+  /\ tail = 0
+  /\ count = 0
+
+(* The producer action enqueues an item when the queue is not full. *)
+Producer == 
+  /\ count < K
+  /\ q' = [q EXCEPT ![tail] = 1]
+  /\ tail' = (tail + 1) \mod K
+  /\ count' = count + 1
+  /\ head' = head
+
+(* The consumer action dequeues an item when the queue is not empty. *)
+Consumer == 
+  /\ count > 0
+  /\ q' = [q EXCEPT ![head] = 0]
+  /\ head' = (head + 1) \mod K
+  /\ count' = count - 1
+  /\ tail' = tail
+
+(* Next action is either Producer or Consumer. *)
+Next == 
+  \/ Producer
+  \/ Consumer
+
+Spec == Init /\ [][Next]_<<q, head, tail, count>> /\ TypeOK
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,1,0,0.444,silver,51.72,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,0,0,0.778,bronze,22.78,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES readers, writer_active
+
+Init == /\ readers = <<>>
+       /\ writer_active = FALSE
+
+Next == \/ /\ writer_active = FALSE
+          /\ \E r \in 1..10 : /\ r \notin readers
+              /\ readers' = Append(readers, r)
+          \/ /\ writer_active = FALSE
+              /\ \E r \in readers : /\ r \in readers
+              /\ writer_active' = TRUE
+          \/ /\ writer_active = TRUE
+              /\ \E r \in readers : /\ r \in readers
+              /\ writer_active' = FALSE
+          \/ /\ writer_active = TRUE
+              /\ \E r \in readers : /\ r \in readers
+              /\ writer_active' = FALSE
+          \/ /\ writer_active = FALSE
+              /\ \E r \in readers : /\ r \in readers
+              /\ writer_active' = FALSE
+
+Spec == Init /\ [][Next]_<<readers, writer_active>>
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,1,0,0.444,silver,45.03,"---- MODULE ChandyLamportSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, channel, marker, recorded, channelState, markerReceived, snapshot, snapshotChannelState, snapshotMarkerReceived
+
+===="
+chattla:20b,BM009,Token Ring,networking,2,1,1,0.667,gold,2.14,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLE token
+
+Init == /\ token \in 1..N
+
+Next == /\ token' \in 1..N
+        /\ token' = IF token = N THEN 1 ELSE token + 1
+
+Spec == Init /\ [][Next]_<<token>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,0.778,silver,4.97,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, Values, NULL
+
+VARIABLES store
+
+Init == store = [k \in Keys |-> NULL]
+
+Next == \/ /\ \E k \in Keys : \E v \in Values : /\ store' = [store EXCEPT ![k] = v]
+      \/ /\ \E k \in Keys : /\ store' = [store EXCEPT ![k] = NULL]
+
+Spec == Init /\ [][Next]_<<store>>
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,1,0,0.444,silver,18.58,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES acceptors, proposers, promises, accepted, chosen, chosenBy
+
+===="
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,0,0,0.667,bronze,75.02,"---- MODULE FileTransfer ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS MAX_RETRIES, CHUNK_SIZE, FILE_SIZE, CHANNEL_CAPACITY
+VARIABLES channel, retransmitCount, sentChunks
+
+    /\ fileChunks = [i \in 1..FILE_SIZE /-> i]
+    /\ sentChunks = <<>>
+    /\ retransmitCount = <<>>
+    /\ channel = <<>>
+
+Next ==
+    /\ channel = Append(channel, [chunk \in 1..FILE_SIZE |-> chunk])
+    /\ sentChunks' = Append(sentChunks, [chunk \in 1..FILE_SIZE |-> chunk])
+    /\ retransmitCount' = Append(retransmitCount, 0)
+    /\ channel' = <<>>
+    /\ UNCHANGED <<fileChunks, sentChunks, retransmitCount>>
+
+Retransmit ==
+    /\ channel' = Append(channel, [chunk \in 1..FILE_SIZE |-> chunk])
+    /\ sentChunks' = sentChunks
+    /\ retransmitCount' = Append(retransmitCount, 1)
+    /\ channel' = <<>>
+    /\ UNCHANGED <<fileChunks, sentChunks, retransmitCount>>
+
+Spec ==
+    Init /\ [][Next]_<<fileChunks, sentChunks, retransmitCount, channel>>
+
+===="
+chattla:20b,BM013,Transaction Isolation (Snapshot Isolation),transaction,4,0,0,1.0,bronze,218.18,"---- MODULE SnapshotIsolation ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS Keys, Txns, Values
+
+VARIABLES db, txns, txnState, txnReadSet, txnWriteSet, txnWriteVals, t
+TxnState == {""active"", ""committed"", ""aborted""}
+
+\* The initial state: empty database, no active transactions
+Init == /\ db = <<>>
+       /\ txns = {}
+       /\ txnState = [t \in Txns |-> ""active""]
+       /\ txnReadSet = [t \in Txns |-> {}]
+       /\ txnWriteSet = [t \in Txns |-> {}]
+       /\ txnWriteVals = [t \in Txns |-> <<>>]
+
+\* The next-state relation
+Next == 
+  \E t \in Txns :
+    /\ txnState[t] = ""active""
+    /\ \E op \in {""begin"", ""read"", ""write"", ""commit"", ""abort""} :
+      /\ op = ""begin"" /\ txnState[t] = ""active"" /\ txnReadSet[t] = {} /\ txnWriteSet[t] = {} /\ txnWriteVals[t] = <<>>
+      \/ op = ""read"" /\ \E k \in Keys :
+          /\ k \in Keys
+          /\ txnReadSet[t] = txnReadSet[t] \cup {k}
+          /\ \E v \in Values : db[k] = v
+      \/ op = ""write"" /\ \E k \in Keys : \E v \in Values :
+          /\ k \in Keys
+          /\ v \in Values
+          /\ txnWriteSet[t] = txnWriteSet[t] \cup {k}
+          /\ txnWriteVals[t] = [txnWriteVals[t] \cup {k \in Values : v}]
+      \/ op = ""commit"" /\ \E t' \in Txns :
+          /\ t' \in Txns
+          /\ txnState[t'] = ""active""
+          /\ txnWriteSet[t'] \cap txnWriteSet[t] = {}
+          /\ txnState[t] = ""committed""
+          /\ db' = [db \cup txnWriteVals[t]]
+      \/ op = ""abort"" /\ txnState[t] = ""aborted""
+
+\* The specification
+Spec == Init /\ [][Next]_<<db, txns, txnState, txnReadSet, txnWriteSet, txnWriteVals>>
+
+\* Type invariants
+TypeOK == /\ db \in [Keys -> Values]
+          /\ txns \subseteq Txns
+          /\ txnState \in [Txns -> TxnState]
+          /\ txnReadSet \in [Txns -> [Keys -> BOOLEAN]]
+          /\ txnWriteSet \in [Txns -> [Keys -> BOOLEAN]]
+          /\ txnWriteVals \in [Txns -> [Keys -> Values]]
+
+===="
+chattla:20b,BM014,Clock Synchronisation,networking,3,0,0,0.778,bronze,202.15,"---- MODULE ClockSync ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES clocks, offsets, epsilon
+
+Init == /\ clocks = [i \in 1..N |-> 0]
+        /\ offsets = [i \in 1..N |-> 0]
+        /\ epsilon \in Nat
+
+Next == /\ \E i \in 1..N :
+          /\ clocks' = [clocks EXCEPT ![i] = clocks[i] + offsets[i]]
+          /\ offsets' = [offsets EXCEPT ![i] = offsets[i] + (Avg(clocks) - clocks[i])]
+        /\ \A j \in 1..N : j # i => clocks'[j] = clocks[j]
+        /\ \A j \in 1..N : j # i => offsets'[j] = offsets[j]
+        /\ epsilon' = epsilon
+
+Avg(c) == (1 \div N) * Sum(i \in 1..N : c[i])
+
+Spec == Init /\ [][Next]_<<clocks, offsets, epsilon>>
+
+===="
+chattla:20b,BM015,Peterson's Algorithm,scheduling,2,1,1,0.778,gold,6.53,"---- MODULE Peterson2 ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES flag, turn
+
+Init == /\ flag = [i \in 1..2 |-> FALSE]
+        /\ turn = 1
+
+Next == \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ turn' = turn
+          /\ flag' = flag
+        \/ /\ flag[1] = TRUE
+          /\ flag[2] = FALSE
+          /\ turn' = 2
+          /\ flag' = [flag EXCEPT ![1] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = TRUE
+          /\ turn' = 1
+          /\ flag' = [flag EXCEPT ![2] = FALSE]
+        \/ /\ flag[1] = TRUE
+          /\ flag[2] = TRUE
+          /\ turn' = turn
+          /\ flag' = flag
+
+Spec == Init /\ [][Next]_<<flag, turn>>
+
+===="
+chattla:20b,BM016,Gossip Protocol,networking,3,1,0,0.778,silver,4.26,"---- MODULE GossipProtocol ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES known, infected
+
+Init == /\ known = <<>> 
+        /\ infected = <<>> 
+
+Next == /\ known' = known
+        /\ infected' = infected \cup known
+
+Spec == Init /\ [][Next]_<<known, infected>> 
+
+===="
+chattla:20b,BM017,Simple Allocator,storage,2,1,0,0.889,silver,14.98,"---- MODULE MemoryAllocator ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, Pages, Clients
+
+VARIABLE free, allocated
+
+Init == /\ free = Pages
+        /\ allocated = [c \in Clients |-> {}]
+
+Next == /\ \E c \in Clients:
+          /\ c \in free
+          /\ free' = free \ {c}
+          /\ allocated' = [allocated EXCEPT ![c] = @ \cup {c}]
+        \/ \E c \in Clients:
+          /\ c \in allocated
+          /\ free' = free \cup {c}
+          /\ allocated' = [allocated EXCEPT ![c] = @ \ {c}]
+
+TypeOK == /\ free \subseteq Pages
+          /\ \A c \in Clients: allocated[c] \subseteq Pages
+          /\ \A c \in Clients: allocated[c] \subseteq free
+          /\ \A c1, c2 \in Clients: c1 # c2 => allocated[c1] # allocated[c2]
+
+Spec == Init /\ [][Next]_<<free, allocated>>
+
+===="
+chattla:20b,BM018,Publish-Subscribe Broker,networking,3,1,0,0.444,silver,7.71,"---- MODULE Broker ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES subscribers, messages, nextMsgId, nextSubId
+
+===="
+chattla:20b,BM019,Dekker's Algorithm,scheduling,3,1,0,1.0,silver,5.88,"---- MODULE Dekker ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES turn, wants
+
+Init == /\ turn \in {0, 1}
+        /\ wants \in {0, 1}^2
+        /\ wants = [i \in {0, 1} |-> 0]
+
+Next == \/ /\ turn' = 1 - turn
+          /\ wants' = [wants EXCEPT ![turn] = 1]
+        \/ /\ turn' = turn
+          /\ wants' = [wants EXCEPT ![1 - turn] = 0]
+
+Spec == Init /\ [][Next]_<<turn, wants>>
+
+TypeOK == /\ turn \in {0, 1}
+          /\ wants \in {0, 1}^2
+
+===="
+chattla:20b,BM020,Eventually Consistent Counter,storage,3,1,0,0.667,silver,150.3,"---- MODULE GCounter ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS Node
+
+VARIABLES counts
+
+Init == /\ counts = [n \in Node |-> [m \in Node |-> 0]]
+Next == /\ \E n \in Node :
+          /\ counts' = [counts EXCEPT ![n] = [m \in Node |-> counts[n][m] + 1]]
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = counts[n][m] + 1
+          /\ \A m \in Node : m \in Node
+          /\ \A m \in Node : counts'[n][m] = co"

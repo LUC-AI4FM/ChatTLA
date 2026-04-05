@@ -1,0 +1,500 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,0,0.444,silver,7.92,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, turn, flag
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,1,0,0.444,silver,55.27,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES participants, votes, commitDecided, abortDecided
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,0,0,1.0,bronze,43.19,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES forks, states
+
+(* Constants *)
+N == 5
+
+(* Helper functions *)
+LEFT(i) == IF i = 1 THEN N ELSE i - 1
+RIGHT(i) == IF i = N THEN 1 ELSE i + 1
+
+(* Initial state *)
+Init == /\ forks = [i \in 1..N |-> 0]
+        /\ states = [i \in 1..N |-> ""thinking""]
+
+(* Next-state relation *)
+Next == \/ (* Philosopher i picks up left fork *)
+          /\ i \in 1..N
+          /\ forks[i] = 0
+          /\ forks' = [forks EXCEPT ![i] = 1]
+          /\ states' = [states EXCEPT ![i] = ""hungry""]
+       \/ (* Philosopher i picks up right fork *)
+          /\ i \in 1..N
+          /\ forks[i] = 0
+          /\ forks' = [forks EXCEPT ![i] = 1]
+          /\ states' = [states EXCEPT ![i] = ""hungry""]
+       \/ (* Philosopher i starts eating *)
+          /\ i \in 1..N
+          /\ forks[i] = 1
+          /\ forks[LEFT(i)] = 1
+          /\ states[i] = ""hungry""
+          /\ forks' = forks
+          /\ states' = [states EXCEPT ![i] = ""eating""]
+       \/ (* Philosopher i puts down left fork *)
+          /\ i \in 1..N
+          /\ forks[i] = 1
+          /\ forks' = [forks EXCEPT ![i] = 0]
+          /\ states' = states
+       \/ (* Philosopher i puts down right fork *)
+          /\ i \in 1..N
+          /\ forks[RIGHT(i)] = 1
+          /\ forks' = [forks EXCEPT ![RIGHT(i)] = 0]
+          /\ states' = states
+       \/ (* Philosopher i goes back to thinking *)
+          /\ i \in 1..N
+          /\ states[i] = ""eating""
+          /\ forks' = forks
+          /\ states' = [states EXCEPT ![i] = ""thinking""]
+
+(* Specification *)
+Spec == Init /\ [][Next]_<<forks, states>>
+
+(* Type invariant *)
+TypeOK == /\ forks \in [1..N -> 0..1]
+          /\ states \in [1..N -> {""thinking"", ""hungry"", ""eating""}]
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,0,0,0.778,bronze,197.85,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+
+VARIABLES num, flag
+
+Init == /\ num = [i \in 1..N |-> 0]
+        /\ flag = [i \in 1..N |-> FALSE]
+
+Next == \E i \in 1..N :
+          /\ flag[i] = FALSE
+          /\ flag' = [flag EXCEPT ![i] = TRUE]
+          /\ num' = [num EXCEPT ![i] = 1 + Max({num[j] : j \in 1..N})]
+          /\ flag' = [flag EXCEPT ![i] = FALSE]
+
+Spec == Init /\ [][Next]_<<num, flag>>
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,1,0.778,gold,184.22,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES queue, full, empty
+
+Init == /\ queue = <<>>
+        /\ full = FALSE
+        /\ empty = TRUE
+
+Next == 
+  \/ /\ full = FALSE
+     /\ queue' = Append(queue, 1)
+     /\ empty' = FALSE
+     /\ full' = (Len(queue') = K)
+  \/ /\ empty = FALSE
+     /\ queue' = Tail(queue)
+     /\ full' = FALSE
+     /\ empty' = (Len(queue') = 0)
+
+Spec == Init /\ [][Next]_<<queue, full, empty>>
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,0,0,0.778,bronze,19.29,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+Init == /\ currentTerm = 0
+        /\ votedFor = NULL
+        /\ state = ""Follower""
+
+Next == \/ /\ state = ""Follower""
+        /\ currentTerm' = currentTerm
+        /\ votedFor' = votedFor
+        /\ state' = ""Follower""
+        \/ /\ state = ""Candidate""
+        /\ currentTerm' = currentTerm + 1
+        /\ votedFor' = NULL
+        /\ state' = ""Candidate""
+        \/ /\ state = ""Leader""
+        /\ currentTerm' = currentTerm
+        /\ votedFor' = votedFor
+        /\ state' = ""Leader""
+
+Spec == Init /\ [][Next]_<<currentTerm, votedFor, state>>
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,1,0,0.667,silver,54.77,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS Readers
+
+VARIABLES readers, writer_active
+
+Init == /\ readers = <<>>
+        /\ writer_active = FALSE
+
+Next == \/ /\ writer_active = FALSE
+          /\ \E r \in Readers : /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+         "
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,1,0,0.444,silver,89.71,"---- MODULE DistributedSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, channel, markerSent, markerReceived, snapshotTaken
+===="
+chattla:20b,BM009,Token Ring,networking,2,1,1,0.667,gold,2.24,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLE token
+
+Init == /\ token \in 1..N
+
+Next == /\ token' \in 1..N
+        /\ token' = IF token = N THEN 1 ELSE token + 1
+
+Spec == Init /\ [][Next]_<<token>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,0.778,silver,9.31,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, Values
+
+VARIABLES store
+
+Init == /\ store \in [Keys -> Values]
+Next == /\ store' \in [Keys -> Values]
+      /\ \E k \in Keys : \E v \in Values : store' = [store EXCEPT ![k] = v]
+
+Spec == Init /\ [][Next]_<<store>>
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,1,0,0.444,silver,42.33,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES acceptors, proposers, promises, accepted, chosen, chosenValue, chosenBallot
+
+===="
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,0,0,0.667,bronze,22.43,"---- MODULE Sender ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS MAX_RETRIES, CHUNK_SIZE, FILE_SIZE
+VARIABLES retransmitCount, sentChunks
+
+    /\ file \in Seq
+    /\ Len(file) = FILE_SIZE
+    /\ chunks \in Seq
+    /\ Len(chunks) = Ceiling(FILE_SIZE \div CHUNK_SIZE)
+    /\ sentChunks \in Seq
+    /\ Len(sentChunks) = 0
+    /\ retransmitCount \in Seq
+    /\ Len(retransmitCount) = 0
+
+Next ==
+    /\ sentChunks' = Append(sentChunks, lastChunk)
+    /\ retransmitCount' = Append(retransmitCount, 0)
+    /\ UNCHANGED <<file, chunks>>
+
+Spec ==
+    Init /\ [][Next]_<<file, chunks, sentChunks, retransmitCount>>
+
+===="

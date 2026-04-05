@@ -1,0 +1,702 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,0,0.444,silver,10.35,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,1,0,0.444,silver,205.73,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES participants, votes, commitDecided, abortDecided, commitSent, abortSent
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,1,0,1.0,silver,47.71,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES forks, states
+
+(* Constants *)
+N == 5
+
+(* Helper functions *)
+LEFT(i) == IF i = 1 THEN N ELSE i - 1
+RIGHT(i) == IF i = N THEN 1 ELSE i + 1
+
+(* State predicates *)
+IsThinking(i) == states[i] = ""thinking""
+IsHungry(i) == states[i] = ""hungry""
+IsEating(i) == states[i] = ""eating""
+
+(* Initial state *)
+Init == /\ forks = [i \in 1..N |-> ""free""]
+        /\ states = [i \in 1..N |-> ""thinking""]
+
+(* Next-state relation *)
+Next == \/ \E i \in 1..N :
+          /\ IsThinking(i)
+          /\ states' = [states EXCEPT ![i] = ""hungry""]
+        \/ \E i \in 1..N :
+          /\ IsHungry(i)
+          /\ forks[LEFT(i)] = ""free""
+          /\ forks[RIGHT(i)] = ""free""
+          /\ forks' = [forks EXCEPT ![LEFT(i)] = i, ![RIGHT(i)] = i]
+          /\ states' = [states EXCEPT ![i] = ""eating""]
+        \/ \E i \in 1..N :
+          /\ IsEating(i)
+          /\ forks[LEFT(i)] = i
+          /\ forks[RIGHT(i)] = i
+          /\ forks' = [forks EXCEPT ![LEFT(i)] = ""free"", ![RIGHT(i)] = ""free""]
+          /\ states' = [states EXCEPT ![i] = ""thinking""]
+        /\ UNCHANGED <<forks, states>>
+
+(* Invariant: No two philosophers share a fork *)
+TypeOK == /\ forks \in [1..N -> {""free""} \cup 1..N]
+          /\ states \in [1..N -> {""thinking"", ""hungry"", ""eating""}]
+
+Spec == Init /\ [][Next]_<<forks, states>>
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,0,0,0.444,bronze,126.39,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+
+VARIABLES num, flag
+
+
+actions
+  Init == /\ num = [i \in 1..N |-> 0]
+          /\ flag = [i \in 1..N |-> FALSE]
+  Next == \E i \in 1..N : 
+          /\ flag[i] = TRUE
+          /\ num[i] = 1 + Max({num[j] : j \in 1..N})
+          /\ flag[i] = FALSE
+          /\ \A j \in 1..N : j # i => 
+              /\ flag[j] = FALSE
+              \/ \E k \in 1..N : k # j /\ flag[k] = TRUE
+                 /\ num[k] < num[j]
+                 \/ /\ num[k] = num[j]
+                 /\ k < j
+          /\ \A j \in 1..N : j # i => 
+              /\ flag[j] = FALSE
+              \/ \E k \in 1..N : k # j /\ flag[k] = TRUE
+                 /\ num[k] < num[j]
+                 \/ /\ num[k] = num[j]
+                 /\ k < j
+          /\ \A j \in 1..N : j # i => 
+              /\ flag[j] = FALSE
+              \/ \E k \in 1..N : k # j /\ flag[k] = TRUE
+                 /\ num[k] < num[j]
+                 \/ /\ num[k] = num[j]
+                 /\ k < j
+          /\ \A j \in 1..N : j # i => 
+              /\ flag[j] = FALSE
+              \/ \E k \in 1..N : k # j /\ flag[k] = TRUE
+                 /\ num[k] < num[j]
+                 \/ /\ num[k] = num[j]
+                 /\ k < j
+          /\ \A j \in 1..N : j # i => 
+              /\ flag[j] = FALSE
+              \/ \E k \in 1..N : k # j /\ flag[k] = TRUE
+                 /\ num[k] < num[j]
+                 \/ /\ num[k] = num[j]
+                 /\ k < j
+          /\ \A j \in 1..N : j # i => 
+              /\ flag[j] = FALSE
+              \/ \E k \in 1..N : k # j /\ flag[k] = TRUE
+                 /\ num[k] < num[j]
+                 \/ /\ num[k] = num[j]
+                 /\ k < j
+          /\ \A j \in 1..N : j # i => 
+              /\ flag[j] = FALSE
+              \/ \E k \in 1..N : k # j /\ flag[k] = TRUE
+                 /\ num[k] < num[j]
+                 \/ /\ num[k] = num[j]
+                 /\ k < j
+          /\ \A j \in 1..N : j # i => 
+              /\ flag[j] = FALSE
+              \/ \E k \in 1..N : k # j /\ flag[k] = TRUE
+                 /\ num[k] < num[j]
+                 \/ /\ num[k] = num[j]
+                 /\ k < j
+          /\ \A j \in 1..N : j # i => 
+              /\ flag[j] = FALSE
+              \/ \E k \in 1..N : k # j /\ flag[k] = TRUE
+                 /\ num[k] < num[j]
+                 \/ /\ num[k] = num[j]
+                 /\ k < j
+          /\ \A j \in 1..N : j # i => 
+              /\ flag[j] = FALSE
+              \/ \E k \in 1..N : k # j /\ flag[k] = TRUE
+                 /\ num[k] < num[j]
+                 \/ /\ num[k] = num[j]
+                 /\ k < j
+          /\ \A j \in 1..N : j # i => 
+              /\ flag[j] = FALSE
+              \/ \E k \in 1..N : k # j /\ flag[k] = TRUE
+                 /\ num[k] < num[j]
+                 \/ /\ num[k] = num[j]
+                 /\ k < j
+          /\ \A j \in 1..N : j # i => 
+              /\ flag[j] = FALSE
+              \/ \E k \in 1..N : k # j /\ flag[k] = TRUE
+                 /\ num[k] < num[j]
+                 \/ /\ num[k] = num[j]
+                 /\ k < j
+          /\ \A j \in 1..N : j # i => 
+              /\ flag[j] = FALSE
+              \/ \E k \in 1..N : k # j /\ flag[k] = TRUE
+                 /\ num[k] < num[j]
+                 \/ /\ num[k] = num[j]
+                 /\ k < j
+          /\ \A j \in 1..N : j # i => 
+              /\ flag[j] = FALSE
+              \/ \E k \in 1..N : k # j /\ flag[k] = TRUE
+                 /\ num[k] < num[j]
+                 \/ /\ num[k] = num[j]
+                 /\ k < j
+          /\ \A j \in 1..N : j # i => 
+              /\ flag[j] = FALSE
+              \/ \E k \in 1..N : k # j /\ flag[k] = TRUE
+                 /\ num[k] < num[j]
+                 \/ /\ num[k] = num[j]
+                 /\ k < j
+          /\ \A j \in 1..N : j # i => 
+              /\ flag[j] = FALSE
+              \/ \E k \in 1..N : k # j /\ flag[k] = TRUE
+                 /\ num[k] < num[j]
+                 \/ /\ num[k] = num[j]
+                 /\ k < j
+          /\ \A j \in 1..N : j # i => 
+              /\ flag[j] = FALSE
+              \/ \E k \in 1..N : k # j /\ flag[k] = TRUE
+                 /\ num[k] < num[j]
+                 \/ /\ num[k] = num[j]
+                 /\ k < j
+          /\ \A j \in 1..N : j # i => 
+              /\ flag[j] = FALSE
+              \/ \E k \in 1..N : k # j /\ flag[k] = TRUE
+                 /\ num[k] < num[j]
+                 \/ /\ num[k] = num[j]
+                 /\ k < j
+          /\ \A j \in 1..N : j # i => 
+              /\ flag[j] = FALSE
+              \/ \E k \in 1..N : k # j /\ flag[k] = TRUE
+                 /\ num[k] < num[j]
+                 \/ /\ num[k] = num[j]
+                 /\ k < j
+          /\ \A j \in 1..N : j # i => 
+              /\ flag[j] = FALSE
+              \/ \E k \in 1..N : k # j /\ flag[k] = TRUE
+                 /\ num[k] < num[j]
+                 \/ /\ num[k] = num[j]
+                 /\ k < j
+          /\ \A j \in 1..N : j # i => 
+              /\ flag[j] = FALSE
+              \/ \E k \in 1..N : k # j /\ flag[k] = TRUE
+                 /\ num[k] < num[j]
+                 \/ /\ num[k] = num[j]
+                 /\ k < j
+          /\ \A j \in 1..N : j # i => 
+              /\ flag[j] = FALSE
+              \/ \E k \in 1..N : k # j /\ flag[k] = TRUE
+                 /\ num[k] < num[j]
+                 \/ /\ num[k] = num[j]
+                 /\ k < j
+          /\ \A j \in 1..N : j # i => 
+              /\ flag[j] = FALSE
+              \/ \E k \in 1..N : k # j /\ flag[k] = TRUE
+                 /\ num[k] < num[j]
+                 \/ /\ num[k] = num[j]
+                 /\ k < j
+          /\ \A j \in 1..N : j # i => 
+              /\ flag[j] = FALSE
+          /\ \A j \in 1..N : j # i => 
+              /\ flag[j] = FALSE
+          /\ \A j \in 1..N : j # i => 
+              /\ flag[j] = FALSE
+          /\ \A j \in 1..N : j # i => 
+              /\ flag[j] = FALSE
+          /\ \A j \in 1..N : j # i => 
+              /\ flag[j] = FALSE
+          /\ \A j \in 1..N : j # i => 
+              /\ flag[j] = FALSE
+          /\ \A j \in 1..N : j # i => 
+              /\ flag[j] = FALSE
+          /\ \A j \in 1..N : j # i => 
+              /\ flag[j] = FALSE
+          /\ \A j \in 1..N : j # i => 
+              /\ flag[j] = FALSE
+          /\ \A j \in 1..N : j # i => 
+              /\ flag[j] = FALSE
+          /\ \A j \in 1..N : j # i => 
+              /\ flag[j] = FALSE
+          /\ \A j \in 1..N : j # i => 
+              /\ flag[j] = FALSE
+          /\ \A j \in 1..N : j # i => 
+              /\ flag[j] = FALSE
+          /\ \A j \in 1..N : j # i => 
+              /\ flag[j] = FALSE
+          /\ \A j \in 1..N : j # i => 
+              /\ flag[j] = FALSE
+          /\ \A j \in 1..N : j # i => 
+              /\ flag[j] = FALSE
+          /\ \A j \in 1..N : j # i => 
+              /\ flag[j] = FALSE
+          /\ \A j \in 1..N : j # i => 
+              /\ flag[j] = FALSE
+          /\ \A j \in 1..N : j # i => 
+              /\ flag[j] = FALSE
+          /\ \A j \in 1..N : j # i => 
+              /\ flag[j] = FALSE
+          /\ \A j \in 1..N : j # i => 
+              /\ flag[j] = FALSE
+          /\ \A j \in 1..N : j # i => 
+              /\ flag[j] = FALSE
+          /\ \A j \in 1..N : j # i => 
+              /\ flag[j] = FALSE
+          /\ \A j \in 1..N : j # i => 
+              /\ flag[j] = FALSE
+          /\ \A j \in 1..N : j # i => 
+              /\ flag[j] = FALSE
+          /\ \A j \in 1..N : j # i => 
+              /\ flag[j] = FALSE
+          /\ \A j \in 1..N : j # i => 
+              /\ flag[j] = FALSE
+          /\ \A j \in 1..N : j # i => 
+              /\ flag[j] = FALSE
+          /\ \A j \in 1..N : j # i => 
+              /\ flag[j] = FALSE
+          /\ \A j \in 1..N : j # i => 
+              /\ flag[j] = FALSE
+          /\ \A j \in 1..N : j # i => 
+              /\ flag[j] = FALSE
+          /\ \A j \in 1..N : j # i => 
+              /\ flag[j] = FALSE
+          /\ \A j \in 1..N : j # i => 
+      "
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,1,0.778,gold,6.02,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail, size
+
+Init == /\ q = <<>>
+        /\ head = 1
+        /\ tail = 1
+        /\ size = 0
+
+Next == 
+  \/ /\ size < K
+     /\ head' = head
+        /\ tail' = (tail % K) + 1
+        /\ size' = size + 1
+        /\ q' = Append(q, head)
+  \/ /\ size > 0
+     /\ head' = (head % K) + 1
+        /\ tail' = tail
+        /\ size' = size - 1
+        /\ q' = Tail(q)
+
+Spec == Init /\ [][Next]_<<q, head, tail, size>>
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,1,1,0.778,gold,73.98,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+Init == /\ currentTerm = 0
+        /\ votedFor = {}
+        /\ state = {}
+
+Next == /\ currentTerm' = currentTerm
+        /\ votedFor' = votedFor
+        /\ state' = state
+
+Spec == Init /\ [][Next]_<<currentTerm, votedFor, state>>
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,1,0,0.778,silver,20.33,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES readers, writer_active
+
+Init == /\ readers = <<>>
+       /\ writer_active = FALSE
+
+Next == \/ /\ writer_active = FALSE
+          /\ \E r \in 1..10 : /\ ~(r \in readers)
+              /\ readers' = Append(readers, r)
+          /\ writer_active' = FALSE
+       \/ /\ writer_active = FALSE
+          /\ \E r \in readers : /\ ~(r \in readers')
+              /\ readers' = Tail(readers)
+          /\ writer_active' = FALSE
+       \/ /\ writer_active = FALSE
+          /\ \E r \in readers : /\ ~(r \in readers')
+              /\ readers' = Tail(readers)
+          /\ writer_active' = TRUE
+       \/ /\ writer_active = TRUE
+          /\ \E r \in readers : /\ ~(r \in readers')
+              /\ readers' = Tail(readers)
+          /\ writer_active' = FALSE
+
+Spec == Init /\ [][Next]_<<readers, writer_active>>
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,1,0,0.444,silver,100.41,"---- MODULE DistributedSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, channel, markerSent, markerReceived, snapshotTaken
+===="
+chattla:20b,BM009,Token Ring,networking,2,1,1,0.667,gold,2.36,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLE token
+
+Init == /\ token \in 1..N
+
+Next == /\ token' \in 1..N
+        /\ token' = IF token = N THEN 1 ELSE token + 1
+
+Spec == Init /\ [][Next]_<<token>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,0.778,silver,17.54,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, Values
+
+VARIABLES store
+
+Init == /\ store \in [Keys -> Values]
+Next == /\ store' \in [Keys -> Values]
+      /\ \E k \in Keys : \E v \in Values : store' = [store EXCEPT ![k] = v]
+
+Spec == Init /\ [][Next]_<<store>>
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,1,0,0.444,silver,29.75,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES acceptors, proposers, promises, accepted, chosen, chosenValue, chosenBallot
+
+===="
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,1,0,0.444,silver,213.88,"---- MODULE FileTransfer ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES file, chunkSize, maxRetries, retransmitCount, sentChunks, receivedChunks, channel, ackedChunks, lostChunks
+
+===="
+chattla:20b,BM013,Transaction Isolation (Snapshot Isolation),transaction,4,1,0,0.889,silver,243.8,"---- MODULE SnapshotIsolation ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES db, txns, snapshot, writeSet, commitSet, abortSet, nextTxId
+CONSTANTS Keys, Values
+
+\* Helper definitions
+\* The set of all transaction IDs
+TxIds == {1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+
+\* The set of all possible transaction states
+TxStates == {""begin"", ""commit"", ""abort""}
+
+\* The type invariant
+TypeOK ==
+  /\ db \in [Keys -> Values]
+  /\ txns \in [TxIds -> TxStates]
+  /\ snapshot \in [TxIds -> [Keys -> Values]]
+  /\ writeSet \in [TxIds -> [Keys -> Values]]
+  /\ commitSet \in [TxIds -> [Keys -> Values]]
+  /\ abortSet \in [TxIds -> [Keys -> Values]]
+  /\ nextTxId \in Int
+  /\ nextTxId > 0
+  /\ nextTxId <= 10
+  /\ \A tx \in TxIds : tx \in Keys
+
+\* The initial state
+Init ==
+  /\ db \in [Keys -> Values]
+  /\ txns \in [TxIds -> TxStates]
+  /\ snapshot \in [TxIds -> [Keys -> Values]]
+  /\ writeSet \in [TxIds -> [Keys -> Values]]
+  /\ commitSet \in [TxIds -> [Keys -> Values]]
+  /\ abortSet \in [TxIds -> [Keys -> Values]]
+  /\ nextTxId \in Int
+  /\ nextTxId > 0
+  /\ nextTxId <= 10
+  /\ \A tx \in TxIds : tx \in Keys
+
+\* The next-state relation
+Next ==
+  \/ \E tx \in TxIds :
+       /\ txns[tx] = ""begin""
+       /\ txns' = [txns EXCEPT ![tx] = ""commit""]
+       /\ snapshot' = [snapshot EXCEPT ![tx] = db]
+       /\ writeSet' = [writeSet EXCEPT ![tx] = [k \in Keys |-> db[k]]]
+       /\ commitSet' = [commitSet EXCEPT ![tx] = [k \in Keys |-> db[k]]]
+       /\ abortSet' = [abortSet EXCEPT ![tx] = [k \in Keys |-> db[k]]]
+       /\ nextTxId' = nextTxId
+  \/ \E tx \in TxIds :
+       /\ txns[tx] = ""commit""
+       /\ txns' = [txns EXCEPT ![tx] = ""abort""]
+       /\ snapshot' = [snapshot EXCEPT ![tx] = db]
+       /\ writeSet' = [writeSet EXCEPT ![tx] = [k \in Keys |-> db[k]]]
+       /\ commitSet' = [commitSet EXCEPT ![tx] = [k \in Keys |-> db[k]]]
+       /\ abortSet' = [abortSet EXCEPT ![tx] = [k \in Keys |-> db[k]]]
+       /\ nextTxId' = nextTxId
+  \/ \E tx \in TxIds :
+       /\ txns[tx] = ""abort""
+       /\ txns' = [txns EXCEPT ![tx] = ""abort""]
+       /\ snapshot' = [snapshot EXCEPT ![tx] = db]
+       /\ writeSet' = [writeSet EXCEPT ![tx] = [k \in Keys |-> db[k]]]
+       /\ commitSet' = [commitSet EXCEPT ![tx] = [k \in Keys |-> db[k]]]
+       /\ abortSet' = [abortSet EXCEPT ![tx] = [k \in Keys |-> db[k]]]
+       /\ nextTxId' = nextTxId
+  \/ \E tx \in TxIds :
+       /\ txns[tx] = ""begin""
+       /\ txns' = [txns EXCEPT ![tx] = ""commit""]
+       /\ snapshot' = [snapshot EXCEPT ![tx] = db]
+       /\ writeSet' = [writeSet EXCEPT ![tx] = [k \in Keys |-> db[k]]]
+       /\ commitSet' = [commitSet EXCEPT ![tx] = [k \in Keys |-> db[k]]]
+       /\ abortSet' = [abortSet EXCEPT ![tx] = [k \in Keys |-> db[k]]]
+       /\ nextTxId' = nextTxId
+  \/ \E tx \in TxIds :
+       /\ txns[tx] = ""commit""
+       /\ txns' = [txns EXCEPT ![tx] = ""abort""]
+       /\ snapshot' = [snapshot EXCEPT ![tx] = db]
+       /\ writeSet' = [writeSet EXCEPT ![tx] = [k \in Keys |-> db[k]]]
+       /\ commitSet' = [commitSet EXCEPT ![tx] = [k \in Keys |-> db[k]]]
+       /\ abortSet' = [abortSet EXCEPT ![tx] = [k \in Keys |-> db[k]]]
+       /\ nextTxId' = nextTxId
+  \/ \E tx \in TxIds :
+       /\ txns[tx] = ""abort""
+       /\ txns' = [txns EXCEPT ![tx] = ""abort""]
+       /\ snapshot' = [snapshot EXCEPT ![tx] = db]
+       /\ writeSet' = [writeSet EXCEPT ![tx] = [k \in Keys |-> db[k]]]
+       /\ commitSet' = [commitSet EXCEPT ![tx] = [k \in Keys |-> db[k]]]
+       /\ abortSet' = [abortSet EXCEPT ![tx] = [k \in Keys |-> db[k]]]
+       /\ nextTxId' = nextTxId
+  \/ \E tx \in TxIds :
+       /\ txns[tx] = ""begin""
+       /\ txns' = [txns EXCEPT ![tx] = ""commit""]
+       /\ snapshot' = [snapshot EXCEPT ![tx] = db]
+       /\ writeSet' = [writeSet EXCEPT ![tx] = [k \in Keys |-> db[k]]]
+       /\ commitSet' = [commitSet EXCEPT ![tx] = [k \in Keys |-> db[k]]]
+       /\ abortSet' = [abortSet EXCEPT ![tx] = [k \in Keys |-> db[k]]]
+       /\ nextTxId' = nextTxId
+  \/ \E tx \in TxIds :
+       /\ txns[tx] = ""commit""
+       /\ txns' = [txns EXCEPT ![tx] = ""abort""]
+       /\ snapshot' = [snapshot EXCEPT ![tx] = db]
+       /\ writeSet' = [writeSet EXCEPT ![tx] = [k \in Keys |-> db[k]]]
+       /\ commitSet' = [commitSet EXCEPT ![tx] = [k \in Keys |-> db[k]]]
+       /\ abortSet' = [abortSet EXCEPT ![tx] = [k \in Keys |-> db[k]]]
+       /\ nextTxId' = nextTxId
+  \/ \E tx \in TxIds :
+       /\ txns[tx] = ""abort""
+       /\ txns' = [txns EXCEPT ![tx] = ""abort""]
+       /\ snapshot' = [snapshot EXCEPT ![tx] = db]
+       /\ writeSet' = [writeSet EXCEPT ![tx] = [k \in Keys |-> db[k]]]
+       /\ commitSet' = [commitSet EXCEPT ![tx] = [k \in Keys |-> db[k]]]
+       /\ abortSet' = [abortSet EXCEPT ![tx] = [k \in Keys |-> db[k]]]
+       /\ nextTxId' = nextTxId
+  \/ \E tx \in TxIds :
+       /\ txns[tx] = ""begin""
+       /\ txns' = [txns EXCEPT ![tx] = ""commit""]
+       /\ snapshot' = [snapshot EXCEPT ![tx] = db]
+       /\ writeSet' = [writeSet EXCEPT ![tx] = [k \in Keys |-> db[k]]]
+       /\ commitSet' = [commitSet EXCEPT ![tx] = [k \in Keys |-> db[k]]]
+       /\ abortSet' = [abortSet EXCEPT ![tx] = [k \in Keys |-> db[k]]]
+       /\ nextTxId' = nextTxId
+  \/ \E tx \in TxIds :
+       /\ txns[tx] = ""commit""
+       /\ txns' = [txns EXCEPT ![tx] = ""abort""]
+       /\ snapshot' = [snapshot EXCEPT ![tx] = db]
+       /\ writeSet' = [writeSet EXCEPT ![tx] = [k \in Keys |-> db[k]]]
+       /\ commitSet' = [commitSet EXCEPT ![tx] = [k \in Keys |-> db[k]]]
+       /\ abortSet' = [abortSet EXCEPT ![tx] = [k \in Keys |-> db[k]]]
+       /\ nextTxId' = nextTxId
+  \/ \E tx \in TxIds :
+       /\ txns[tx] = ""abort""
+       /\ txns' = [txns EXCEPT ![tx] = ""abort""]
+       /\ snapshot' = [snapshot EXCEPT ![tx] = db]
+       /\ writeSet' = [writeSet EXCEPT ![tx] = [k \in Keys |-> db[k]]]
+       /\ commitSet' = [commitSet EXCEPT ![tx] = [k \in Keys |-> db[k]]]
+       /\ abortSet' = [abortSet EXCEPT ![tx] = [k \in Keys |-> db[k]]]
+       /\ nextTxId' = nextTxId
+  \/ \E tx \in TxIds :
+       /\ txns[tx] = ""begin""
+       /\ txns' = [txns EXCEPT ![tx] = ""commit""]
+       /\ snapshot' = [snapshot EXCEPT ![tx] = db]
+       /\ writeSet' = [writeSet EXCEPT ![tx] = [k \in Keys |-> db[k]]]
+       /\ commitSet' = [commitSet EXCEPT ![tx] = [k \in Keys |-> db[k]]]
+       /\ abortSet' = [abortSet EXCEPT ![tx] = [k \in Keys |-> db[k]]]
+       /\ nextTxId' = nextTxId
+  \/ \E tx \in TxIds :
+       /\ txns[tx] = ""commit""
+       /\ txns' = [txns EXCEPT ![tx] = ""abort""]
+       /\ snapshot' = [snapshot EXCEPT ![tx] = db]
+       /\ writeSet' = [writeSet EXCEPT ![tx] = [k \in Keys |-> db[k]]]
+       /\ commitSet' = [commitSet EXCEPT ![tx] = [k \in Keys |-> db[k]]]
+       /\ abortSet' = [abortSet EXCEPT ![tx] = [k \in Keys |-> db[k]]]
+       /\ nextTxId' = nextTxId
+  \/ \E tx \in TxIds :
+       /\ txns[tx] = ""abort""
+       /\ txns' = [txns EXCEPT ![tx] = ""abort""]
+       /\ snapshot' = [snapshot EXCEPT ![tx] = db]
+       /\ writeSet' = [writeSet EXCEPT ![tx] = [k \in Keys |-> db[k]]]
+       /\ commitSet' = [commitSet EXCEPT ![tx] = [k \in Keys |-> db[k]]]
+       /\ abortSet' = [abortSet EXCEPT ![tx] = [k \in Keys |-> db[k]]]
+       /\ nextTxId' = nextTxId
+  \/ \E tx \in TxIds :
+       /\ txns[tx] = ""begin""
+       /\ txns' = [txns EXCEPT ![tx] = ""commit""]
+       /\ snapshot' = [snapshot EXCEPT ![tx] = db]
+       /\ writeSet' = [writeSet EXCEPT ![tx] = [k \in Keys |-> db[k]]]
+       /\ commitSet' = [commitSet EXCEPT ![tx] = [k \in Keys |-> db[k]]]
+       /\ abortSet' = [abortSet EXCEPT ![tx] = [k \in Keys |-> db[k]]]
+       /\ nextTxId' = nextTxId
+  \/ \E tx \in TxIds :
+       /\ txns[tx] = ""commit""
+       /\ txns' = [txns EXCEPT ![tx] = ""abort""]
+       /\ snapshot' = [snapshot EXCEPT ![tx] = db]
+       /\ writeSet' = [writeSet EXCEPT ![tx] = [k \in Keys |-> db[k]]]
+       /\ commitSet' = [commitSet EXCEPT ![tx] = [k \in Keys |-> db[k]]]
+       /\ abortSet' = [abortSet EXCEPT ![tx] = [k \in Keys |-> db[k]]]
+       /\ nextTxId' = nextTxId
+  \/ \E tx \in TxIds :
+       /\ txns[tx] = ""abort""
+       /\ txns' = [txns EXCEPT ![tx] = ""abort""]"
+chattla:20b,BM014,Clock Synchronisation,networking,3,0,0,0.778,bronze,387.94,"---- MODULE ClockSync ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES clocks, offsets, epsilon
+
+Init == /\ clocks = [i \in 1..N |-> 0]
+        /\ offsets = [i \in 1..N |-> 0]
+        /\ epsilon \in Nat
+        /\ epsilon > 0
+
+Next == /\ \E i \in 1..N :
+          /\ clocks' = [clocks EXCEPT ![i] = clocks[i] + offsets[i]]
+          /\ offsets' = [offsets EXCEPT ![i] = offsets[i] + (Avg - clocks[i])]
+          /\ epsilon' = epsilon
+        /\ \A j \in 1..N :
+          /\ clocks'[j] = clocks[j] + offsets[j]
+          /\ offsets'[j] = offsets[j] + (Avg - clocks[j])
+          /\ epsilon' = epsilon
+
+Spec == Init /\ [][Next]_<<clocks, offsets, epsilon>>
+
+===="
+chattla:20b,BM015,Peterson's Algorithm,scheduling,2,1,1,0.778,gold,198.57,"---- MODULE Peterson2 ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES flag, turn
+
+Init == /\ flag = [i \in 1..2 |-> FALSE]
+        /\ turn = 1
+
+Next == \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ turn' = turn
+          /\ flag' = flag
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = TRUE
+          /\ turn' = 1
+          /\ flag' = [flag EXCEPT ![2] = FALSE]
+        \/ /\ flag[1] = TRUE
+          /\ flag[2] = FALSE
+          /\ turn' = 2
+          /\ flag' = [flag EXCEPT ![1] = FALSE]
+        \/ /\ flag[1] = TRUE
+          /\ flag[2] = TRUE
+          /\ turn' = turn
+          /\ flag' = flag
+
+Spec == Init /\ [][Next]_<<flag, turn>>
+
+===="
+chattla:20b,BM016,Gossip Protocol,networking,3,1,0,0.778,silver,76.24,"---- MODULE GossipProtocol ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES known, infected
+
+Init == /\ known = <<>> /\ infected = <<>> /\ Len(known) = Len(infected)
+
+Next == /\ known' = known
+      /\ infected' = Append(infected, known)
+
+Spec == Init /\ [][Next]_<<known, infected>>
+
+===="
+chattla:20b,BM017,Simple Allocator,storage,2,1,0,0.778,silver,19.78,"---- MODULE MemoryAllocator ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, Pages, Client
+
+VARIABLES free, allocated
+
+Init == /\ free = Pages
+        /\ allocated = [c \in Client |-> {}]
+
+Next == /\ \E c \in Client:
+          /\ c \in free
+          /\ free' = free \ {c}
+          /\ allocated' = [allocated EXCEPT ![c] = @ \cup {c}]
+        \/ \E c \in Client:
+          /\ c \in Pages
+          /\ c \in allocated
+          /\ free' = free \cup {c}
+          /\ allocated' = [allocated EXCEPT ![c] = @ \ {c}]
+
+Spec == Init /\ [][Next]_<<free, allocated>>
+
+===="
+chattla:20b,BM018,Publish-Subscribe Broker,networking,3,1,0,0.444,silver,52.76,"---- MODULE Broker ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES subscribers, messages, topicMsgs, topicSubs, topicMsgIdx, topicSubIdx
+===="
+chattla:20b,BM019,Dekker's Algorithm,scheduling,3,1,0,0.778,silver,15.17,"---- MODULE Dekker ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES turn, wants
+
+Init == /\ turn \in {0,1}
+        /\ wants \in {0,1}^2
+        /\ wants = [i \in {0,1} |-> 0]
+
+Next == /\ turn' \in {0,1}
+        /\ wants' \in {0,1}^2
+        /\ turn' = turn
+        /\ wants' = [i \in {0,1} |-> IF i = turn THEN 1 ELSE wants[i]]
+        /\ turn' = 1 - turn
+        /\ wants' = [i \in {0,1} |-> IF i = turn THEN 0 ELSE wants[i]]
+
+Spec == Init /\ [][Next]_<<turn, wants>>
+
+===="
+chattla:20b,BM020,Eventually Consistent Counter,storage,3,0,0,0.778,bronze,209.2,"---- MODULE GCounter ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS Node
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+
+VARIABLES counts
+
+Init == /\ counts \in [Node -> [Node -> Nat]]
+       /\ \A n \in Node: counts[n] = [m \in Node |-> 0]
+
+Next == /\ \A n \in Node: counts' = [counts EXCEPT ![n] = [m \in Node |-> counts[n][m] + 1]]
+       \/ \A n, m \in Node: counts' = [counts EXCEPT ![n][m] = Max(counts[n][m], counts[m][n])]
+
+Spec == Init /\ [][Next]_<<counts>>
+
+===="

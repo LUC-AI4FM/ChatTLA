@@ -1,0 +1,668 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,0,0.444,silver,24.93,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,1,0,0.444,silver,282.45,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES participants, votes, commit, abort, messages
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,0,0,1.0,bronze,62.52,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES forks, states
+
+(* Constants *)
+N == 5
+
+(* Helper functions *)
+LEFT(i) == IF i = 1 THEN N ELSE i - 1
+RIGHT(i) == IF i = N THEN 1 ELSE i + 1
+
+(* Initial state *)
+Init == /\ forks = [i \in 1..N |-> 0]
+        /\ states = [i \in 1..N |-> ""thinking""]
+
+(* Next-state relation *)
+Next == \/ /\ states[i] = ""thinking""
+        /\ forks[i] = 0
+        /\ forks[LEFT(i)] = 0
+        /\ states' = [states EXCEPT ![i] = ""hungry""]
+        /\ forks' = forks
+   \/ /\ states[i] = ""hungry""
+        /\ forks[i] = 0
+        /\ forks[LEFT(i)] = 0
+        /\ states' = [states EXCEPT ![i] = ""eating""]
+        /\ forks' = [forks EXCEPT ![i] = i, ![LEFT(i)] = i]
+   \/ /\ states[i] = ""eating""
+        /\ forks[i] = i
+        /\ forks[LEFT(i)] = i
+        /\ states' = [states EXCEPT ![i] = ""thinking""]
+        /\ forks' = [forks EXCEPT ![i] = 0, ![LEFT(i)] = 0]
+   /\ UNCHANGED <<forks, states>> \* For all other philosophers
+
+(* Invariant: No two philosophers eat simultaneously with the same fork *)
+TypeOK == /\ forks \in [1..N -> 0..N]
+          /\ states \in [1..N -> {""thinking"", ""hungry"", ""eating""}]
+          /\ \A i \in 1..N : forks[i] = 0 \/ forks[i] = i
+
+Spec == Init /\ [][Next]_<<forks, states>>
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,0,0,0.444,bronze,578.42,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+
+VARIABLES num, flag, maxNum
+
+
+define
+  maxNum == Max(Seq(num))
+  choose(i) == 
+    LET maxNum' == maxNum + 1 IN
+      LET num' == [num EXCEPT ![i] = maxNum'] IN
+        LET flag' == [flag EXCEPT ![i] = TRUE] IN
+          LET flag'' == [flag' EXCEPT ![i] = FALSE] IN
+            LET num'' == [num' EXCEPT ![i] = 0] IN
+              LET flag''' == [flag'' EXCEPT ![i] = TRUE] IN
+                LET num''' == [num'' EXCEPT ![i] = maxNum'] IN
+                  LET flag'''' == [flag''' EXCEPT ![i] = FALSE] IN
+                    LET num'''' == [num''' EXCEPT ![i] = 0] IN
+                      LET flag''''' == [flag'''' EXCEPT ![i] = TRUE] IN
+                        LET num''''' == [num'''' EXCEPT ![i] = maxNum'] IN
+                          LET flag'''''' == [flag''''' EXCEPT ![i] = FALSE] IN
+                            LET num'''''' == [num''''' EXCEPT ![i] = 0] IN
+                              LET flag''''''' == [flag'''''' EXCEPT ![i] = TRUE] IN
+                                LET num''''''' == [num'''''' EXCEPT ![i] = maxNum'] IN
+                                  LET flag'''''''' == [flag''''''' EXCEPT ![i] = FALSE] IN
+                                    LET num'''''''' == [num''''''' EXCEPT ![i] = 0] IN
+                                      LET flag''''''''' == [flag'''''''' EXCEPT ![i] = TRUE] IN
+                                        LET num''''''''' == [num'''''''' EXCEPT ![i] = maxNum'] IN
+                                          LET flag'''''''''' == [flag''''''''' EXCEPT ![i] = FALSE] IN
+                                            LET num'''''''''' == [num''''''' EXCEPT ![i] = 0] IN
+                                              LET flag''''''''''' == [flag'''''''''' EXCEPT ![i] = TRUE] IN
+                                                LET num''''''''''' == [num'''''''''' EXCEPT ![i] = maxNum'] IN
+                                                  LET flag'''''''''''' == [flag''''''''''' EXCEPT ![i] = FALSE] IN
+                                                    LET num'''''''''''' == [num''''''''''' EXCEPT ![i] = 0] IN
+                                                      LET flag''''''''''''' == [flag'''''''''''' EXCEPT ![i] = TRUE] IN
+                                                        LET num''''''''''''' == [num'''''''''''' EXCEPT ![i] = maxNum'] IN
+                                                          LET flag'''''''''''''' == [flag''''''''''''' EXCEPT ![i] = FALSE] IN
+                                                            LET num'''''''''''''' == [num''''''''''''' EXCEPT ![i] = 0] IN
+                                                              LET flag''''''''''''''' == [flag'''''''''''''' EXCEPT ![i] = TRUE] IN
+                                                                LET num''''''''''''''' == [num'''''''''''''' EXCEPT ![i] = maxNum'] IN
+                                                                  LET flag'''''''''''''''' == [flag''''''''''''''' EXCEPT ![i] = FALSE] IN
+                                                                    LET num'''''''''''''''' == [num''''''''''''''' EXCEPT ![i] = 0] IN
+                                                                      LET flag''''''''''''''''' == [flag'''''''''''''''' EXCEPT ![i] = TRUE] IN
+                                                                        LET num''''''''''''''''' == [num'''''''''''''''' EXCEPT ![i] = maxNum'] IN
+                                                                          LET flag'''''''''''''''''' == [flag''''''''''''''''' EXCEPT ![i] = FALSE] IN
+                                                                            LET num'''''''''''''''''' == [num''''''''''''''''' EXCEPT ![i] = 0] IN
+                                                                              LET flag''''''''''''''''''' == [flag'''''''''''''''''' EXCEPT ![i] = TRUE] IN
+                                                                                LET num''''''''''''''''''' == [num'''''''''''''''''' EXCEPT ![i] = maxNum'] IN
+                                                                                  LET flag'''''''''''''''''''' == [flag''''''''''''''''''' EXCEPT ![i] = FALSE] IN
+                                                                                    LET num'''''''''''''''''''' == [num''''''''''''''''''' EXCEPT ![i] = 0] IN
+                                                                                      LET flag''''''''''''''''''''' == [flag'''''''''''''''''''' EXCEPT ![i] = TRUE] IN
+                                                                                        LET num''''''''''''''''''''' == [num'''''''''''''''''''' EXCEPT ![i] = maxNum'] IN
+                                                                                          LET flag'''''''''''''''''''''' == [flag''''''''''''''''''''' EXCEPT ![i] = FALSE] IN
+                                                                                            LET num'''''''''''''''''''''' == [num''''''''''''''''''''' EXCEPT ![i] = 0] IN
+                                                                                              LET flag''''''''''''''''''''''' == [flag'''''''''''''''''''''' EXCEPT ![i] = TRUE] IN
+                                                                                                LET num''''''''''''''''''''''' == [num'''''''''''''''''''''' EXCEPT ![i] = maxNum'] IN
+                                                                                                  LET flag'''''''''''''''''''''''' == [flag''''''''''''''''''''''' EXCEPT ![i] = FALSE] IN
+                                                                                                    LET num'''''''''''''''''''''''' == [num''''''''''''''''''''''' EXCEPT ![i] = 0] IN
+                                                                                                      LET flag''''''''''''''''''''''''' == [flag'''''''''''''''''''''''' EXCEPT ![i] = TRUE] IN
+                                                                                                        LET num''''''''''''''''''''''''' == [num'''''''''''''''''''''''' EXCEPT ![i] = maxNum'] IN
+                                                                                                          LET flag'''''''''''''''''''''''''' == [flag''''''''''''''''''''''''' EXCEPT ![i] = FALSE] IN
+                                                                                                            LET num'''''''''''''''''''''''''' == [num''''''''''''''''''''''' EXCEPT ![i] = 0] IN
+                                                                                                              LET flag''''''''''''''''''''''''''' == [flag'''''''''''''''''''''''''' EXCEPT ![i] = TRUE] IN
+                                                                                                                LET num''''''''''''''''''''''''''' == [num'''''''''''''''''''''''''' EXCEPT ![i] = maxNum'] IN
+                                                                                                                  LET flag'''''''''''''''''''''''''''' == [flag''''''''''''''''''''''''''' EXCEPT ![i] = FALSE] IN
+                                                                                                                    LET num'''''''''''''''''''''''''''' == [num''''''''''''''''''''''''''' EXCEPT ![i] = 0] IN
+                                                                                                                      LET flag''''''''''''''''''''''''''''' == [flag'''''''''''''''''''''''''''' EXCEPT ![i] = TRUE] IN
+                                                                                                                        LET num''''''''''''''''''''''''''''' == [num'''''''''''''''''''''''''''' EXCEPT ![i] = maxNum'] IN
+                                                                                                          "
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,1,0.778,gold,6.06,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail, count
+
+Init == /\ q = <<>>
+        /\ head = 1
+        /\ tail = 1
+        /\ count = 0
+
+Next == 
+  \/ /\ count < K
+     /\ head' = head
+        /\ tail' = (tail % K) + 1
+        /\ count' = count + 1
+        /\ q' = Append(q, head)
+  \/ /\ count > 0
+     /\ head' = (head % K) + 1
+        /\ tail' = tail
+        /\ count' = count - 1
+        /\ q' = Tail(q)
+
+Spec == Init /\ [][Next]_<<q, head, tail, count>>
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,0,0,0.778,bronze,29.0,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+Init == /\ currentTerm = 0
+        /\ votedFor = NULL
+        /\ state = ""Follower""
+
+Next == \/ /\ state = ""Follower""
+          /\ currentTerm' = currentTerm
+          /\ votedFor' = votedFor
+          /\ state' = ""Follower""
+        \/ /\ state = ""Candidate""
+          /\ currentTerm' = currentTerm + 1
+          /\ votedFor' = NULL
+          /\ state' = ""Candidate""
+        \/ /\ state = ""Leader""
+          /\ currentTerm' = currentTerm
+          /\ votedFor' = votedFor
+          /\ state' = ""Leader""
+
+Spec == Init /\ [][Next]_<<currentTerm, votedFor, state>>
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,1,0,0.778,silver,22.46,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES readers, writer_active
+
+Init == /\ readers = <<>>
+        /\ writer_active = FALSE
+
+Next == \/ /\ writer_active = FALSE
+          /\ \E r \in 1..10 : /\ ~(r \in readers)
+          /\ writer_active' = FALSE
+             /\ readers' = Append(readers, r)
+        \/ /\ writer_active = FALSE
+          /\ \E r \in readers : /\ ~(r \in readers')
+          /\ writer_active' = TRUE
+             /\ readers' = <<>>
+        \/ /\ writer_active = TRUE
+          /\ \E r \in readers : /\ ~(r \in readers')
+          /\ writer_active' = FALSE
+             /\ readers' = <<>>
+        \/ /\ writer_active = FALSE
+          /\ \E r \in readers : /\ ~(r \in readers')
+          /\ writer_active' = FALSE
+             /\ readers' = <<>>
+
+Spec == Init /\ [][Next]_<<readers, writer_active>>
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,1,0,0.444,silver,136.61,"---- MODULE DistributedSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, channel, marker, recorded, channelState
+
+===="
+chattla:20b,BM009,Token Ring,networking,2,1,1,0.667,gold,2.53,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLE token
+
+Init == /\ token \in 1..N
+
+Next == /\ token' \in 1..N
+        /\ token' = IF token = N THEN 1 ELSE token + 1
+
+Spec == Init /\ [][Next]_<<token>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,0.778,silver,7.69,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, Values
+
+VARIABLES store
+
+Init == /\ store \in [Keys -> Values]
+Next == /\ store' \in [Keys -> Values]
+      /\ \E k \in Keys : \E v \in Values : store' = [store EXCEPT ![k] = v]
+
+Spec == Init /\ [][Next]_<<store>>
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,1,0,0.778,silver,145.42,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, M, B, V
+VARIABLES acceptors, proposers
+
+Init ==
+  /\ acceptors = [i \in 1..N |-> [maxBallot |-> 0, chosenValue |-> {}]]
+  /\ proposers = [i \in 1..M |-> [maxBallot |-> 0, chosenValue |-> {}]]
+
+Next ==
+  \/ \E i \in 1..M : \E j \in 1..N : \E b \in B : \E v \in V :
+       /\ proposers[i].maxBallot = b
+       /\ acceptors[j].maxBallot <= b
+       /\ acceptors' = [acceptors EXCEPT ![j].maxBallot = b]
+       /\ proposers' = [proposers EXCEPT ![i].chosenValue = v]
+  \/ \E i \in 1..M : \E j \in 1..N : \E b \in B : \E v \in V :
+       /\ proposers[i].maxBallot = b
+       /\ acceptors[j].maxBallot = b
+       /\ acceptors[j].chosenValue = v
+       /\ acceptors' = [acceptors EXCEPT ![j].chosenValue = v]
+       /\ proposers' = [proposers EXCEPT ![i].chosenValue = v]
+  \/ \E i \in 1..M : \E j \in 1..N : \E b \in B : \E v \in V :
+       /\ proposers[i].maxBallot = b
+       /\ acceptors[j].maxBallot = b
+       /\ acceptors[j].chosenValue = {}
+       /\ acceptors' = [acceptors EXCEPT ![j].chosenValue = v]
+       /\ proposers' = [proposers EXCEPT ![i].chosenValue = v]
+  \/ \E i \in 1..M : \E j \in 1..N : \E b \in B : \E v \in V :
+       /\ proposers[i].maxBallot = b
+       /\ acceptors[j].maxBallot = b
+       /\ acceptors[j].chosenValue = v
+       /\ acceptors' = [acceptors EXCEPT ![j].chosenValue = v]
+       /\ proposers' = [proposers EXCEPT ![i].chosenValue = v]
+  \/ \E i \in 1..M : \E j \in 1..N : \E b \in B : \E v \in V :
+       /\ proposers[i].maxBallot = b
+       /\ acceptors[j].maxBallot = b
+       /\ acceptors[j].chosenValue = {}
+       /\ acceptors' = [acceptors EXCEPT ![j].chosenValue = v]
+       /\ proposers' = [proposers EXCEPT ![i].chosenValue = v]
+  \/ \E i \in 1..M : \E j \in 1..N : \E b \in B : \E v \in V :
+       /\ proposers[i].maxBallot = b
+       /\ acceptors[j].maxBallot = b
+       /\ acceptors[j].chosenValue = v
+       /\ acceptors' = [acceptors EXCEPT ![j].chosenValue = v]
+       /\ proposers' = [proposers EXCEPT ![i].chosenValue = v]
+  \/ \E i \in 1..M : \E j \in 1..N : \E b \in B : \E v \in V :
+       /\ proposers[i].maxBallot = b
+       /\ acceptors[j].maxBallot = b
+       /\ acceptors[j].chosenValue = {}
+       /\ acceptors' = [acceptors EXCEPT ![j].chosenValue = v]
+       /\ proposers' = [proposers EXCEPT ![i].chosenValue = v]
+  \/ \E i \in 1..M : \E j \in 1..N : \E b \in B : \E v \in V :
+       /\ proposers[i].maxBallot = b
+       /\ acceptors[j].maxBallot = b
+       /\ acceptors[j].chosenValue = v
+       /\ acceptors' = [acceptors EXCEPT ![j].chosenValue = v]
+       /\ proposers' = [proposers EXCEPT ![i].chosenValue = v]
+  \/ \E i \in 1..M : \E j \in 1..N : \E b \in B : \E v \in V :
+       /\ proposers[i].maxBallot = b
+       /\ acceptors[j].maxBallot = b
+       /\ acceptors[j].chosenValue = {}
+       /\ acceptors' = [acceptors EXCEPT ![j].chosenValue = v]
+       /\ proposers' = [proposers EXCEPT ![i].chosenValue = v]
+  \/ \E i \in 1..M : \E j \in 1..N : \E b \in B : \E v \in V :
+       /\ proposers[i].maxBallot = b
+       /\ acceptors[j].maxBallot = b
+       /\ acceptors[j].chosenValue = v
+       /\ acceptors' = [acceptors EXCEPT ![j].chosenValue = v]
+       /\ proposers' = [proposers EXCEPT ![i].chosenValue = v]
+  \/ \E i \in 1..M : \E j \in 1..N : \E b \in B : \E v \in V :
+       /\ proposers[i].maxBallot = b
+       /\ acceptors[j].maxBallot = b
+       /\ acceptors[j].chosenValue = {}
+       /\ acceptors' = [acceptors EXCEPT ![j].chosenValue = v]
+       /\ proposers' = [proposers EXCEPT ![i].chosenValue = v]
+  \/ \E i \in 1..M : \E j \in 1..N : \E b \in B : \E v \in V :
+       /\ proposers[i].maxBallot = b
+       /\ acceptors[j].maxBallot = b
+       /\ acceptors[j].chosenValue = v
+       /\ acceptors' = [acceptors EXCEPT ![j].chosenValue = v]
+       /\ proposers' = [proposers EXCEPT ![i].chosenValue = v]
+  \/ \E i \in 1..M : \E j \in 1..N : \E b \in B : \E v \in V :
+       /\ proposers[i].maxBallot = b
+       /\ acceptors[j].maxBallot = b
+       /\ acceptors[j].chosenValue = {}
+       /\ acceptors' = [acceptors EXCEPT ![j].chosenValue = v]
+       /\ proposers' = [proposers EXCEPT ![i].chosenValue = v]
+  \/ \E i \in 1..M : \E j \in 1..N : \E b \in B : \E v \in V :
+       /\ proposers[i].maxBallot = b
+       /\ acceptors[j].maxBallot = b
+       /\ acceptors[j].chosenValue = v
+       /\ acceptors' = [acceptors EXCEPT ![j].chosenValue = v]
+       /\ proposers' = [proposers EXCEPT ![i].chosenValue = v]
+  \/ \E i \in 1..M : \E j \in 1..N : \E b \in B : \E v \in V :
+       /\ proposers[i].maxBallot = b
+       /\ acceptors[j].maxBallot = b
+       /\ acceptors[j].chosenValue = {}
+       /\ acceptors' = [acceptors EXCEPT ![j].chosenValue = v]
+       /\ proposers' = [proposers EXCEPT ![i].chosenValue = v]
+  \/ \E i \in 1..M : \E j \in 1..N : \E b \in B : \E v \in V :
+       /\ proposers[i].maxBallot = b
+       /\ acceptors[j].maxBallot = b
+       /\ acceptors[j].chosenValue = v
+       /\ acceptors' = [acceptors EXCEPT ![j].chosenValue = v]
+       /\ proposers' = [proposers EXCEPT ![i].chosenValue = v]
+  \/ \E i \in 1..M : \E j \in 1..N : \E b \in B : \E v \in V :
+       /\ proposers[i].maxBallot = b
+       /\ acceptors[j].maxBallot = b
+       /\ acceptors[j].chosenValue = {}
+       /\ acceptors' = [acceptors EXCEPT ![j].chosenValue = v]
+       /\ proposers' = [proposers EXCEPT ![i].chosenValue = v]
+  \/ \E i \in 1..M : \E j \in 1..N : \E b \in B : \E v \in V :
+       /\ proposers[i].maxBallot = b
+       /\ acceptors[j].maxBallot = b
+       /\ acceptors[j].chosenValue = v
+       /\ acceptors' = [acceptors EXCEPT ![j].chosenValue = v]
+       /\ proposers' = [proposers EXCEPT ![i].chosenValue = v]
+  \/ \E i \in 1..M : \E j \in 1..N : \E b \in B : \E v \in V :
+       /\ proposers[i].maxBallot = b
+       /\ acceptors[j].maxBallot = b
+       /\ acceptors[j].chosenValue = {}
+       /\ acceptors' = [acceptors EXCEPT ![j].chosenValue = v]
+       /\ proposers' = [proposers EXCEPT ![i].chosenValue = v]
+  \/ \E i \in 1..M : \E j \in 1..N : \E b \in B : \E v \in V :
+       /\ proposers[i].maxBallot = b
+       /\ acceptors[j].maxBallot = b
+       /\ acceptors[j].chosenValue = v
+       /\ acceptors' = [acceptors EXCEPT ![j].chosenValue = v]
+       /\ proposers' = [proposers EXCEPT ![i].chosenValue = v]
+  \/ \E i \in 1..M : \E j \in 1..N : \E b \in B : \E v \in V :
+       /\ proposers[i].maxBallot = b
+       /\ acceptors[j].maxBallot = b
+       /\ acceptors[j].chosenValue = {}
+       /\ acceptors' = [acceptors EXCEPT ![j].chosenValue = v]
+       /\ proposers' = [proposers EXCEPT ![i].chosenValue = v]
+  \/ \E i \in 1..M : \E j \in 1..N : \E b \in B : \E v \in V :
+       /\ proposers[i].maxBallot = b
+       /\ acceptors[j].maxBallot = b
+       /\ acceptors[j].chosenValue = v
+       /\ acceptors' = [acceptors EXCEPT ![j].chosenValue = v]
+       /\ proposers' = [proposers EXCEPT ![i].chosenValue = v]
+  \/ \E i \in 1..M : \E j \in 1..N : \E b \in B : \E v \in V :
+       /\ proposers[i].maxBallot = b
+       /\ acceptors[j].maxBallot = b
+       /\ acceptors[j].chosenValue = {}
+       /\ acceptors' = [acceptors EXCEPT ![j].chosenValue = v]
+       /\ proposers' = [proposers EXCEPT ![i].chosenValue = v]
+  \/ \E i \in 1..M : \E j \in 1..N : \E b \in B : \E v \in V :
+       /\ proposers[i].maxBallot = b
+       /\ acceptors[j].maxBallot = b
+       /\ acceptors[j].chosenValue = v
+       /\ acceptors' = [acceptors EXCEPT ![j].chosenValue = v]
+       /\ proposers' = [proposers EXCEPT ![i].chosenValue = v]
+  \/ \E i \in 1..M : \E j \in 1..N : \E b \in B : \E v \in V :
+       /\ proposers[i].maxBallot = b
+       /\ acceptors[j].maxBallot = b
+       /\ acceptors[j].chosenValue = {}
+       /\ acceptors' = [acceptors EXCEPT ![j].chosenValue = v]
+       /\ proposers' = [proposers EXCEPT ![i].chosenValue = v]
+  \/ \E i \in 1..M : \E j \in 1..N : \E b \in B : \E v \in V :
+       /\ proposers[i].maxBallot = b
+       /\ acceptors[j].maxBallot = b
+       /\ acceptors[j].chosenValue = v
+       /\ acceptors' = ["
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,1,0,0.778,silver,45.91,"---- MODULE Sender ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS MAX_RETRIES, CHUNK_SIZE, FILE_SIZE, CHUNK_COUNT, CHUNK_DATA
+
+VARIABLES lostChunks, retransmitCount, sentChunks, chunkCount, chunkData, file
+
+Init ==
+    /\ file = CHUNK_DATA
+    /\ chunkCount = CHUNK_COUNT
+    /\ chunkData = [i \in 1..chunkCount |-> [chunk \in 1..CHUNK_SIZE |-> file[i][chunk]]]
+    /\ retransmitCount = [i \in 1..chunkCount |-> 0]
+    /\ sentChunks = {}
+    /\ lostChunks = {}
+
+Next ==
+    \/ \E i \in 1..chunkCount :
+        /\ i \notin sentChunks
+        /\ retransmitCount[i] < MAX_RETRIES
+        /\ sentChunks' = sentChunks \cup {i}
+        /\ lostChunks' = lostChunks \cup {i}
+        /\ retransmitCount' = [retransmitCount EXCEPT ![i] = @ + 1]
+    \/ \E i \in 1..chunkCount :
+        /\ i \in sentChunks
+        /\ i \in lostChunks
+        /\ retransmitCount[i] < MAX_RETRIES
+        /\ lostChunks' = lostChunks \cup {i}
+        /\ retransmitCount' = [retransmitCount EXCEPT ![i] = @ + 1]
+    \/ \E i \in 1..chunkCount :
+        /\ i \in sentChunks
+        /\ i \in lostChunks
+        /\ retransmitCount[i] >= MAX_RETRIES
+        /\ lostChunks' = lostChunks \ {i}
+        /\ retransmitCount' = retransmitCount
+    \/ \E i \in 1..chunkCount :
+        /\ i \in sentChunks
+        /\ i \notin lostChunks
+        /\ sentChunks' = sentChunks
+        /\ lostChunks' = lostChunks
+        /\ retransmitCount' = retransmitCount
+
+Spec ==
+    Init /\ [][Next]_<<file, chunkCount, chunkData, retransmitCount, sentChunks, lostChunks>>
+
+===="
+chattla:20b,BM013,Transaction Isolation (Snapshot Isolation),transaction,4,1,0,0.444,silver,32.07,"---- MODULE SnapshotIsolation ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES db, txns, nextTxId, committed, aborted, snapshot, writes, reads, status
+
+===="
+chattla:20b,BM014,Clock Synchronisation,networking,3,1,0,0.778,silver,66.92,"---- MODULE ClockSync ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N
+
+VARIABLES clocks, epsilon
+
+Init == /\ clocks \in [1..N -> Int]
+        /\ epsilon \in Nat
+        /\ \A i \in 1..N: clocks[i] = 0
+
+Next == /\ \A i \in 1..N: clocks[i] = clocks[i] + 1
+        /\ epsilon' \in Nat
+        /\ \A i \in 1..N: clocks[i] = clocks[i] + (1 - epsilon')
+
+Spec == Init /\ [][Next]_<<clocks, epsilon>>
+
+===="
+chattla:20b,BM015,Peterson's Algorithm,scheduling,2,1,0,0.778,silver,200.86,"---- MODULE Peterson2 ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES flag, turn
+
+Init == /\ flag = [i \in 1..2 |-> FALSE]
+        /\ turn = 1
+
+Next == \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag[1] = TRUE
+          /\ turn' = 2
+          /\ flag' = [flag EXCEPT ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag[2] = TRUE
+          /\ turn' = 1
+          /\ flag' = [flag EXCEPT ![1] = FALSE]
+        \/ /\ flag[1] = TRUE
+          /\ turn = 2
+          /\ flag[2] = TRUE
+          /\ flag' = [flag EXCEPT ![1] = FALSE]
+        \/ /\ flag[2] = TRUE
+          /\ turn = 1
+          /\ flag[1] = TRUE
+          /\ flag' = [flag EXCEPT ![2] = FALSE]
+
+Spec == Init /\ [][Next]_<<flag, turn>>
+
+===="
+chattla:20b,BM016,Gossip Protocol,networking,3,1,0,0.778,silver,265.17,"---- MODULE GossipProtocol ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES known, infected
+
+Init == /\ known = <<>> /\ infected = <<>> /\ Len(known) = Len(infected)
+
+Next == /\ known' = known
+       /\ infected' = Append(infected, known)
+
+Spec == Init /\ [][Next]_<<known, infected>>
+
+===="
+chattla:20b,BM017,Simple Allocator,storage,2,0,0,0.889,bronze,34.42,"---- MODULE MemoryAllocator ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, Pages, Client
+
+VARIABLE free, allocated, p
+
+Init == /\ free = Pages
+        /\ allocated = [c \in Client |-> {}]
+
+Next == /\ \E c \in Client:
+          /\ c \notin DOMAIN allocated
+          /\ \E p \in free:
+              /\ allocated' = [allocated EXCEPT ![c] = \E p' \in free: p']
+              /\ free' = free \ {p}
+        \/ \E c \in DOMAIN allocated:
+          /\ \E p \in allocated[c]:
+              /\ allocated' = [allocated EXCEPT ![c] = \E p' \in allocated[c]: p']
+              /\ free' = free \cup {p}
+
+TypeOK == /\ free \subseteq Pages
+          /\ allocated \subseteq [Client -> SUBSET Pages]
+          /\ \A c \in DOMAIN allocated: allocated[c] \subseteq Pages
+          /\ \A c \in DOMAIN allocated: \A p \in allocated[c]: p \in Pages
+          /\ \A c1, c2 \in DOMAIN allocated: c1 # c2 => allocated[c1] # allocated[c2]
+
+Spec == Init /\ [][Next]_<<free, allocated>>
+
+===="
+chattla:20b,BM018,Publish-Subscribe Broker,networking,3,1,0,0.444,silver,203.16,"---- MODULE Broker ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES subscribers, topics, messages, subscriptions, pending, delivered
+
+===="
+chattla:20b,BM019,Dekker's Algorithm,scheduling,3,1,0,0.778,silver,21.42,"---- MODULE Dekker ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES turn, wants
+
+Init == /\ turn \in {0,1}
+        /\ wants \in {0,1}^2
+        /\ wants = [i \in {0,1} |-> 0]
+
+Next == 
+  \/ /\ turn = 0
+      /\ wants[0] = 0
+      /\ wants' = [wants EXCEPT ![0] = 1]
+      /\ turn' = 1
+      /\ UNCHANGED <<wants[1]>>
+  \/ /\ turn = 1
+      /\ wants[1] = 0
+      /\ wants' = [wants EXCEPT ![1] = 1]
+      /\ turn' = 0
+      /\ UNCHANGED <<wants[0]>>
+  \/ /\ turn = 0
+      /\ wants[0] = 1
+      /\ UNCHANGED <<turn, wants>>
+  \/ /\ turn = 1
+      /\ wants[1] = 1
+      /\ UNCHANGED <<turn, wants>>
+
+Spec == Init /\ [][Next]_<<turn, wants>>
+
+===="
+chattla:20b,BM020,Eventually Consistent Counter,storage,3,1,0,0.444,silver,241.37,"---- MODULE GCounter ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES counts
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+===="

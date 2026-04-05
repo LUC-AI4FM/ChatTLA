@@ -1,0 +1,412 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,0,1.0,silver,6.15,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS N
+
+VARIABLES state, turn
+
+Init == /\ state = [p \in 1..N |-> ""idle""]
+        /\ turn = 1
+
+Next == \/ /\ state[turn] = ""idle""
+          /\ state' = [state EXCEPT ![turn] = ""critical""]
+          /\ turn' = turn
+        \/ /\ state[turn] # ""idle""
+          /\ state' = state
+          /\ turn' = turn + 1
+
+Spec == Init /\ [][Next]_<<state, turn>>
+
+TypeOK == /\ state \in [1..N -> {""idle"", ""trying"", ""critical""}]
+          /\ turn \in 1..N
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,0,0,1.0,bronze,34.17,"---- MODULE TwoPhaseCommitProtocol ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N, participants, coordinator
+VARIABLES coordinator, messages, participants
+
+
+vars == << participants, coordinator >>
+
+Prepare == [msgType |-> ""Prepare"", sender |-> coordinator, receiver |-> participants]
+VoteYes == [msgType |-> ""VoteYes"", sender |-> participants, receiver |-> coordinator]
+VoteNo == [msgType |-> ""VoteNo"", sender |-> participants, receiver |-> coordinator]
+Commit == [msgType |-> ""Commit"", sender |-> coordinator, receiver |-> participants]
+Abort == [msgType |-> ""Abort"", sender |-> coordinator, receiver |-> participants]
+
+Init == 
+  /\ participants' = participants
+  /\ coordinator' = coordinator
+  /\ messages' = {}
+
+Next == 
+  \/ /\ messages = {}
+     /\ messages' = {Prepare}
+  \/ /\ messages = {Prepare}
+     /\ messages' = {VoteYes}
+  \/ /\ messages = {VoteYes}
+     /\ messages' = {Commit}
+  \/ /\ messages = {Commit}
+     /\ messages' = {}
+
+Spec == Init /\ [][Next]_vars
+
+TypeOK == 
+  /\ participants \in SUBSET 1..N
+  /\ coordinator \in 1..N
+  /\ messages \subseteq {Prepare, VoteYes, VoteNo, Commit, Abort}
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,0,0,1.0,bronze,217.27,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+\* State of each philosopher: ""thinking"", ""hungry"", or ""eating""
+VARIABLES philosophers, forks
+
+Init == /\ philosophers = [i \in 1..N |-> ""thinking""]
+        /\ forks = [i \in 1..N |-> TRUE]  \* TRUE means fork i is free
+
+\* Helper to get left and right fork indices for philosopher i
+leftFork(i) == IF i = 1 THEN N ELSE i - 1
+rightFork(i) == IF i = N THEN 1 ELSE i + 1
+
+\* Action: philosopher i becomes hungry
+Hungry(i) == /\ philosophers[i] = ""thinking""
+            /\ philosophers' = [philosophers EXCEPT ![i] = ""hungry""]
+            /\ UNCHANGED forks
+
+\* Action: philosopher i picks up forks if both are free
+PickUp(i) == /\ philosophers[i] = ""hungry""
+            /\ forks[leftFork(i)] = TRUE
+            /\ forks[rightFork(i)] = TRUE
+            /\ philosophers' = [philosophers EXCEPT ![i] = ""eating""]
+            /\ forks' = [forks EXCEPT ![leftFork(i)] = FALSE,
+                                   ![rightFork(i)] = FALSE]
+            /\ UNCHANGED <<>>
+
+\* Action: philosopher i puts down forks
+PutDown(i) == /\ philosophers[i] = ""eating""
+             /\ philosophers' = [philosophers EXCEPT ![i] = ""thinking""]
+             /\ forks' = [forks EXCEPT ![leftFork(i)] = TRUE,
+                                ![rightFork(i)] = TRUE]
+             /\ UNCHANGED <<>>
+
+\* Next-state relation: any philosopher can become hungry, pick up forks, or put them down
+Next == \E i \in 1..N:
+          (Hungry(i) \/ PickUp(i) \/ PutDown(i))
+
+Spec == Init /\ [][Next]_<<philosophers, forks>>
+
+\* Type correctness invariant
+TypeOK == /\ philosophers \in [1..N -> {""thinking"", ""hungry"", ""eating""}]
+          /\ forks \in [1..N -> BOOLEAN]
+
+\* Safety property: no two adjacent philosophers eat simultaneously
+NoDeadlock == \A i \in 1..N:
+                 philosophers[i] # ""eating"" \/ philosophers[rightFork(i)] # ""eating""
+
+\* Liveness property: every hungry philosopher eventually eats
+\* (fairness condition)
+SpecFair == Init /\ [][Next]_<<philosophers, forks>> /\ WF_vars[Hungry(i) => PickUp(i)]_<<philosophers, forks>>
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,1,0,0.778,silver,15.35,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+
+CONSTANT N
+VARIABLES flag, num
+
+
+vars == <<num, flag>>
+
+Init == /\ num = [i \in 1..N |-> 0]
+        /\ flag = [i \in 1..N |-> FALSE]
+
+Next == \E i \in 1..N :
+          /\ flag[i] = FALSE
+          /\ flag' = [flag EXCEPT ![i] = TRUE]
+          /\ num' = [num EXCEPT ![i] = 1 + Max(num)]
+          /\ flag' = [flag EXCEPT ![i] = FALSE]
+          /\ \A j \in 1..N : j # i => flag[j] = FALSE
+          /\ \A j \in 1..N : j # i => num[j] = 0
+
+Spec == Init /\ [][Next]_vars
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,0,1.0,silver,9.08,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail, size
+
+vars == <<q, head, tail, size>>
+
+Init == /\ q = [i \in 1..K |-> 0]  \* Queue initialized with zeros
+        /\ head = 1
+        /\ tail = 1
+        /\ size = 0
+
+ProducerAction == /\ size < K
+                 /\ q' = [q EXCEPT ![tail] = 1]  \* Produce by setting 1
+                 /\ tail' = IF tail = K THEN 1 ELSE tail + 1
+                 /\ size' = size + 1
+                 /\ UNCHANGED <<head, q>>
+
+ConsumerAction == /\ size > 0
+                 /\ q' = [q EXCEPT ![head] = 0]  \* Consume by setting 0
+                 /\ head' = IF head = K THEN 1 ELSE head + 1
+                 /\ size' = size - 1
+                 /\ UNCHANGED <<tail, q>>
+
+Next == ProducerAction \/ ConsumerAction
+
+Spec == Init /\ [][Next]_vars
+
+TypeOK == /\ head \in 1..K
+          /\ tail \in 1..K
+          /\ size \in 0..K
+          /\ q \in [1..K -> {0,1}]
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,1,1,1.0,gold,28.78,"---- MODULE RaftElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, majority, NULL
+
+VARIABLES currentTerm, votedFor, state
+
+Init == /\ currentTerm = 0
+        /\ votedFor = [i \in 1..N |-> NULL]
+        /\ state = [i \in 1..N |-> ""Follower""]
+
+Next == 
+    \E i \in 1..N :
+        \/ /\ state[i] = ""Follower""
+           /\ currentTerm' = currentTerm + 1
+           /\ votedFor' = [votedFor EXCEPT ![i] = i]
+           /\ state' = [state EXCEPT ![i] = ""Candidate""]
+        \/ /\ state[i] = ""Candidate""
+           /\ currentTerm' = currentTerm
+           /\ votedFor' = votedFor
+           /\ state' = state
+        \/ /\ state[i] = ""Leader""
+           /\ currentTerm' = currentTerm
+           /\ votedFor' = votedFor
+           /\ state' = state
+
+Spec == Init /\ [][Next]_<<currentTerm, votedFor, state>>
+
+TypeOK == /\ currentTerm \in Nat
+          /\ votedFor \in [1..N -> 1..N \cup {NULL}]
+          /\ state \in [1..N -> {""Follower"", ""Candidate"", ""Leader""}]
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,0,0,0.778,bronze,27.08,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES readers, writer_active, reader, writer
+
+Init == 
+  /\ readers = <<>> 
+  /\ writer_active = FALSE
+
+Next == 
+  /\ \E r \in 1..Len(readers) :
+        /\ reader = readers[r]
+        /\ reader \in 1..N
+        /\ reader \notin readers
+        /\ reader' = reader
+        /\ writer_active' = writer_active
+        /\ readers' = Append(readers, reader)
+  \/ \E r \in 1..Len(readers) :
+        /\ reader = readers[r]
+        /\ reader \in 1..N
+        /\ reader \in readers
+        /\ reader' = reader
+        /\ writer_active' = writer_active
+        /\ readers' = Remove(readers, r)
+  \/ /\ writer_active = FALSE
+     /\ \E w \in 1..N :
+          /\ writer = w
+          /\ writer \notin readers
+          /\ writer' = writer
+          /\ writer_active' = TRUE
+          /\ readers' = readers
+  \/ /\ writer_active = TRUE
+     /\ writer = writer
+     /\ writer' = writer
+     /\ writer_active' = FALSE
+     /\ readers' = readers
+
+Spec == Init /\ [][Next]_<<readers, writer_active>>
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,1,0,0.444,silver,18.42,"---- MODULE DistributedSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, Channels, j
+
+VARIABLES state, channel, recorded, markerSent
+
+===="
+chattla:20b,BM009,Token Ring,networking,2,1,1,0.778,gold,2.28,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+VARIABLES tokenPos
+
+
+vars == <<tokenPos>>
+
+Init == tokenPos = 1
+
+Next == \E i \in 1..N :
+          /\ tokenPos' = IF i = N THEN 1 ELSE i + 1
+
+Spec == Init /\ [][Next]_vars
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,0,0,0.778,bronze,18.51,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets, TLC
+
+CONSTANTS Keys, Values, NULL
+VARIABLES store
+
+
+vars == << store >>
+
+Init == 
+  /\ store = [k \in Keys |-> NULL]
+
+Next == 
+  \/ /\ op = ""Put""
+     /\ k \in Keys
+     /\ v \in Values
+     /\ store' = [store EXCEPT ![k] = v]
+  \/ /\ op = ""Get""
+     /\ k \in Keys
+     /\ store' = store
+
+Spec == Init /\ [][Next]_vars
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,0,0,1.0,bronze,60.58,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, M, V
+
+VARIABLES acceptors, proposers, chosen
+
+vars == <<acceptors, proposers, chosen>>
+
+Init == 
+  /\ acceptors = [i \in 1..N |-> [promised \in 1..N -> 0, accepted \in 1..N -> 0, value \in 1..N -> 0]]
+  /\ proposers = [j \in 1..M |-> [ballot \in 1..N -> 0, value \in 1..N -> 0]]
+  /\ chosen = 0
+
+Prepare(p, a) == 
+  /\ acceptors[a].promised <= proposers[p].ballot
+  /\ acceptors' = [acceptors EXCEPT ![a].promised = proposers[p].ballot]
+  /\ proposers' = proposers
+  /\ chosen' = chosen
+
+Promise(p, a) == 
+  /\ acceptors[a].promised = proposers[p].ballot
+  /\ proposers' = [proposers EXCEPT ![p].value = 
+        IF acceptors[a].accepted > 0 THEN acceptors[a].value ELSE proposers[p].value]
+  /\ acceptors' = acceptors
+  /\ chosen' = chosen
+
+Accept(p, a) == 
+  /\ acceptors[a].promised = proposers[p].ballot
+  /\ acceptors' = [acceptors EXCEPT ![a].accepted = proposers[p].ballot, ![a].value = proposers[p].value]
+  /\ proposers' = proposers
+  /\ chosen' = chosen
+
+Chosen(v) == 
+  /\ chosen = 0
+  /\ chosen' = v
+
+Next == 
+  \E p \in 1..M : \E a \in 1..N : 
+    /\ proposers[p].ballot > 0
+    /\ proposers[p].value > 0
+    /\ Prepare(p, a)
+  \/ \E p \in 1..M : \E a \in 1..N : 
+    /\ proposers[p].ballot > 0
+    /\ proposers[p].value > 0
+    /\ Promise(p, a)
+  \/ \E p \in 1..M : \E a \in 1..N : 
+    /\ proposers[p].ballot > 0
+    /\ proposers[p].value > 0
+    /\ Accept(p, a)
+  \/ \E v \in V: Chosen(v)
+
+Spec == Init /\ [][Next]_vars
+
+TypeOK == 
+  /\ acceptors \in [1..N -> [promised \in 1..N -> Nat, accepted \in 1..N -> Nat, value \in 1..N -> Nat]]
+  /\ proposers \in [1..M -> [ballot \in 1..N -> Nat, value \in 1..N -> Nat]]
+  /\ chosen \in 1..N
+
+===="
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,0,0,0.889,bronze,61.39,"---- MODULE FileSender ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS MAX_RETRIES, CHUNK_SIZE, FILE_SIZE
+VARIABLES ackedChunks, retransmitCount, sentChunks
+
+    /\ file = Seq(1..FILE_SIZE) \* For simplicity, file bytes are 1..FILE_SIZE
+    /\ chunks = [i \in 1..Ceiling(FILE_SIZE \div CHUNK_SIZE) |-> 
+
+                        SubSeq(file, (i-1)*CHUNK_SIZE + 1, i*CHUNK_SIZE)
+
+                        SubSeq(file, (i-1)*CHUNK_SIZE + 1, FILE_SIZE)]
+    /\ sentChunks = {}
+    /\ ackedChunks = {}
+    /\ retransmitCount = [i \in 1..Ceiling(FILE_SIZE \div CHUNK_SIZE) |-> 0]
+
+SendChunk(i) ==
+    /\ i \in 1..Ceiling(FILE_SIZE \div CHUNK_SIZE)
+    /\ i \notin sentChunks
+    /\ sentChunks' = sentChunks \cup {i}
+    /\ retransmitCount' = [retransmitCount EXCEPT ![i] = 0]
+    /\ UNCHANGED <<file, chunks, ackedChunks>>
+
+AckChunk(i) ==
+    /\ i \in sentChunks
+    /\ i \notin ackedChunks
+    /\ ackedChunks' = ackedChunks \cup {i}
+    /\ UNCHANGED <<file, chunks, sentChunks, retransmitCount>>
+
+RetransmitChunk(i) ==
+    /\ i \in sentChunks
+    /\ i \notin ackedChunks
+    /\ retransmitCount[i] < MAX_RETRIES
+    /\ retransmitCount' = [retransmitCount EXCEPT ![i] = retransmitCount[i] + 1]
+    /\ UNCHANGED <<file, chunks, sentChunks, ackedChunks>>
+
+Next ==
+    \/ \E i \in 1..Ceiling(FILE_SIZE \div CHUNK_SIZE) : SendChunk(i)
+    \/ \E i \in sentChunks \setminus ackedChunks : AckChunk(i)
+    \/ \E i \in sentChunks \setminus ackedChunks : RetransmitChunk(i)
+    \/ UNCHANGED <<file, chunks, sentChunks, ackedChunks, retransmitCount>>
+
+Spec ==
+    Init /\ [][Next]_<<file, chunks, sentChunks, ackedChunks, retransmitCount>>
+
+TypeOK ==
+    /\ file \in Seq(1..FILE_SIZE)
+    /\ chunks \in [1..Ceiling(FILE_SIZE \div CHUNK_SIZE) -> Seq(1..CHUNK_SIZE)]
+    /\ sentChunks \subseteq 1..Ceiling(FILE_SIZE \div CHUNK_SIZE)
+    /\ ackedChunks \subseteq 1..Ceiling(FILE_SIZE \div CHUNK_SIZE)
+    /\ retransmitCount \in [1..Ceiling(FILE_SIZE \div CHUNK_SIZE) -> Nat]
+
+===="

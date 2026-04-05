@@ -1,0 +1,923 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,0,0.444,silver,9.37,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, turn, N
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,1,0,0.444,silver,39.69,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, Participants, Coordinator
+
+VARIABLES state, vote, decision, messages
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,1,1,1.0,gold,6.03,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES forks, states
+
+(* Constants *)
+N == 5
+
+(* Helper functions *)
+LEFT(i) == IF i = 1 THEN N ELSE i - 1
+RIGHT(i) == IF i = N THEN 1 ELSE i + 1
+
+(* State definitions *)
+THINKING == 0
+HUNGRY == 1
+EATING == 2
+
+(* Type invariant *)
+TypeOK == 
+  /\ forks \in [1..N -> 0..N]
+  /\ states \in [1..N -> {THINKING, HUNGRY, EATING}]
+
+(* Initial state *)
+Init == 
+  /\ forks = [i \in 1..N |-> 0]
+  /\ states = [i \in 1..N |-> THINKING]
+
+(* Next-state relation *)
+Next == 
+  \E i \in 1..N :
+    \/ (* Philosopher i becomes hungry *)
+       /\ states[i] = THINKING
+       /\ states' = [states EXCEPT ![i] = HUNGRY]
+       /\ forks' = forks
+    \/ (* Philosopher i starts eating if both forks are free *)
+       /\ states[i] = HUNGRY
+       /\ forks[i] = 0
+       /\ forks[LEFT(i)] = 0
+       /\ forks' = [forks EXCEPT ![i] = i, ![LEFT(i)] = i]
+       /\ states' = [states EXCEPT ![i] = EATING]
+    \/ (* Philosopher i puts down forks after eating *)
+       /\ states[i] = EATING
+       /\ forks' = [forks EXCEPT ![i] = 0, ![LEFT(i)] = 0]
+       /\ states' = [states EXCEPT ![i] = THINKING]
+
+(* Temporal specification *)
+Spec == Init /\ [][Next]_<<forks, states>>
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,0,0,0.444,bronze,433.5,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+
+VARIABLES num, flag
+
+
+actions
+  Init == /\ num = [i \in 1..N |-> 0]
+          /\ flag = [i \in 1..N |-> FALSE]
+  Next == \E i \in 1..N : /\ flag[i] = FALSE
+          /\ flag[i] = TRUE
+          /\ num[i] = 1 + Max({num[j] : j \in 1..N})
+          /\ flag[i] = FALSE
+          /\ \A j \in 1..N : j # i => /\ num[j] = 0
+          \/ /\ num[j] > 0
+          \/ /\ num[j] = num[i] /\ j < i
+          /\ \A k \in 1..N : k # i => /\ num[k] = 0
+          \/ /\ num[k] > 0
+          \/ /\ num[k] = num[i] /\ k < i
+          /\ \A l \in 1..N : l # i => /\ num[l] = 0
+          \/ /\ num[l] > 0
+          \/ /\ num[l] = num[i] /\ l < i
+          /\ \A m \in 1..N : m # i => /\ num[m] = 0
+          \/ /\ num[m] > 0
+          \/ /\ num[m] = num[i] /\ m < i
+          /\ \A n \in 1..N : n # i => /\ num[n] = 0
+          \/ /\ num[n] > 0
+          \/ /\ num[n] = num[i] /\ n < i
+          /\ \A o \in 1..N : o # i => /\ num[o] = 0
+          \/ /\ num[o] > 0
+          \/ /\ num[o] = num[i] /\ o < i
+          /\ \A p \in 1..N : p # i => /\ num[p] = 0
+          \/ /\ num[p] > 0
+          \/ /\ num[p] = num[i] /\ p < i
+          /\ \A q \in 1..N : q # i => /\ num[q] = 0
+          \/ /\ num[q] > 0
+          \/ /\ num[q] = num[i] /\ q < i
+          /\ \A r \in 1..N : r # i => /\ num[r] = 0
+          \/ /\ num[r] > 0
+          \/ /\ num[r] = num[i] /\ r < i
+          /\ \A s \in 1..N : s # i => /\ num[s] = 0
+          \/ /\ num[s] > 0
+          \/ /\ num[s] = num[i] /\ s < i
+          /\ \A t \in 1..N : t # i => /\ num[t] = 0
+          \/ /\ num[t] > 0
+          \/ /\ num[t] = num[i] /\ t < i
+          /\ \A u \in 1..N : u # i => /\ num[u] = 0
+          \/ /\ num[u] > 0
+          \/ /\ num[u] = num[i] /\ u < i
+          /\ \A v \in 1..N : v # i => /\ num[v] = 0
+          \/ /\ num[v] > 0
+          \/ /\ num[v] = num[i] /\ v < i
+          /\ \A w \in 1..N : w # i => /\ num[w] = 0
+          \/ /\ num[w] > 0
+          \/ /\ num[w] = num[i] /\ w < i
+          /\ \A x \in 1..N : x # i => /\ num[x] = 0
+          \/ /\ num[x] > 0
+          \/ /\ num[x] = num[i] /\ x < i
+          /\ \A y \in 1..N : y # i => /\ num[y] = 0
+          \/ /\ num[y] > 0
+          \/ /\ num[y] = num[i] /\ y < i
+          /\ \A z \in 1..N : z # i => /\ num[z] = 0
+          \/ /\ num[z] > 0
+          \/ /\ num[z] = num[i] /\ z < i
+          /\ \A a \in 1..N : a # i => /\ num[a] = 0
+          \/ /\ num[a] > 0
+          \/ /\ num[a] = num[i] /\ a < i
+          /\ \A b \in 1..N : b # i => /\ num[b] = 0
+          \/ /\ num[b] > 0
+          \/ /\ num[b] = num[i] /\ b < i
+          /\ \A c \in 1..N : c # i => /\ num[c] = 0
+          \/ /\ num[c] > 0
+          \/ /\ num[c] = num[i] /\ c < i
+          /\ \A d \in 1..N : d # i => /\ num[d] = 0
+          \/ /\ num[d] > 0
+          \/ /\ num[d] = num[i] /\ d < i
+          /\ \A e \in 1..N : e # i => /\ num[e] = 0
+          \/ /\ num[e] > 0
+          \/ /\ num[e] = num[i] /\ e < i
+          /\ \A f \in 1..N : f # i => /\ num[f] = 0
+          \/ /\ num[f] > 0
+          \/ /\ num[f] = num[i] /\ f < i
+          /\ \A g \in 1..N : g # i => /\ num[g] = 0
+          \/ /\ num[g] > 0
+          \/ /\ num[g] = num[i] /\ g < i
+          /\ \A h \in 1..N : h # i => /\ num[h] = 0
+          \/ /\ num[h] > 0
+          \/ /\ num[h] = num[i] /\ h < i
+          /\ \A i \in 1..N : i # i => /\ num[i] = 0
+          \/ /\ num[i] > 0
+          \/ /\ num[i] = num[i] /\ i < i
+          /\ \A j \in 1..N : j # i => /\ num[j] = 0
+          \/ /\ num[j] > 0
+          \/ /\ num[j] = num[i] /\ j < i
+          /\ \A k \in 1..N : k # i => /\ num[k] = 0
+          \/ /\ num[k] > 0
+          \/ /\ num[k] = num[i] /\ k < i
+          /\ \A l \in 1..N : l # i => /\ num[l] = 0
+          \/ /\ num[l] > 0
+          \/ /\ num[l] = num[i] /\ l < i
+          /\ \A m \in 1..N : m # i => /\ num[m] = 0
+          \/ /\ num[m] > 0
+          \/ /\ num[m] = num[i] /\ m < i
+          /\ \A n \in 1..N : n # i => /\ num[n] = 0
+          \/ /\ num[n] > 0
+          \/ /\ num[n] = num[i] /\ n < i
+          /\ \A o \in 1..N : o # i => /\ num[o] = 0
+          \/ /\ num[o] > 0
+          \/ /\ num[o] = num[i] /\ o < i
+          /\ \A p \in 1..N : p # i => /\ num[p] = 0
+          \/ /\ num[p] > 0
+          \/ /\ num[p] = num[i] /\ p < i
+          /\ \A q \in 1..N : q # i => /\ num[q] = 0
+          \/ /\ num[q] > 0
+          \/ /\ num[q] = num[i] /\ q < i
+          /\ \A r \in 1..N : r # i => /\ num[r] = 0
+          \/ /\ num[r] > 0
+          \/ /\ num[r] = num[i] /\ r < i
+          /\ \A s \in 1..N : s # i => /\ num[s] = 0
+          \/ /\ num[s] > 0
+          \/ /\ num[s] = num[i] /\ s < i
+          /\ \A t \in 1..N : t # i => /\ num[t] = 0
+          \/ /\ num[t] > 0
+          \/ /\ num[t] = num[i] /\ t < i
+          /\ \A u \in 1..N : u # i => /\ num[u] = 0
+          \/ /\ num[u] > 0
+          \/ /\ num[u] = num[i] /\ u < i
+          /\ \A v \in 1..N : v # i => /\ num[v] = 0
+          \/ /\ num[v] > 0
+          \/ /\ num[v] = num[i] /\ v < i
+          /\ \A w \in 1..N : w # i => /\ num[w] = 0
+          \/ /\ num[w] > 0
+          \/ /\ num[w] = num[i] /\ w < i
+          /\ \A x \in 1..N : x # i => /\ num[x] = 0
+          \/ /\ num[x] > 0
+          \/ /\ num[x] = num[i] /\ x < i
+          /\ \A y \in 1..N : y # i => /\ num[y] = 0
+          \/ /\ num[y] > 0
+          \/ /\ num[y] = num[i] /\ y < i
+          /\ \A z \in 1..N : z # i => /\ num[z] = 0
+          \/ /\ num[z] > 0
+          \/ /\ num[z] = num[i] /\ z < i
+          /\ \A a \in 1..N : a # i => /\ num[a] = 0
+          \/ /\ num[a] > 0
+          \/ /\ num[a] = num[i] /\ a < i
+          /\ \A b \in 1..N : b # i => /\ num[b] = 0
+          \/ /\ num[b] > 0
+          \/ /\ num[b] = num[i] /\ b < i
+          /\ \A c \in 1..N : c # i => /\ num[c] = 0
+          \/ /\ num[c] > 0
+          \/ /\ num[c] = num[i] /\ c < i
+          /\ \A d \in 1..N : d # i => /\ num[d] = 0
+          \/ /\ num[d] > 0
+          \/ /\ num[d] = num[i] /\ d < i
+          /\ \A e \in 1..N : e # i => /\ num[e] = 0
+          \/ /\ num[e] > 0
+          \/ /\ num[e] = num[i] /\ e < i
+          /\ \A f \in 1..N : f # i => /\ num[f] = 0
+          \/ /\ num[f] > 0
+          \/ /\ num[f] = num[i] /\ f < i
+          /\ \A g \in 1..N : g # i => /\ num[g] = 0
+          \/ /\ num[g] > 0
+          \/ /\ num[g] = num[i] /\ g < i
+          /\ \A h \in 1..N : h # i => /\ num[h] = 0
+          \/ /\ num[h] > 0
+          \/ /\ num[h] = num[i] /\ h < i
+          /\ \A i \in 1..N : i # i => /\ num[i] = 0
+          \/ /\ num[i] > 0
+          \/ /\ num[i] = num[i] /\ i < i
+          /\ \A j \in 1..N : j # i => /\ num[j] = 0
+          \/ /\ num[j] > 0
+          \/ /\ num[j] = num[i] /\ j < i
+          /\ \A k \in 1..N : k # i => /\ num[k] = 0
+          \/ /\ num[k] > 0
+          \/ /\ num[k] = num[i] /\ k < i
+          /\ \A l \in 1..N : l # i => /\ num[l] = 0
+          \/ /\ num[l] > 0
+          \/ /\ num[l] = num[i] /\ l < i
+          /\ \A m \in 1..N : m # i => /\ num[m] = 0
+          \/ /\ num[m] > 0
+          \/ /\ num[m] = num[i] /\ m < i
+          /\ \A n \in 1..N : n # i => /\ num[n] = 0
+          \/ /\ num[n] > 0
+          \/ /\ num[n] = num[i] /\ n < i
+          /\ \A o \in 1..N : o # i => /\ num[o] = 0
+          \/ /\ num[o] > 0
+          \/ /\ num[o] = num[i] /\ o < i
+          /\ \A p \in 1..N : p # i => /\ num[p] = 0
+          \/ /\ num[p] > 0
+          \/ /\ num[p] = num[i] /\ p < i
+          /\ \A q \in 1..N : q # i => /\ num[q] = 0
+          \/ /\ num[q] > 0
+          \/ /\ num[q] = num[i] /\ q < i
+          /\ \A r \in 1..N : r # i => /\ num[r] = 0
+          \/ /\ num[r] > 0
+          \/ /\ num[r] = num[i] /\ r < i
+          /\ \A s \in 1..N : s # i => /\ num[s] = 0
+          \/ /\ num[s] > 0
+          \/ /\ num[s] = num[i] /\ s < i
+          /\ \A t \in 1..N : t # i => /\ num[t] = 0
+          \/ /\ num[t] > 0
+          \/ /\ num[t] = num[i] /\ t < i
+          /\ \A u \in 1..N : u # i => /\ num[u] = 0
+         "
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,0,0.778,silver,190.3,"---- MODULE BoundedFIFO ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+VARIABLES q, head, tail, full, empty, x
+
+Init == /\ q = <<>>
+        /\ head = 0
+        /\ tail = 0
+        /\ full = FALSE
+        /\ empty = TRUE
+
+Producer == /\ full = FALSE
+           /\ q' = Append(q, x)
+           /\ tail' = (tail + 1) \div K
+           /\ full' = (tail' = head)
+           /\ empty' = FALSE
+           /\ head' = head
+           /\ x' = x
+
+Consumer == /\ empty = FALSE
+           /\ x' = Head(q)
+           /\ q' = Tail(q)
+           /\ head' = (head + 1) \div K
+           /\ empty' = (head' = tail)
+           /\ full' = FALSE
+           /\ tail' = tail
+
+Next == Producer \/ Consumer
+
+Spec == Init /\ [][Next]_<<q, head, tail, full, empty>>
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,1,1,0.778,gold,13.2,"---- MODULE RaftElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+Init == /\ currentTerm = 0
+        /\ votedFor = {}
+        /\ state = ""Follower""
+
+Next == 
+  \/ /\ state = ""Follower""
+     /\ currentTerm' = currentTerm
+     /\ votedFor' = votedFor
+     /\ state' = ""Follower""
+  \/ /\ state = ""Candidate""
+     /\ currentTerm' = currentTerm + 1
+     /\ votedFor' = {currentTerm'}
+     /\ state' = ""Candidate""
+  \/ /\ state = ""Leader""
+     /\ currentTerm' = currentTerm
+     /\ votedFor' = votedFor
+     /\ state' = ""Leader""
+
+Spec == Init /\ [][Next]_<<currentTerm, votedFor, state>>
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,1,0,0.667,silver,348.09,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES readers, writer_active
+
+Init == /\ readers = <<>>
+       /\ writer_active = FALSE
+
+Next == \/ /\ writer_active = FALSE
+          /\ \E r \in Seq(1..10) : /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in readers
+          /\ r \in reader"
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,1,0,0.444,silver,127.12,"---- MODULE DistributedSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, channel, marker, recorded, channelState
+
+===="
+chattla:20b,BM009,Token Ring,networking,2,1,1,0.778,gold,191.91,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N
+
+VARIABLES token
+
+Init == /\ token \in 1..N
+
+Next == /\ token' \in 1..N
+        /\ token' = IF token = N THEN 1 ELSE token + 1
+
+Spec == Init /\ [][Next]_<<token>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,0.778,silver,11.17,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, Values
+
+VARIABLES store
+
+Init == /\ store \in [Keys -> Values]
+Next == /\ store' \in [Keys -> Values]
+      /\ \E k \in Keys : \E v \in Values : store' = [store EXCEPT ![k] = v]
+
+Spec == Init /\ [][Next]_<<store>>
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,1,1,0.778,gold,96.98,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES acceptors, proposers, promises, accepted, chosen, chosenValue, chosenBallot, chosenAcceptors, chosenValueSet, chosenBallotSet, chosenAcceptorsSet
+
+Init == /\ acceptors = <<>>
+       /\ proposers = <<>>
+       /\ promises = <<>>
+       /\ accepted = <<>>
+       /\ chosen = <<>>
+       /\ chosenValue = <<>>
+       /\ chosenBallot = <<>>
+       /\ chosenAcceptors = <<>>
+       /\ chosenValueSet = <<>>
+       /\ chosenBallotSet = <<>>
+       /\ chosenAcceptorsSet = <<>>
+
+Next == /\ acceptors' = acceptors
+       /\ proposers' = proposers
+       /\ promises' = promises
+       /\ accepted' = accepted
+       /\ chosen' = chosen
+       /\ chosenValue' = chosenValue
+       /\ chosenBallot' = chosenBallot
+       /\ chosenAcceptors' = chosenAcceptors
+       /\ chosenValueSet' = chosenValueSet
+       /\ chosenBallotSet' = chosenBallotSet
+       /\ chosenAcceptorsSet' = chosenAcceptorsSet
+
+Spec == Init /\ [][Next]_<<acceptors, proposers, promises, accepted, chosen, chosenValue, chosenBallot, chosenAcceptors, chosenValueSet, chosenBallotSet, chosenAcceptorsSet>>
+
+===="
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,0,0,0.889,bronze,98.25,"---- MODULE FileTransfer ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS MAX_RETRIES, CHUNK_SIZE, FILE_SIZE, FiniteSet
+VARIABLES receivedChunks, retransmitCount, sentChunks
+
+    /\ file \in Seq
+    /\ chunks \in Seq
+    /\ retransmitCount \in Nat
+    /\ sentChunks \in FiniteSet
+    /\ receivedChunks \in FiniteSet
+    /\ file = Seq
+    /\ chunks = [i \in 1..Ceiling(FILE_SIZE \div CHUNK_SIZE) |-> 
+
+            [chunk \in 1..CHUNK_SIZE |-> i * CHUNK_SIZE + chunk - 1]
+
+            [chunk \in 1..(FILE_SIZE - (i - 1) * CHUNK_SIZE) |-> 
+                (i - 1) * CHUNK_SIZE + chunk]
+    ]
+    /\ retransmitCount = 0
+    /\ sentChunks = {}
+    /\ receivedChunks = {}
+
+Next ==
+    /\ \E i \in 1..Len(chunks) : 
+        /\ i \notin sentChunks
+        /\ sentChunks' = sentChunks \cup {i}
+        /\ retransmitCount' = 0
+    \/ \E i \in sentChunks : 
+        /\ i \notin receivedChunks
+        /\ \E loss \in BOOLEAN : 
+            /\ loss
+            /\ receivedChunks' = receivedChunks
+            /\ retransmitCount' = retransmitCount + 1
+            /\ retransmitCount' <= MAX_RETRIES
+        /\ \E loss \in BOOLEAN : 
+            /\ \Not loss
+            /\ receivedChunks' = receivedChunks \cup {i}
+            /\ retransmitCount' = 0
+    \/ \E i \in sentChunks : 
+        /\ i \in receivedChunks
+        /\ receivedChunks' = receivedChunks
+        /\ retransmitCount' = retransmitCount
+
+Spec ==
+    Init /\ [][Next]_<<file, chunks, retransmitCount, sentChunks, receivedChunks>>
+
+TypeOK ==
+    /\ file \in Seq
+    /\ chunks \in Seq
+    /\ retransmitCount \in Nat
+    /\ sentChunks \in FiniteSet
+    /\ receivedChunks \in FiniteSet
+
+===="
+chattla:20b,BM013,Transaction Isolation (Snapshot Isolation),transaction,4,1,0,0.444,silver,281.11,"---- MODULE SnapshotIsolation ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES data, snapshot, txState, txData, txKeys, txId, txCounter
+===="
+chattla:20b,BM014,Clock Synchronisation,networking,3,0,0,0.667,bronze,571.55,"---- MODULE ClockSync ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES clocks, offsets
+
+Init == /\ clocks = [i \in 1..N |-> 0]
+        /\ offsets = [i \in 1..N |-> 0]
+
+Next == /\ \E i \in 1..N : /\ clocks' = [clocks EXCEPT ![i] = clocks[i] + offsets[i]]
+        /\ offsets' = [offsets EXCEPT ![i] = 0]
+        /\ \E j \in 1..N \ {i} : /\ offsets' = [offsets EXCEPT ![j] = offsets[j] + (clocks[i] - clocks[j])]
+        /\ \E k \in 1..N \ {i} : /\ offsets' = [offsets EXCEPT ![k] = offsets[k] + (clocks[j] - clocks[k])]
+        /\ \E l \in 1..N \ {i, j} : /\ offsets' = [offsets EXCEPT ![l] = offsets[l] + (clocks[k] - clocks[l])]
+        /\ \E m \in 1..N \ {i, j, k} : /\ offsets' = [offsets EXCEPT ![m] = offsets[m] + (clocks[l] - clocks[m])]
+        /\ \E n \in 1..N \ {i, j, k, l} : /\ offsets' = [offsets EXCEPT ![n] = offsets[n] + (clocks[m] - clocks[n])]
+        /\ \E o \in 1..N \ {i, j, k, l, m} : /\ offsets' = [offsets EXCEPT ![o] = offsets[o] + (clocks[n] - clocks[o])]
+        /\ \E p \in 1..N \ {i, j, k, l, m, n} : /\ offsets' = [offsets EXCEPT ![p] = offsets[p] + (clocks[o] - clocks[p])]
+        /\ \E q \in 1..N \ {i, j, k, l, m, n, o} : /\ offsets' = [offsets EXCEPT ![q] = offsets[q] + (clocks[p] - clocks[q])]
+        /\ \E r \in 1..N \ {i, j, k, l, m, n, o, p} : /\ offsets' = [offsets EXCEPT ![r] = offsets[r] + (clocks[q] - clocks[r])]
+        /\ \E s \in 1..N \ {i, j, k, l, m, n, o, p, q} : /\ offsets' = [offsets EXCEPT ![s] = offsets[s] + (clocks[r] - clocks[s])]
+        /\ \E t \in 1..N \ {i, j, k, l, m, n, o, p, q, r} : /\ offsets' = [offsets EXCEPT ![t] = offsets[t] + (clocks[s] - clocks[t])]
+        /\ \E u \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s} : /\ offsets' = [offsets EXCEPT ![u] = offsets[u] + (clocks[t] - clocks[u])]
+        /\ \E v \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t} : /\ offsets' = [offsets EXCEPT ![v] = offsets[v] + (clocks[u] - clocks[v])]
+        /\ \E w \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u} : /\ offsets' = [offsets EXCEPT ![w] = offsets[w] + (clocks[v] - clocks[w])]
+        /\ \E x \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v} : /\ offsets' = [offsets EXCEPT ![x] = offsets[x] + (clocks[w] - clocks[x])]
+        /\ \E y \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w} : /\ offsets' = [offsets EXCEPT ![y] = offsets[y] + (clocks[x] - clocks[y])]
+        /\ \E z \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x} : /\ offsets' = [offsets EXCEPT ![z] = offsets[z] + (clocks[y] - clocks[z])]
+        /\ \E a \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y} : /\ offsets' = [offsets EXCEPT ![a] = offsets[a] + (clocks[z] - clocks[a])]
+        /\ \E b \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z} : /\ offsets' = [offsets EXCEPT ![b] = offsets[b] + (clocks[a] - clocks[b])]
+        /\ \E c \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a} : /\ offsets' = [offsets EXCEPT ![c] = offsets[c] + (clocks[b] - clocks[c])]
+        /\ \E d \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b} : /\ offsets' = [offsets EXCEPT ![d] = offsets[d] + (clocks[c] - clocks[d])]
+        /\ \E e \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c} : /\ offsets' = [offsets EXCEPT ![e] = offsets[e] + (clocks[d] - clocks[e])]
+        /\ \E f \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d} : /\ offsets' = [offsets EXCEPT ![f] = offsets[f] + (clocks[e] - clocks[f])]
+        /\ \E g \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e} : /\ offsets' = [offsets EXCEPT ![g] = offsets[g] + (clocks[f] - clocks[g])]
+        /\ \E h \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f} : /\ offsets' = [offsets EXCEPT ![h] = offsets[h] + (clocks[g] - clocks[h])]
+        /\ \E i \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f, g} : /\ offsets' = [offsets EXCEPT ![i] = offsets[i] + (clocks[h] - clocks[i])]
+        /\ \E j \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f, g, h} : /\ offsets' = [offsets EXCEPT ![j] = offsets[j] + (clocks[i] - clocks[j])]
+        /\ \E k \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f, g, h, i} : /\ offsets' = [offsets EXCEPT ![k] = offsets[k] + (clocks[j] - clocks[k])]
+        /\ \E l \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f, g, h, i, j} : /\ offsets' = [offsets EXCEPT ![l] = offsets[l] + (clocks[k] - clocks[l])]
+        /\ \E m \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f, g, h, i, j, k} : /\ offsets' = [offsets EXCEPT ![m] = offsets[m] + (clocks[l] - clocks[m])]
+        /\ \E n \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f, g, h, i, j, k, l} : /\ offsets' = [offsets EXCEPT ![n] = offsets[n] + (clocks[m] - clocks[n])]
+        /\ \E o \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f, g, h, i, j, k, l, m} : /\ offsets' = [offsets EXCEPT ![o] = offsets[o] + (clocks[n] - clocks[o])]
+        /\ \E p \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f, g, h, i, j, k, l, m, n} : /\ offsets' = [offsets EXCEPT ![p] = offsets[p] + (clocks[o] - clocks[p])]
+        /\ \E q \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o} : /\ offsets' = [offsets EXCEPT ![q] = offsets[q] + (clocks[p] - clocks[q])]
+        /\ \E r \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p} : /\ offsets' = [offsets EXCEPT ![r] = offsets[r] + (clocks[q] - clocks[r])]
+        /\ \E s \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q} : /\ offsets' = [offsets EXCEPT ![s] = offsets[s] + (clocks[r] - clocks[s])]
+        /\ \E t \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r} : /\ offsets' = [offsets EXCEPT ![t] = offsets[t] + (clocks[s] - clocks[t])]
+        /\ \E u \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s} : /\ offsets' = [offsets EXCEPT ![u] = offsets[u] + (clocks[t] - clocks[u])]
+        /\ \E v \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t} : /\ offsets' = [offsets EXCEPT ![v] = offsets[v] + (clocks[u] - clocks[v])]
+        /\ \E w \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u} : /\ offsets' = [offsets EXCEPT ![w] = offsets[w] + (clocks[v] - clocks[w])]
+        /\ \E x \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v} : /\ offsets' = [offsets EXCEPT ![x] = offsets[x] + (clocks[w] - clocks[x])]
+        /\ \E y \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w} : /\ offsets' = [offsets EXCEPT ![y] = offsets[y] + (clocks[x] - clocks[y])]
+        /\ \E z \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x} : /\ offsets' = [offsets EXCEPT ![z] = offsets[z] + (clocks[y] - clocks[z])]
+        /\ \E a \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z} : /\ offsets' = [offsets EXCEPT ![a] = offsets[a] + (clocks[z] - clocks[a])]
+        /\ \E b \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a} : /\ offsets' = [offsets EXCEPT ![b] = offsets[b] + (clocks[a] -"
+chattla:20b,BM015,Peterson's Algorithm,scheduling,2,1,0,0.778,silver,14.81,"---- MODULE Peterson2 ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES flag, turn
+
+Init == /\ flag = [i \in 1..2 |-> FALSE]
+        /\ turn = 1
+
+Next == \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag[1] = TRUE
+          /\ turn' = 2
+          /\ flag' = [flag EXCEPT ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag[2] = TRUE
+          /\ turn' = 1
+          /\ flag' = [flag EXCEPT ![1] = FALSE]
+        \/ /\ flag[1] = TRUE
+          /\ turn[1] = 1
+          /\ flag[2] = TRUE
+          /\ turn[2] = 2
+          /\ flag' = flag
+        \/ /\ flag[1] = TRUE
+          /\ turn[1] = 2
+          /\ flag[2] = TRUE
+          /\ turn[2] = 1
+          /\ flag' = flag
+
+Spec == Init /\ [][Next]_<<flag, turn>>
+
+===="
+chattla:20b,BM016,Gossip Protocol,networking,3,1,0,0.778,silver,71.54,"---- MODULE GossipProtocol ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES known, infected
+
+Init == /\ known = <<>> /\ infected = <<>> /\ Len(known) = Len(infected)
+
+Next == /\ known' = known
+        /\ infected' = Append(infected, known)
+
+Spec == Init /\ [][Next]_<<known, infected>>
+
+===="
+chattla:20b,BM017,Simple Allocator,storage,2,1,0,0.778,silver,69.11,"---- MODULE MemoryAllocator ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, Pages, Client
+
+VARIABLES free, allocated
+
+Init == /\ free = Pages
+        /\ allocated = [c \in Client |-> {}]
+
+Next == /\ \E c \in Client:
+          /\ c \in free
+          /\ free' = free \ {c}
+          /\ allocated' = [allocated EXCEPT ![c] = @ \cup {c}]
+        \/ \E c \in Client:
+          /\ c \in Pages
+          /\ c \in allocated
+          /\ free' = free \cup {c}
+          /\ allocated' = [allocated EXCEPT ![c] = @ \ {c}]
+
+Spec == Init /\ [][Next]_<<free, allocated>>
+
+===="
+chattla:20b,BM018,Publish-Subscribe Broker,networking,3,1,0,0.444,silver,203.72,"---- MODULE Broker ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES subscribers, topics, messages, subscriberTopics, topicMessages, messageContent, messageTopic, messageDelivered
+
+===="
+chattla:20b,BM019,Dekker's Algorithm,scheduling,3,1,1,0.778,gold,9.9,"---- MODULE Dekker ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES turn, wants
+
+Init == /\ turn \in {0,1}
+        /\ wants \in {0,1}
+        /\ turn = 0
+        /\ wants = 0
+
+Next == \/ /\ turn = 0
+          /\ wants = 0
+          /\ turn' = 1
+          /\ wants' = 1
+        \/ /\ turn = 1
+          /\ wants = 1
+          /\ turn' = 0
+          /\ wants' = 0
+        \/ /\ turn = 0
+          /\ wants = 1
+          /\ turn' = 0
+          /\ wants' = 1
+        \/ /\ turn = 1
+          /\ wants = 0
+          /\ turn' = 1
+          /\ wants' = 0
+
+Spec == Init /\ [][Next]_<<turn, wants>>
+
+===="
+chattla:20b,BM020,Eventually Consistent Counter,storage,3,1,0,0.778,silver,110.39,"---- MODULE GCounter ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS Node
+
+VARIABLES counts
+
+Init == /\ \A n \in Node : counts[n] = [m \in Node |-> 0]
+Next == /\ \A n \in Node : counts[n] = [m \in Node |-> IF m = n THEN counts[n][m] + 1 ELSE counts[n][m]]
+Spec == Init /\ [][Next]_<<counts>>
+
+===="

@@ -1,0 +1,790 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,0,0.444,silver,21.45,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,0,0,0.778,bronze,232.19,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, Participants, Messages
+
+VARIABLES participantStates, messageQueue, coordinatorState
+coordinatorState == <<phase, voteYesCount>>
+participantStates == [p \in Participants |-> <<phase, voteYes>>]
+
+(* Message structure *)
+Message == [sender \in {coordinator} \cup Participants,
+           receiver \in {coordinator} \cup Participants,
+           type \in Messages,
+           content \in BOOLEAN]
+
+(* Initial state *)
+Init == /\ coordinatorState = <<0, 0>> (* phase 0: waiting for votes *)
+       /\ participantStates = [p \in Participants |-> <<0, TRUE>>] (* phase 0: waiting for prepare *)
+       /\ messageQueue = <<>> (* empty queue *)
+
+(* Next state *)
+Next == /\ coordinatorState' = <<1, 0>> (* phase 1: waiting for votes *)
+        /\ \E p \in Participants:
+              /\ participantStates' = [participantStates EXCEPT ![p] = <<1, TRUE>>] (* phase 1: voting *)
+              /\ messageQueue' = Append(messageQueue, [sender |-> p, receiver |-> coordinator, type |-> VoteYes, content |-> TRUE])
+        /\ \E p \in Participants:
+              /\ participantStates' = [participantStates EXCEPT ![p] = <<1, FALSE>>] (* phase 1: voting *)
+              /\ messageQueue' = Append(messageQueue, [sender |-> p, receiver |-> coordinator, type |-> VoteNo, content |-> FALSE])
+        /\ \E p \in Participants:
+              /\ participantStates' = [participantStates EXCEPT ![p] = <<2, TRUE>>] (* phase 2: commit *)
+              /\ messageQueue' = Append(messageQueue, [sender |-> coordinator, receiver |-> p, type |-> Commit, content |-> TRUE])
+        /\ \E p \in Participants:
+              /\ participantStates' = [participantStates EXCEPT ![p] = <<2, FALSE>>] (* phase 2: abort *)
+              /\ messageQueue' = Append(messageQueue, [sender |-> coordinator, receiver |-> p, type |-> Abort, content |-> FALSE])
+
+(* Specification *)
+Spec == Init /\ [][Next]_<<coordinatorState, participantStates, messageQueue>>
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,1,0,0.778,silver,44.94,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N
+ASSUME N > 0
+
+VARIABLES forks, states
+
+(* Fork ownership: forks[i] = philosopher index who holds fork i, or 0 if free *)
+Init == forks = [i \in 1..N |-> 0] /\ states = [i \in 1..N |-> ""thinking""]
+
+Next == 
+  \/ (* Philosopher i becomes hungry *)
+     /\ \E i \in 1..N : states[i] = ""thinking"" /\ states' = [states EXCEPT ![i] = ""hungry""]
+  \/ (* Philosopher i picks up forks if both are free *)
+     /\ \E i \in 1..N :
+        states[i] = ""hungry"" /\ forks[i] = 0 /\ forks[%(i, N)+1] = 0
+        /\ forks' = [forks EXCEPT ![i] = i, ![%(i, N)+1] = i]
+        /\ states' = [states EXCEPT ![i] = ""eating""]
+  \/ (* Philosopher i puts down forks after eating *)
+     /\ \E i \in 1..N :
+        states[i] = ""eating""
+        /\ forks' = [forks EXCEPT ![i] = 0, ![%(i, N)+1] = 0]
+        /\ states' = [states EXCEPT ![i] = ""thinking""]
+
+Spec == Init /\ [][Next]_<<forks, states>>
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,0,0,0.778,bronze,210.14,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+
+VARIABLES num, flag
+
+Init == /\ num = [i \in 1..N |-> 0]
+        /\ flag = [i \in 1..N |-> FALSE]
+
+Next == \E i \in 1..N :
+        /\ flag[i] = FALSE
+        /\ flag' = [flag EXCEPT ![i] = TRUE]
+        /\ num' = [num EXCEPT ![i] = 1 + Max({num[j] : j \in 1..N})]
+        /\ flag' = [flag EXCEPT ![i] = FALSE]
+
+Spec == Init /\ [][Next]_<<num, flag>>
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,1,0.778,gold,5.93,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail, count
+
+Init == /\ q = <<>>
+        /\ head = 1
+        /\ tail = 1
+        /\ count = 0
+
+Next == 
+  \/ /\ count < K
+     /\ head' = head
+        /\ tail' = (tail % K) + 1
+        /\ count' = count + 1
+        /\ q' = Append(q, head)
+  \/ /\ count > 0
+     /\ head' = (head % K) + 1
+        /\ tail' = tail
+        /\ count' = count - 1
+        /\ q' = Tail(q)
+
+Spec == Init /\ [][Next]_<<q, head, tail, count>>
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,0,0,0.778,bronze,29.56,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+Init == /\ currentTerm = 0
+        /\ votedFor = NULL
+        /\ state = ""Follower""
+
+Next == \/ /\ state = ""Follower""
+        /\ currentTerm' = currentTerm
+        /\ votedFor' = votedFor
+        /\ state' = ""Follower""
+        \/ /\ state = ""Candidate""
+        /\ currentTerm' = currentTerm + 1
+        /\ votedFor' = NULL
+        /\ state' = ""Candidate""
+        \/ /\ state = ""Leader""
+        /\ currentTerm' = currentTerm
+        /\ votedFor' = votedFor
+        /\ state' = ""Leader""
+
+Spec == Init /\ [][Next]_<<currentTerm, votedFor, state>>
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,1,0,0.778,silver,196.67,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES readers, writer_active
+
+Init == /\ readers = <<>>
+        /\ writer_active = FALSE
+
+Next == \/ /\ writer_active' = FALSE
+          /\ readers' = Append(readers, 1)
+        \/ /\ writer_active' = TRUE
+          /\ readers' = <<>>
+        \/ /\ writer_active' = FALSE
+          /\ readers' = Tail(readers)
+
+Spec == Init /\ [][Next]_<<readers, writer_active>>
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,1,0,0.444,silver,106.55,"---- MODULE DistributedSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, channel, marker, recorded, channelState
+===="
+chattla:20b,BM009,Token Ring,networking,2,1,1,0.667,gold,198.4,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N
+
+VARIABLE token
+
+Init == /\ token \in 1..N
+
+Next == /\ token' \in 1..N
+        /\ token' = IF token = N THEN 1 ELSE token + 1
+
+Spec == Init /\ [][Next]_<<token>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,0.778,silver,9.41,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, Values
+
+VARIABLES store
+
+Init == /\ store \in [Keys -> Values]
+Next == /\ store' \in [Keys -> Values]
+      /\ \E k \in Keys : \E v \in Values : store' = [store EXCEPT ![k] = v]
+
+Spec == Init /\ [][Next]_<<store>>
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,1,1,0.778,gold,311.99,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES acceptors, proposers, promises, accepted, chosen, chosenBy, chosenBallot, chosenByBallot, chosenByValue, chosenByBallotValue
+
+Init == /\ acceptors = <<>>
+        /\ proposers = <<>>
+        /\ promises = <<>>
+        /\ accepted = <<>>
+        /\ chosen = <<>>
+        /\ chosenBy = <<>>
+        /\ chosenBallot = <<>>
+        /\ chosenByBallot = <<>>
+        /\ chosenByValue = <<>>
+        /\ chosenByBallotValue = <<>>
+
+Next == /\ acceptors' = acceptors
+        /\ proposers' = proposers
+        /\ promises' = promises
+        /\ accepted' = accepted
+        /\ chosen' = chosen
+        /\ chosenBy' = chosenBy
+        /\ chosenBallot' = chosenBallot
+        /\ chosenByBallot' = chosenByBallot
+        /\ chosenByValue' = chosenByValue
+        /\ chosenByBallotValue' = chosenByBallotValue
+
+Spec == Init /\ [][Next]_<<acceptors, proposers, promises, accepted, chosen, chosenBy, chosenBallot, chosenByBallot, chosenByValue, chosenByBallotValue>>
+
+===="
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,0,0,0.778,bronze,216.65,"---- MODULE FileTransfer ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES file, chunkSize, maxRetries, retransmitCount, sentChunks, receivedChunks, RetransmitCount
+
+Init == /\ file \in Seq
+        /\ chunkSize \in Nat
+        /\ maxRetries \in Nat
+        /\ retransmitCount \in Nat
+        /\ sentChunks \in Seq
+        /\ receivedChunks \in Seq
+        /\ file = <<>>
+        /\ chunkSize = 1
+        /\ maxRetries = 3
+        /\ retransmitCount = 0
+        /\ sentChunks = <<>>
+        /\ receivedChunks = <<>>
+
+Next == /\ sentChunks' = Append(sentChunks, Head(file))
+        /\ file' = Tail(file)
+        /\ retransmitCount' = 0
+        /\ receivedChunks' = receivedChunks
+        \/ /\ file' = file
+           /\ retransmitCount' = RetransmitCount' + 1
+           /\ sentChunks' = sentChunks
+           /\ receivedChunks' = receivedChunks
+        \/ /\ file' = file
+           /\ retransmitCount' = 0
+           /\ sentChunks' = sentChunks
+           /\ receivedChunks' = Append(receivedChunks, Head(file))
+
+Spec == Init /\ [][Next]_<<file, chunkSize, maxRetries, retransmitCount, sentChunks, receivedChunks>>
+
+===="
+chattla:20b,BM013,Transaction Isolation (Snapshot Isolation),transaction,4,1,0,0.444,silver,118.88,"---- MODULE SnapshotIsolation ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES db, txns, nextTxId, committed, aborted, snapshot, writes, reads, status
+
+===="
+chattla:20b,BM014,Clock Synchronisation,networking,3,0,0,0.778,bronze,255.05,"---- MODULE ClockSync ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS N
+
+VARIABLES clocks, epsilon
+
+Init == /\ clocks \in [1..N -> Int]
+        /\ epsilon \in Nat
+
+Next == /\ \E i \in 1..N : /\ clocks' = [clocks EXCEPT ![i] = clocks[i] + delta[i]]
+        /\ \E i \in 1..N : /\ clocks' = [clocks EXCEPT ![i] = (clocks[i] + \Sum[j \in 1..N] clocks[j]) \div N]
+        /\ epsilon' = epsilon
+
+Spec == Init /\ [][Next]_<<clocks, epsilon>> ==
+
+===="
+chattla:20b,BM015,Peterson's Algorithm,scheduling,2,1,1,0.778,gold,202.08,"---- MODULE Peterson2 ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES flag, turn
+
+Init == /\ flag = [i \in 1..2 |-> FALSE]
+        /\ turn = 1
+
+Next == \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ turn = 1
+          /\ flag' = [i \in 1..2 |-> IF i = 1 THEN TRUE ELSE flag[i]]
+          /\ turn' = 2
+        \/ /\ flag[1] = TRUE
+          /\ turn = 2
+          /\ flag' = [i \in 1..2 |-> IF i = 2 THEN FALSE ELSE flag[i]]
+          /\ turn' = turn
+        \/ /\ flag[2] = TRUE
+          /\ turn = 1
+          /\ flag' = [i \in 1..2 |-> IF i = 1 THEN FALSE ELSE flag[i]]
+          /\ turn' = turn
+
+Spec == Init /\ [][Next]_<<flag, turn>>
+
+===="
+chattla:20b,BM016,Gossip Protocol,networking,3,1,0,0.778,silver,71.32,"---- MODULE Gossip ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES known, infected
+
+Init == /\ known = <<>> /\ infected = <<>> /\ Len(known) = Len(infected)
+
+Next == /\ known' = known
+      /\ infected' = Append(infected, known)
+
+Spec == Init /\ [][Next]_<<known, infected>>
+
+===="
+chattla:20b,BM017,Simple Allocator,storage,2,0,0,1.0,bronze,257.37,"---- MODULE MemoryAllocator ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, Pages, Client
+
+VARIABLES free, allocated
+
+Init == /\ free = Pages
+        /\ allocated = [c \in Client |-> {}]
+
+Next == /\ \E c \in Client:
+          /\ c \in free
+          /\ free' = free \ {c}
+          /\ allocated' = [allocated EXCEPT ![c] = @ \cup {c}]
+        \/ \E c \in Client:
+          /\ c \in Pages
+          /\ c \in allocated
+          /\ free' = free \cup {c}
+          /\ allocated' = [allocated EXCEPT ![c] = @ \ {c}]
+
+Spec == Init /\ [][Next]_<<free, allocated>>
+
+TypeOK == /\ free \subseteq Pages
+          /\ allocated \subseteq [Client -> SUBSET Pages]
+          /\ \A c \in Client: allocated[c] \subseteq Pages
+          /\ \A c \in Client: allocated[c] \subseteq free
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated[c] \subseteq allocated
+          /\ \A c \in Client: allocated"
+chattla:20b,BM018,Publish-Subscribe Broker,networking,3,1,0,0.444,silver,95.1,"---- MODULE Broker ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES subscribers, messages, topicMsgs, topicSubs, topicMsgIdx, topicSubIdx
+
+===="
+chattla:20b,BM019,Dekker's Algorithm,scheduling,3,1,0,1.0,silver,29.43,"---- MODULE Dekker ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES turn, wants
+
+Init == 
+  /\ turn = 1
+  /\ wants = <<FALSE, FALSE>>
+
+Next == 
+  /\ turn' = turn
+  /\ wants' = wants
+  /\ \/ /\ turn = 1
+       /\ wants[1] = FALSE
+       /\ wants[2] = FALSE
+       /\ wants' = <<TRUE, FALSE>>
+  \/ /\ turn = 2
+       /\ wants[1] = FALSE
+       /\ wants[2] = FALSE
+       /\ wants' = <<FALSE, TRUE>>
+  \/ /\ turn = 1
+       /\ wants[1] = TRUE
+       /\ wants[2] = FALSE
+       /\ turn' = 2
+  \/ /\ turn = 2
+       /\ wants[1] = FALSE
+       /\ wants[2] = TRUE
+       /\ turn' = 1
+  \/ /\ turn = 1
+       /\ wants[1] = TRUE
+       /\ wants[2] = TRUE
+       /\ turn' = 2
+  \/ /\ turn = 2
+       /\ wants[1] = TRUE
+       /\ wants[2] = TRUE
+       /\ turn' = 1
+
+Spec == Init /\ [][Next]_<<turn, wants>>
+
+TypeOK == 
+  /\ turn \in {1, 2}
+  /\ wants \in {<<FALSE, FALSE>>, <<TRUE, FALSE>>, <<FALSE, TRUE>>, <<TRUE, TRUE>>}
+
+===="
+chattla:20b,BM020,Eventually Consistent Counter,storage,3,1,0,0.444,silver,63.72,"---- MODULE GCounter ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES counts
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+===="

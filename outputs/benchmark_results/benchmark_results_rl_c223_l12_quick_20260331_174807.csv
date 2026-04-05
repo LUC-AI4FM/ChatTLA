@@ -1,0 +1,520 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,0,1.0,silver,29.94,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N
+VARIABLES state, turn
+
+
+(* State variables *)
+
+(* Initial state *)
+Init == /\ state = [p \in 1..N |-> ""idle""]
+        /\ turn \in 1..N
+
+(* Next-state relation *)
+Next == \/ /\ \E p \in 1..N : /\ state[p] = ""idle""
+                     /\ turn' = p
+                     /\ state' = [state EXCEPT ![p] = ""trying""]
+          \/ /\ \E p \in 1..N : /\ state[p] = ""trying""
+                     /\ turn = p
+                     /\ state' = [state EXCEPT ![p] = ""critical""]
+          \/ /\ \E p \in 1..N : /\ state[p] = ""critical""
+                     /\ state' = [state EXCEPT ![p] = ""idle""]
+          \/ /\ \E p \in 1..N : /\ state[p] = ""idle""
+                     /\ state' = state
+          \/ /\ \E p \in 1..N : /\ state[p] = ""trying""
+                     /\ turn' = turn
+                     /\ state' = state
+          \/ /\ \E p \in 1..N : /\ state[p] = ""critical""
+                     /\ turn' = turn
+                     /\ state' = state
+
+(* Specification *)
+Spec == Init /\ [][Next]_<<state, turn>>
+
+(* Type invariant *)
+TypeOK == /\ state \in [1..N -> {""idle"", ""trying"", ""critical""}]
+          /\ turn \in 1..N
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,1,0,0.444,silver,199.64,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES participants, votes, decision, messages
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,0,0,1.0,bronze,46.49,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLES forks, states
+
+(* Fork ownership: forks[i] = j means fork i is held by philosopher j; forks[i] = -1 means fork i is free *)
+Init == /\ forks = [i \in 1..N |-> -> -1]
+        /\ states = [i \in 1..N |-> -> ""thinking""]
+
+Next == \/ (* Philosopher i becomes hungry *)
+          /\ states' = [states EXCEPT ![i] = ""hungry""]
+        \/ (* Philosopher i picks up forks if both are free *)
+          /\ states[i] = ""hungry""
+          /\ forks[i] = -1
+          /\ forks[%(i, N) + 1] = -1
+          /\ forks' = [forks EXCEPT ![i] = i, ![%(i, N) + 1] = i]
+          /\ states' = [states EXCEPT ![i] = ""eating""]
+        \/ (* Philosopher i puts down forks after eating *)
+          /\ states[i] = ""eating""
+          /\ forks' = [forks EXCEPT ![i] = -1, ![%(i, N) + 1] = -1]
+          /\ states' = [states EXCEPT ![i] = ""thinking""]
+
+TypeOK == /\ forks \in [1..N -> 1..N \cup {-1}]
+          /\ states \in [1..N -> {""thinking"", ""hungry"", ""eating""}]
+
+Spec == Init /\ [][Next]_<<forks, states>>
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,1,0,0.444,silver,64.87,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES num, flag
+
+(* exit section *)
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,0,0.444,silver,227.68,"---- MODULE BoundedFIFO ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail
+
+(* The queue is represented as a sequence of length K. *)
+(* head and tail are indices into the sequence. *)
+
+(* The queue is empty when head = tail. *)
+(* The queue is full when (tail + 1) \mod K = head. *)
+
+(* The queue holds elements in positions [head, tail). *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)
+
+(* The queue is represented as a sequence of length K. *)
+(* The element at position head is the next to be consumed. *)"
+chattla:20b,BM006,Raft Leader Election,consensus,4,1,0,0.444,silver,232.61,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,1,0,0.778,silver,12.88,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES readers, writer_active
+
+Init == /\ readers = <<>>
+       /\ writer_active = FALSE
+
+Next == \/ /\ writer_active' = FALSE
+          /\ readers' = Append(readers, 1)
+        \/ /\ writer_active' = TRUE
+          /\ readers' = <<>>
+        \/ /\ writer_active' = FALSE
+          /\ readers' = Tail(readers)
+
+Spec == Init /\ [][Next]_<<readers, writer_active>>
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,1,0,0.444,silver,234.41,"---- MODULE DistributedSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, channel, snapshot, marker, finished
+===="
+chattla:20b,BM009,Token Ring,networking,2,1,1,0.667,gold,2.25,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLE token
+
+Init == /\ token \in 1..N
+
+Next == /\ token' \in 1..N
+        /\ token' = IF token = N THEN 1 ELSE token + 1
+
+Spec == Init /\ [][Next]_<<token>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,1.0,silver,5.43,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, NULL, Values
+VARIABLES store
+
+
+(* Type invariant *)
+TypeOK == 
+  /\ store \in [Keys -> Values]
+  /\ \A k \in Keys: store[k] \in Values
+
+(* Initial state *)
+Init == 
+  /\ store = [k \in Keys |-> NULL]
+
+(* Next-state relation *)
+Next == 
+  \/ \E k \in Keys : \E v \in Values : 
+       /\ store' = [store EXCEPT ![k] = v]
+  \/ \E k \in Keys: 
+       /\ store' = store
+
+Spec == Init /\ [][Next]_<<store>>
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,1,0,0.444,silver,234.26,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES acceptors, proposers, promises, accepts, chosen, values, ballots
+===="
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,0,0,0.889,bronze,44.15,"---- MODULE FileTransfer ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS MAX_RETRIES, CHUNK_SIZE, FILE_SIZE, CHANNEL_LOSS_PROBABILITY
+VARIABLES RetransmitCount, channel, retransmit_count, sent_chunks
+
+    /\ file \in Seq(1..FILE_SIZE)
+    /\ chunks = [i \in 1..Len(file) |-> -> [chunk \in 1..CHUNK_SIZE |-> IF i*CHUNK_SIZE <= Len(file) THEN
+
+            SubSeq(file, i*CHUNK_SIZE, i*CHUNK_SIZE + CHUNK_SIZE - 1)
+
+            SubSeq(file, i*CHUNK_SIZE, Len(file))
+
+            <<>>
+    ]
+    /\ sent_chunks = <<>>
+    /\ retransmit_count = <<>>
+    /\ channel = <<>>
+
+Next ==
+    /\ \E i \in 1..Len(chunks) : 
+        /\ i \notin sent_chunks
+        /\ \E msg \in {chunks[i], <<>>} : 
+            /\ channel' = Append(channel, msg)
+            /\ sent_chunks' = Append(sent_chunks, i)
+            /\ retransmit_count' = Append(retransmit_count, 0)
+    \/ \E i \in sent_chunks : 
+        /\ \E msg \in {chunks[i], <<>>} : 
+            /\ channel' = Append(channel, msg)
+            /\ retransmit_count' = Append(retransmit_count, RetransmitCount(i) + 1)
+    \/ \E i \in sent_chunks : 
+        /\ RetransmitCount(i) >= MAX_RETRIES
+        /\ channel' = Append(channel, <<>>)
+        /\ sent_chunks' = sent_chunks \ {i}
+        /\ retransmit_count' = RetransmitCount' \ {i}
+
+RetransmitCount(i) ==
+
+        RetransmitCount(i)
+
+        0
+
+RetransmitCount' ==
+
+        RetransmitCount'(i)
+
+        0
+
+Spec ==
+    Init /\ [][Next]_<<file, chunks, sent_chunks, retransmit_count, channel>>
+
+TypeOK ==
+    /\ file \in Seq(1..FILE_SIZE)
+    /\ chunks \in [1..Len(file) -> Seq(1..CHUNK_SIZE)]
+    /\ sent_chunks \in Seq(1..Len(chunks))
+    /\ retransmit_count \in Seq(1..Len(chunks))
+    /\ channel \in Seq(Seq(1..CHUNK_SIZE))
+
+===="

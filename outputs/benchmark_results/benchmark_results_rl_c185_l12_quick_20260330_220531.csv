@@ -1,0 +1,597 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,0,0.444,silver,57.87,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, turn, flag
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,0,0,0.778,bronze,51.25,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES participants, coordinator, messages
+
+
+  coordinator = 0;       (* coordinator ID *)
+  messages = <<>>;       (* list of messages in transit *)
+
+
+
+Init == /\ participants = <<1, 2, 3, 4, 5>>  (* Example with 5 participants *)
+        /\ coordinator = 0
+        /\ messages = <<>>
+
+Next == \/ CoordinatorSendPrepare
+      \/ ParticipantReceivePrepare
+      \/ CoordinatorReceiveVotes
+      \/ CoordinatorDecideCommit
+      \/ CoordinatorDecideAbort
+      \/ CoordinatorSendCommit
+      \/ CoordinatorSendAbort
+      \/ ParticipantReceiveCommit
+      \/ ParticipantReceiveAbort
+
+Spec == Init /\ [][Next]_<<participants, coordinator, messages>>
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,1,1,0.778,gold,78.72,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES forks, states
+
+Init == /\ forks = [i \in 1..5 |-> 0]
+        /\ states = [i \in 1..5 |-> 0]
+
+Next == /\ forks' = forks
+        /\ states' = states
+
+Spec == Init /\ [][Next]_<<forks, states>>
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,0,0,0.778,bronze,292.92,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+
+VARIABLES num, flag
+
+Init == /\ num = [i \in 1..N |-> 0]
+        /\ flag = [i \in 1..N |-> FALSE]
+
+Next == \E i \in 1..N :
+          /\ flag[i] = FALSE
+          /\ flag' = [flag EXCEPT ![i] = TRUE]
+          /\ num' = [num EXCEPT ![i] = 1 + Max({num[j] : j \in 1..N})]
+          /\ flag' = [flag EXCEPT ![i] = FALSE]
+
+Spec == Init /\ [][Next]_<<num, flag>>
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,0,0,0.667,bronze,537.15,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail, count
+
+Init == /\ q = <<>>
+        /\ head = 1
+        /\ tail = 1
+        /\ count = 0
+
+Next == 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+  /\ 
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,1,0,0.444,silver,87.17,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,1,0,0.778,silver,20.63,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS Readers
+
+VARIABLES readers, writer_active
+
+Init == /\ readers = <<>>
+        /\ writer_active = FALSE
+
+Next == \/ /\ writer_active = FALSE
+          /\ \E r \in Readers : /\ r \in readers
+          /\ ~(r \in readers)
+          /\ writer_active' = TRUE
+        \/ /\ writer_active = TRUE
+          /\ \E r \in Readers : /\ r \in readers
+          /\ ~(r \in readers)
+          /\ writer_active' = FALSE
+        \/ /\ writer_active = FALSE
+          /\ \E r \in Readers : /\ ~(r \in readers)
+          /\ r \in readers
+          /\ writer_active' = FALSE
+
+Spec == Init /\ [][Next]_<<readers, writer_active>>
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,1,0,0.444,silver,81.07,"---- MODULE DistributedSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, channel, snapshot, marker, finished
+
+===="
+chattla:20b,BM009,Token Ring,networking,2,1,1,0.667,gold,2.47,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLE token
+
+Init == /\ token \in 1..N
+
+Next == /\ token' \in 1..N
+        /\ token' = IF token = N THEN 1 ELSE token + 1
+
+Spec == Init /\ [][Next]_<<token>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,0.667,silver,13.84,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, Values
+VARIABLE store
+
+Init == /\ store \in [Keys -> Values]
+
+Next == /\ \E k \in Keys : \E v \in Values : store' = [store EXCEPT ![k] = v]
+
+Spec == Init /\ [][Next]_<<store>>
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,1,0,0.444,silver,58.37,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES acceptors, proposers, promises, accepts, chosen
+
+===="
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,1,0,0.444,silver,91.38,"---- MODULE Sender ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES file, chunks, sent, received, retransmitCount, MAX_RETRIES
+
+===="

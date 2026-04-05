@@ -1,0 +1,647 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,0,0,1.0,bronze,32.33,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS N
+
+VARIABLES state, turn
+State == <<state, turn>>
+
+(* Initial condition *)
+Init == /\ state \in [1..N -> {idle, trying, critical}]
+       /\ turn \in 1..N
+       /\ \A p \in 1..N : state[p] = idle
+
+(* Next-state relation *)
+Next == \/ \E p \in 1..N :
+          /\ state[p] = idle
+          /\ state' = [state EXCEPT ![p] = trying]
+          /\ turn' = turn
+       \/ \E p \in 1..N :
+          /\ state[p] = trying
+          /\ turn = p
+          /\ state' = [state EXCEPT ![p] = critical]
+          /\ turn' = turn
+       \/ \E p \in 1..N :
+          /\ state[p] = critical
+          /\ state' = [state EXCEPT ![p] = idle]
+          /\ turn' = (p + 1) \mod N + 1
+
+(* Specification *)
+Spec == Init /\ [][Next]_<<state, turn>>
+
+(* Type invariant *)
+TypeOK == /\ state \in [1..N -> {idle, trying, critical}]
+          /\ turn \in 1..N
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,1,0,0.444,silver,58.06,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES participants, votes, state, messages, committed, aborted
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,1,0,0.444,silver,104.53,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLES forks, state
+
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,1,0,0.444,silver,134.62,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N
+
+VARIABLES num, flag
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,0,1.0,silver,19.58,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail, count
+
+(* Queue is represented as a sequence of length K *)
+Queue == [i \in 1..K |-> q[i]]
+
+(* The queue is empty when count = 0 *)
+Empty == count = 0
+
+(* The queue is full when count = K *)
+Full == count = K
+
+(* The queue is bounded: each element is an integer *)
+Bounded == \A i \in 1..K : q[i] \in Int
+
+(* The queue is a FIFO: head points to the next element to consume,
+   tail points to the next position to produce into *)
+ValidPointers == head \in 1..K /\ tail \in 1..K
+
+(* The queue is consistent: count is the number of elements in the queue *)
+Consistent == count = Len(Queue)
+
+(* The queue is well-formed: all elements are integers and pointers are valid *)
+TypeOK == Bounded /\ ValidPointers /\ Consistent
+
+(* The producer action: if not full, produce an element *)
+Produce(x) == 
+  /\ \E i \in 1..K : q[i] = 0
+  /\ q[tail] = x
+  /\ tail' = IF tail = K THEN 1 ELSE tail + 1
+  /\ count' = count + 1
+  /\ UNCHANGED <<head, q>>
+
+(* The consumer action: if not empty, consume an element *)
+Consume == 
+  /\ \E i \in 1..K : q[i] # 0
+  /\ q[head] = 0
+  /\ head' = IF head = K THEN 1 ELSE head + 1
+  /\ count' = count - 1
+  /\ UNCHANGED <<tail, q>>
+
+(* The next-state relation: either produce or consume *)
+Next == 
+  \/ \E x \in Int : \E i \in 1..K : q[i] = 0 /\ Produce(x)
+  \/ \E i \in 1..K : q[i] # 0 /\ Consume
+
+(* The initial state: empty queue *)
+Init == 
+  /\ q = [i \in 1..K |-> 0]
+  /\ head = 1
+  /\ tail = 1
+  /\ count = 0
+
+Spec == Init /\ [][Next]_<<q, head, tail, count>>
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,1,0,0.444,silver,65.53,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,0,0,0.778,bronze,13.8,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES readers, writer_active
+
+Init == /\ readers = <<>>
+       /\ writer_active = FALSE
+
+Next == \/ /\ writer_active' = FALSE
+          /\ readers' = Append(readers, 1)
+        \/ /\ writer_active' = TRUE
+          /\ readers' = <<>>
+        \/ /\ writer_active' = FALSE
+          /\ readers' = Tail(readers)
+
+Spec == Init /\ [][Next]_<<readers, writer_active>> ==
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,0,0,1.0,bronze,98.93,"---- MODULE ChandyLamportSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS FiniteSet, ProcessSet
+
+VARIABLES state, channel, markerSent, snapshotTaken, snapshotState, snapshotChannel
+channels == [p \in ProcessSet, q \in ProcessSet |-> channel[p][q]]
+markers == [p \in ProcessSet, q \in ProcessSet |-> markerSent[p][q]]
+snapshots == [p \in ProcessSet |-> snapshotTaken[p]]
+snapState == [p \in ProcessSet |-> snapshotState[p]]
+snapChannel == [p \in ProcessSet, q \in ProcessSet |-> snapshotChannel[p][q]]
+
+(* Initial state *)
+Init == /\ state \in [ProcessSet -> Int]
+        /\ channel \in [ProcessSet, ProcessSet -> FiniteSet(Int)]
+        /\ markerSent \in [ProcessSet, ProcessSet -> BOOLEAN]
+        /\ snapshotTaken \in [ProcessSet -> BOOLEAN]
+        /\ snapshotState \in [ProcessSet -> Int]
+        /\ snapshotChannel \in [ProcessSet, ProcessSet -> FiniteSet(Int)]
+        /\ \A p \in ProcessSet : state[p] = 0
+        /\ \A p, q \in ProcessSet : channel[p][q] = {}
+        /\ \A p, q \in ProcessSet : markerSent[p][q] = FALSE
+        /\ \A p \in ProcessSet : snapshotTaken[p] = FALSE
+        /\ \A p, q \in ProcessSet : snapshotChannel[p][q] = {}
+
+(* Next-state relation *)
+Next == \/ \A p \in ProcessSet : 
+          /\ state[p] \in Int
+          /\ channel[p][q] \in FiniteSet(Int)
+          /\ markerSent[p][q] \in BOOLEAN
+          /\ snapshotTaken[p] \in BOOLEAN
+          /\ snapshotState[p] \in Int
+          /\ snapshotChannel[p][q] \in FiniteSet(Int)
+        \/ \A p, q \in ProcessSet : 
+          /\ \E msg \in Int : 
+              /\ msg \in channel[p][q]
+              /\ channel' = [channel EXCEPT ![p][q] = @ \ {msg}]
+              /\ state' = state
+              /\ markerSent' = markerSent
+              /\ snapshotTaken' = snapshotTaken
+              /\ snapshotState' = snapshotState
+              /\ snapshotChannel' = snapshotChannel
+        \/ \A p, q \in ProcessSet : 
+          /\ markerSent[p][q] = FALSE
+          /\ markerSent' = [markerSent EXCEPT ![p][q] = TRUE]
+          /\ state' = state
+          /\ channel' = channel
+          /\ snapshotTaken' = snapshotTaken
+          /\ snapshotState' = snapshotState
+          /\ snapshotChannel' = snapshotChannel
+        \/ \A p \in ProcessSet : 
+          /\ snapshotTaken[p] = FALSE
+          /\ snapshotTaken' = [snapshotTaken EXCEPT ![p] = TRUE]
+          /\ snapshotState' = [snapshotState EXCEPT ![p] = state[p]]
+          /\ snapshotChannel' = [snapshotChannel EXCEPT ![p][q] = {} \forall q \in ProcessSet]
+          /\ state' = state
+          /\ channel' = channel
+          /\ markerSent' = markerSent
+        \/ \A p, q \in ProcessSet : 
+          /\ snapshotTaken[p] = TRUE
+          /\ markerSent[p][q] = TRUE
+          /\ markerSent' = markerSent
+          /\ state' = state
+          /\ channel' = channel
+          /\ snapshotTaken' = snapshotTaken
+          /\ snapshotState' = snapshotState
+          /\ snapshotChannel' = [snapshotChannel EXCEPT ![p][q] = @ \cup channel[p][q]]
+          /\ channel' = [channel EXCEPT ![p][q] = {}]
+
+(* Invariant: all channels are finite sets *)
+TypeOK == /\ state \in [ProcessSet -> Int]
+          /\ channel \in [ProcessSet, ProcessSet -> FiniteSet(Int)]
+          /\ markerSent \in [ProcessSet, ProcessSet -> BOOLEAN]
+          /\ snapshotTaken \in [ProcessSet -> BOOLEAN]
+          /\ snapshotState \in [ProcessSet -> Int]
+          /\ snapshotChannel \in [ProcessSet, ProcessSet -> FiniteSet(Int)]
+
+Spec == Init /\ [][Next]_<<state, channel, markerSent, snapshotTaken, snapshotState, snapshotChannel>> 
+
+===="
+chattla:20b,BM009,Token Ring,networking,2,0,0,0.778,bronze,16.08,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS N
+
+VARIABLES token, messages
+
+Init == /\ token \in 1..N
+        /\ messages \in 1..N -> 1..N
+
+Next == /\ token' \in 1..N
+        /\ messages' \in 1..N -> 1..N
+        /\ token' = IF token = N THEN 1 ELSE token + 1
+           /\ messages' = [i \in 1..N |-> IF i = token THEN token' ELSE messages[i]]
+
+Spec == Init /\ [][Next]_<<token, messages>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,0.778,silver,4.82,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, Values, NULL
+
+VARIABLES store
+
+Init == store = [k \in Keys |-> NULL]
+
+Next == \/ /\ \E k \in Keys : \E v \in Values : /\ store' = [store EXCEPT ![k] = v]
+      \/ /\ \E k \in Keys : /\ store' = [store EXCEPT ![k] = NULL]
+
+Spec == Init /\ [][Next]_<<store>>
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,0,0,1.0,bronze,82.75,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS NULL, Values
+
+VARIABLES acceptors, proposers, promises, accepts, chosen, chosenBy
+\* Highest promised ballot by an acceptor
+HighestPromised(a) == promises[a][1]
+\* Highest accepted ballot by an acceptor
+HighestAccepted(a) == accepts[a][1]
+\* Value accepted by an acceptor
+AcceptedValue(a) == accepts[a][2]
+\* Value chosen by an acceptor
+ChosenValue(a) == chosenBy[a]
+
+\* Initial state
+Init == /\ acceptors = {1, 2, ..., N}
+        /\ proposers = {1, 2, ..., M}
+        /\ promises = [a \in acceptors |-> [1 |-> 0, 2 |-> NULL]]
+        /\ accepts = [a \in acceptors |-> [1 |-> 0, 2 |-> NULL]]
+        /\ chosen = {}
+        /\ chosenBy = [v \in Values |-> NULL]
+
+\* Proposer sends Prepare to all acceptors
+Prepare(p, b) == /\ b > HighestPromised(a) for all a \in acceptors
+                  /\ promises' = [a \in acceptors |-> [1 |-> b, 2 |-> NULL]]
+                  /\ accepts' = accepts
+                  /\ chosen' = chosen
+                  /\ chosenBy' = chosenBy
+
+\* Acceptors respond to Prepare
+Promise(a, b, v) == /\ b = HighestPromised(a)
+                     /\ promises' = [a \in acceptors |-> [1 |-> b, 2 |-> v]]
+                     /\ accepts' = accepts
+                     /\ chosen' = chosen
+                     /\ chosenBy' = chosenBy
+
+\* Proposer sends Accept to all acceptors
+Accept(p, b, v) == /\ b > HighestAccepted(a) for all a \in acceptors
+                   /\ accepts' = [a \in acceptors |-> [1 |-> b, 2 |-> v]]
+                   /\ promises' = promises
+                   /\ chosen' = chosen
+                   /\ chosenBy' = chosenBy
+
+\* Acceptors respond to Accept
+Accepted(a, b, v) == /\ b = HighestAccepted(a)
+                     /\ accepts' = [a \in acceptors |-> [1 |-> b, 2 |-> v]]
+                     /\ promises' = promises
+                     /\ chosen' = chosen
+                     /\ chosenBy' = chosenBy
+
+\* Value chosen by an acceptor
+Chosen(a, v) == /\ v \in chosen
+                /\ chosenBy[v] = HighestAccepted(a)
+
+\* Next-state relation
+Next == \/ /\ \E p \in proposers : \E b \in Values : \E v \in Values :
+          /\ Prepare(p, b)
+          /\ \E a \in acceptors :
+              /\ Promise(a, b, v)
+          /\ \E a \in acceptors :
+              /\ Accept(p, b, v)
+          /\ \E a \in acceptors :
+              /\ Accepted(a, b, v)
+          /\ \E a \in acceptors :
+              /\ Chosen(a, v)
+        \/ /\ \E a \in acceptors : \E b \in Values : \E v \in Values :
+          /\ Chosen(a, v)
+
+\* Invariant : chosen values are never changed
+TypeOK == /\ \A a \in acceptors, v \in Values
+          /\ Chosen(a, v) => chosenBy[v] = HighestAccepted(a)
+
+Spec == Init /\ [][Next]_<<acceptors, proposers, promises, accepts, chosen, chosenBy>>
+
+===="
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,0,0,0.667,bronze,39.28,"---- MODULE FileTransfer ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS MAX_RETRIES, CHUNK_SIZE, FILE_SIZE, CHANNEL_LOSS_PROBABILITY, SeqIndices
+VARIABLES channel, retransmit_count, sent_chunks
+
+    /\ file \in Seq(1..FILE_SIZE)
+    /\ chunks = [i \in 1..Len(file) |-> -> SubSeq(file, i, CHUNK_SIZE)]
+    /\ sent_chunks = <<>>
+    /\ retransmit_count = <<>>
+    /\ channel = <<>>
+
+Next ==
+    /\ \E i \in 1..Len(chunks) :
+        /\ i \notin SeqIndices(sent_chunks)
+        /\ channel' = Append(channel, [chunk |-> chunks[i], loss |-> Random < CHANNEL_LOSS_PROBABILITY])
+        /\ sent_chunks' = Append(sent_chunks, chunks[i])
+        /\ retransmit_count' = Append(retransmit_count, 0)
+    \/ \E i \in 1..Len(chunks) :
+        /\ i \in SeqIndices(sent_chunks)
+        /\ channel' = Append(channel, [chunk |-> chunks[i], loss |-> Random < CHANNEL_LOSS_PROBABILITY])
+        /\ retransmit_count' = Append(retransmit_count, RetransmitCount(i) + 1)
+        /\ sent_chunks' = sent_chunks
+    \/ /\ \E i \in 1..Len(chunks) :
+            /\ i \in SeqIndices(sent_chunks)
+            /\ RetransmitCount(i) >= MAX_RETRIES
+            /\ channel' = channel
+            /\ sent_chunks' = sent_chunks
+            /\ retransmit_count' = retransmit_count
+
+RetransmitCount(i) ==
+
+        retransmit_count[i]
+
+        0
+
+Spec ==
+    Init /\ [][Next]_<<file, chunks, sent_chunks, retransmit_count, channel>>
+
+===="

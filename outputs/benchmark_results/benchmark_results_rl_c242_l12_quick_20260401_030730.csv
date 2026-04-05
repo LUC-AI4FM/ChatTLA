@@ -1,0 +1,576 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,0,0.444,silver,27.22,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,1,0,0.444,silver,68.42,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES participants, votes, decision, messages
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,1,0,0.444,silver,61.32,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES forks, states
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,1,0,0.444,silver,47.83,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES num, flag
+
+
+  (* --comment
+  The algorithm uses two phases: choosing and waiting.
+  *)
+  (* --comment
+  The algorithm uses the following invariants:
+  - TypeOK: ensures that num and flag have the correct types.
+  - MutualExclusion: ensures that at most one process is in the critical section at a time.
+  *)
+  (* --comment
+  The algorithm uses the following actions:
+  - Init: initializes the state variables.
+  - Next: updates the state variables.
+  *)
+  (* --comment
+  The algorithm uses the following operators:
+  - Spec: the specification of the algorithm.
+  *)
+  (* --comment
+  The algorithm uses the following definitions:
+  - TypeOK: ensures that num and flag have the correct types.
+  - MutualExclusion: ensures that at most one process is in the critical section at a time.
+  *)
+  (* --comment
+  The algorithm uses the following variables:
+  - num: the ticket number of each process.
+  - flag: the flag of each process.
+  *)
+  (* --comment
+  The algorithm uses the following actions:
+  - Init: initializes the state variables.
+  - Next: updates the state variables.
+  *)
+  (* --comment
+  The algorithm uses the following operators:
+  - Spec: the specification of the algorithm.
+  *)
+  (* --comment
+  The algorithm uses the following definitions:
+  - TypeOK: ensures that num and flag have the correct types.
+  - MutualExclusion: ensures that at most one process is in the critical section at a time.
+  *)
+  (* --comment
+  The algorithm uses the following variables:
+  - num: the ticket number of each process.
+  - flag: the flag of each process.
+  *)
+  (* --comment
+  The algorithm uses the following actions:
+  - Init: initializes the state variables.
+  - Next: updates the state variables.
+  *)
+  (* --comment
+  The algorithm uses the following operators:
+  - Spec: the specification of the algorithm.
+  *)
+  (* --comment
+  The algorithm uses the following definitions:
+  - TypeOK: ensures that num and flag have the correct types.
+  - MutualExclusion: ensures that at most one process is in the critical section at a time.
+  *)
+  (* --comment
+  The algorithm uses the following variables:
+  - num: the ticket number of each process.
+  - flag: the flag of each process.
+  *)
+  (* --comment
+  The algorithm uses the following actions:
+  - Init: initializes the state variables.
+  - Next: updates the state variables.
+  *)
+  (* --comment
+  The algorithm uses the following operators:
+  - Spec: the specification of the algorithm.
+  *)
+  (* --comment
+  The algorithm uses the following definitions:
+  - TypeOK: ensures that num and flag have the correct types.
+  - MutualExclusion: ensures that at most one process is in the critical section at a time.
+  *)
+  (* --comment
+  The algorithm uses the following variables:
+  - num: the ticket number of each process.
+  - flag: the flag of each process.
+  *)
+  (* --comment
+  The algorithm uses the following actions:
+  - Init: initializes the state variables.
+  - Next: updates the state variables.
+  *)
+  (* --comment
+  The algorithm uses the following operators:
+  - Spec: the specification of the algorithm.
+  *)
+  (* --comment
+  The algorithm uses the following definitions:
+  - TypeOK: ensures that num and flag have the correct types.
+  - MutualExclusion: ensures that at most one process is in the critical section at a time.
+  *)
+  (* --comment
+  The algorithm uses the following variables:
+  - num: the ticket number of each process.
+  - flag: the flag of each process.
+  *)
+  (* --comment
+  The algorithm uses the following actions:
+  - Init: initializes the state variables.
+  - Next: updates the state variables.
+  *)
+  (* --comment
+  The algorithm uses the following operators:
+  - Spec: the specification of the algorithm.
+  *)
+  (* --comment
+  The algorithm uses the following definitions:
+  - TypeOK: ensures that num and flag have the correct types.
+  - MutualExclusion: ensures that at most one process is in the critical section at a time.
+  *)
+  (* --comment
+  The algorithm uses the following variables:
+  - num: the ticket number of each process.
+  - flag: the flag of each process.
+  *)
+  (* --comment
+  The algorithm uses the following actions:
+  - Init: initializes the state variables.
+  - Next: updates the state variables.
+  *)
+  (* --comment
+  The algorithm uses the following operators:
+  - Spec: the specification of the algorithm.
+  *)
+  (* --comment
+  The algorithm uses the following definitions:
+  - TypeOK: ensures that num and flag have the correct types.
+  - MutualExclusion: ensures that at most one process is in the critical section at a time.
+  *)
+  (* --comment
+  The algorithm uses the following variables:
+  - num: the ticket number of each process.
+  - flag: the flag of each process.
+  *)
+  (* --comment
+  The algorithm uses the following actions:
+  - Init: initializes the state variables.
+  - Next: updates the state variables.
+  *)
+  (* --comment
+  The algorithm uses the following operators:
+  - Spec: the specification of the algorithm.
+  *)
+  (* --comment
+  The algorithm uses the following definitions:
+  - TypeOK: ensures that num and flag have the correct types.
+  - MutualExclusion: ensures that at most one process is in the critical section at a time.
+  *)
+  (* --comment
+  The algorithm uses the following variables:
+  - num: the ticket number of each process.
+  - flag: the flag of each process.
+  *)
+  (* --comment
+  The algorithm uses the following actions:
+  - Init: initializes the state variables.
+  - Next: updates the state variables.
+  *)
+  (* --comment
+  The algorithm uses the following operators:
+  - Spec: the specification of the algorithm.
+  *)
+  (* --comment
+  The algorithm uses the following definitions:
+  - TypeOK: ensures that num and flag have the correct types.
+  - MutualExclusion: ensures that at most one process is in the critical section at a time.
+  *)
+  (* --comment
+  The algorithm uses the following variables:
+  - num: the ticket number of each process.
+  - flag: the flag of each process.
+  *)
+  (* --comment
+  The algorithm uses the following actions:
+  - Init: initializes the state variables.
+  - Next: updates the state variables.
+  *)
+  (* --comment
+  The algorithm uses the following operators:
+  - Spec: the specification of the algorithm.
+  *)
+  (* --comment
+  The algorithm uses the following definitions:
+  - TypeOK: ensures that num and flag have the correct types.
+  - MutualExclusion: ensures that at most one process is in the critical section at a time.
+  *)
+  (* --comment
+  The algorithm uses the following variables:
+  - num: the ticket number of each process.
+  - flag: the flag of each process.
+  *)
+  (* --comment
+  The algorithm uses the following actions:
+  - Init: initializes the state variables.
+  - Next: updates the state variables.
+  *)
+  (* --comment
+  The algorithm uses the following operators:
+  - Spec: the specification of the algorithm.
+  *)
+  (* --comment
+  The algorithm uses the following definitions:
+  - TypeOK: ensures that num and flag have the correct types.
+  - MutualExclusion: ensures that at most one process is in the critical section at a time.
+  *)
+  (* --comment
+  The algorithm uses the following variables:
+  - num: the ticket number of each process.
+  - flag: the flag of each process.
+  *)
+  (* --comment
+  The algorithm uses the following actions:
+  - Init: initializes the state variables.
+  - Next: updates the state variables.
+  *)
+  (* --comment
+  The algorithm uses the following operators:
+  - Spec: the specification of the algorithm.
+  *)
+  (* --comment
+  The algorithm uses the following definitions:
+  - TypeOK: ensures that num and flag have the correct types.
+  - MutualExclusion: ensures that at most one process is in the critical section at a time.
+  *)
+  (* --comment
+  The algorithm uses the following variables:
+  - num: the ticket number of each process.
+  - flag: the flag of each process.
+  *)
+  (* --comment
+  The algorithm uses the following actions:
+  - Init: initializes the state variables.
+  -"
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,0,0.778,silver,7.51,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail
+
+Init == /\ q \in Seq(1..K)
+        /\ head = 1
+        /\ tail = 1
+
+Next == /\ head \in 1..K
+        /\ tail \in 1..K
+        /\ head = tail
+        /\ q[head] = 0
+
+Spec == Init /\ [][Next]_<<q, head, tail>>
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,1,0,0.444,silver,89.33,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,0,0,0.778,bronze,195.66,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES readers, writer_active
+
+Init == /\ readers = <<>> \\
+       /\ writer_active = FALSE
+
+Next == \/ /\ writer_active' = FALSE \\
+          /\ readers' = Append(readers, 1) \\
+          /\ writer_active' = writer_active \\
+        \/ /\ writer_active' = TRUE \\
+          /\ readers' = <<>> \\
+          /\ writer_active' = writer_active
+
+Spec == Init /\ [][Next]_<<readers, writer_active>>
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,1,0,0.444,silver,38.94,"---- MODULE ChandyLamportSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, channel, snapshot, markerSent, markerReceived, finished
+
+===="
+chattla:20b,BM009,Token Ring,networking,2,0,0,0.778,bronze,17.03,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS N
+
+VARIABLES token, messages
+
+Init == /\ token \in 1..N
+        /\ messages \in 1..N -> 1..N
+
+Next == /\ token' \in 1..N
+        /\ messages' \in 1..N -> 1..N
+        /\ token' = IF token = N THEN 1 ELSE token + 1
+           /\ messages' = [i \in 1..N |-> IF i = token THEN token' ELSE messages[i]]
+
+Spec == Init /\ [][Next]_<<token, messages>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,1.0,silver,8.13,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, Values, NULL
+
+VARIABLES store
+
+Init == store = [k \in Keys |-> NULL]
+
+Next == \/ /\ \E k \in Keys : \E v \in Values : /\ store' = [store EXCEPT ![k] = v]
+      \/ /\ \E k \in Keys : /\ store' = [store EXCEPT ![k] = NULL]
+
+Spec == Init /\ [][Next]_<<store>>
+
+TypeOK == /\ store \in [Keys -> Values]
+          /\ \A k \in Keys : store[k] \in Values
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,1,0,0.444,silver,97.83,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES acceptors, proposers, promises, accepted, chosen, chosenBy, chosenByProposer, chosenByAcceptor, chosenByValue, chosenByProposerVal, chosenByAcceptorVal, chosenByValueVal, chosenByProposerValVal, chosenByAcceptorValVal, chosenByValueValVal, chosenByProposerValValVal, chosenByAcceptorValValVal, chosenByValueValValVal, chosenByProposerValValValVal, chosenByAcceptorValValValVal, chosenByValueValValValVal, chosenByProposerValValValValVal, chosenByAcceptorValValValValVal, chosenByValueValValValValVal, chosenByProposerValValValValValVal, chosenByAcceptorValValValValValVal, chosenByValueValValValValValVal, chosenByProposerValValValValValValVal, chosenByAcceptorValValValValValValVal, chosenByValueValValValValValValVal, chosenByProposerValValValValValValValVal, chosenByAcceptorValValValValValValValVal, chosenByValueValValValValValValValVal, chosenByProposerValValValValValValValValVal, chosenByAcceptorValValValValValValValValVal, chosenByValueValValValValValValValValVal, chosenByProposerValValValValValValValValValVal, chosenByAcceptorValValValValValValValValValVal, chosenByValueValValValValValValValValValVal, chosenByProposerValValValValValValValValValValVal, chosenByAcceptorValValValValValValValValValValVal, chosenByValueValValValValValValValValValValVal, chosenByProposerValValValValValValValValValValValVal, chosenByAcceptorValValValValValValValValValValValVal, chosenByValueValValValValValValValValValValValVal, chosenByProposerValValValValValValValValValValValValVal, chosenByAcceptorValValValValValValValValValValValValVal, chosenByValueValValValValValValValValValValValValVal, chosenByProposerValValValValValValValValValValValValValVal, chosenByAcceptorValValValValValValValValValValValValValVal, chosenByValueValValValValValValValValValValValValValVal, chosenByProposerValValValValValValValValValValValValValValVal, chosenByAcceptorValValValValValValValValValValValValValValVal, chosenByValueValValValValValValValValValValValValValValVal, chosenByProposerValValValValValValValValValValValValValValValVal, chosenByAcceptorValValValValValValValValValValValValValValValVal, chosenByValueValValValValValValValValValValValValValValValVal, chosenByProposerValValValValValValValValValValValValValValValValVal, chosenByAcceptorValValValValValValValValValValValValValValValValVal, chosenByValueValValValValValValValValValValValValValValValValVal, chosenByProposerValValValValValValValValValValValValValValValValValVal, chosenByAcceptorValValValValValValValValValValValValValValValValValVal, chosenByValueValValValValValValValValValValValValValValValValValVal, chosenByProposerValValValValValValValValValValValValValValValValValValVal, chosenByAcceptorValValValValValValValValValValValValValValValValValValVal, chosenByValueValValValValValValValValValValValValValValValValValValVal, chosenByProposerValValValValValValValValValValValValValValValValValValValVal, chosenByAcceptorValValValValValValValValValValValValValValValValValValValVal, chosenByValueValValValValValValValValValValValValValValValValValValValVal, chosenByProposerValValValValValValValValValValValValValValValValValValValValVal, chosenByAcceptorValValValValValValValValValValValValValValValValValValValValVal, chosenByValueValValValValValValValValValValValValValValValValValValValValVal, chosenByProposerValValValValValValValValValValValValValValValValValValValValValVal, chosenByAcceptorValValValValValValValValValValValValValValValValValValValValValVal, chosenByValueValValValValValValValValValValValValValValValValValValValValValVal, chosenByProposerValValValValValValValValValValValValValValValValValValValValValValVal, chosenByAcceptorValValValValValValValValValValValValValValValValValValValValValValVal, chosenByValueValValValValValValValValValValValValValValValValValValValValValValVal, chosenByProposerValValValValValValValValValValValValValValValValValValValValValValValVal, chosenByAcceptorValValValValValValValValValValValValValValValValValValValValValValValValValVal, chosenByValueValValValValValValValValValValValValValValValValValValValValValValValValValValVal, chosenByProposerValValValValValValValValValValValValValValValValValValValValValValValValValValValVal, chosenByAcceptorValValValValValValValValValValValValValValValValValValValValValValValValValValValVal, chosenByValueValValValValValValValValValValValValValValValValValValValValValValValValValValValValVal, chosenByProposerValValValValValValValValValValValValValValValValValValValValValValValValValValValValValVal, chosenByAcceptorValValValValValValValValValValValValValValValValValValValValValValValValValValValValValValVal, chosenByValueValValValValValValValValValValValValValValValValValValValValValValValValValValValValValValVal, chosenByProposerValValValValValValValValValValValValValValValValValValValValValValValValValValValValValValVal
+===="
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,0,0,0.778,bronze,73.16,"---- MODULE Sender ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS MAX_RETRIES, FiniteSet
+VARIABLES chunkSize, chunks, file, lostChunks, receivedChunks, retransmitCount, sentChunks
+
+    /\ file \in Seq(Byte)
+    /\ chunkSize \in Nat
+    /\ chunks \in Seq(Seq(Byte))
+    /\ retransmitCount \in Nat
+    /\ sentChunks \in FiniteSet[Seq(Byte)]
+    /\ receivedChunks \in FiniteSet[Seq(Byte)]
+    /\ lostChunks \in FiniteSet[Seq(Byte)]
+    /\ Len(chunks) = Len(file) \div chunkSize
+    /\ Len(chunks) \in Nat
+    /\ retransmitCount \in Nat
+    /\ Len(sentChunks) \in Nat
+    /\ Len(receivedChunks) \in Nat
+    /\ Len(lostChunks) \in Nat
+
+Init ==
+    /\ file = <<>>
+    /\ chunkSize = 1
+    /\ chunks = <<>>
+    /\ retransmitCount = 0
+    /\ sentChunks = {}
+    /\ receivedChunks = {}
+    /\ lostChunks = {}
+
+Next ==
+    /\ file \in Seq(Byte)
+       /\ chunkSize \in Nat
+       /\ chunks = [i \in 1..Len(file) \div chunkSize |-> SubSeq(file, (i-1)*chunkSize+1, i*chunkSize)]
+       /\ retransmitCount \in Nat
+       /\ sentChunks \in FiniteSet[Seq(Byte)]
+       /\ receivedChunks \in FiniteSet[Seq(Byte)]
+       /\ lostChunks \in FiniteSet[Seq(Byte)]
+       /\ Len(chunks) = Len(file) \div chunkSize
+       /\ Len(chunks) \in Nat
+       /\ retransmitCount \in Nat
+       /\ Len(sentChunks) \in Nat
+       /\ Len(receivedChunks) \in Nat
+       /\ Len(lostChunks) \in Nat
+    /\ sentChunks' = sentChunks \cup {chunk}
+       /\ receivedChunks' = receivedChunks \cup {chunk}
+       /\ lostChunks' = lostChunks \cup {chunk}
+       /\ retransmitCount' = retransmitCount + 1
+       /\ chunk \in chunks
+       /\ chunk \notin sentChunks
+       /\ chunk \notin receivedChunks
+       /\ chunk \notin lostChunks
+       /\ retransmitCount < MAX_RETRIES
+    \/ /\ sentChunks' = sentChunks
+       /\ receivedChunks' = receivedChunks
+       /\ lostChunks' = lostChunks
+       /\ retransmitCount' = retransmitCount
+       /\ chunk \in chunks
+       /\ chunk \notin sentChunks
+       /\ chunk \notin receivedChunks
+       /\ chunk \notin lostChunks
+       /\ retransmitCount >= MAX_RETRIES
+    \/ /\ sentChunks' = sentChunks
+       /\ receivedChunks' = receivedChunks
+       /\ lostChunks' = lostChunks
+       /\ retransmitCount' = retransmitCount
+       /\ chunk \in chunks
+       /\ chunk \in sentChunks
+       /\ chunk \notin receivedChunks
+       /\ chunk \notin lostChunks
+       /\ retransmitCount < MAX_RETRIES
+    \/ /\ sentChunks' = sentChunks
+       /\ receivedChunks' = receivedChunks
+       /\ lostChunks' = lostChunks
+       /\ retransmitCount' = retransmitCount
+       /\ chunk \in chunks
+       /\ chunk \in sentChunks
+       /\ chunk \in receivedChunks
+       /\ chunk \notin lostChunks
+       /\ retransmitCount < MAX_RETRIES
+    \/ /\ sentChunks' = sentChunks
+       /\ receivedChunks' = receivedChunks
+       /\ lostChunks' = lostChunks
+       /\ retransmitCount' = retransmitCount
+       /\ chunk \in chunks
+       /\ chunk \in sentChunks
+       /\ chunk \in receivedChunks
+       /\ chunk \in lostChunks
+       /\ retransmitCount < MAX_RETRIES
+    \/ /\ sentChunks' = sentChunks
+       /\ receivedChunks' = receivedChunks
+       /\ lostChunks' = lostChunks
+       /\ retransmitCount' = retransmitCount
+       /\ chunk \in chunks
+       /\ chunk \in sentChunks
+       /\ chunk \in receivedChunks
+       /\ chunk \in lostChunks
+       /\ retransmitCount >= MAX_RETRIES
+
+Spec ==
+    Init /\ [][Next]_<<file, chunkSize, chunks, retransmitCount, sentChunks, receivedChunks, lostChunks>>
+
+===="

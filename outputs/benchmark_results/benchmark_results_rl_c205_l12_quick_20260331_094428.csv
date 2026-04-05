@@ -1,0 +1,575 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,0,0,1.0,bronze,79.37,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, turn, N
+Idle == ""idle""
+Trying == ""trying""
+Critical == ""critical""
+
+(* Initial state *)
+Init == /\ N \in Nat /\ N > 0
+        /\ state \in [1..N -> {Idle, Trying, Critical}]
+        /\ \A p \in 1..N : state[p] = Idle
+        /\ turn \in 1..N
+
+(* Next-state relation *)
+Next == 
+  \E p \in 1..N :
+    /\ state[p] = Idle
+    /\ state' = [state EXCEPT ![p] = Trying]
+    /\ turn' = turn
+  \/ \E p \in 1..N :
+    /\ state[p] = Trying
+    /\ turn = p
+    /\ state' = [state EXCEPT ![p] = Critical]
+    /\ turn' = turn
+  \/ \E p \in 1..N :
+    /\ state[p] = Critical
+    /\ state' = [state EXCEPT ![p] = Idle]
+    /\ turn' = turn
+
+(* Invariant: at most one process in critical section *)
+TypeOK == /\ state \in [1..N -> {Idle, Trying, Critical}]
+          /\ turn \in 1..N
+          /\ \A p \in 1..N : state[p] \in {Idle, Trying, Critical}
+          /\ \A p, q \in 1..N : p # q => state[p] # Critical \/ state[q] # Critical
+
+Spec == Init /\ [][Next]_<<state, turn, N>>
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,1,0,0.444,silver,12.45,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES participants, votes, decision, messages, state
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,0,0,0.778,bronze,205.76,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLES forks, states
+
+(* Fork ownership: forks[i] = j means fork i is held by philosopher j; forks[i] = -1 means fork i is free *)
+Init == /\ forks = [i \in 1..N |-> -> -1]
+        /\ states = [i \in 1..N |-> -> ""thinking""]
+
+Next == \/ (* Philosopher i becomes hungry *)
+          /\ states' = [states EXCEPT ![i] = ""hungry""]
+          /\ UNCHANGED <<forks>>
+        \/ (* Philosopher i picks up forks if both are free *)
+          /\ states[i] = ""hungry""
+          /\ forks[i] = -1
+          /\ forks[%(i, N) + 1] = -1
+          /\ forks' = [forks EXCEPT ![i] = i, ![%(i, N) + 1] = i]
+          /\ states' = [states EXCEPT ![i] = ""eating""]
+        \/ (* Philosopher i puts down forks after eating *)
+          /\ states[i] = ""eating""
+          /\ forks' = [forks EXCEPT ![i] = -1, ![%(i, N) + 1] = -1]
+          /\ states' = [states EXCEPT ![i] = ""thinking""]
+        \/ (* No change *)
+          /\ UNCHANGED <<forks, states>>
+
+Spec == Init /\ [][Next]_<<forks, states>>
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,1,0,0.444,silver,152.44,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N
+
+VARIABLES num, flag
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,0,1.0,silver,50.88,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail, count
+
+(* The queue is represented as a sequence of length K. *)
+(* head and tail are indices into the sequence. *)
+(* count is the number of elements in the queue. *)
+
+(* The queue is empty when count = 0. *)
+(* The queue is full when count = K. *)
+
+(* The queue is a sequence of length K. *)
+(* The elements are stored in q[head], q[head+1], ..., q[tail-1] modulo K. *)
+
+(* The initial state: empty queue. *)
+Init == /\ q = [i \in 1..K |-> 0]
+        /\ head = 1
+        /\ tail = 1
+        /\ count = 0
+
+(* The next-state relation: either the producer or the consumer acts. *)
+Next == 
+    (* Producer action: add an element to the queue if not full. *)
+    \/ /\ count < K
+       /\ q' = [q EXCEPT ![tail] = 1]  (* For illustration, we add 1. *)
+       /\ tail' = IF tail = K THEN 1 ELSE tail + 1
+       /\ count' = count + 1
+       /\ head' = head
+       /\ q' = q
+    \/ /\ count > 0
+       /\ q' = q
+       /\ head' = IF head = K THEN 1 ELSE head + 1
+       /\ tail' = tail
+       /\ count' = count - 1
+       /\ q' = q
+
+(* Type invariant: all variables have the correct type. *)
+TypeOK == /\ q \in [1..K -> Nat]
+          /\ head \in 1..K
+          /\ tail \in 1..K
+          /\ count \in 0..K
+
+Spec == Init /\ [][Next]_<<q, head, tail, count>>
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,1,0,0.444,silver,56.44,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,0,0,0.778,bronze,24.33,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES readers, writer_active, r
+
+Init == /\ readers = <<>> \\
+       /\ writer_active = FALSE
+
+Next == \/ /\ writer_active = FALSE \\
+          /\ \E r \in 1..10 : /\ r \notin readers \\
+          /\ r' = r \\
+             /\ writer_active' = FALSE \\
+             /\ readers' = Append(readers, r) \\
+          \/ /\ writer_active = FALSE \\
+             /\ \E r \in 1..10 : /\ r \in readers \\
+             /\ r' = r \\
+                /\ writer_active' = TRUE \\
+                /\ readers' = <<>> \\
+          \/ /\ writer_active = TRUE \\
+             /\ \E r \in 1..10 : /\ r \in readers \\
+             /\ r' = r \\
+                /\ writer_active' = FALSE \\
+                /\ readers' = Tail(readers) \\
+          \/ /\ writer_active = FALSE \\
+             /\ \E r \in 1..10 : /\ r \in readers \\
+             /\ r' = r \\
+                /\ writer_active' = FALSE \\
+                /\ readers' = Tail(readers)
+
+Spec == Init /\ [][Next]_<<readers, writer_active>>
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,1,0,0.444,silver,235.35,"---- MODULE DistributedSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, channel, snapshot, marker, finished
+===="
+chattla:20b,BM009,Token Ring,networking,2,1,1,0.667,gold,2.29,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLE token
+
+Init == /\ token \in 1..N
+
+Next == /\ token' \in 1..N
+        /\ token' = IF token = N THEN 1 ELSE token + 1
+
+Spec == Init /\ [][Next]_<<token>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,1.0,silver,5.26,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, Values, NULL
+
+VARIABLES store
+
+Init == store = [k \in Keys |-> NULL]
+
+Next == \/ /\ \E k \in Keys : \E v \in Values : /\ store' = [store EXCEPT ![k] = v]
+      \/ /\ \E k \in Keys : /\ store' = [store EXCEPT ![k] = NULL]
+
+Spec == Init /\ [][Next]_<<store>>
+
+TypeOK == /\ store \in [Keys -> Values]
+          /\ \A k \in Keys : store[k] \in Values
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,1,1,0.778,gold,93.6,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES acceptors, proposers, promises, accepts, chosen, values, chosenVal
+
+Init == /\ acceptors = <<>>
+       /\ proposers = <<>>
+       /\ promises = <<>>
+       /\ accepts = <<>>
+       /\ chosen = <<>>
+       /\ values = <<>>
+       /\ chosenVal = <<>>
+
+Next == /\ acceptors' = acceptors
+       /\ proposers' = proposers
+       /\ promises' = promises
+       /\ accepts' = accepts
+       /\ chosen' = chosen
+       /\ values' = values
+       /\ chosenVal' = chosenVal
+
+Spec == Init /\ [][Next]_<<acceptors, proposers, promises, accepts, chosen, values, chosenVal>>
+
+===="
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,0,0,0.667,bronze,38.2,"---- MODULE FileTransfer ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS MAX_RETRIES, CHUNK_SIZE, FILE_SIZE, CHANNEL_CAPACITY
+VARIABLES channel, retransmit_count, sent_chunks
+
+    /\ file \in Seq(1..FILE_SIZE)
+    /\ chunks = [i \in 1..Ceiling(FILE_SIZE \div CHUNK_SIZE) |-> 
+
+            SubSeq(file, (i-1)*CHUNK_SIZE + 1, i*CHUNK_SIZE)
+
+            SubSeq(file, (i-1)*CHUNK_SIZE + 1, FILE_SIZE)]
+    /\ sent_chunks = <<>>
+    /\ retransmit_count = <<>>
+    /\ channel = <<>>
+
+Next ==
+    /\ channel \in Seq(1..CHANNEL_CAPACITY)
+    /\ sent_chunks' = sent_chunks
+        /\ retransmit_count' = retransmit_count
+        /\ channel' = channel
+    \/ /\ sent_chunks' == Append(sent_chunks, i)
+        /\ retransmit_count' = Append(retransmit_count, 0)
+        /\ channel' = Append(channel, i)
+        /\ i \in 1..Len(chunks)
+        /\ i \notin sent_chunks
+    \/ /\ sent_chunks' == sent_chunks
+        /\ retransmit_count' = 
+            [i \in 1..Len(chunks) |-> 
+
+
+
+                            retransmit_count[i] + 1
+
+                            retransmit_count[i]
+
+                        retransmit_count[i]
+
+                    retransmit_count[i]]
+        /\ channel' = 
+            [i \in 1..Len(chunks) |-> 
+
+
+
+                            channel[i]
+
+                            <<>>
+
+                        channel[i]
+
+                    <<>>]
+        /\ i \in channel
+            /\ i \in sent_chunks
+            /\ retransmit_count[i] < MAX_RETRIES
+        \/ /\ i \in channel
+            /\ i \in sent_chunks
+            /\ retransmit_count[i] = MAX_RETRIES
+            /\ channel' = <<>>
+            /\ sent_chunks' = sent_chunks
+            /\ retransmit_count' = retransmit_count
+
+Spec ==
+    Init /\ [][Next]_<<file, chunks, sent_chunks, retransmit_count, channel>>
+
+===="

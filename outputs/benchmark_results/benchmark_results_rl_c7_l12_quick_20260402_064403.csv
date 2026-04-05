@@ -1,0 +1,828 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,0,1.0,silver,90.53,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS N
+
+VARIABLES state, turn
+
+Init == 
+  /\ state = [p \in 1..N |-> ""idle""]
+  /\ turn = 1
+
+Next == 
+  \E p \in 1..N :
+    \/ /\ state[p] = ""idle""
+       /\ state' = [state EXCEPT ![p] = ""trying""]
+       /\ turn' = turn
+    \/ /\ state[p] = ""trying""
+       /\ state' = [state EXCEPT ![p] = ""critical""]
+       /\ turn' = turn
+    \/ /\ state[p] = ""critical""
+       /\ state' = [state EXCEPT ![p] = ""idle""]
+       /\ turn' = turn + 1
+
+Spec == Init /\ [][Next]_<<state, turn>>
+
+TypeOK == 
+  /\ state \in [1..N -> {""idle"", ""trying"", ""critical""}]
+  /\ turn \in Int
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,1,0,1.0,silver,44.9,"---- MODULE TwoPhaseCommitProtocol ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLES coordinatorState, participantStates, messages
+
+Prepare == 
+  /\ coordinatorState = ""prepare""
+  /\ messages = [p \in 1..N |-> ""Prepare""]
+
+VoteYes == 
+  /\ coordinatorState = ""voteYes""
+  /\ messages = [p \in 1..N |-> ""VoteYes""]
+
+VoteNo == 
+  /\ coordinatorState = ""voteNo""
+  /\ messages = [p \in 1..N |-> ""VoteNo""]
+
+Commit == 
+  /\ coordinatorState = ""commit""
+  /\ messages = [p \in 1..N |-> ""Commit""]
+
+Abort == 
+  /\ coordinatorState = ""abort""
+  /\ messages = [p \in 1..N |-> ""Abort""]
+
+Init == 
+  /\ coordinatorState = ""prepare""
+  /\ participantStates = [p \in 1..N |-> ""unknown""]
+  /\ messages = [p \in 1..N |-> ""Prepare""]
+
+Next == 
+  /\ coordinatorState = ""prepare""
+      /\ \E p \in 1..N : participantStates[p] = ""unknown"" /\ messages[p] = ""Prepare""
+      /\ participantStates' = [participantStates EXCEPT ![p] = ""yes""]
+      /\ messages' = [messages EXCEPT ![p] = ""VoteYes""]
+      /\ coordinatorState' = ""voteYes""
+  \/ /\ coordinatorState = ""prepare""
+      /\ \E p \in 1..N : participantStates[p] = ""unknown"" /\ messages[p] = ""Prepare""
+      /\ participantStates' = [participantStates EXCEPT ![p] = ""no""]
+      /\ messages' = [messages EXCEPT ![p] = ""VoteNo""]
+      /\ coordinatorState' = ""voteNo""
+  \/ /\ coordinatorState = ""voteYes""
+      /\ messages = [p \in 1..N |-> ""VoteYes""]
+      /\ messages' = [p \in 1..N |-> ""Commit""]
+      /\ coordinatorState' = ""commit""
+  \/ /\ coordinatorState = ""voteNo""
+      /\ messages = [p \in 1..N |-> ""VoteNo""]
+      /\ messages' = [p \in 1..N |-> ""Abort""]
+      /\ coordinatorState' = ""abort""
+  \/ /\ coordinatorState \in {""commit"", ""abort""}
+      /\ messages = [p \in 1..N |-> IF coordinatorState = ""commit"" THEN ""Commit"" ELSE ""Abort""]
+      /\ messages' = [p \in 1..N |-> ""Done""]
+      /\ coordinatorState' = coordinatorState
+
+Spec == Init /\ [][Next]_<<coordinatorState, participantStates, messages>>
+
+TypeOK == 
+  /\ coordinatorState \in {""prepare"", ""voteYes"", ""voteNo"", ""commit"", ""abort""}
+  /\ \A p \in 1..N : participantStates[p] \in {""unknown"", ""yes"", ""no""}
+  /\ \A p \in 1..N : messages[p] \in {""Prepare"", ""VoteYes"", ""VoteNo"", ""Commit"", ""Abort"", ""Done""}
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,0,0,1.0,bronze,266.58,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+VARIABLES forkOwner, hasn, philosopherState
+
+
+\* Philosopher states
+States == {""thinking"", ""hungry"", ""eating""}
+
+\* Each philosopher is identified by an integer 0..N-1
+Philosophers == 0 .. N-1
+
+\* Each fork is identified by an integer 0..N-1
+Forks == 0 .. N-1
+
+\* Helper to get the left and right fork indices for a philosopher
+LeftFork == [p \in Philosophers |-> p]
+RightFork == [p \in Philosophers |-> (p + 1) \mod N]
+
+\* State of each philosopher
+\*  - ""thinking"": philosopher is thinking
+\*  - ""hungry"": philosopher wants to eat but hasn't acquired forks yet
+\*  - ""eating"": philosopher has acquired both forks and is eating
+philosopherState == [p \in Philosophers |-> ""thinking""]
+
+\* Ownership of each fork
+\*  - If fork f is owned by philosopher p, then forkOwner[f] = p
+\*  - If fork f is free, then forkOwner[f] = -1
+forkOwner == [f \in Forks |-> -1]
+
+\* Helper to check if a philosopher can eat
+CanEat(p) == philosopherState[p] = ""hungry"" /\ forkOwner[LeftFork[p]] = -1 /\ forkOwner[RightFork[p]] = -1
+
+\* Action: philosopher p becomes hungry
+BecomeHungry(p) == philosopherState' = [philosopherState EXCEPT ![p] = ""hungry""]
+
+\* Action: philosopher p starts eating (acquires both forks)
+StartEating(p) == philosopherState' = [philosopherState EXCEPT ![p] = ""eating""] /\ forkOwner' = [forkOwner EXCEPT ![LeftFork[p]] = p, ![RightFork[p]] = p]
+
+\* Action: philosopher p stops eating (releases both forks)
+StopEating(p) == philosopherState' = [philosopherState EXCEPT ![p] = ""thinking""] /\ forkOwner' = [forkOwner EXCEPT ![LeftFork[p]] = -1, ![RightFork[p]] = -1]
+
+\* Next-state relation
+Next == \E p \in Philosophers :
+          (philosopherState[p] = ""thinking"" /\ BecomeHungry(p)) \lor
+          (philosopherState[p] = ""hungry"" /\ CanEat(p) /\ StartEating(p)) \lor
+          (philosopherState[p] = ""eating"" /\ StopEating(p))
+
+\* Initial state
+Init == philosopherState = [p \in Philosophers |-> ""thinking""] /\ forkOwner = [f \in Forks |-> -1]
+
+\* Type correctness invariant
+TypeOK == /\ philosopherState \in [Philosophers -> States]
+          /\ forkOwner \in [Forks -> {p \in Philosophers} \cup {-1}]
+
+\* Specification
+Spec == Init /\ [][Next]_<<philosopherState, forkOwner>>
+
+\* Fairness constraints
+SpecFair == Init /\ [][Next]_<<philosopherState, forkOwner>> /\ WF_vars(Next)
+
+\* Fairness constraints with weak fairness for philosophers becoming hungry
+SpecFairWeak == Init /\ [][Next]_<<philosopherState, forkOwner>> /\ WF_vars(Next) /\ WF_vars(\E p \in Philosophers : BecomeHungry(p))
+
+\* Fairness constraints with strong fairness for philosophers becoming hungry
+SpecFairStrong == Init /\ [][Next]_<<philosopherState, forkOwner>> /\ WF_vars(Next) /\ SF_vars(\E p \in Philosophers : BecomeHungry(p))
+
+\* Fairness constraints with weak fairness for philosophers starting to eat
+SpecFairWeakStartEating == Init /\ [][Next]_<<philosopherState, forkOwner>> /\ WF_vars(Next) /\ WF_vars(\E p \in Philosophers : StartEating(p))
+
+\* Fairness constraints with strong fairness for philosophers starting to eat
+SpecFairStrongStartEating == Init /\ [][Next]_<<philosopherState, forkOwner>> /\ WF_vars(Next) /\ SF_vars(\E p \in Philosophers : StartEating(p))
+
+\* Fairness constraints with weak fairness for philosophers stopping eating
+SpecFairWeakStopEating == Init /\ [][Next]_<<philosopherState, forkOwner>> /\ WF_vars(Next) /\ WF_vars(\E p \in Philosophers : StopEating(p))
+
+\* Fairness constraints with strong fairness for philosophers stopping eating
+SpecFairStrongStopEating == Init /\ [][Next]_<<philosopherState, forkOwner>> /\ WF_vars(Next) /\ SF_vars(\E p \in Philosophers : StopEating(p))
+
+\* Fairness constraints with weak fairness for philosophers becoming hungry and starting to eat
+SpecFairWeakBoth == Init /\ [][Next]_<<philosopherState, forkOwner>> /\ WF_vars(Next) /\ WF_vars(\E p \in Philosophers : BecomeHungry(p)) /\ WF_vars(\E p \in Philosophers : StartEating(p))
+
+\* Fairness constraints with strong fairness for philosophers becoming hungry and starting to eat
+SpecFairStrongBoth == Init /\ [][Next]_<<philosopherState, forkOwner>> /\ WF_vars(Next) /\ SF_vars(\E p \in Philosophers : BecomeHungry(p)) /\ SF_vars(\E p \in Philosophers : StartEating(p))
+
+\* Fairness constraints with weak fairness for philosophers becoming hungry and stopping eating
+SpecFairWeakBothStopEating == Init /\ [][Next]_<<philosopherState, forkOwner>> /\ WF_vars(Next) /\ WF_vars(\E p \in Philosophers : BecomeHungry(p)) /\ WF_vars(\E p \in Philosophers : StopEating(p))
+
+\* Fairness constraints with strong fairness for philosophers becoming hungry and stopping eating
+SpecFairStrongBothStopEating == Init /\ [][Next]_<<philosopherState, forkOwner>> /\ WF_vars(Next) /\ SF_vars(\E p \in Philosophers : BecomeHungry(p)) /\ SF_vars(\E p \in Philosophers : StopEating(p))
+
+\* Fairness constraints with weak fairness for philosophers starting to eat and stopping eating
+SpecFairWeakBothStartStopEating == Init /\ [][Next]_<<philosopherState, forkOwner>> /\ WF_vars(Next) /\ WF_vars(\E p \in Philosophers : StartEating(p)) /\ WF_vars(\E p \in Philosophers : StopEating(p))
+
+\* Fairness constraints with strong fairness for philosophers starting to eat and stopping eating
+SpecFairStrongBothStartStopEating == Init /\ [][Next]_<<philosopherState, forkOwner>> /\ WF_vars(Next) /\ SF_vars(\E p \in Philosophers : StartEating(p)) /\ SF_vars(\E p \in Philosophers : StopEating(p))
+
+\* Fairness constraints with weak fairness for philosophers becoming hungry, starting to eat, and stopping eating
+SpecFairWeakAll == Init /\ [][Next]_<<philosopherState, forkOwner>> /\ WF_vars(Next) /\ WF_vars(\E p \in Philosophers : BecomeHungry(p)) /\ WF_vars(\E p \in Philosophers : StartEating(p)) /\ WF_vars(\E p \in Philosophers : StopEating(p))
+
+\* Fairness constraints with strong fairness for philosophers becoming hungry, starting to eat, and stopping eating
+SpecFairStrongAll == Init /\ [][Next]_<<philosopherState, forkOwner>> /\ WF_vars(Next) /\ SF_vars(\E p \in Philosophers : BecomeHungry(p)) /\ SF_vars(\E p \in Philosophers : StartEating(p)) /\ SF_vars(\E p \in Philosophers : StopEating(p))
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,1,0,1.0,silver,16.08,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+
+CONSTANT N
+VARIABLES flag, num
+
+
+vars == <<num, flag>>
+
+Init == /\ num = [i \in 1..N |-> 0]
+        /\ flag = [i \in 1..N |-> FALSE]
+
+Next == \E i \in 1..N :
+          /\ flag' = [flag EXCEPT ![i] = TRUE]
+          /\ num' = [num EXCEPT ![i] = Max(num) + 1]
+          /\ flag' = [flag EXCEPT ![i] = FALSE]
+          /\ \A j \in 1..N : j # i => num'[i] <= num'[j] \/ (num'[i] = num'[j] /\ i <= j)
+
+Spec == Init /\ [][Next]_vars
+
+TypeOK == /\ num \in [1..N -> Nat]
+          /\ flag \in [1..N -> BOOLEAN]
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,0,1.0,silver,21.06,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail, size
+
+vars == <<q, head, tail, size>>
+
+Init == /\ q = [i \in 1..K |-> 0]
+        /\ head = 1
+        /\ tail = 1
+        /\ size = 0
+
+ProducerAction == /\ size < K
+                 /\ q[tail] = 0
+                 /\ q' = [q EXCEPT ![tail] = 1]
+                 /\ tail' = IF tail = K THEN 1 ELSE tail + 1
+                 /\ size' = size + 1
+                 /\ UNCHANGED <<head>>
+
+ConsumerAction == /\ size > 0
+                 /\ q[head] = 1
+                 /\ q' = [q EXCEPT ![head] = 0]
+                 /\ head' = IF head = K THEN 1 ELSE head + 1
+                 /\ size' = size - 1
+                 /\ UNCHANGED <<tail>>
+
+Next == ProducerAction \/ ConsumerAction
+
+Spec == Init /\ [][Next]_vars
+
+TypeOK == /\ head \in 1..K
+          /\ tail \in 1..K
+          /\ size \in 0..K
+          /\ \A i \in 1..K: q[i] \in {0,1}
+          /\ size = Cardinality({i \in 1..K: q[i] = 1})
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,1,0,0.778,silver,92.55,"---- MODULE RaftElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, majority, NULL
+
+VARIABLES currentTerm, votedFor, state, candidate, hasn
+
+(* State can be ""Follower"", ""Candidate"", or ""Leader"" *)
+
+Init == 
+    /\ currentTerm = 0
+    /\ votedFor = [i \in 1..N |-> NULL]
+    /\ state = [i \in 1..N |-> ""Follower""]
+
+(* A candidate requests votes from all other servers *)
+RequestVote == 
+    /\ \A i \in 1..N : state[i] = ""Candidate""
+    /\ \A i \in 1..N : currentTerm[i] = currentTerm[1] + 1
+    /\ \A i \in 1..N : votedFor[i] = NULL
+    /\ \A i \in 1..N : state[i] = ""Follower""
+
+(* A follower grants a vote if it hasn't voted yet and the candidate's term is at least as large *)
+GrantVote == 
+    /\ \A i \in 1..N : state[i] = ""Follower""
+    /\ \A i \in 1..N : currentTerm[i] = currentTerm[1]
+    /\ \A i \in 1..N : votedFor[i] = NULL
+    /\ \A i \in 1..N : state[i] = ""Candidate""
+
+(* A candidate becomes a leader if it receives a majority of votes *)
+BecomeLeader == 
+    /\ \A i \in 1..N : state[i] = ""Candidate""
+    /\ \A i \in 1..N : currentTerm[i] = currentTerm[1]
+    /\ \A i \in 1..N : votedFor[i] = NULL
+    /\ \A i \in 1..N : state[i] = ""Follower""
+    /\ \A i \in 1..N : currentTerm[i] = currentTerm[1] + 1
+    /\ \A i \in 1..N : votedFor[i] = NULL
+    /\ \A i \in 1..N : state[i] = ""Leader""
+
+Next == 
+    \/ RequestVote
+    \/ GrantVote
+    \/ BecomeLeader
+
+Spec == Init /\ [][Next]_<<currentTerm, votedFor, state>>
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,0,0,0.778,bronze,21.68,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES readers, writer_active
+
+Init == 
+    /\ readers = {}
+    /\ writer_active = FALSE
+
+Next == 
+    /\ \E r \in readers : 
+        /\ r \in readers
+        /\ readers' = readers \ {r}
+        /\ writer_active' = writer_active
+    \/ \E r \notin readers : 
+        /\ r \notin readers
+        /\ readers' = readers \cup {r}
+        /\ writer_active' = writer_active
+    \/ /\ writer_active = FALSE
+        /\ \A r \in readers : r \notin readers
+        /\ writer_active' = TRUE
+        /\ readers' = readers
+
+Spec == Init /\ [][Next]_<<readers, writer_active>>
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,0,0,0.778,bronze,79.45,"---- MODULE DistributedSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, Channels, InitState, InitChannelState
+
+VARIABLES state, channelState, markerSent, markerReceived
+
+vars == <<state, channelState, markerSent, markerReceived>>
+
+Init == 
+    /\ state = [p \in 1..N |-> InitState[p]]
+    /\ channelState = [c \in Channels |-> InitChannelState[c]]
+    /\ markerSent = [p \in 1..N |-> FALSE]
+    /\ markerReceived = [c \in Channels |-> FALSE]
+
+SendMarker(p, q) == 
+    /\ channelState[(p, q)] = channelState[(p, q)] \cup { ""marker"" }
+    /\ markerSent[p] = TRUE
+
+ReceiveMarker(p, q) == 
+    /\ channelState[(p, q)] = channelState[(p, q)] \setminus { ""marker"" }
+    /\ markerReceived[(p, q)] = TRUE
+
+RecordState(p) == 
+    /\ state[p] = ""recorded""
+    /\ markerSent[p] = TRUE
+
+Next == 
+    /\ \E p \in 1..N :
+        /\ state[p] = ""not recorded""
+        /\ RecordState(p)
+        /\ \A q \in 1..N : SendMarker(p, q)
+    \/ \E (p, q) \in Channels :
+        /\ channelState[(p, q)] \in {""marker"", ""non-marker""}
+        /\ channelState[(p, q)] = ""marker""
+        /\ ReceiveMarker(p, q)
+        /\ state[q] = ""not recorded""
+        /\ RecordState(q)
+        /\ \A r \in 1..N : SendMarker(q, r)
+    \/ \E (p, q) \in Channels :
+        /\ channelState[(p, q)] \in {""marker"", ""non-marker""}
+        /\ channelState[(p, q)] = ""non-marker""
+        /\ channelState[(p, q)] = channelState[(p, q)] \cup { ""non-marker"" }
+
+Spec == Init /\ [][Next]_vars
+
+===="
+chattla:20b,BM009,Token Ring,networking,2,0,0,1.0,bronze,13.66,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N, Messages
+
+VARIABLES token, message
+
+Init == /\ token \in 1..N
+        /\ message = NULL
+
+Next == /\ token' = IF token = N THEN 1 ELSE token + 1
+        /\ UNCHANGED message
+
+Spec == Init /\ [][Next]_<<token, message>>
+
+TypeOK == /\ token \in 1..N
+          /\ message \in Messages
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,1.0,silver,26.26,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, Values, NULL
+
+VARIABLES store, client, op, key, value, result
+
+vars == <<store, client, op, key, value, result>>
+
+Init == /\ store = [k \in Keys |-> NULL]
+        /\ client = 0
+        /\ op = 0
+        /\ key = 0
+        /\ value = 0
+        /\ result = 0
+
+Next == /\ client' = client + 1
+        /\ op' = 0
+        /\ key' = 0
+        /\ value' = 0
+        /\ result' = 0
+        /\ \/ /\ op = 0
+              /\ key \in Keys
+              /\ op' = 1
+              /\ key' = key
+        /\ \/ /\ op = 1
+              /\ key \in Keys
+              /\ value \in Values
+              /\ store' = [store EXCEPT ![key] = value]
+              /\ op' = 2
+              /\ key' = key
+              /\ value' = value
+        /\ \/ /\ op = 2
+              /\ key \in Keys
+              /\ result' = store[key]
+              /\ op' = 3
+              /\ key' = key
+        /\ \/ /\ op = 3
+              /\ op' = 0
+              /\ key' = 0
+              /\ value' = 0
+              /\ result' = 0
+
+Spec == Init /\ [][Next]_vars
+
+TypeOK == /\ store \in [Keys -> Values \cup {NULL}]
+          /\ client \in Nat
+          /\ op \in 0..3
+          /\ key \in Keys
+          /\ value \in Values
+          /\ result \in Values \cup {NULL}
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,0,0,1.0,bronze,274.28,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, M, V
+
+VARIABLES acceptors, proposers, chosen, ballot, value
+
+vars == <<acceptors, proposers, chosen>>
+
+TypeOK == 
+  /\ acceptors \in [1..N -> [ballot: Int, value: V]]
+  /\ proposers \in [1..M -> [ballot: Int, value: V]]
+  /\ chosen \in V
+
+Init == 
+  /\ acceptors = [i \in 1..N |-> [ballot |-> 0, value |-> 0]]
+  /\ proposers = [i \in 1..M |-> [ballot |-> 0, value |-> 0]]
+  /\ chosen = 0
+
+Prepare(p) == 
+  /\ proposers[p].ballot' = proposers[p].ballot + 1
+  /\ proposers[p].value' = proposers[p].value
+  /\ acceptors' = [i \in 1..N |-> 
+
+          [ballot |-> proposers[p].ballot', value |-> proposers[p].value']
+
+  /\ chosen' = chosen
+
+Accept(p) == 
+  /\ proposers[p].ballot' = proposers[p].ballot
+  /\ proposers[p].value' = proposers[p].value
+  /\ acceptors' = [i \in 1..N |-> 
+
+          [ballot |-> proposers[p].ballot', value |-> proposers[p].value']
+
+  /\ chosen' = chosen
+
+Chosen(v) == 
+  /\ acceptors' = acceptors
+  /\ proposers' = proposers
+  /\ chosen' = v
+
+Next == 
+  \E p \in 1..M : 
+    \E v \in V : 
+      /\ proposers[p].value = v
+      /\ proposers[p].ballot' = proposers[p].ballot
+      /\ proposers[p].value' = proposers[p].value
+      /\ acceptors' = acceptors
+      /\ chosen' = chosen
+      \/ Prepare(p)
+      \/ Accept(p)
+  \/ \E v \in V : Chosen(v)
+
+Spec == Init /\ [][Next]_vars
+
+THEOREM Spec => []TypeOK
+
+THEOREM Spec => <> (chosen \in V)
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM Spec => [] (chosen \in V => <> (chosen = chosen))
+
+THEOREM "
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,0,0,0.778,bronze,70.4,"---- MODULE FileSender ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS MAX_RETRIES, CHUNK_SIZE, FILE_SIZE
+VARIABLES ackedChunks, chunks, currentChunk, file, retransmitCount, sentChunks, state, timer
+
+    /\ file \in Seq(0..255)
+    /\ Len(file) = FILE_SIZE
+    /\ chunks = [i \in 1..Ceiling(FILE_SIZE \div CHUNK_SIZE) |-> 
+
+                        SubSeq(file, (i-1)*CHUNK_SIZE + 1, i*CHUNK_SIZE)
+
+                        SubSeq(file, (i-1)*CHUNK_SIZE + 1, FILE_SIZE)]
+    /\ sentChunks \subseteq 1..Ceiling(FILE_SIZE \div CHUNK_SIZE)
+    /\ ackedChunks \subseteq 1..Ceiling(FILE_SIZE \div CHUNK_SIZE)
+    /\ retransmitCount \in [1..Ceiling(FILE_SIZE \div CHUNK_SIZE) -> 0..MAX_RETRIES]
+    /\ state \in {""Idle"", ""Sending"", ""WaitingAck"", ""Done""}
+    /\ timer \in Nat
+    /\ currentChunk \in 1..Ceiling(FILE_SIZE \div CHUNK_SIZE)
+
+Init == 
+    /\ file = Seq(0..255)  \* Placeholder for actual file content
+    /\ chunks = [i \in 1..Ceiling(FILE_SIZE \div CHUNK_SIZE) |-> 
+
+                        SubSeq(file, (i-1)*CHUNK_SIZE + 1, i*CHUNK_SIZE)
+
+                        SubSeq(file, (i-1)*CHUNK_SIZE + 1, FILE_SIZE)]
+    /\ sentChunks = {}
+    /\ ackedChunks = {}
+    /\ retransmitCount = [i \in 1..Ceiling(FILE_SIZE \div CHUNK_SIZE) |-> 0]
+    /\ state = ""Idle""
+    /\ timer = 0
+    /\ currentChunk = 1
+
+SendChunk == 
+    /\ state = ""Idle""
+    /\ currentChunk \in 1..Ceiling(FILE_SIZE \div CHUNK_SIZE)
+    /\ state' = ""Sending""
+    /\ sentChunks' = sentChunks \cup {currentChunk}
+    /\ retransmitCount' = [retransmitCount EXCEPT ![currentChunk] = 0]
+    /\ UNCHANGED <<file, chunks, ackedChunks, timer>>
+
+TransmitChunk == 
+    /\ state = ""Sending""
+    /\ currentChunk \in 1..Ceiling(FILE_SIZE \div CHUNK_SIZE)
+    /\ state' = ""WaitingAck""
+    /\ timer' = 1
+    /\ UNCHANGED <<file, chunks, sentChunks, ackedChunks, retransmitCount>>
+
+ReceiveAck == 
+    /\ state = ""WaitingAck""
+    /\ currentChunk \in 1..Ceiling(FILE_SIZE \div CHUNK_SIZE)
+    /\ ackedChunks' = ackedChunks \cup {currentChunk}
+    /\ IF currentChunk < Ceiling(FILE_SIZE \div CHUNK_SIZE) THEN
+           /\ currentChunk' = currentChunk + 1
+           /\ state' = ""Idle""
+
+           /\ state' = ""Done""
+           /\ currentChunk' = currentChunk
+    /\ UNCHANGED <<file, chunks, sentChunks, timer, retransmitCount>>
+
+Retransmit == 
+    /\ state = ""WaitingAck""
+    /\ timer = 0
+    /\ retransmitCount[currentChunk] < MAX_RETRIES
+    /\ state' = ""Sending""
+    /\ retransmitCount' = [retransmitCount EXCEPT ![currentChunk] = retransmitCount[currentChunk] + 1]
+    /\ UNCHANGED <<file, chunks, sentChunks, ackedChunks, timer, currentChunk>>
+
+Timeout == 
+    /\ state = ""WaitingAck""
+    /\ timer > 0
+    /\ timer' = timer - 1
+    /\ UNCHANGED <<file, chunks, sentChunks, ackedChunks, retransmitCount, currentChunk>>
+
+NoOp == 
+    /\ state = ""Done""
+    /\ UNCHANGED <<file, chunks, sentChunks, ackedChunks, retransmitCount, timer, currentChunk>>
+
+Next == 
+    \/ SendChunk
+    \/ TransmitChunk
+    \/ ReceiveAck
+    \/ Retransmit
+    \/ Timeout
+    \/ NoOp
+
+Spec == Init /\ [][Next]_<<file, chunks, sentChunks, ackedChunks, retransmitCount, state, timer, currentChunk>>
+
+===="

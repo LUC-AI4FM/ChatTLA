@@ -1,0 +1,255 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,0,1.0,silver,28.24,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS N
+
+VARIABLES state, turn
+
+Init == 
+    /\ state = [i \in 1..N |-> ""idle""]
+    /\ turn \in 1..N
+
+Next == 
+    \E i \in 1..N :
+        /\ state[i] = ""idle""
+        /\ state' = [state EXCEPT ![i] = ""trying""]
+        /\ state' = [state EXCEPT ![i] = ""critical""]
+        /\ state' = [state EXCEPT ![i] = ""idle""]
+        /\ turn' = (turn % N) + 1
+
+Spec == Init /\ [][Next]_<<state, turn>>
+
+TypeOK == 
+    /\ state \in [1..N -> {""idle"", ""trying"", ""critical""}]
+    /\ turn \in 1..N
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,1,0,1.0,silver,41.66,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLES participants, coordinator, messages
+
+
+
+TypeOK ==
+  /\ participants \in [1..N -> {""INIT"", ""PREPARED"", ""COMMITTED"", ""ABORTED""}]
+  /\ coordinator \in {""INIT"", ""PREPARING"", ""COMMITTING"", ""ABORTING"", ""COMMITTED"", ""ABORTED""}
+  /\ messages \in [1..N -> {"""", ""PREPARE"", ""VOTE_YES"", ""VOTE_NO"", ""COMMIT"", ""ABORT""}]
+
+Init ==
+  /\ participants = [i \in 1..N |-> ""INIT""]
+  /\ coordinator = ""INIT""
+  /\ messages = [i \in 1..N |-> """"]
+
+Prepare ==
+  /\ coordinator = ""INIT""
+  /\ coordinator' = ""PREPARING""
+  /\ messages' = [i \in 1..N |-> ""PREPARE""]
+  /\ UNCHANGED participants
+
+VoteYes ==
+  /\ coordinator = ""PREPARING""
+  /\ \A i \in 1..N : messages[i] = ""PREPARE""
+  /\ messages' = [i \in 1..N |-> ""VOTE_YES""]
+  /\ UNCHANGED <<coordinator, participants>>
+
+VoteNo ==
+  /\ coordinator = ""PREPARING""
+  /\ \A i \in 1..N : messages[i] = ""PREPARE""
+  /\ messages' = [i \in 1..N |-> ""VOTE_NO""]
+  /\ UNCHANGED <<coordinator, participants>>
+
+Commit ==
+  /\ coordinator = ""COMMITTING""
+  /\ \A i \in 1..N : messages[i] = ""COMMIT""
+  /\ coordinator' = ""COMMITTED""
+  /\ UNCHANGED participants
+
+Abort ==
+  /\ coordinator = ""ABORTING""
+  /\ \A i \in 1..N : messages[i] = ""ABORT""
+  /\ coordinator' = ""ABORTED""
+  /\ UNCHANGED participants
+
+Next ==
+  \/ Prepare
+  \/ VoteYes
+  \/ VoteNo
+  \/ Commit
+  \/ Abort
+
+Spec ==
+  Init /\ [][Next]_<<participants, coordinator, messages>>
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,0,0,1.0,bronze,50.05,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLES forks, states
+
+(* Forks: a set of fork indices {0, 1, ..., N-1} *)
+Forks == {0, 1, ..., N-1}
+
+(* States: a function from philosopher indices to {""thinking"", ""hungry"", ""eating""} *)
+States == [i \in Forks |-> {""thinking"", ""hungry"", ""eating""}]
+
+(* Initial state: all forks are free, all philosophers are thinking *)
+Init == forks = Forks /\ states = [i \in Forks |-> ""thinking""]
+
+(* Helper: determine the left and right fork indices for philosopher i *)
+LeftFork(i) == IF i = 0 THEN N-1 ELSE i-1
+RightFork(i) == IF i = N-1 THEN 0 ELSE i+1
+
+(* Action: philosopher i picks up both forks if they are free and philosopher is hungry *)
+PickUp(i) == 
+    /\ states[i] = ""hungry""
+    /\ forks = Forks \ {LeftFork(i), RightFork(i)}
+    /\ states' = [states EXCEPT ![i] = ""eating""]
+    /\ forks' = forks \ {LeftFork(i), RightFork(i)}
+
+(* Action: philosopher i puts down both forks and becomes hungry *)
+PutDown(i) == 
+    /\ states[i] = ""eating""
+    /\ forks' = forks \cup {LeftFork(i), RightFork(i)}
+    /\ states' = [states EXCEPT ![i] = ""hungry""]
+
+(* Action: philosopher i thinks *)
+Think(i) == 
+    /\ states[i] = ""thinking""
+    /\ states' = [states EXCEPT ![i] = ""hungry""]
+    /\ forks' = forks
+
+(* Next action: any philosopher can think, pick up forks, or put down forks *)
+Next == \E i \in Forks : 
+    PickUp(i) \/ PutDown(i) \/ Think(i)
+
+(* Type invariant: forks is a subset of Forks, states is a function from Forks to {""thinking"", ""hungry"", ""eating""} *)
+TypeOK == 
+    /\ forks \subseteq Forks
+    /\ states \in [Forks -> {""thinking"", ""hungry"", ""eating""}]
+
+Spec == Init /\ [][Next]_<<forks, states>>
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,0,0,1.0,bronze,35.47,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+
+CONSTANT N
+
+VARIABLES num, flag
+
+(* TypeOK ensures num is a sequence of N integers, flag is a sequence of N booleans *)
+TypeOK == /\ num \in Seq(N)
+          /\ flag \in Seq(N)
+
+(* Helper functions *)
+Less(i, j) == /\ flag[i] /\ flag[j]
+              /\ (num[i] < num[j] \/ (num[i] = num[j] /\ i < j))
+
+MaxNum == IF N = 0 THEN 0 ELSE Max(num)
+
+(* Initial state: all flag false, all num 0 *)
+Init == /\ num = <<0, .., 0>>  (* N zeros *)
+        /\ flag = <<FALSE, .., FALSE>>
+
+(* Next action: process i can either be choosing a number or executing critical section *)
+Next == \E i \in 1..N :
+        \/ (* Choosing phase *)
+           /\ flag' = Subst(flag, i, TRUE)
+           /\ num' = Subst(num, i, MaxNum + 1)
+        \/ (* Critical section *)
+           /\ flag' = Subst(flag, i, FALSE)
+           /\ num' = Subst(num, i, 0)
+
+Spec == Init /\ [][Next]_<<num, flag>>
+
+(* Mutual exclusion invariant: at most one process in critical section *)
+MutualExclusion == \A i, j \in 1..N : i /= j => ~(flag[i] /\ flag[j])
+
+(* Safety invariant: if a process is in critical section, no other process has a smaller number *)
+Safety == \A i, j \in 1..N : i /= j => ~(flag[i] /\ flag[j] /\ Less(j, i))
+
+(* Liveness invariant: if a process is choosing a number, eventually it will finish choosing *)
+Liveness == \A i \in 1..N : flag[i] => <> (num[i] = 0)
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,1,1.0,gold,4.38,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail, size
+
+(* Type invariants *)
+TypeOK == 
+    /\ q \in Seq(1..K)
+    /\ head \in 1..K
+    /\ tail \in 1..K
+    /\ size \in 0..K
+
+(* Initial state: empty queue *)
+Init == 
+    /\ q = <<>>
+    /\ head = 1
+    /\ tail = 1
+    /\ size = 0
+
+(* Producer action: enqueue *)
+Enqueue == 
+    /\ size < K
+    /\ head' = head
+    /\ tail' = IF tail = K THEN 1 ELSE tail + 1
+    /\ size' = size + 1
+    /\ q' = Append(q, 1)  (* placeholder value *)
+
+(* Consumer action: dequeue *)
+Dequeue == 
+    /\ size > 0
+    /\ head' = IF head = K THEN 1 ELSE head + 1
+    /\ tail' = tail
+    /\ size' = size - 1
+    /\ q' = Tail(q)
+
+(* Next-state relation *)
+Next == Enqueue \/ Dequeue
+
+(* Specification *)
+Spec == Init /\ [][Next]_<<q, head, tail, size>>
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,1,0,1.0,silver,21.94,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS NULL, ServerId
+
+VARIABLES currentTerm, votedFor, state
+
+
+
+TypeOK == 
+  /\ currentTerm \in Int
+  /\ state \in [ServerId -> {""Follower"", ""Candidate"", ""Leader""}]
+  /\ votedFor \in [ServerId -> ServerId]
+
+Init == 
+  /\ currentTerm = 0
+  /\ state = [s \in ServerId |-> ""Follower""]
+  /\ votedFor = [s \in ServerId |-> NULL]
+
+(* Next action: state transitions *)
+Next == 
+  \E s \in ServerId :
+    /\ state' = [state EXCEPT ![s] = ""Follower""]
+    /\ currentTerm' = currentTerm
+    /\ votedFor' = votedFor
+
+
+
+Spec == Init /\ [][Next]_<<currentTerm, votedFor, state>>
+
+===="

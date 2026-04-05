@@ -1,0 +1,318 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,0,0.444,silver,7.68,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, turn, flag
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,1,0,0.778,silver,16.3,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES participants, coordinator, messages
+
+Init ==
+  /\ participants = <<>>
+  /\ coordinator = <<>>
+  /\ messages = <<>>
+
+Next ==
+  \/ /\ participants' = Append(participants, <<>>)
+     /\ messages' = messages
+  \/ /\ coordinator' = <<>>
+     /\ messages' = messages
+  \/ /\ messages' = Append(messages, <<>>)
+     /\ participants' = participants
+     /\ coordinator' = coordinator
+
+Spec ==
+  Init /\ [][Next]_<<participants, coordinator, messages>>
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,0,0,1.0,bronze,40.4,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES forks, states
+
+(* Constants *)
+N == 5
+
+(* Helper functions *)
+Left(i) == IF i = 1 THEN N ELSE i - 1
+Right(i) == IF i = N THEN 1 ELSE i + 1
+
+(* State predicates *)
+ForkOwner(i) == forks[i]
+PhilosopherState(i) == states[i]
+
+(* Initial state *)
+Init == /\ forks = [i \in 1..N |-> 0]
+        /\ states = [i \in 1..N |-> ""thinking""]
+
+(* Next-state relation *)
+Next == \/ (* Philosopher i becomes hungry *)
+          /\ \E i \in 1..N : states[i] = ""thinking"" /\ states' = [states EXCEPT ![i] = ""hungry""]
+        \/ (* Philosopher i picks up forks if hungry and forks are free *)
+          /\ \E i \in 1..N : states[i] = ""hungry"" /\ forks[i] = 0 /\ forks[Left(i)] = 0
+          /\ forks' = [forks EXCEPT ![i] = i, ![Left(i)] = i]
+          /\ states' = [states EXCEPT ![i] = ""eating""]
+        \/ (* Philosopher i puts down forks after eating *)
+          /\ \E i \in 1..N : states[i] = ""eating""
+          /\ forks' = [forks EXCEPT ![i] = 0, ![Left(i)] = 0]
+          /\ states' = [states EXCEPT ![i] = ""thinking""]
+
+(* Invariant: No two philosophers share a fork *)
+TypeOK == /\ \A i \in 1..N : forks[i] \in 0..N
+          /\ \A i \in 1..N : forks[i] = 0 \/ forks[i] = i
+          /\ \A i \in 1..N : states[i] \in {""thinking"", ""hungry"", ""eating""}
+
+Spec == Init /\ [][Next]_<<forks, states>>
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,0,0,0.778,bronze,19.52,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+
+VARIABLES num, flag
+
+Init == /\ num = [i \in 1..N |-> 0]
+        /\ flag = [i \in 1..N |-> FALSE]
+
+Next == \E i \in 1..N : /\ flag[i] = FALSE
+                     /\ flag' = [flag EXCEPT ![i] = TRUE]
+                     /\ num' = [num EXCEPT ![i] = Max([num[j] | j \in 1..N]) + 1]
+                     /\ flag' = [flag EXCEPT ![i] = FALSE]
+
+Spec == Init /\ [][Next]_<<num, flag>>
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,1,1.0,gold,15.9,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS K
+
+VARIABLES q, head, tail, count
+
+(* TypeOK: *)
+TypeOK == 
+  /\ K \in Nat
+  /\ q \in Seq(1..K)
+  /\ head \in 1..K
+  /\ tail \in 1..K
+  /\ count \in 0..K
+
+(* Init: *)
+Init == 
+  /\ q = <<>>
+  /\ head = 1
+  /\ tail = 1
+  /\ count = 0
+
+(* Next: *)
+Next == 
+  (* Producer action *)
+  \/ /\ count < K
+     /\ head' = head
+     /\ tail' = IF tail = K THEN 1 ELSE tail + 1
+     /\ count' = count + 1
+     /\ q' = Append(q, 1)  (* Append a dummy element *)
+  \/ (* Consumer action *)
+     /\ count > 0
+     /\ head' = IF head = K THEN 1 ELSE head + 1
+     /\ tail' = tail
+     /\ count' = count - 1
+     /\ q' = Tail(q)  (* Remove the first element *)
+
+Spec == Init /\ [][Next]_<<q, head, tail, count>>
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,0,0,0.778,bronze,19.57,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+Init == /\ currentTerm = 0
+        /\ votedFor = NULL
+        /\ state = ""Follower""
+
+Next == \/ /\ state = ""Follower""
+        /\ currentTerm' = currentTerm
+        /\ votedFor' = votedFor
+        /\ state' = ""Follower""
+        \/ /\ state = ""Candidate""
+        /\ currentTerm' = currentTerm + 1
+        /\ votedFor' = NULL
+        /\ state' = ""Candidate""
+        \/ /\ state = ""Leader""
+        /\ currentTerm' = currentTerm
+        /\ votedFor' = votedFor
+        /\ state' = ""Leader""
+
+Spec == Init /\ [][Next]_<<currentTerm, votedFor, state>>
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,0,0,0.778,bronze,24.66,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES readers, writer_active
+
+Init == /\ readers = <<>>
+        /\ writer_active = FALSE
+
+Next == \/ /\ writer_active = FALSE
+          /\ \E r \in 1..10 : /\ r \notin readers
+              /\ writer_active' = FALSE
+                 /\ readers' = Append(readers, r)
+          \/ /\ writer_active = FALSE
+              /\ \E r \in 1..10 : r \in readers
+              /\ writer_active' = FALSE
+                 /\ readers' = Tail(readers)
+          \/ /\ writer_active = FALSE
+              /\ \E r \in 1..10 : r \notin readers
+              /\ writer_active' = TRUE
+                 /\ readers' = <<>>
+          \/ /\ writer_active = TRUE
+              /\ writer_active' = FALSE
+                 /\ readers' = <<>>
+
+Spec == Init /\ [][Next]_<<readers, writer_active>>
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,1,0,0.444,silver,91.05,"---- MODULE DistributedSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, channel, snapshot, marker, finished
+
+===="
+chattla:20b,BM009,Token Ring,networking,2,1,1,0.667,gold,2.52,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLE token
+
+Init == /\ token \in 1..N
+
+Next == /\ token' \in 1..N
+        /\ token' = IF token = N THEN 1 ELSE token + 1
+
+Spec == Init /\ [][Next]_<<token>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,0.667,silver,8.07,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, Values
+VARIABLE store
+
+Init == /\ store \in [Keys -> Values]
+
+Next == /\ \E k \in Keys : \E v \in Values : store' = [store EXCEPT ![k] = v]
+
+Spec == Init /\ [][Next]_<<store>>
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,1,0,0.444,silver,200.21,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES acceptors, proposers, promises, accepts, chosen, chosenBallot
+
+===="
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,0,0,1.0,bronze,63.33,"---- MODULE FileTransfer ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS MAX_RETRIES, CHUNK_SIZE, FILE_SIZE, CHANNEL_LOSS_PROBABILITY, Chunks
+VARIABLES ackedChunks, channelState, currentChunk, file, retransmitCount, sentChunks
+
+
+(* Helper definitions *)
+chunkSize == CHUNK_SIZE
+fileSize == FILE_SIZE
+maxRetries == MAX_RETRIES
+channelLossProb == CHANNEL_LOSS_PROBABILITY
+
+(* Compute the number of chunks needed to send the file *)
+numChunks == Ceil(fileSize \div chunkSize)
+
+(* Define the chunks as a sequence of byte sequences *)
+chunks == [i \in 1..numChunks |-> 
+
+                 SubSeq(file, (i-1)*chunkSize + 1, i*chunkSize)
+
+                 SubSeq(file, (i-1)*chunkSize + 1, fileSize)
+           ]
+
+(* Define the initial state *)
+Init == /\ file \in Seq(1..256)  (* file is a sequence of bytes *)
+        /\ Len(file) = fileSize
+        /\ sentChunks = {}  (* no chunks have been sent yet *)
+        /\ ackedChunks = {}  (* no chunks have been acknowledged yet *)
+        /\ retransmitCount = 0
+        /\ currentChunk = 1
+        /\ channelState = ""idle""
+
+(* Define the Next action *)
+Next == 
+    (* If the channel is idle, send the next chunk *)
+    /\ channelState = ""idle""
+    /\ currentChunk <= numChunks
+    /\ sentChunks' = sentChunks \cup {currentChunk}
+    /\ channelState' = ""sending""
+    /\ UNCHANGED <<file, chunks, ackedChunks, retransmitCount>>
+
+    \/ (* If the channel is sending, decide whether the message is lost *)
+    /\ channelState = ""sending""
+    /\ IF Random < channelLossProb THEN
+           (* Message is lost *)
+           /\ channelState' = ""idle""
+           /\ retransmitCount' = retransmitCount + 1
+           /\ UNCHANGED <<file, chunks, sentChunks, ackedChunks, currentChunk>>
+
+           (* Message is received *)
+           /\ channelState' = ""acknowledged""
+           /\ ackedChunks' = ackedChunks \cup {currentChunk}
+           /\ retransmitCount' = 0
+           /\ IF currentChunk < numChunks THEN
+                  currentChunk' = currentChunk + 1
+
+                  currentChunk' = currentChunk
+           /\ UNCHANGED <<file, chunks, sentChunks>>
+
+    \/ (* If the channel is acknowledged, check if retransmissions are needed *)
+    /\ channelState = ""acknowledged""
+    /\ IF currentChunk <= numChunks THEN
+           (* Check if the current chunk has been acknowledged *)
+
+               (* Move to the next chunk *)
+               /\ channelState' = ""idle""
+               /\ currentChunk' = currentChunk + 1
+               /\ UNCHANGED <<file, chunks, sentChunks, ackedChunks, retransmitCount>>
+
+               (* Retransmit if retries remain *)
+
+                   /\ channelState' = ""idle""
+                   /\ retransmitCount' = retransmitCount + 1
+                   /\ UNCHANGED <<file, chunks, sentChunks, ackedChunks, currentChunk>>
+
+                   (* Give up after max retries *)
+                   /\ channelState' = ""idle""
+                   /\ UNCHANGED <<file, chunks, sentChunks, ackedChunks, retransmitCount, currentChunk>>
+
+           (* All chunks have been acknowledged *)
+           /\ channelState' = ""idle""
+           /\ UNCHANGED <<file, chunks, sentChunks, ackedChunks, retransmitCount, currentChunk>>
+
+(* Define the specification *)
+Spec == Init /\ [][Next]_<<file, chunks, sentChunks, ackedChunks, retransmitCount, currentChunk, channelState>>
+
+(* Define the type invariant *)
+TypeOK == /\ file \in Seq(1..256)
+          /\ Len(file) = fileSize
+          /\ chunks \in [1..numChunks -> Seq(1..256)]
+          /\ sentChunks \in SUBSET 1..numChunks
+          /\ ackedChunks \in SUBSET 1..numChunks
+          /\ retransmitCount \in Nat
+          /\ currentChunk \in 1..numChunks
+          /\ channelState \in {""idle"", ""sending"", ""acknowledged""}
+
+===="

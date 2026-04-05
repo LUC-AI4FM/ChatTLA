@@ -1,0 +1,721 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,0,0.444,silver,69.18,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, turn
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,1,0,0.444,silver,176.55,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES participants, votes, commitDecided, commitDecision
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,0,0,1.0,bronze,224.28,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES forks, states
+
+(* Constants *)
+N == 5
+
+(* Helper functions *)
+LEFT(i) == IF i = 1 THEN N ELSE i - 1
+RIGHT(i) == IF i = N THEN 1 ELSE i + 1
+
+(* Initial state *)
+Init == /\ forks = [i \in 1..N |-> i]
+        /\ states = [i \in 1..N |-> ""thinking""]
+
+(* Next state *)
+Next == \/ /\ states' = [states EXCEPT ![i] = ""hungry""]
+          /\ forks' = forks
+        \/ /\ states' = [states EXCEPT ![i] = ""eating""]
+          /\ forks' = [forks EXCEPT ![LEFT(i)] = i, ![RIGHT(i)] = i]
+        \/ /\ states' = [states EXCEPT ![i] = ""thinking""]
+          /\ forks' = [forks EXCEPT ![LEFT(i)] = LEFT(i), ![RIGHT(i)] = RIGHT(i)]
+
+(* Invariant: fork ownership *)
+TypeOK == /\ forks \in [1..N |-> 1..N]
+          /\ states \in [1..N |-> {""thinking"", ""hungry"", ""eating""}]
+          /\ \A i \in 1..N : forks[i] = i
+
+Spec == Init /\ [][Next]_<<forks, states>>
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,1,0,0.444,silver,295.69,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+
+VARIABLES num, flag
+
+
+
+  \* Each process runs the following
+  \* process i \in 1..N
+  \* begin
+  \*   flag[i] := TRUE;
+  \*   num[i] := 1 + Max(num);
+  \*   flag[i] := FALSE;
+  \*   \* Wait until all processes with smaller numbers have finished
+  \*   \* Wait until all processes with the same number have smaller IDs
+  \*   \* Wait until all processes with smaller numbers have finished
+  \*   \* Wait until all processes with the same number have smaller IDs
+  \*   \* Wait until all processes with smaller numbers have finished
+  \*   \* Wait until all processes with the same number have smaller IDs
+  \*   \* Wait until all processes with smaller numbers have finished
+  \*   \* Wait until all processes with the same number have smaller IDs
+  \*   \* Wait until all processes with smaller numbers have finished
+  \*   \* Wait until all processes with the same number have smaller IDs
+  \*   \* Wait until all processes with smaller numbers have finished
+  \*   \* Wait until all processes with the same number have smaller IDs
+  \*   \* Wait until all processes with smaller numbers have finished
+  \*   \* Wait until all processes with the same number have smaller IDs
+  \*   \* Wait until all processes with smaller numbers have finished
+  \*   \* Wait until all processes with the same number have smaller IDs
+  \*   \* Wait until all processes with smaller numbers have finished
+  \*   \* Wait until all processes with the same number have smaller IDs
+  \*   \* Wait until all processes with smaller numbers have finished
+  \*   \* Wait until all processes with the same number have smaller IDs
+  \*   \* Wait until all processes with smaller numbers have finished
+  \*   \* Wait until all processes with the same number have smaller IDs
+  \*   \* Wait until all processes with smaller numbers have finished
+  \*   \* Wait until all processes with the same number have smaller IDs
+  \*   \* Wait until all processes with smaller numbers have finished
+  \*   \* Wait until all processes with the same number have smaller IDs
+  \*   \* Wait until all processes with smaller numbers have finished
+  \*   \* Wait until all processes with the same number have smaller IDs
+  \*   \* Wait until all processes with smaller numbers have finished
+  \*   \* Wait until all processes with the same number have smaller IDs
+  \*   \* Wait until all processes with smaller numbers have finished
+  \*   \* Wait until all processes with the same number have smaller IDs
+  \*   \* Wait until all processes with smaller numbers have finished
+  \*   \* Wait until all processes with the same number have smaller IDs
+  \*   \* Wait until all processes with smaller numbers have finished
+  \*   \* Wait until all processes with the same number have smaller IDs
+  \*   \* Wait until all processes with smaller numbers have finished
+  \*   \* Wait until all processes with the same number have smaller IDs
+  \*   \* Wait until all processes with smaller numbers have finished
+  \*   \* Wait until all processes with the same number have smaller IDs
+  \*   \* Wait until all processes with smaller numbers have finished
+  \*   \* Wait until all processes with the same number have smaller IDs
+  \*   \* Wait until all processes with smaller numbers have finished
+  \*   \* Wait until all processes with the same number have smaller IDs
+  \*   \* Wait until all processes with smaller numbers have finished
+  \*   \* Wait until all processes with the same number have smaller IDs
+  \*   \* Wait until all processes with smaller numbers have finished
+  \*   \* Wait until all processes with the same number have smaller IDs
+  \*   \* Wait until all processes with smaller numbers have finished
+  \*   \* Wait until all processes with the same number have smaller IDs
+  \*   \* Wait until all processes with smaller numbers have finished
+  \*   \* Wait until all processes with the same number have smaller IDs
+  \*   \* Wait until all processes with smaller numbers have finished
+  \*   \* Wait until all processes with the same number have smaller IDs
+  \*   \* Wait until all processes with smaller numbers have finished
+  \*   \* Wait until all processes with the same number have smaller IDs
+  \*   \* Wait until all processes with smaller numbers have finished
+  \*   \* Wait until all processes with the same number have smaller IDs
+  \*   \* Wait until all processes with smaller numbers have finished
+  \*   \* Wait until all processes with the same number have smaller IDs
+  \*   \* Wait until all processes with smaller numbers have finished
+  \*   \* Wait until all processes with the same number have smaller IDs
+  \*   \* Wait until all processes with smaller numbers have finished
+  \*   \* Wait until all processes with the same number have smaller IDs
+  \*   \* Wait until all processes with smaller numbers have finished
+  \*   \* Wait until all processes with the same number have smaller IDs
+  \*   \* Wait until all processes with smaller numbers have finished
+  \*   \* Wait until all processes with the same number have smaller IDs
+  \*   \* Wait until all processes with smaller numbers have finished
+  \*   \* Wait until all processes with the same number have smaller IDs
+  \*   \* Wait until all processes with smaller numbers have finished
+  \*   \* Wait until all processes with the same number have smaller IDs
+  \*   \* Wait until all processes with smaller numbers have finished
+  \*   \* Wait until all processes with the same number have smaller IDs
+  \*   \* Wait until all processes with smaller numbers have finished
+  \*   \* Wait until all processes with the same number have smaller IDs
+  \*   \* Wait until all processes with smaller numbers have finished
+  \*   \* Wait until all processes with the same number have smaller IDs
+  \*   \* Wait until all processes with smaller numbers have finished
+  \*   \* Wait until all processes with the same number have smaller IDs
+  \*   \* Wait until all processes with smaller numbers have finished
+  \*   \* Wait until all processes with the same number have smaller IDs
+  \*   \* Wait until all processes with smaller numbers have finished
+  \*   \* Wait until all processes with the same number have smaller IDs
+  \*   \* Wait until all processes with smaller numbers have finished
+  \*   \* Wait until all processes with the same number have smaller IDs
+  \*   \* Wait until all processes with smaller numbers have finished
+  \*   \* Wait until all processes with the same number have smaller IDs
+  \*   \* Wait until all processes with smaller numbers have finished
+  \*   \* Wait until all processes with the same number have smaller IDs
+  \*   \* Wait until all processes with smaller numbers have finished
+  \*   \* Wait until all processes with the same number have smaller IDs
+  \*   \* Wait until all processes with smaller numbers have finished
+  \*   \* Wait until all processes with the same number have smaller IDs
+  \*   \* Wait until all processes with smaller numbers have finished
+  \*   \* Wait until all processes with the same number have smaller IDs
+  \*   \* Wait until all processes with smaller numbers have finished
+  \*   \* Wait until all processes with the same number have smaller IDs
+  \*   \* Wait until all processes with smaller numbers have finished
+  \*   \* Wait until all processes with the same number have smaller IDs
+  \*   \* Wait until all processes with smaller numbers have finished
+  \*   \* Wait until all processes with the same number have smaller IDs
+  \*   \* Wait until all processes with smaller numbers have finished
+  \*   \* Wait until all processes with the same number have smaller IDs
+  \*   \* Wait until all processes with smaller numbers have finished
+  \*   \* Wait until all processes with the same number have smaller IDs
+  \*   \* Wait until all processes with smaller numbers have finished
+  \*   \* Wait until all processes with the same number have sm"
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,1,0.778,gold,6.2,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail, count
+
+Init == /\ q = <<>>
+        /\ head = 1
+        /\ tail = 1
+        /\ count = 0
+
+Next == 
+  \/ /\ count < K
+     /\ head' = head
+        /\ tail' = (tail % K) + 1
+        /\ count' = count + 1
+        /\ q' = Append(q, head)
+  \/ /\ count > 0
+     /\ head' = (head % K) + 1
+        /\ tail' = tail
+        /\ count' = count - 1
+        /\ q' = Tail(q)
+
+Spec == Init /\ [][Next]_<<q, head, tail, count>>
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,0,0,0.778,bronze,29.37,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+Init == /\ currentTerm = 0
+        /\ votedFor = NULL
+        /\ state = ""Follower""
+
+Next == \/ /\ state = ""Follower""
+        /\ currentTerm' = currentTerm
+        /\ votedFor' = votedFor
+        /\ state' = ""Follower""
+        \/ /\ state = ""Candidate""
+        /\ currentTerm' = currentTerm + 1
+        /\ votedFor' = NULL
+        /\ state' = ""Candidate""
+        \/ /\ state = ""Leader""
+        /\ currentTerm' = currentTerm
+        /\ votedFor' = votedFor
+        /\ state' = ""Leader""
+
+Spec == Init /\ [][Next]_<<currentTerm, votedFor, state>>
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,0,0,0.778,bronze,211.9,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS Readers
+
+VARIABLES readers, writer_active
+
+Init == /\ readers = <<>>
+        /\ writer_active = FALSE
+
+Next == \/ /\ writer_active = FALSE
+          /\ \E r \in Readers :
+              /\ r \in readers
+              /\ readers' = Remove(r, readers)
+          \/ /\ writer_active = FALSE
+              /\ \E r \in Readers :
+                  /\ r \notin readers
+                  /\ writer_active' = TRUE
+          \/ /\ writer_active = TRUE
+              /\ writer_active' = FALSE
+
+Spec == Init /\ [][Next]_<<readers, writer_active>>
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,1,0,0.444,silver,136.09,"---- MODULE DistributedSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, channel, snapshot, marker, recorded, channelState
+===="
+chattla:20b,BM009,Token Ring,networking,2,1,1,0.667,gold,2.54,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLE token
+
+Init == /\ token \in 1..N
+
+Next == /\ token' \in 1..N
+        /\ token' = IF token = N THEN 1 ELSE token + 1
+
+Spec == Init /\ [][Next]_<<token>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,0.778,silver,14.33,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, Values
+
+VARIABLES store
+
+Init == /\ store \in [Keys -> Values]
+Next == /\ store' \in [Keys -> Values]
+      /\ \E k \in Keys : \E v \in Values : store' = [store EXCEPT ![k] = v]
+
+Spec == Init /\ [][Next]_<<store>>
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,1,0,0.444,silver,305.46,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES acceptors, proposers, promises, accepted, chosen, chosenBallot, chosenValue, chosenBallotValue, chosenBallotValueValue, chosenBallotValueBallot, chosenBallotValueBallotValue, chosenBallotValueBallotValueBallot, chosenBallotValueBallotValueBallotValue, chosenBallotValueBallotValueBallotValueBallot, chosenBallotValueBallotValueBallotValueBallotValue, chosenBallotValueBallotValueBallotValueBallotValueBallot, chosenBallotValueBallotValueBallotValueBallotValueBallotValue, chosenBallotValueBallotValueBallotValueBallotValueBallotValueBallot, chosenBallotValueBallotValueBallotValueBallotValueBallotValueBallotValue, chosenBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallot, chosenBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValue, chosenBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallot, chosenBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValue, chosenBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallot, chosenBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValue, chosenBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallot, chosenBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValue, chosenBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallot, chosenBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValue, chosenBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallot, chosenBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallot, chosenBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValue, chosenBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallot, chosenBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValue, chosenBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallot, chosenBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValue, chosenBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallot, chosenBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValue, chosenBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValue, chosenBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallot, chosenBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValue, chosenBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallot, chosenBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotVal"
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,0,0,0.667,bronze,93.16,"---- MODULE Sender ----
+EXTENDS Integers, Sequences, FiniteSets
+Min(S) == CHOOSE x \in S : \A y \in S : x =< y
+
+
+CONSTANTS MAX_RETRIES, CHUNK_SIZE, FILE_SIZE
+VARIABLES retransmitCount, sentChunks
+
+    /\ file \in Seq
+    /\ chunks = [i \in 1..Len(file) \div i*CHUNK_SIZE \in 1..Len(file) \div CHUNK_SIZE |-> SubSeq(file, (i-1)*CHUNK_SIZE+1, Min(i*CHUNK_SIZE, Len(file)))]
+    /\ sentChunks = <<>>
+    /\ retransmitCount = 0
+
+Next ==
+    /\ sentChunks' = Append(sentChunks, [i \in 1..Len(chunks) \div CHUNK_SIZE |-> SubSeq(chunks, (i-1)*CHUNK_SIZE+1, Min(i*CHUNK_SIZE, Len(chunks)))] )
+    /\ retransmitCount' = retransmitCount + 1
+    /\ UNCHANGED <<file, chunks>>
+
+Spec ==
+    Init /\ [][Next]_<<file, chunks, sentChunks, retransmitCount>>
+
+===="
+chattla:20b,BM013,Transaction Isolation (Snapshot Isolation),transaction,4,1,1,0.778,gold,180.36,"---- MODULE SnapshotIsolation ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES data, snapshot, txState, txWrites, txReadSet, txWriteSet, txStartTime, txCommitTime, txAbortTime, txId, txCount, txActive, txCommitted, txAborted, txPending, txPendingWrites, txPendingReads, txPendingWritesSet, txPendingReadsSet, txPendingStartTime, txPendingCommitTime, txPendingAbortTime, txPendingId, txPendingCount, txPendingActive, txPendingCommitted, txPendingAborted, txPendingPending
+
+Init == /\ data = <<>>
+       /\ snapshot = <<>>
+       /\ txState = <<>>
+       /\ txWrites = <<>>
+       /\ txReadSet = <<>>
+       /\ txWriteSet = <<>>
+       /\ txStartTime = <<>>
+       /\ txCommitTime = <<>>
+       /\ txAbortTime = <<>>
+       /\ txId = <<>>
+       /\ txCount = <<>>
+       /\ txActive = <<>>
+       /\ txCommitted = <<>>
+       /\ txAborted = <<>>
+       /\ txPending = <<>>
+       /\ txPendingWrites = <<>>
+       /\ txPendingReads = <<>>
+       /\ txPendingWritesSet = <<>>
+       /\ txPendingReadsSet = <<>>
+       /\ txPendingStartTime = <<>>
+       /\ txPendingCommitTime = <<>>
+       /\ txPendingAbortTime = <<>>
+       /\ txPendingId = <<>>
+       /\ txPendingCount = <<>>
+       /\ txPendingActive = <<>>
+       /\ txPendingCommitted = <<>>
+       /\ txPendingAborted = <<>>
+       /\ txPendingPending = <<>>
+
+Next == /\ UNCHANGED <<data, snapshot, txState, txWrites, txReadSet, txWriteSet, txStartTime, txCommitTime, txAbortTime, txId, txCount, txActive, txCommitted, txAborted, txPending, txPendingWrites, txPendingReads, txPendingWritesSet, txPendingReadsSet, txPendingStartTime, txPendingCommitTime, txPendingAbortTime, txPendingId, txPendingCount, txPendingActive, txPendingCommitted, txPendingAborted, txPendingPending>>
+       \/ /\ txState' = <<>>
+          /\ txWrites' = <<>>
+          /\ txReadSet' = <<>>
+          /\ txWriteSet' = <<>>
+          /\ txStartTime' = <<>>
+          /\ txCommitTime' = <<>>
+          /\ txAbortTime' = <<>>
+          /\ txId' = <<>>
+          /\ txCount' = <<>>
+          /\ txActive' = <<>>
+          /\ txCommitted' = <<>>
+          /\ txAborted' = <<>>
+          /\ txPending' = <<>>
+          /\ txPendingWrites' = <<>>
+          /\ txPendingReads' = <<>>
+          /\ txPendingWritesSet' = <<>>
+          /\ txPendingReadsSet' = <<>>
+          /\ txPendingStartTime' = <<>>
+          /\ txPendingCommitTime' = <<>>
+          /\ txPendingAbortTime' = <<>>
+          /\ txPendingId' = <<>>
+          /\ txPendingCount' = <<>>
+          /\ txPendingActive' = <<>>
+          /\ txPendingCommitted' = <<>>
+          /\ txPendingAborted' = <<>>
+          /\ txPendingPending' = <<>>
+          /\ data' = <<>>
+          /\ snapshot' = <<>>
+       \/ /\ txState' = <<>>
+          /\ txWrites' = <<>>
+          /\ txReadSet' = <<>>
+          /\ txWriteSet' = <<>>
+          /\ txStartTime' = <<>>
+          /\ txCommitTime' = <<>>
+          /\ txAbortTime' = <<>>
+          /\ txId' = <<>>
+          /\ txCount' = <<>>
+          /\ txActive' = <<>>
+          /\ txCommitted' = <<>>
+          /\ txAborted' = <<>>
+          /\ txPending' = <<>>
+          /\ txPendingWrites' = <<>>
+          /\ txPendingReads' = <<>>
+          /\ txPendingWritesSet' = <<>>
+          /\ txPendingReadsSet' = <<>>
+          /\ txPendingStartTime' = <<>>
+          /\ txPendingCommitTime' = <<>>
+          /\ txPendingAbortTime' = <<>>
+          /\ txPendingId' = <<>>
+          /\ txPendingCount' = <<>>
+          /\ txPendingActive' = <<>>
+          /\ txPendingCommitted' = <<>>
+          /\ txPendingAborted' = <<>>
+          /\ txPendingPending' = <<>>
+          /\ data' = <<>>
+          /\ snapshot' = <<>>
+       \/ /\ txState' = <<>>
+          /\ txWrites' = <<>>
+          /\ txReadSet' = <<>>
+          /\ txWriteSet' = <<>>
+          /\ txStartTime' = <<>>
+          /\ txCommitTime' = <<>>
+          /\ txAbortTime' = <<>>
+          /\ txId' = <<>>
+          /\ txCount' = <<>>
+          /\ txActive' = <<>>
+          /\ txCommitted' = <<>>
+          /\ txAborted' = <<>>
+          /\ txPending' = <<>>
+          /\ txPendingWrites' = <<>>
+          /\ txPendingReads' = <<>>
+          /\ txPendingWritesSet' = <<>>
+          /\ txPendingReadsSet' = <<>>
+          /\ txPendingStartTime' = <<>>
+          /\ txPendingCommitTime' = <<>>
+          /\ txPendingAbortTime' = <<>>
+          /\ txPendingId' = <<>>
+          /\ txPendingCount' = <<>>
+          /\ txPendingActive' = <<>>
+          /\ txPendingCommitted' = <<>>
+          /\ txPendingAborted' = <<>>
+          /\ txPendingPending' = <<>>
+          /\ data' = <<>>
+          /\ snapshot' = <<>>
+       \/ /\ txState' = <<>>
+          /\ txWrites' = <<>>
+          /\ txReadSet' = <<>>
+          /\ txWriteSet' = <<>>
+          /\ txStartTime' = <<>>
+          /\ txCommitTime' = <<>>
+          /\ txAbortTime' = <<>>
+          /\ txId' = <<>>
+          /\ txCount' = <<>>
+          /\ txActive' = <<>>
+          /\ txCommitted' = <<>>
+          /\ txAborted' = <<>>
+          /\ txPending' = <<>>
+          /\ txPendingWrites' = <<>>
+          /\ txPendingReads' = <<>>
+          /\ txPendingWritesSet' = <<>>
+          /\ txPendingReadsSet' = <<>>
+          /\ txPendingStartTime' = <<>>
+          /\ txPendingCommitTime' = <<>>
+          /\ txPendingAbortTime' = <<>>
+          /\ txPendingId' = <<>>
+          /\ txPendingCount' = <<>>
+          /\ txPendingActive' = <<>>
+          /\ txPendingCommitted' = <<>>
+          /\ txPendingAborted' = <<>>
+          /\ txPendingPending' = <<>>
+          /\ data' = <<>>
+          /\ snapshot' = <<>>
+       \/ /\ txState' = <<>>
+          /\ txWrites' = <<>>
+          /\ txReadSet' = <<>>
+          /\ txWriteSet' = <<>>
+          /\ txStartTime' = <<>>
+          /\ txCommitTime' = <<>>
+          /\ txAbortTime' = <<>>
+          /\ txId' = <<>>
+          /\ txCount' = <<>>
+          /\ txActive' = <<>>
+          /\ txCommitted' = <<>>
+          /\ txAborted' = <<>>
+          /\ txPending' = <<>>
+          /\ txPendingWrites' = <<>>
+          /\ txPendingReads' = <<>>
+          /\ txPendingWritesSet' = <<>>
+          /\ txPendingReadsSet' = <<>>
+          /\ txPendingStartTime' = <<>>
+          /\ txPendingCommitTime' = <<>>
+          /\ txPendingAbortTime' = <<>>
+          /\ txPendingId' = <<>>
+          /\ txPendingCount' = <<>>
+          /\ txPendingActive' = <<>>
+          /\ txPendingCommitted' = <<>>
+          /\ txPendingAborted' = <<>>
+          /\ txPendingPending' = <<>>
+          /\ data' = <<>>
+          /\ snapshot' = <<>>
+       \/ /\ txState' = <<>>
+          /\ txWrites' = <<>>
+          /\ txReadSet' = <<>>
+          /\ txWriteSet' = <<>>
+          /\ txStartTime' = <<>>
+          /\ txCommitTime' = <<>>
+          /\ txAbortTime' = <<>>
+          /\ txId' = <<>>
+          /\ txCount' = <<>>
+          /\ txActive' = <<>>
+          /\ txCommitted' = <<>>
+          /\ txAborted' = <<>>
+          /\ txPending' = <<>>
+          /\ txPendingWrites' = <<>>
+          /\ txPendingReads' = <<>>
+          /\ txPendingWritesSet' = <<>>
+          /\ txPendingReadsSet' = <<>>
+          /\ txPendingStartTime' = <<>>
+          /\ txPendingCommitTime' = <<>>
+          /\ txPendingAbortTime' = <<>>
+          /\ txPendingId' = <<>>
+          /\ txPendingCount' = <<>>
+          /\ txPendingActive' = <<>>
+          /\ txPendingCommitted' = <<>>
+          /\ txPendingAborted' = <<>>
+          /\ txPendingPending' = <<>>
+          /\ data' = <<>>
+          /\ snapshot' = <<>>
+       \/ /\ txState' = <<>>
+          /\ txWrites' = <<>>
+          /\ txReadSet' = <<>>
+          /\ txWriteSet' = <<>>
+          /\ txStartTime' = <<>>
+          /\ txCommitTime' = <<>>
+          /\ txAbortTime' = <<>>
+          /\ txId' = <<>>
+          /\ txCount' = <<>>
+          /\ txActive' = <<>>
+          /\ txCommitted' = <<>>
+          /\ txAborted' = <<>>
+          /\ txPending' = <<>>
+          /\ txPendingWrites' = <<>>
+          /\ txPendingReads' = <<>>
+          /\ txPendingWritesSet' = <<>>
+          /\ txPendingReadsS"
+chattla:20b,BM014,Clock Synchronisation,networking,3,0,0,0.667,bronze,566.71,"---- MODULE ClockSync ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES clocks, offsets
+
+Init == /\ clocks = [i \in 1..N |-> 0]
+        /\ offsets = [i \in 1..N |-> 0]
+
+Next == /\ \E i \in 1..N : /\ clocks' = [clocks EXCEPT ![i] = clocks[i] + offsets[i]]
+        /\ offsets' = [offsets EXCEPT ![i] = 0]
+        /\ \E j \in 1..N \ {i} : /\ offsets' = [offsets EXCEPT ![j] = offsets[j] + (clocks[i] - clocks[j])]
+        /\ \E k \in 1..N \ {i} : /\ offsets' = [offsets EXCEPT ![k] = offsets[k] + (clocks[j] - clocks[k])]
+        /\ \E l \in 1..N \ {i, j} : /\ offsets' = [offsets EXCEPT ![l] = offsets[l] + (clocks[k] - clocks[l])]
+        /\ \E m \in 1..N \ {i, j, k} : /\ offsets' = [offsets EXCEPT ![m] = offsets[m] + (clocks[l] - clocks[m])]
+        /\ \E n \in 1..N \ {i, j, k, l} : /\ offsets' = [offsets EXCEPT ![n] = offsets[n] + (clocks[m] - clocks[n])]
+        /\ \E o \in 1..N \ {i, j, k, l, m} : /\ offsets' = [offsets EXCEPT ![o] = offsets[o] + (clocks[n] - clocks[o])]
+        /\ \E p \in 1..N \ {i, j, k, l, m, n} : /\ offsets' = [offsets EXCEPT ![p] = offsets[p] + (clocks[o] - clocks[p])]
+        /\ \E q \in 1..N \ {i, j, k, l, m, n, o} : /\ offsets' = [offsets EXCEPT ![q] = offsets[q] + (clocks[p] - clocks[q])]
+        /\ \E r \in 1..N \ {i, j, k, l, m, n, o, p} : /\ offsets' = [offsets EXCEPT ![r] = offsets[r] + (clocks[q] - clocks[r])]
+        /\ \E s \in 1..N \ {i, j, k, l, m, n, o, p, q} : /\ offsets' = [offsets EXCEPT ![s] = offsets[s] + (clocks[r] - clocks[s])]
+        /\ \E t \in 1..N \ {i, j, k, l, m, n, o, p, q, r} : /\ offsets' = [offsets EXCEPT ![t] = offsets[t] + (clocks[s] - clocks[t])]
+        /\ \E u \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s} : /\ offsets' = [offsets EXCEPT ![u] = offsets[u] + (clocks[t] - clocks[u])]
+        /\ \E v \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t} : /\ offsets' = [offsets EXCEPT ![v] = offsets[v] + (clocks[u] - clocks[v])]
+        /\ \E w \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u} : /\ offsets' = [offsets EXCEPT ![w] = offsets[w] + (clocks[v] - clocks[w])]
+        /\ \E x \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v} : /\ offsets' = [offsets EXCEPT ![x] = offsets[x] + (clocks[w] - clocks[x])]
+        /\ \E y \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w} : /\ offsets' = [offsets EXCEPT ![y] = offsets[y] + (clocks[x] - clocks[y])]
+        /\ \E z \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x} : /\ offsets' = [offsets EXCEPT ![z] = offsets[z] + (clocks[y] - clocks[z])]
+        /\ \E a \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y} : /\ offsets' = [offsets EXCEPT ![a] = offsets[a] + (clocks[z] - clocks[a])]
+        /\ \E b \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z} : /\ offsets' = [offsets EXCEPT ![b] = offsets[b] + (clocks[a] - clocks[b])]
+        /\ \E c \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a} : /\ offsets' = [offsets EXCEPT ![c] = offsets[c] + (clocks[b] - clocks[c])]
+        /\ \E d \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b} : /\ offsets' = [offsets EXCEPT ![d] = offsets[d] + (clocks[c] - clocks[d])]
+        /\ \E e \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c} : /\ offsets' = [offsets EXCEPT ![e] = offsets[e] + (clocks[d] - clocks[e])]
+        /\ \E f \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d} : /\ offsets' = [offsets EXCEPT ![f] = offsets[f] + (clocks[e] - clocks[f])]
+        /\ \E g \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e} : /\ offsets' = [offsets EXCEPT ![g] = offsets[g] + (clocks[f] - clocks[g])]
+        /\ \E h \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f} : /\ offsets' = [offsets EXCEPT ![h] = offsets[h] + (clocks[g] - clocks[h])]
+        /\ \E i \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f, g} : /\ offsets' = [offsets EXCEPT ![i] = offsets[i] + (clocks[h] - clocks[i])]
+        /\ \E j \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f, g, h} : /\ offsets' = [offsets EXCEPT ![j] = offsets[j] + (clocks[i] - clocks[j])]
+        /\ \E k \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f, g, h, i} : /\ offsets' = [offsets EXCEPT ![k] = offsets[k] + (clocks[j] - clocks[k])]
+        /\ \E l \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f, g, h, i, j} : /\ offsets' = [offsets EXCEPT ![l] = offsets[l] + (clocks[k] - clocks[l])]
+        /\ \E m \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f, g, h, i, j, k} : /\ offsets' = [offsets EXCEPT ![m] = offsets[m] + (clocks[l] - clocks[m])]
+        /\ \E n \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f, g, h, i, j, k, l} : /\ offsets' = [offsets EXCEPT ![n] = offsets[n] + (clocks[m] - clocks[n])]
+        /\ \E o \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f, g, h, i, j, k, l, m} : /\ offsets' = [offsets EXCEPT ![o] = offsets[o] + (clocks[n] - clocks[o])]
+        /\ \E p \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f, g, h, i, j, k, l, m, n} : /\ offsets' = [offsets EXCEPT ![p] = offsets[p] + (clocks[o] - clocks[p])]
+        /\ \E q \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o} : /\ offsets' = [offsets EXCEPT ![q] = offsets[q] + (clocks[p] - clocks[q])]
+        /\ \E r \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p} : /\ offsets' = [offsets EXCEPT ![r] = offsets[r] + (clocks[q] - clocks[r])]
+        /\ \E s \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q} : /\ offsets' = [offsets EXCEPT ![s] = offsets[s] + (clocks[r] - clocks[s])]
+        /\ \E t \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r} : /\ offsets' = [offsets EXCEPT ![t] = offsets[t] + (clocks[s] - clocks[t])]
+        /\ \E u \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s} : /\ offsets' = [offsets EXCEPT ![u] = offsets[u] + (clocks[t] - clocks[u])]
+        /\ \E v \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t} : /\ offsets' = [offsets EXCEPT ![v] = offsets[v] + (clocks[u] - clocks[v])]
+        /\ \E w \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u} : /\ offsets' = [offsets EXCEPT ![w] = offsets[w] + (clocks[v] - clocks[w])]
+        /\ \E x \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v} : /\ offsets' = [offsets EXCEPT ![x] = offsets[x] + (clocks[w] - clocks[x])]
+        /\ \E y \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w} : /\ offsets' = [offsets EXCEPT ![y] = offsets[y] + (clocks[x] - clocks[y])]
+        /\ \E z \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x} : /\ offsets' = [offsets EXCEPT ![z] = offsets[z] + (clocks[y] - clocks[z])]
+        /\ \E a \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z} : /\ offsets' = [offsets EXCEPT ![a] = offsets[a] + (clocks[z] - clocks[a])]
+        /\ \E b \in 1..N \ {i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, a} : /\ offsets' = [offsets EXCEPT ![b] = offsets[b] + (clocks[a] -"
+chattla:20b,BM015,Peterson's Algorithm,scheduling,2,1,0,0.778,silver,13.35,"---- MODULE Peterson2 ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES flag, turn
+
+Init == /\ flag = [i \in 1..2 |-> FALSE]
+        /\ turn = 1
+
+Next == \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag[1] = TRUE
+          /\ turn' = 2
+          /\ flag' = [flag EXCEPT ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag[2] = TRUE
+          /\ turn' = 1
+          /\ flag' = [flag EXCEPT ![1] = FALSE]
+        \/ /\ flag[1] = TRUE
+          /\ turn = 2
+          /\ flag[2] = TRUE
+          /\ flag' = [flag EXCEPT ![1] = FALSE]
+        \/ /\ flag[2] = TRUE
+          /\ turn = 1
+          /\ flag[1] = TRUE
+          /\ flag' = [flag EXCEPT ![2] = FALSE]
+
+Spec == Init /\ [][Next]_<<flag, turn>>
+
+===="
+chattla:20b,BM016,Gossip Protocol,networking,3,1,0,0.778,silver,442.53,"---- MODULE GossipProtocol ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES known, infected
+
+Init == /\ known = <<>> /\ infected = <<>> /\ Len(known) = Len(infected)
+
+Next == /\ known' = known
+       /\ infected' = Append(infected, known)
+
+Spec == Init /\ [][Next]_<<known, infected>>
+
+===="
+chattla:20b,BM017,Simple Allocator,storage,2,1,0,0.667,silver,19.18,"---- MODULE MemoryAllocator ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, Pages, Clients
+
+VARIABLE free, allocated
+
+Init == /\ free = Pages
+        /\ allocated = [c \in Clients |-> {}]
+
+Next == /\ \E c \in Clients:
+          /\ c \in free
+          /\ free' = free \ {c}
+          /\ allocated' = [allocated EXCEPT ![c] = @ \cup {c}]
+        \/ \E c \in Clients:
+          /\ c \in Pages
+          /\ c \in allocated
+          /\ free' = free \cup {c}
+          /\ allocated' = [allocated EXCEPT ![c] = @ \ {c}]
+
+Spec == Init /\ [][Next]_<<free, allocated>>
+
+===="
+chattla:20b,BM018,Publish-Subscribe Broker,networking,3,1,0,0.444,silver,113.16,"---- MODULE Broker ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES subscribers, messages, topicMsgs, topicSubs, topicMsgIdx, topicSubIdx
+===="
+chattla:20b,BM019,Dekker's Algorithm,scheduling,3,1,0,0.778,silver,192.14,"---- MODULE Dekker ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES turn, wants
+
+Init == /\ turn \in {0,1}
+        /\ wants \in {0,1}^2
+        /\ wants = [i \in {0,1} |-> 0]
+
+Next == \/ /\ turn' = 1 - turn
+          /\ wants' = [i \in {0,1} |-> IF i = turn THEN 1 ELSE wants[i]]
+        \/ /\ turn' = turn
+          /\ wants' = [i \in {0,1} |-> IF i = turn THEN 0 ELSE wants[i]]
+
+Spec == Init /\ [][Next]_<<turn, wants>>
+
+===="
+chattla:20b,BM020,Eventually Consistent Counter,storage,3,1,0,0.778,silver,81.26,"---- MODULE GCounter ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS Node
+
+VARIABLES counts
+
+Init == /\ counts = [n \in Node |-> [m \in Node |-> 0]]
+Next == /\ \E n \in Node :
+          /\ counts' = [counts EXCEPT ![n] = [m \in Node |-> counts[n][m] + 1]]
+          /\ UNCHANGED <<>>  (* No other state changes *)
+Spec == Init /\ [][Next]_<<counts>>
+
+===="

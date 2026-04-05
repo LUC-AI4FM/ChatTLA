@@ -1,0 +1,754 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,0,0.444,silver,59.45,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, turn, N
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,1,0,1.0,silver,20.81,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, participants, coordinator
+VARIABLES state, votes, decision
+
+Init ==
+    /\ state = [p \in participants |-> ""Init""]
+    /\ votes = [p \in participants |-> ""None""]
+    /\ decision = ""None""
+
+Prepare ==
+    /\ \E p \in participants :
+        /\ state[p] = ""Init""
+        /\ state' = [state EXCEPT ![p] = ""Prepared""]
+        /\ votes' = votes
+        /\ decision' = decision
+
+VoteYes ==
+    /\ \E p \in participants :
+        /\ state[p] = ""Prepared""
+        /\ state' = [state EXCEPT ![p] = ""Committed""]
+        /\ votes' = [votes EXCEPT ![p] = ""Yes""]
+        /\ decision' = decision
+
+VoteNo ==
+    /\ \E p \in participants :
+        /\ state[p] = ""Prepared""
+        /\ state' = [state EXCEPT ![p] = ""Aborted""]
+        /\ votes' = [votes EXCEPT ![p] = ""No""]
+        /\ decision' = decision
+
+Commit ==
+    /\ decision = ""Commit""
+    /\ \E p \in participants :
+        /\ state[p] = ""Committed""
+        /\ state' = state
+        /\ votes' = votes
+        /\ decision' = decision
+
+Abort ==
+    /\ decision = ""Abort""
+    /\ \E p \in participants :
+        /\ state[p] = ""Aborted""
+        /\ state' = state
+        /\ votes' = votes
+        /\ decision' = decision
+
+Next ==
+    \/ Prepare
+    \/ VoteYes
+    \/ VoteNo
+    \/ Commit
+    \/ Abort
+
+TypeOK ==
+    /\ state \in [participants -> {""Init"", ""Prepared"", ""Committed"", ""Aborted""}]
+    /\ votes \in [participants -> {""Yes"", ""No"", ""None""}]
+    /\ decision \in {""Commit"", ""Abort"", ""None""}
+
+Spec ==
+    Init /\ [][Next]_<<state, votes, decision>>
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,0,0,1.0,bronze,34.21,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLES forks, states
+
+(* Fork ownership: forks[i] = j means fork i is held by philosopher j; forks[i] = -1 means fork i is free *)
+Init == /\ forks = [i \in 1..N |-> -> -1]
+        /\ states = [i \in 1..N |-> -> ""thinking""]
+
+Next == \/ (* Philosopher i becomes hungry *)
+          /\ states' = [states EXCEPT ![i] = ""hungry""]
+        \/ (* Philosopher i picks up forks if both are free *)
+          /\ states[i] = ""hungry""
+          /\ forks[i] = -1
+          /\ forks[%(i, N) + 1] = -1
+          /\ forks' = [forks EXCEPT ![i] = i, ![%(i, N) + 1] = i]
+          /\ states' = [states EXCEPT ![i] = ""eating""]
+        \/ (* Philosopher i puts down forks after eating *)
+          /\ states[i] = ""eating""
+          /\ forks' = [forks EXCEPT ![i] = -1, ![%(i, N) + 1] = -1]
+          /\ states' = [states EXCEPT ![i] = ""thinking""]
+
+Spec == Init /\ [][Next]_<<forks, states>>
+
+TypeOK == /\ forks \in [1..N -> 1..N \cup {-1}]
+          /\ states \in [1..N -> {""thinking"", ""hungry"", ""eating""}]
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,1,0,1.0,silver,143.27,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N
+
+VARIABLES num, flag
+
+Init == /\ num = <<1, 2, 3, 4, 5>>
+        /\ flag = <<FALSE, FALSE, FALSE, FALSE, FALSE>>
+
+Next == \/ /\ flag[1] = FALSE
+           /\ flag[2] = FALSE
+           /\ flag[3] = FALSE
+           /\ flag[4] = FALSE
+           /\ flag[5] = FALSE
+           /\ flag[1] = TRUE
+           /\ num[1] = 1
+           /\ flag[1] = FALSE
+       \/ /\ flag[1] = FALSE
+           /\ flag[2] = FALSE
+           /\ flag[3] = FALSE
+           /\ flag[4] = FALSE
+           /\ flag[5] = FALSE
+           /\ flag[2] = TRUE
+           /\ num[2] = 2
+           /\ flag[2] = FALSE
+       \/ /\ flag[1] = FALSE
+           /\ flag[2] = FALSE
+           /\ flag[3] = FALSE
+           /\ flag[4] = FALSE
+           /\ flag[5] = FALSE
+           /\ flag[3] = TRUE
+           /\ num[3] = 3
+           /\ flag[3] = FALSE
+       \/ /\ flag[1] = FALSE
+           /\ flag[2] = FALSE
+           /\ flag[3] = FALSE
+           /\ flag[4] = FALSE
+           /\ flag[5] = FALSE
+           /\ flag[4] = TRUE
+           /\ num[4] = 4
+           /\ flag[4] = FALSE
+       \/ /\ flag[1] = FALSE
+           /\ flag[2] = FALSE
+           /\ flag[3] = FALSE
+           /\ flag[4] = FALSE
+           /\ flag[5] = FALSE
+           /\ flag[5] = TRUE
+           /\ num[5] = 5
+           /\ flag[5] = FALSE
+
+TypeOK == /\ num \in <<1, 2, 3, 4, 5>>
+           /\ flag \in <<FALSE, FALSE, FALSE, FALSE, FALSE>>
+
+Spec == Init /\ [][Next]_<<num, flag>>
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,0,0.667,silver,107.66,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail
+
+Init == /\ q = <<>>
+        /\ head = 0
+        /\ tail = 0
+
+Next == 
+  \/ /\ head < tail
+      /\ head < K
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+         /\ head < Len(q)
+      "
+chattla:20b,BM006,Raft Leader Election,consensus,4,1,0,0.444,silver,57.29,"---- MODULE RaftElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,0,0,0.778,bronze,16.25,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES readers, writer_active
+
+Init == /\ readers = <<>> /\ writer_active = FALSE
+
+Next == \/ /\ writer_active' = FALSE
+        /\ readers' = Append(readers, 1)
+        /\ writer_active = FALSE
+        /\ Len(readers) = 0
+    \/ /\ writer_active' = TRUE
+        /\ writer_active = FALSE
+        /\ Len(readers) = 0
+    \/ /\ writer_active' = writer_active
+        /\ Len(readers) = Len(readers')
+        /\ \A i \in 1..Len(readers) : readers[i] = readers'[i]
+
+Spec == Init /\ [][Next]_<<readers, writer_active>>
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,1,0,0.444,silver,111.58,"---- MODULE DistributedSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, channel, snapshot, marker, finished
+===="
+chattla:20b,BM009,Token Ring,networking,2,1,1,0.667,gold,10.19,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLE token
+
+Init == /\ token \in 1..N
+
+Next == /\ token' \in 1..N
+        /\ token' = IF token = N THEN 1 ELSE token + 1
+
+Spec == Init /\ [][Next]_<<token>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,1.0,silver,15.43,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, Values, NULL
+
+VARIABLES store
+
+Init == store = [k \in Keys |-> NULL]
+
+Next == \E k \in Keys : \E v \in Values :
+          /\ store' = [store EXCEPT ![k] = v]
+          /\ UNCHANGED <<>>
+
+Spec == Init /\ [][Next]_<<store>>
+
+TypeOK == /\ store \in [Keys -> Values]
+          /\ \A k \in Keys : store[k] \in Values
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,0,0,0.667,bronze,281.88,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS M, N
+
+VARIABLES
+  acceptors, proposers, values, ballots, promises, accepted, chosen
+
+(* Types *)
+TypeOK == 
+  /\ acceptors \in SUBSET 1..N
+  /\ proposers \in SUBSET 1..M
+  /\ values \in SUBSET 1..V
+  /\ ballots \in [1..M -> Nat]
+  /\ promises \in [1..M -> [1..N -> [maxBallot: Nat, maxValue: Nat]]]
+  /\ accepted \in [1..N -> [maxBallot: Nat, maxValue: Nat]]
+  /\ chosen \in [1..N -> [maxBallot: Nat, maxValue: Nat]]
+  /\ \A a \in acceptors: 
+       /\ promises[a] \in [1..M -> [maxBallot: Nat, maxValue: Nat]]
+       /\ accepted[a] \in [maxBallot: Nat, maxValue: Nat]
+  /\ \A p \in proposers: 
+       /\ ballots[p] \in Nat
+       /\ promises[p] \in [1..N -> [maxBallot: Nat, maxValue: Nat]]
+  /\ \A a \in acceptors: 
+       /\ accepted[a] \in [maxBallot: Nat, maxValue: Nat]
+  /\ \A a \in acceptors: 
+       /\ chosen[a] \in [maxBallot: Nat, maxValue: Nat]
+  /\ \A a \in acceptors: 
+       /\ chosen[a] = [maxBallot: 0, maxValue: 0] \/ 
+          /\ chosen[a] \in [maxBallot: Nat, maxValue: Nat]
+  /\ \A a \in acceptors: 
+       /\ accepted[a] = [maxBallot: 0, maxValue: 0] \/ 
+          /\ accepted[a] \in [maxBallot: Nat, maxValue: Nat]
+  /\ \A p \in proposers: 
+       /\ ballots[p] \in Nat
+  /\ \A p \in proposers: 
+       /\ promises[p] \in [1..N -> [maxBallot: Nat, maxValue: Nat]]
+  /\ \A a \in acceptors: 
+       /\ promises[a] \in [1..M -> [maxBallot: Nat, maxValue: Nat]]
+  /\ \A a \in acceptors: 
+       /\ accepted[a] \in [maxBallot: Nat, maxValue: Nat]
+  /\ \A a \in acceptors: 
+       /\ chosen[a] \in [maxBallot: Nat, maxValue: Nat]
+  /\ \A a \in acceptors: 
+       /\ chosen[a] = [maxBallot: 0, maxValue: 0] \/ 
+          /\ chosen[a] \in [maxBallot: Nat, maxValue: Nat]
+  /\ \A a \in acceptors: 
+       /\ accepted[a] = [maxBallot: 0, maxValue: 0] \/ 
+          /\ accepted[a] \in [maxBallot: Nat, maxValue: Nat]
+  /\ \A p \in proposers: 
+       /\ ballots[p] \in Nat
+  /\ \A p \in proposers: 
+       /\ promises[p] \in [1..N -> [maxBallot: Nat, maxValue: Nat]]
+  /\ \A a \in acceptors: 
+       /\ promises[a] \in [1..M -> [maxBallot: Nat, maxValue: Nat]]
+  /\ \A a \in acceptors: 
+       /\ accepted[a] \in [maxBallot: Nat, maxValue: Nat]
+  /\ \A a \in acceptors: 
+       /\ chosen[a] \in [maxBallot: Nat, maxValue: Nat]
+  /\ \A a \in acceptors: 
+       /\ chosen[a] = [maxBallot: 0, maxValue: 0] \/ 
+          /\ chosen[a] \in [maxBallot: Nat, maxValue: Nat]
+  /\ \A a \in acceptors: 
+       /\ accepted[a] = [maxBallot: 0, maxValue: 0] \/ 
+          /\ accepted[a] \in [maxBallot: Nat, maxValue: Nat]
+  /\ \A p \in proposers: 
+       /\ ballots[p] \in Nat
+  /\ \A p \in proposers: 
+       /\ promises[p] \in [1..N -> [maxBallot: Nat, maxValue: Nat]]
+  /\ \A a \in acceptors: 
+       /\ promises[a] \in [1..M -> [maxBallot: Nat, maxValue: Nat]]
+  /\ \A a \in acceptors: 
+       /\ accepted[a] \in [maxBallot: Nat, maxValue: Nat]
+  /\ \A a \in acceptors: 
+       /\ chosen[a] \in [maxBallot: Nat, maxValue: Nat]
+  /\ \A a \in acceptors: 
+       /\ chosen[a] = [maxBallot: 0, maxValue: 0] \/ 
+          /\ chosen[a] \in [maxBallot: Nat, maxValue: Nat]
+  /\ \A a \in acceptors: 
+       /\ accepted[a] = [maxBallot: 0, maxValue: 0] \/ 
+          /\ accepted[a] \in [maxBallot: Nat, maxValue: Nat]
+  /\ \A p \in proposers: 
+       /\ ballots[p] \in Nat
+  /\ \A p \in proposers: 
+       /\ promises[p] \in [1..N -> [maxBallot: Nat, maxValue: Nat]]
+  /\ \A a \in acceptors: 
+       /\ promises[a] \in [1..M -> [maxBallot: Nat, maxValue: Nat]]
+  /\ \A a \in acceptors: 
+       /\ accepted[a] \in [maxBallot: Nat, maxValue: Nat]
+  /\ \A a \in acceptors: 
+       /\ chosen[a] \in [maxBallot: Nat, maxValue: Nat]
+  /\ \A a \in acceptors: 
+       /\ chosen[a] = [maxBallot: 0, maxValue: 0] \/ 
+          /\ chosen[a] \in [maxBallot: Nat, maxValue: Nat]
+  /\ \A a \in acceptors: 
+       /\ accepted[a] = [maxBallot: 0, maxValue: 0] \/ 
+          /\ accepted[a] \in [maxBallot: Nat, maxValue: Nat]
+  /\ \A p \in proposers: 
+       /\ ballots[p] \in Nat
+  /\ \A p \in proposers: 
+       /\ promises[p] \in [1..N -> [maxBallot: Nat, maxValue: Nat]]
+  /\ \A a \in acceptors: 
+       /\ promises[a] \in [1..M -> [maxBallot: Nat, maxValue: Nat]]
+  /\ \A a \in acceptors: 
+       /\ accepted[a] \in [maxBallot: Nat, maxValue: Nat]
+  /\ \A a \in acceptors: 
+       /\ chosen[a] \in [maxBallot: Nat, maxValue: Nat]
+  /\ \A a \in acceptors: 
+       /\ chosen[a] = [maxBallot: 0, maxValue: 0] \/ 
+          /\ chosen[a] \in [maxBallot: Nat, maxValue: Nat]
+  /\ \A a \in acceptors: 
+       /\ accepted[a] = [maxBallot: 0, maxValue: 0] \/ 
+          /\ accepted[a] \in [maxBallot: Nat, maxValue: Nat]
+  /\ \A p \in proposers: 
+       /\ ballots[p] \in Nat
+  /\ \A p \in proposers: 
+       /\ promises[p] \in [1..N -> [maxBallot: Nat, maxValue: Nat]]
+  /\ \A a \in acceptors: 
+       /\ promises[a] \in [1..M -> [maxBallot: Nat, maxValue: Nat]]
+  /\ \A a \in acceptors: 
+       /\ accepted[a] \in [maxBallot: Nat, maxValue: Nat]
+  /\ \A a \in acceptors: 
+       /\ chosen[a] \in [maxBallot: Nat, maxValue: Nat]
+  /\ \A a \in acceptors: 
+       /\ chosen[a] = [maxBallot: 0, maxValue: 0] \/ 
+          /\ chosen[a] \in [maxBallot: Nat, maxValue: Nat]
+  /\ \A a \in acceptors: 
+       /\ accepted[a] = [maxBallot: 0, maxValue: 0] \/ 
+          /\ accepted[a] \in [maxBallot: Nat, maxValue: Nat]
+  /\ \A p \in proposers: 
+       /\ ballots[p] \in Nat
+  /\ \A p \in proposers: 
+       /\ promises[p] \in [1..N -> [maxBallot: Nat, maxValue: Nat]]
+  /\ \A a \in acceptors: 
+       /\ promises[a] \in [1..M -> [maxBallot: Nat, maxValue: Nat]]
+  /\ \A a \in acceptors: 
+       /\ accepted[a] \in [maxBallot: Nat, maxValue: Nat]
+  /\ \A a \in acceptors: 
+       /\ chosen[a] \in [maxBallot: Nat, maxValue: Nat]
+  /\ \A a \in acceptors: 
+       /\ chosen[a] = [maxBallot: 0, maxValue: 0] \/ 
+          /\ chosen[a] \in [maxBallot: Nat, maxValue: Nat]
+  /\ \A a \in acceptors: 
+       /\ accepted[a] = [maxBallot: 0, maxValue: 0] \/ 
+          /\ accepted[a] \in [maxBallot: Nat, maxValue: Nat]
+  /\ \A p \in proposers: 
+       /\ ballots[p] \in Nat
+  /\ \A p \in proposers: 
+       /\ promises[p] \in [1..N -> [maxBallot: Nat, maxValue: Nat]]
+  /\ \A a \in acceptors: 
+       /\ promises[a] \in [1..M -> [maxBallot: Nat, maxValue: Nat]]
+  /\ \A a \in acceptors: 
+       /\ accepted[a] \in [maxBallot: Nat, maxValue: Nat]
+  /\ \A a \in acceptors: 
+       /\ chosen[a] \in [maxBallot: Nat, maxValue: Nat]
+  /\ \A a \in acceptors: 
+       /\ chosen[a] = [maxBallot: 0, maxValue: 0] \/ 
+          /\ chosen[a] \in [maxBallot: Nat, maxValue: Nat]
+  /\ \A a \in acceptors: 
+       /\ accepted[a] = [maxBallot: 0, maxValue: 0] \/ 
+          /\ accepted[a] \in [maxBallot: Nat, maxValue: Nat]
+  /\ \A p \in proposers: 
+       /\ ballots[p] \in Nat
+  /\ \A p \in proposers: 
+       /\ promises[p] \in [1..N -> [maxBallot: Nat, maxValue: Nat]]
+  /\ \A a \in acceptors: 
+       /\ promises[a] \in [1..M -> [maxBallot: Nat, maxValue: Nat]]
+  /\ \A a \in acceptors: 
+       /\ accepted[a] \in [maxBallot: Nat, maxValue: Nat]
+  /\ \A a \in acceptors: 
+       /\ chosen[a] \in [maxBallot: Nat, maxValue: Nat]
+  /\ \A a \in acceptors: 
+       /\ chosen[a] = [maxBallot: 0, maxValue: 0] \/ 
+          /\ chosen[a] \in [maxBallot: Nat, maxValue: Nat]
+  /\ \A a \in acceptors: 
+       /\ accepted[a] = [maxBallot: 0, maxValue: 0] \/ 
+          /\ accepted[a] \in [maxBallot: Nat, maxValue: Nat]
+  /\ \A p \in proposers: 
+       /\ ballots[p] \in Nat
+  /\ \A p \in proposers: 
+       /\ promises[p] \in [1..N -> [maxBallot: Nat, maxValue: Nat]]
+  /\ \A a \in acceptors: 
+       /\ promises[a] \in [1..M -> [maxBallot: Nat, maxValue: Nat]]
+  /\ \A a \in acceptors: 
+       /\ accepted[a] \in [maxBallot: Nat, maxValue: Nat]
+  /\ \A a \in acceptors: 
+       /\ chosen[a] \in [maxBallot: Nat, maxValue: Nat]
+  /\ \A a \in acceptors: 
+       /\ chosen[a] = [maxBallot: 0, maxValue: 0] \/ 
+          /\ chosen[a] \in [maxBallot: Nat, maxValue: Nat]
+  /\ \A a \in accept"
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,0,0,0.667,bronze,30.88,"---- MODULE Sender ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS MAX_RETRIES, CHUNK_SIZE, FILE_SIZE
+VARIABLES channel, retransmitCount, sentChunks
+
+    /\ file \in Seq
+    /\ Len(file) = FILE_SIZE
+    /\ chunks = [i \in 1..Ceiling(FILE_SIZE \div CHUNK_SIZE) |-> 
+
+            SubSeq(file, (i-1)*CHUNK_SIZE + 1, i*CHUNK_SIZE)
+
+            SubSeq(file, (i-1)*CHUNK_SIZE + 1, FILE_SIZE)]
+    /\ sentChunks = <<>>
+    /\ retransmitCount = 0
+    /\ channel = <<>>
+
+Next ==
+    /\ sentChunks' = Append(sentChunks, lastChunk)
+    /\ retransmitCount' = IF lastChunk \in sentChunks THEN retransmitCount + 1 ELSE 0
+    /\ channel' = IF lastChunk \in sentChunks THEN channel ELSE Append(channel, lastChunk)
+    /\ UNCHANGED <<file, chunks, sentChunks, retransmitCount, channel>>
+
+Spec ==
+    Init /\ [][Next]_<<file, chunks, sentChunks, retransmitCount, channel>>
+
+===="

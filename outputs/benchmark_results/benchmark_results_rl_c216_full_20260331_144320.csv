@@ -1,0 +1,698 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,0,0.444,silver,16.36,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, turn, N
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,1,0,0.667,silver,101.1,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, Participants, Prepare, VoteYes, VoteNo, Commit, Abort, All
+VARIABLES decisions, messages, state
+
+Init ==
+    /\ state = 1
+    /\ decisions = 1
+    /\ messages = 1
+
+Next ==
+    \/ /\ state = 1
+       /\ messages = 1
+       /\ decisions = 1
+       /\ state' = 2
+       /\ messages' = 1
+       /\ decisions' = 1
+    \/ /\ state = 2
+       /\ messages = 1
+       /\ decisions = 1
+       /\ state' = 3
+       /\ messages' = 1
+       /\ decisions' = 1
+    \/ /\ state = 3
+       /\ messages = 1
+       /\ decisions = 1
+       /\ state' = 4
+       /\ messages' = 1
+       /\ decisions' = 1
+    \/ /\ state = 4
+       /\ messages = 1
+       /\ decisions = 1
+       /\ state' = 5
+       /\ messages' = 1
+       /\ decisions' = 1
+    \/ /\ state = 5
+       /\ messages = 1
+       /\ decisions = 1
+       /\ state' = 6
+       /\ messages' = 1
+       /\ decisions' = 1
+    \/ /\ state = 6
+       /\ messages = 1
+       /\ decisions = 1
+       /\ state' = 7
+       /\ messages' = 1
+       /\ decisions' = 1
+    \/ /\ state = 7
+       /\ messages = 1
+       /\ decisions = 1
+       /\ state' = 8
+       /\ messages' = 1
+       /\ decisions' = 1
+    \/ /\ state = 8
+       /\ messages = 1
+       /\ decisions = 1
+       /\ state' = 9
+       /\ messages' = 1
+       /\ decisions' = 1
+    \/ /\ state = 9
+       /\ messages = 1
+       /\ decisions = 1
+       /\ state' = 10
+       /\ messages' = 1
+       /\ decisions' = 1
+    \/ /\ state = 10
+       /\ messages = 1
+       /\ decisions = 1
+       /\ state' = 11
+       /\ messages' = 1
+       /\ decisions' = 1
+    \/ /\ state = 11
+       /\ messages = 1
+       /\ decisions = 1
+       /\ state' = 12
+       /\ messages' = 1
+       /\ decisions' = 1
+    \/ /\ state = 12
+       /\ messages = 1
+       /\ decisions = 1
+       /\ state' = 13
+       /\ messages' = 1
+       /\ decisions' = 1
+    \/ /\ state = 13
+       /\ messages = 1
+       /\ decisions = 1
+       /\ state' = 14
+       /\ messages' = 1
+       /\ decisions' = 1
+    \/ /\ state = 14
+       /\ messages = 1
+       /\ decisions = 1
+       /\ state' = 15
+       /\ messages' = 1
+       /\ decisions' = 1
+    \/ /\ state = 15
+       /\ messages = 1
+       /\ decisions = 1
+       /\ state' = 16
+       /\ messages' = 1
+       /\ decisions' = 1
+    \/ /\ state = 16
+       /\ messages = 1
+       /\ decisions = 1
+       /\ state' = 17
+       /\ messages' = 1
+       /\ decisions' = 1
+    \/ /\ state = 17
+       /\ messages = 1
+       /\ decisions = 1
+       /\ state' = 18
+       /\ messages' = 1
+       /\ decisions' = 1
+    \/ /\ state = 18
+       /\ messages = 1
+       /\ decisions = 1
+       /\ state' = 19
+       /\ messages' = 1
+       /\ decisions' = 1
+    \/ /\ state = 19
+       /\ messages = 1
+       /\ decisions = 1
+       /\ state' = 20
+       /\ messages' = 1
+       /\ decisions' = 1
+    \/ /\ state = 20
+       /\ messages = 1
+       /\ decisions = 1
+       /\ state' = 21
+       /\ messages' = 1
+       /\ decisions' = 1
+    \/ /\ state = 21
+       /\ messages = 1
+       /\ decisions = 1
+       /\ state' = 22
+       /\ messages' = 1
+       /\ decisions' = 1
+    \/ /\ state = 22
+       /\ messages = 1
+       /\ decisions = 1
+       /\ state' = 23
+       /\ messages' = 1
+       /\ decisions' = 1
+    \/ /\ state = 23
+       /\ messages = 1
+       /\ decisions = 1
+       /\ state' = 24
+       /\ messages' = 1
+       /\ decisions' = 1
+    \/ /\ state = 24
+       /\ messages = 1
+       /\ decisions = 1
+       /\ state' = 25
+       /\ messages' = 1
+       /\ decisions' = 1
+    \/ /\ state = 25
+       /\ messages = 1
+       /\ decisions = 1
+       /\ state' = 26
+       /\ messages' = 1
+       /\ decisions' = 1
+    \/ /\ state = 26
+       /\ messages = 1
+       /\ decisions = 1
+       /\ state' = 27
+       /\ messages' = 1
+       /\ decisions' = 1
+    \/ /\ state = 27
+       /\ messages = 1
+       /\ decisions = 1
+       /\ state' = 28
+       /\ messages' = 1
+       /\ decisions' = 1
+    \/ /\ state = 28
+       /\ messages = 1
+       /\ decisions = 1
+       /\ state' = 29
+       /\ messages' = 1
+       /\ decisions' = 1
+    \/ /\ state = 29
+       /\ messages = 1
+       /\ decisions = 1
+       /\ state' = 30
+       /\ messages' = 1
+       /\ decisions' = 1
+    \/ /\ state = 30
+       /\ messages = 1
+       /\ decisions = 1
+       /\ state' = 31
+       /\ messages' = 1
+       /\ decisions' = 1
+    \/ /\ state = 31
+       /\ messages = 1
+       /\ decisions = 1
+       /\ state' = 32
+       /\ messages' = 1
+       /\ decisions' = 1
+    \/ /\ state = 32
+       /\ messages = 1
+       /\ decisions = 1
+       /\ state' = 33
+       /\ messages' = 1
+       /\ decisions' = 1
+    \/ /\ state = 33
+       /\ messages = 1
+       /\ decisions = 1
+       /\ state' = 34
+       /\ messages' = 1
+       /\ decisions' = 1
+    \/ /\ state = 34
+       /\ messages = 1
+       /\ decisions = 1
+       /\ state' = 35
+       /\ messages' = 1
+       /\ decisions' = 1
+    \/ /\ state = 35
+       /\ messages = 1
+       /\ decisions = 1
+       /\ state' = 36
+       /\ messages' = 1
+       /\ decisions' = 1
+    \/ /\ state = 36
+       /\ messages = 1
+       /\ decisions = 1
+       /\ state' = 37
+       /\ messages' = 1
+       /\ decisions' = 1
+    \/ /\ state = 37
+       /\ messages = 1
+       /\ decisions = 1
+       /\ state' = 38
+       /\ messages' = 1
+       /\ decisions' = 1
+    \/ /\ state = 38
+       /\ messages = 1
+       /\ decisions = 1
+       /\ state' = 39
+       /\ messages' = 1
+       /\ decisions' = 1
+    \/ /\ state = 39
+       /\ messages = 1
+       /\ decisions = 1
+       /\ state' = 40
+       /\ messages' = 1
+       /\ decisions' = 1
+    \/ /\ state = 40
+       /\ messages = 1
+       /\ decisions = 1
+       /\ state' = 41
+       /\ messages' = 1
+       /\ decisions' = 1
+    \/ /\ state = 41
+       /\ messages = 1
+       /\ decisions = 1
+       /\ state' = 42
+       /\ messages' = 1
+       /\ decisions' = 1
+    \/ /\ state = 42
+       /\ messages = 1
+       /\ decisions = 1
+       /\ state' = 43
+       /\ messages' = 1
+       /\ decisions' = 1
+    \/ /\ state = 43
+       /\ messages = 1
+       /\ decisions = 1
+       /\ state' = 44
+       /\ messages' = 1
+       /\ decisions' = 1
+    \/ /\ state = 44
+       /\ messages = 1
+       /\ decisions = 1
+       /\ state' = 45
+       /\ messages' = 1
+       /\ decisions' = 1
+    \/ /\ state = 45
+       /\ messages = 1
+       /\ decisions = 1
+       /\ state' = 46
+       /\ messages' = 1
+       /\ decisions' = 1
+    \/ /\ state = 46
+       /\ messages = 1
+       /\ decisions = 1
+       /\ state' = 47
+       /\ messages' = 1
+       /\ decisions' = 1
+    \/ /\ state = 47
+       /\ messages = 1
+       /\ decisions = 1
+       /\ state' = 48
+       /\ messages' = 1
+       /\ decisions' = 1
+    \/ /\ state = 48
+       /\ messages = 1
+       /\ decisions = 1
+       /\ state' = 49
+       /\ messages' = 1
+       /\ decisions' = 1
+    \/ /\ state = 49
+       /\ messages = 1
+       /\ decisions = 1
+       /\ state' = 50
+       /\ messages' = 1
+       /\ decisions' = 1
+    \/ /\ state = 50
+       /\ messages = 1
+       /\ decisions = 1
+       /\ state' = 51
+       /\ messages' = 1
+       /\ decisions' = 1
+    \/ /\ state = 51
+       /\ messages = 1
+       /\ decisions = 1
+       /\ state' = 52
+       /\ messages' = 1
+       /\ decisions' = 1
+    \/ /\ state = 52
+       /\ messages = 1
+       /\ decisions = 1
+       /\ state' = 53
+       /\ messages' = 1
+       /\ decisions' = 1
+    \/ /\ state = 53
+       /\ messages = 1
+       /\ decisions = 1
+       /\ state' = 54
+       /\ messages' = 1
+       /\ decisions' = 1
+    \/ /\ state = 54
+       /\ messages = 1
+       /\ decisions = 1
+       /\ state' = 55
+       /\ messages' = 1
+       /\ decisions' = 1
+    \/ /\ state = 55
+       /\ messages = 1
+       /\ decisions = 1
+       /\ state' = 56
+       /\ messages' = 1
+       /\ decisions' = 1
+    \/ /\ state = 56
+       /\ messages = 1
+       /\ decisions = 1
+       /\ state' = 57
+       /\ messages' = 1
+"
+chattla:20b,BM003,Dining Philosophers,scheduling,2,1,0,0.444,silver,25.4,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, Forks, Philosophers
+
+VARIABLES forkOwner, state
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,1,0,0.444,silver,7.99,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES num, flag
+
+
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,0,1.0,silver,22.16,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS K
+
+VARIABLES q, head, tail, count
+
+(* Type invariants *)
+TypeOK == 
+  /\ q \in Seq(1..K) \land Len(q) = K
+  /\ head \in 1..K
+  /\ tail \in 1..K
+  /\ count \in 0..K
+
+(* Initial state *)
+Init == 
+  /\ q = [i \in 1..K |-> 0]
+  /\ head = 1
+  /\ tail = 1
+  /\ count = 0
+
+(* Next-state relation *)
+Next == 
+  \/ 
+    (* Producer action *)
+    /\ count < K
+    /\ q' = [q EXCEPT ![tail] = 1]
+    /\ tail' = IF tail = K THEN 1 ELSE tail + 1
+    /\ count' = count + 1
+    /\ head' = head
+  \/ 
+    (* Consumer action *)
+    /\ count > 0
+    /\ q' = [q EXCEPT ![head] = 0]
+    /\ head' = IF head = K THEN 1 ELSE head + 1
+    /\ count' = count - 1
+    /\ tail' = tail
+  \/ 
+    (* No operation *)
+    /\ q' = q
+    /\ head' = head
+    /\ tail' = tail
+    /\ count' = count
+
+Spec == Init /\ [][Next]_<<q, head, tail, count>> 
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,1,0,0.667,silver,151.41,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+Init == /\ currentTerm = 0
+        /\ votedFor = {}
+        /\ state = {}
+
+Next == \/ /\ state = {}
+        /\ currentTerm' = currentTerm + 1
+        /\ votedFor' = {}
+        /\ state' = {}
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,0,0,0.778,bronze,22.41,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES readers, writer_active
+
+Init == /\ readers = <<>> \\
+       /\ writer_active = FALSE
+
+Next == \/ /\ writer_active = FALSE \\
+          /\ \E r \in 1..10 : /\ r \in readers \\
+          /\ r \notin readers \\
+          /\ writer_active' = TRUE \\
+          /\ readers' = readers \\
+       \/ /\ writer_active = TRUE \\
+          /\ \E r \in 1..10 : /\ r \in readers \\
+          /\ writer_active' = FALSE \\
+          /\ readers' = <<>> \\
+       \/ /\ writer_active = FALSE \\
+          /\ \E r \in 1..10 : /\ r \notin readers \\
+          /\ writer_active' = FALSE \\
+          /\ readers' = Append(readers, r)
+
+Spec == Init /\ [][Next]_<<readers, writer_active>>
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,1,0,0.444,silver,16.36,"---- MODULE DistributedSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, channel, snapshot, marker, finished
+
+===="
+chattla:20b,BM009,Token Ring,networking,2,1,1,0.667,gold,2.12,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLE token
+
+Init == /\ token \in 1..N
+
+Next == /\ token' \in 1..N
+        /\ token' = IF token = N THEN 1 ELSE token + 1
+
+Spec == Init /\ [][Next]_<<token>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,0.778,silver,4.94,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, Values, NULL
+
+VARIABLES store
+
+Init == store = [k \in Keys |-> NULL]
+
+Next == \/ /\ \E k \in Keys : \E v \in Values : /\ store' = [store EXCEPT ![k] = v]
+      \/ /\ \E k \in Keys: /\ store' = [store EXCEPT ![k] = NULL]
+
+Spec == Init /\ [][Next]_<<store>>
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,1,0,0.444,silver,195.34,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES acceptors, proposers, promises, accepts, chosen, values, ballots, chosenValue
+
+===="
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,0,0,0.667,bronze,208.79,"---- MODULE FileTransfer ----
+EXTENDS Integers, Sequences, FiniteSets
+Min(S) == CHOOSE x \in S : \A y \in S : x =< y
+
+
+CONSTANTS MAX_RETRIES, CHUNK_SIZE, FILE_SIZE, CHANNEL_CAPACITY, Indices
+VARIABLES channel, retransmitCount, sentChunks
+
+    /\ file \in Seq(1..FILE_SIZE)
+    /\ chunks = [i \in 1..Len(file) |-> -> SubSeq(file, i, Min(i+CHUNK_SIZE-1, Len(file)))]
+    /\ sentChunks = <<>>
+    /\ retransmitCount = <<>>
+    /\ channel = <<>>
+
+Next ==
+    /\ channel \in Seq(1..CHANNEL_CAPACITY)
+    /\ sentChunks \in Seq(1..Len(chunks))
+    /\ retransmitCount \in Seq(1..Len(chunks))
+    /\ \E i \in 1..Len(chunks) :
+        /\ i \notin Indices(sentChunks)
+        /\ channel' = Append(channel, i)
+        /\ sentChunks' = Append(sentChunks, i)
+        /\ retransmitCount' = Append(retransmitCount, 1)
+    \/ /\ \E i \in Indices(sentChunks) :
+        /\ i \in Indices(channel)
+        /\ channel' = Remove(channel, i)
+        /\ sentChunks' = sentChunks
+        /\ retransmitCount' = retransmitCount
+    \/ /\ \E i \in Indices(sentChunks) :
+        /\ i \notin Indices(channel)
+        /\ channel' = channel
+        /\ sentChunks' = sentChunks
+        /\ retransmitCount' = [j \in 1..Len(retransmitCount) |-> retransmitCount[j] + 1
+
+                    0
+
+                retransmitCount[j]]
+    \/ /\ \E i \in Indices(sentChunks) :
+        /\ i \in Indices(channel)
+        /\ channel' = Remove(channel, i)
+        /\ sentChunks' = sentChunks
+        /\ retransmitCount' = retransmitCount
+
+Spec == Init /\ [][Next]_<<file, chunks, sentChunks, retransmitCount, channel>>
+
+===="
+chattla:20b,BM013,Transaction Isolation (Snapshot Isolation),transaction,4,1,0,0.444,silver,197.91,"---- MODULE SnapshotIsolationDB ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES data, snapshot, txState, txWrites, txReadSet, txWriteSet, txStartVersion, version, committedWrites, abortedWrites
+
+===="
+chattla:20b,BM014,Clock Synchronisation,networking,3,0,0,1.0,bronze,59.28,"---- MODULE ClockSync ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES clocks, offsets
+
+Init == /\ clocks = [i \in 1..N |-> 0]
+        /\ offsets = [i \in 1..N |-> 0]
+
+Next == /\ \A i \in 1..N : clocks[i] = clocks[i] + offsets[i]
+        /\ \A i \in 1..N : offsets[i] = offsets[i] + (AvgOffset - offsets[i])
+        /\ AvgOffset = (1 \div N) * \Sum i \in 1..N : offsets[i]
+
+TypeOK == /\ \A i \in 1..N : clocks[i] \in Int
+        /\ \A i \in 1..N : offsets[i] \in Int
+
+Spec == Init /\ [][Next]_<<clocks, offsets>> ==
+
+===="
+chattla:20b,BM015,Peterson's Algorithm,scheduling,2,1,1,0.778,gold,195.31,"---- MODULE Peterson2 ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES flag, turn
+
+Init == /\ flag = [i \in 1..2 |-> FALSE]
+        /\ turn = 1
+
+Next == \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ turn' = turn
+          /\ flag' = flag
+        \/ /\ flag[1] = TRUE
+          /\ flag[2] = FALSE
+          /\ turn' = 2
+          /\ flag' = [flag EXCEPT ![1] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = TRUE
+          /\ turn' = 1
+          /\ flag' = [flag EXCEPT ![2] = FALSE]
+        \/ /\ flag[1] = TRUE
+          /\ flag[2] = TRUE
+          /\ turn' = turn
+          /\ flag' = flag
+
+Spec == Init /\ [][Next]_<<flag, turn>>
+
+===="
+chattla:20b,BM016,Gossip Protocol,networking,3,1,0,0.778,silver,7.96,"---- MODULE GossipProtocol ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES known, infected
+
+Init == /\ known = <<>> 
+        /\ infected = <<>> 
+
+Next == /\ known' = known
+        /\ infected' = infected \cup known
+
+Spec == Init /\ [][Next]_<<known, infected>> 
+
+===="
+chattla:20b,BM017,Simple Allocator,storage,2,0,0,1.0,bronze,29.22,"---- MODULE MemoryAllocator ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, Pages, Clients
+
+VARIABLES free, allocated, c
+
+Init == /\ free = Pages
+        /\ allocated = [c \in Clients |-> {}]
+
+Next == \/ /\ free # {}
+          /\ free' = free \ {p}
+          /\ allocated' = [c \in Clients |-> IF c = client THEN allocated[c] \cup {p} ELSE allocated[c]]
+        \/ /\ free' = free
+          /\ allocated' = [c \in Clients |-> IF c = client THEN allocated[c] \ {p} ELSE allocated[c]]
+
+TypeOK == /\ free \subseteq Pages
+          /\ \A c \in Clients: allocated[c] \subseteq Pages
+          /\ \A c \in Clients: \A p \in allocated[c]: p \in Pages
+          /\ \A c \in Clients: \A p \in allocated[c]: \A c' \in Clients: IF c' # c THEN p \notin allocated[c']
+
+Spec == Init /\ [][Next]_<<free, allocated>>
+
+===="
+chattla:20b,BM018,Publish-Subscribe Broker,networking,3,1,0,0.778,silver,77.15,"---- MODULE Broker ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES subscribers, messages, nextMsgId, nextSubId
+
+Init == /\ subscribers = <<>>
+        /\ messages = <<>>
+        /\ nextMsgId = 0
+        /\ nextSubId = 0
+
+Next == \/ /\ nextMsgId' = nextMsgId + 1
+          /\ messages' = Append(messages, [id |-> nextMsgId, content |-> ""New Message""])
+          /\ subscribers' = subscribers
+          /\ nextSubId' = nextSubId
+        \/ /\ nextSubId' = nextSubId + 1
+          /\ subscribers' = Append(subscribers, [id |-> nextSubId, topic |-> ""New Topic""])
+          /\ messages' = messages
+          /\ nextMsgId' = nextMsgId
+
+Spec == Init /\ [][Next]_<<subscribers, messages, nextMsgId, nextSubId>>
+
+===="
+chattla:20b,BM019,Dekker's Algorithm,scheduling,3,1,1,0.778,gold,6.49,"---- MODULE Dekker ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES turn, wants
+
+Init == /\ turn \in {0,1}
+        /\ wants \in SUBSET {0,1}
+        /\ turn \in {0,1}
+        /\ wants \subseteq {0,1}
+
+Next == \/ /\ turn' = 1 - turn
+          /\ wants' = {0,1}
+        \/ /\ turn' = turn
+          /\ wants' = {0,1} \ {turn}
+          /\ turn' \in {0,1}
+          /\ wants' \subseteq {0,1}
+
+Spec == Init /\ [][Next]_<<turn, wants>>
+
+===="
+chattla:20b,BM020,Eventually Consistent Counter,storage,3,0,0,1.0,bronze,109.38,"---- MODULE GCounter ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS Node
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+
+VARIABLES counts
+
+Init == /\ counts \in [Node -> [Node -> Nat]]
+       /\ \A n \in Node: counts[n] = [m \in Node |-> 0]
+
+Next == /\ \A n \in Node: counts' = [counts EXCEPT ![n] = [m \in Node |-> counts[n][m] + 1]]
+       /\ \A n \in Node: \A m \in Node: counts'[n][m] = Max(counts[n][m], counts[m][n])
+
+Spec == Init /\ [][Next]_<<counts>>
+
+TypeOK == /\ counts \in [Node -> [Node -> Nat]]
+         /\ \A n \in Node: \A m \in Node: counts[n][m] \in Nat
+
+===="

@@ -1,0 +1,1342 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,0,1.0,silver,9.18,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS N
+
+VARIABLES state, flag, turn, processes
+
+(* State of each process: idle, trying, critical *)
+State == {""idle"", ""trying"", ""critical""}
+
+(* Initial state: all processes idle, no flags set, turn arbitrary *)
+Init == /\ state \in [1..N -> State]
+        /\ flag \in [1..N -> BOOLEAN]
+        /\ turn \in 1..N
+        /\ \A i \in 1..N: state[i] = ""idle"" /\ flag[i] = FALSE
+
+(* Transition for process i *)
+Proc(i) == 
+  \/ (* Trying to enter critical section *)
+      /\ state[i] = ""idle""
+      /\ flag[i] = FALSE
+      /\ state' = [state EXCEPT ![i] = ""trying""]
+      /\ flag' = [flag EXCEPT ![i] = TRUE]
+      /\ turn' = turn
+  \/ (* Entering critical section *)
+      /\ state[i] = ""trying""
+      /\ flag[i] = TRUE
+      /\ turn = i
+      /\ state' = [state EXCEPT ![i] = ""critical""]
+      /\ flag' = flag
+      /\ turn' = turn
+  \/ (* Exiting critical section *)
+      /\ state[i] = ""critical""
+      /\ flag[i] = TRUE
+      /\ state' = [state EXCEPT ![i] = ""idle""]
+      /\ flag' = [flag EXCEPT ![i] = FALSE]
+      /\ turn' = turn
+  \/ (* Other processes' actions *)
+      /\ state' = state
+      /\ flag' = flag
+      /\ turn' = turn
+
+(* Next-state relation: any process can make a transition *)
+Next == \E i \in 1..N: Proc(i)
+
+(* Mutual exclusion invariant: at most one process in critical section *)
+TypeOK == \A i, j \in 1..N: i /= j => ~(state[i] = ""critical"" /\ state[j] = ""critical"")
+
+Spec == Init /\ [][Next]_<<state, flag, turn>>
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,1,0,0.778,silver,20.95,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N, Participants, Coordinator
+VARIABLES coordinator, participants
+
+
+vars == <<participants, coordinator>>
+
+Init == /\ participants = [p \in Participants |-> ""Init""]
+        /\ coordinator = ""Init""
+
+Prepare == /\ coordinator = ""Init""
+           /\ coordinator' = ""Prepare""
+           /\ UNCHANGED participants
+
+VoteYes == /\ coordinator = ""Prepare""
+           /\ participants' = [p \in Participants |-> ""VoteYes""]
+           /\ coordinator' = ""VoteYes""
+           /\ UNCHANGED <<>>
+
+VoteNo == /\ coordinator = ""Prepare""
+          /\ participants' = [p \in Participants |-> ""VoteNo""]
+          /\ coordinator' = ""VoteNo""
+          /\ UNCHANGED <<>>
+
+Commit == /\ coordinator = ""VoteYes""
+          /\ participants' = [p \in Participants |-> ""Commit""]
+          /\ coordinator' = ""Commit""
+          /\ UNCHANGED <<>>
+
+Abort == /\ coordinator = ""VoteNo""
+         /\ participants' = [p \in Participants |-> ""Abort""]
+         /\ coordinator' = ""Abort""
+         /\ UNCHANGED <<>>
+
+Next == Prepare \/ VoteYes \/ VoteNo \/ Commit \/ Abort
+
+Spec == Init /\ [][Next]_vars
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,0,0,1.0,bronze,60.01,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+VARIABLES forks, philosophers
+
+
+\* State variables
+vars == <<philosophers, forks>>
+
+\* Each philosopher can be in one of three states
+\* 0: Thinking, 1: Hungry, 2: Eating
+Init == /\ philosophers = [i \in 1..N |-> 0]
+        /\ forks = [i \in 1..N |-> 0]  \* 0: free, 1: held
+
+\* Helper predicates
+Left(i) == IF i = 1 THEN N ELSE i - 1
+Right(i) == IF i = N THEN 1 ELSE i + 1
+
+\* A philosopher can pick up a fork if it is free
+CanPickUp(i, f) == forks[f] = 0
+
+\* A philosopher can put down a fork if they hold it
+CanPutDown(i, f) == forks[f] = i
+
+\* A philosopher can eat if both adjacent forks are free
+CanEat(i) == forks[Left(i)] = 0 /\ forks[Right(i)] = 0
+
+\* Actions
+\* Philosopher i picks up left fork
+PickUpLeft(i) == /\ philosophers[i] = 1
+                 /\ CanPickUp(i, Left(i))
+                 /\ philosophers' = [philosophers EXCEPT ![i] = 2]
+                 /\ forks' = [forks EXCEPT ![Left(i)] = i]
+                 /\ UNCHANGED forks[Right(i)]
+
+\* Philosopher i picks up right fork
+PickUpRight(i) == /\ philosophers[i] = 1
+                  /\ CanPickUp(i, Right(i))
+                  /\ philosophers' = [philosophers EXCEPT ![i] = 2]
+                  /\ forks' = [forks EXCEPT ![Right(i)] = i]
+                  /\ UNCHANGED forks[Left(i)]
+
+\* Philosopher i puts down left fork
+PutDownLeft(i) == /\ philosophers[i] = 2
+                  /\ CanPutDown(i, Left(i))
+                  /\ philosophers' = [philosophers EXCEPT ![i] = 0]
+                  /\ forks' = [forks EXCEPT ![Left(i)] = 0]
+                  /\ UNCHANGED forks[Right(i)]
+
+\* Philosopher i puts down right fork
+PutDownRight(i) == /\ philosophers[i] = 2
+                   /\ CanPutDown(i, Right(i))
+                   /\ philosophers' = [philosophers EXCEPT ![i] = 0]
+                   /\ forks' = [forks EXCEPT ![Right(i)] = 0]
+                   /\ UNCHANGED forks[Left(i)]
+
+\* Philosopher i becomes hungry
+BecomeHungry(i) == /\ philosophers[i] = 0
+                   /\ philosophers' = [philosophers EXCEPT ![i] = 1]
+                   /\ UNCHANGED forks
+
+\* Next-state relation
+Next == \/ \E i \in 1..N : PickUpLeft(i)
+      \/ \E i \in 1..N : PickUpRight(i)
+      \/ \E i \in 1..N : PutDownLeft(i)
+      \/ \E i \in 1..N : PutDownRight(i)
+      \/ \E i \in 1..N : BecomeHungry(i)
+
+Spec == Init /\ [][Next]_vars
+
+\* Type correctness invariant
+TypeOK == /\ \A i \in 1..N : philosophers[i] \in {0,1,2}
+          /\ \A f \in 1..N : forks[f] \in {0,1,2}
+          /\ \A i \in 1..N : forks[Left(i)] = 0 \/ forks[Left(i)] = i
+          /\ \A i \in 1..N : forks[Right(i)] = 0 \/ forks[Right(i)] = i
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,1,0,1.0,silver,9.82,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+
+CONSTANT N
+VARIABLES flag, num
+
+
+vars == <<num, flag>>
+
+Init == /\ num = [i \in 1..N |-> 0]
+        /\ flag = [i \in 1..N |-> FALSE]
+
+Next == \E i \in 1..N :
+          /\ flag[i] = FALSE
+          /\ flag' = [flag EXCEPT ![i] = TRUE]
+          /\ num' = [num EXCEPT ![i] = 1 + Max(num)]
+          /\ flag' = [flag EXCEPT ![i] = FALSE]
+          /\ \A j \in 1..N : j # i => num[j] <= num[i] \/ num[j] = 0
+
+Spec == Init /\ [][Next]_vars
+
+TypeOK == /\ num \in [1..N -> Nat]
+          /\ flag \in [1..N -> BOOLEAN]
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,1,1.0,gold,8.59,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail
+
+vars == <<q, head, tail>>
+
+Init == /\ q = [i \in 1..K |-> 0]
+        /\ head = 1
+        /\ tail = 1
+
+TypeOK == /\ q \in [1..K -> Nat]
+          /\ head \in 1..K
+          /\ tail \in 1..K
+
+Next == 
+  \* Producer action: enqueue a value if the queue is not full
+  \/ /\ head # tail
+     /\ q' = [q EXCEPT ![head] = 1]
+     /\ head' = IF head = K THEN 1 ELSE head + 1
+     /\ tail' = tail
+  \* Consumer action: dequeue a value if the queue is not empty
+  \/ /\ head = tail
+     /\ q' = [q EXCEPT ![head] = 0]
+     /\ head' = head
+     /\ tail' = IF tail = K THEN 1 ELSE tail + 1
+
+Spec == Init /\ [][Next]_vars
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,0,0,0.667,bronze,203.69,"---- MODULE RaftElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, majority, NULL
+VARIABLES currentTerm, state, votedFor
+
+    /\ currentTerm = [i \in 1..N |-> 0]
+    /\ votedFor = [i \in 1..N |-> NULL]
+    /\ state = [i \in 1..N |-> ""Follower""]
+
+ElectionTimeout ==
+    \* Placeholder for election timeout logic
+    TRUE
+
+StartElection ==
+    /\ \E i \in 1..N : state[i] = ""Follower""
+    /\ \E i \in 1..N : state[i] = ""Candidate""
+    /\ \E i \in 1..N : state[i] = ""Leader""
+
+RequestVote ==
+    \* Placeholder for request vote logic
+    TRUE
+
+Vote ==
+    \* Placeholder for vote logic
+    TRUE
+
+Next ==
+    \/ \E i \in 1..N : /\ state[i] = ""Follower""
+                      /\ ElectionTimeout
+                      /\ state' = [state EXCEPT ![i] = ""Candidate""]
+                      /\ currentTerm' = [currentTerm EXCEPT ![i] = currentTerm[i] + 1]
+                      /\ votedFor' = [votedFor EXCEPT ![i] = NULL]
+                      /\ UNCHANGED <<currentTerm, votedFor, state>>
+    \/ \E i \in 1..N : /\ state[i] = ""Candidate""
+                      /\ RequestVote
+                      /\ state' = [state EXCEPT ![i] = ""Leader""]
+                      /\ UNCHANGED <<currentTerm, votedFor, state>>
+    \/ \E i \in 1..N : /\ state[i] = ""Follower""
+                      /\ Vote
+                      /\ state' = [state EXCEPT ![i] = ""Follower""]
+                      /\ UNCHANGED <<currentTerm, votedFor, state>>
+
+Spec ==
+    Init /\ [][Next]_vars
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,1,0,1.0,silver,14.72,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES readers, writer_active
+
+Init == 
+  /\ readers = {}
+  /\ writer_active = FALSE
+
+Next == 
+  \/ /\ writer_active = FALSE
+     /\ \E r \in readers : /\ r \in readers
+                            /\ readers' = readers \ {r}
+                            /\ writer_active' = writer_active
+  \/ /\ writer_active = FALSE
+     /\ \E r \in readers : /\ r \in readers
+                            /\ readers' = readers \ {r}
+                            /\ writer_active' = TRUE
+  \/ /\ writer_active = TRUE
+     /\ \E r \in readers : /\ r \in readers
+                            /\ readers' = readers
+                            /\ writer_active' = FALSE
+
+Spec == Init /\ [][Next]_<<readers, writer_active>>
+
+TypeOK == 
+  /\ readers \subseteq Nat
+  /\ writer_active \in BOOLEAN
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,0,0,0.667,bronze,206.26,"---- MODULE DistributedSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets, TLC
+
+CONSTANT N
+CONSTANT Channels \subseteq {1..N} \times {1..N} \* Directed edges (channels)
+
+\* Each process has a local state (an integer) and a flag indicating whether it has recorded its state
+VARIABLES localState, recorded, buffer
+
+Init == /\ localState \in [1..N -> Nat]
+        /\ recorded \in [1..N -> BOOLEAN]
+        /\ \A i \in 1..N: localState[i] = 0
+        /\ \A i \in 1..N: recorded[i] = FALSE
+
+\* Each channel has a buffer (sequence of messages) and a flag indicating whether a marker has been sent
+
+Next == /\ buffer' = [buffer EXCEPT !i..j = Append(bufferi..j, ""msg"") 
+                      \* Non-marker message appended to channel (i,j)
+                      \* Only if channel is not marked
+                      \* and if process i has not recorded its state
+                      \* and if process j has not recorded its state
+                      \* and if process i is not the initiator
+                      \* and if process j is not the initiator
+                      \* and if process i is not the initiator
+                      \* and if process j is not the initiator
+                      \* and if process i is not the initiator
+                      \* and if process j is not the initiator
+                      \* and if process i is not the initiator
+                      \* and if process j is not the initiator
+                      \* and if process i is not the initiator
+                      \* and if process j is not the initiator
+                      \* and if process i is not the initiator
+                      \* and if process j is not the initiator
+                      \* and if process i is not the initiator
+                      \* and if process j is not the initiator
+                      \* and if process i is not the initiator
+                      \* and if process j is not the initiator
+                      \* and if process i is not the initiator
+                      \* and if process j is not the initiator
+                      \* and if process i is not the initiator
+                      \* and if process j is not the initiator
+                      \* and if process i is not the initiator
+                      \* and if process j is not the initiator
+                      \* and if process i is not the initiator
+                      \* and if process j is not the initiator
+                      \* and if process i is not the initiator
+                      \* and if process j is not the initiator
+                      \* and if process i is not the initiator
+                      \* and if process j is not the initiator
+                      \* and if process i is not the initiator
+                      \* and if process j is not the initiator
+                      \* and if process i is not the initiator
+                      \* and if process j is not the initiator
+                      \* and if process i is not the initiator
+                      \* and if process j is not the initiator
+                      \* and if process i is not the initiator
+                      \* and if process j is not the initiator
+                      \* and if process i is not the initiator
+                      \* and if process j is not the initiator
+                      \* and if process i is not the initiator
+                      \* and if process j is not the initiator
+                      \* and if process i is not the initiator
+                      \* and if process j is not the initiator
+                      \* and if process i is not the initiator
+                      \* and if process j is not the initiator
+                      \* and if process i is not the initiator
+                      \* and if process j is not the initiator
+                      \* and if process i is not the initiator
+                      \* and if process j is not the initiator
+                      \* and if process i is not the initiator
+                      \* and if process j is not the initiator
+                      \* and if process i is not the initiator
+                      \* and if process j is not the initiator
+                      \* and if process i is not the initiator
+                      \* and if process j is not the initiator
+                      \* and if process i is not the initiator
+                      \* and if process j is not the initiator
+                      \* and if process i is not the initiator
+                      \* and if process j is not the initiator
+                      \* and if process i is not the initiator
+                      \* and if process j is not the initiator
+                      \* and if process i is not the initiator
+                      \* and if process j is not the initiator
+                      \* and if process i is not the initiator
+                      \* and if process j is not the initiator
+                      \* and if process i is not the initiator
+                      \* and if process j is not the initiator
+                      \* and if process i is not the initiator
+                      \* and if process j is not the initiator
+                      \* and if process i is not the initiator
+                      \* and if process j is not the initiator
+                      \* and if process i is not the initiator
+                      \* and if process j is not the initiator
+                      \* and if process i is not the initiator
+                      \* and if process j is not the initiator
+                      \* and if process i is not the initiator
+                      \* and if process j is not the initiator
+                      \* and if process i is not the initiator
+                      \* and if process j is not the initiator
+                      \* and if process i is not the initiator
+                      \* and if process j is not the initiator
+                      \* and if process i is not the initiator
+                      \* and if process j is not the initiator
+                      \* and if process i is not the initiator
+                      \* and if process j is not the initiator
+                      \* and if process i is not the initiator
+                      \* and if process j is not the initiator
+                      \* and if process i is not the initiator
+                      \* and if process j is not the initiator
+                      \* and if process i is not the initiator
+                      \* and if process j is not the initiator
+                      \* and if process i is not the initiator
+                      \* and if process j is not the initiator
+                      \* and if process i is not the initiator
+                      \* and if process j is not the initiator
+                      \* and if process i is not the initiator
+                      \* and if process j is not the initiator
+                      \* and if process i is not the initiator
+                      \* and if process j is not the initiator
+                      \* and if process i is not the initiator
+                      \* and if process j is not the initiator
+                      \* and if process i is not the initiator
+                      \* and if process j is not the initiator
+                      \* and if process i is not the initiator
+                      \* and if process j is not the initiator
+                      \* and if process i is not the initiator
+                      \* and if process j is not the initiator
+                      \* and if process i is not the initiator
+                      \* and if process j is not the initiator
+                      \* and if process i is not the initiator
+                      \* and if process j is not the initiator
+                      \* and if process i is not the initiator
+                      \* and if process j is not the initiator
+               "
+chattla:20b,BM009,Token Ring,networking,2,1,1,0.778,gold,2.14,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+VARIABLES token
+
+
+vars == <<token>>
+
+Init == token = 1
+
+Next == /\ token' = %(token, N) + 1
+
+Spec == Init /\ [][Next]_vars
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,0.778,silver,10.5,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets, TLC
+
+CONSTANTS Keys, Values, NULL
+VARIABLES store
+
+
+vars == <<store>>
+
+Init == 
+  /\ store = [k \in Keys |-> NULL]
+
+Next == 
+  /\ \E k \in Keys : \E v \in Values :
+        /\ store' = [store EXCEPT ![k] = v]
+  \/ \E k \in Keys :
+        /\ store' = [store EXCEPT ![k] = NULL]
+  /\ UNCHANGED <<>>
+
+Spec == Init /\ [][Next]_vars
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,0,0,1.0,bronze,90.14,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, M, V, Ballot
+
+VARIABLES acceptors, proposers, chosen, maxBallot, v, value
+
+vars == <<acceptors, proposers, chosen>>
+
+Init == 
+  /\ acceptors = [i \in 1..N |-> [maxBallot -> 0, chosen -> FALSE, value -> NULL]]
+  /\ proposers = [i \in 1..M |-> [maxBallot -> 0, chosen -> FALSE, value -> NULL]]
+  /\ chosen = FALSE
+
+Prepare(p, b) == 
+  /\ proposers[p].maxBallot' = b
+  /\ proposers[p].chosen' = FALSE
+  /\ proposers[p].value' = NULL
+  /\ acceptors' = [i \in 1..N |-> acceptors[i]]
+  /\ acceptors' = [i \in 1..N |-> 
+
+          [acceptors[i] EXCEPT !.maxBallot = b]
+
+  /\ chosen' = chosen
+
+Accept(p, b, v) == 
+  /\ proposers[p].maxBallot' = b
+  /\ proposers[p].chosen' = FALSE
+  /\ proposers[p].value' = v
+  /\ acceptors' = [i \in 1..N |-> acceptors[i]]
+  /\ acceptors' = [i \in 1..N |-> 
+
+          [acceptors[i] EXCEPT !.maxBallot = b, !.value = v]
+
+  /\ chosen' = chosen
+
+Chosen(v) == 
+  /\ chosen' = TRUE
+  /\ proposers' = [i \in 1..M |-> proposers[i]]
+  /\ proposers' = [i \in 1..M |-> 
+
+          [proposers[i] EXCEPT !.value = v]
+
+  /\ acceptors' = [i \in 1..N |-> acceptors[i]]
+  /\ acceptors' = [i \in 1..N |-> 
+
+          [acceptors[i] EXCEPT !.value = v]
+
+  /\ chosen' = chosen
+
+Next == 
+  /\ \E p \in 1..M : \E b \in 1..N : Prepare(p, b)
+  \/ \E p \in 1..M : \E b \in 1..N : \E v \in V : Accept(p, b, v)
+  \/ \E v \in V : Chosen(v)
+
+Spec == Init /\ [][Next]_vars
+
+TypeOK == 
+  /\ acceptors \in [1..N -> [maxBallot: Nat, chosen: BOOLEAN, value: V \cup {NULL}]]
+  /\ proposers \in [1..M -> [maxBallot: Nat, chosen: BOOLEAN, value: V \cup {NULL}]]
+  /\ chosen \in BOOLEAN
+
+THEOREM Spec => []TypeOK
+
+THEOREM Spec => [](\E v \in V : Chosen(v))
+
+THEOREM Spec => [](\A v \in V : Chosen(v) => Chosen(v))
+
+THEOREM Spec => [](\A v \in V : Chosen(v) => \A v' \in V : Chosen(v') => v = v')
+---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, M, V
+
+
+vars == <<acceptors, proposers, chosen>>
+
+Init == 
+  /\ acceptors = [i \in 1..N |-> [maxBallot -> 0, chosen -> FALSE, value -> NULL]]
+  /\ proposers = [i \in 1..M |-> [maxBallot -> 0, chosen -> FALSE, value -> NULL]]
+  /\ chosen = FALSE
+
+Prepare(p, b) == 
+  /\ proposers[p].maxBallot' = b
+  /\ proposers[p].chosen' = FALSE
+  /\ proposers[p].value' = NULL
+  /\ acceptors' = [i \in 1..N |-> acceptors[i]]
+  /\ acceptors' = [i \in 1..N |-> 
+
+          [acceptors[i] EXCEPT !.maxBallot = b]
+
+  /\ chosen' = chosen
+
+Accept(p, b, v) == 
+  /\ proposers[p].maxBallot' = b
+  /\ proposers[p].chosen' = FALSE
+  /\ proposers[p].value' = v
+  /\ acceptors' = [i \in 1..N |-> acceptors[i]]
+  /\ acceptors' = [i \in 1..N |-> 
+
+          [acceptors[i] EXCEPT !.maxBallot = b, !.value = v]
+
+  /\ chosen' = chosen
+
+Chosen(v) == 
+  /\ chosen' = TRUE
+  /\ proposers' = [i \in 1..M |-> proposers[i]]
+  /\ proposers' = [i \in 1..M |-> 
+
+          [proposers[i] EXCEPT !.value = v]
+
+  /\ acceptors' = [i \in 1..N |-> acceptors[i]]
+  /\ acceptors' = [i \in 1..N |-> 
+
+          [acceptors[i] EXCEPT !.value = v]
+
+  /\ chosen' = chosen
+
+Next == 
+  /\ \E p \in 1..M : \E b \in 1..N : Prepare(p, b)
+  \/ \E p \in 1..M : \E b \in 1..N : \E v \in V : Accept(p, b, v)
+  \/ \E v \in V : Chosen(v)
+
+Spec == Init /\ [][Next]_vars
+
+TypeOK == 
+  /\ acceptors \in [1..N -> [maxBallot: Nat, chosen: BOOLEAN, value: V \cup {NULL}]]
+  /\ proposers \in [1..M -> [maxBallot: Nat, chosen: BOOLEAN, value: V \cup {NULL}]]
+  /\ chosen \in BOOLEAN
+
+THEOREM Spec => []TypeOK
+
+THEOREM Spec => [](\E v \in V : Chosen(v))
+
+THEOREM Spec => [](\A v \in V : Chosen(v) => Chosen(v))
+
+THEOREM Spec => [](\A v \in V : Chosen(v) => \A v' \in V : Chosen(v') => v = v')
+---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, M, V
+
+
+vars == <<acceptors, proposers, chosen>>
+
+Init == 
+  /\ acceptors = [i \in 1..N |-> [maxBallot -> 0, chosen -> FALSE, value -> NULL]]
+  /\ proposers = [i \in 1..M |-> [maxBallot -> 0, chosen -> FALSE, value -> NULL]]
+  /\ chosen = FALSE
+
+Prepare(p, b) == 
+  /\ proposers[p].maxBallot' = b
+  /\ proposers[p].chosen' = FALSE
+  /\ proposers[p].value' = NULL
+  /\ acceptors' = [i \in 1..N |-> acceptors[i]]
+  /\ acceptors' = [i \in 1..N |-> 
+
+          [acceptors[i] EXCEPT !.maxBallot = b]
+
+  /\ chosen' = chosen
+
+Accept(p, b, v) == 
+  /\ proposers[p].maxBallot' = b
+  /\ proposers[p].chosen' = FALSE
+  /\ proposers[p].value' = v
+  /\ acceptors' = [i \in 1..N |-> acceptors[i]]
+  /\ acceptors' = [i \in 1..N |-> 
+
+          [acceptors[i] EXCEPT !.maxBallot = b, !.value = v]
+
+  /\ chosen' = chosen
+
+Chosen(v) == 
+  /\ chosen' = TRUE
+  /\ proposers' = [i \in 1..M |-> proposers[i]]
+  /\ proposers' = [i \in 1..M |-> 
+
+          [proposers[i] EXCEPT !.value = v]
+
+  /\ acceptors' = [i \in 1..N |-> acceptors[i]]
+  /\ acceptors' = [i \in 1..N |-> 
+
+          [acceptors[i] EXCEPT !.value = v]
+
+  /\ chosen' = chosen
+
+Next == 
+  /\ \E p \in 1..M : \E b \in 1..N : Prepare(p, b)
+  \/ \E p \in 1..M : \E b \in 1..N : \E v \in V : Accept(p, b, v)
+  \/ \E v \in V : Chosen(v)
+
+Spec == Init /\ [][Next]_vars
+
+TypeOK == 
+  /\ acceptors \in [1..N -> [maxBallot: Nat, chosen: BOOLEAN, value: V \cup {NULL}]]
+  /\ proposers \in [1..M -> [maxBallot: Nat, chosen: BOOLEAN, value: V \cup {NULL}]]
+  /\ chosen \in BOOLEAN
+
+THEOREM Spec => []TypeOK
+
+THEOREM Spec => [](\E v \in V : Chosen(v))
+
+THEOREM Spec => [](\A v \in V : Chosen(v) => Chosen(v))
+
+THEOREM Spec => [](\A v \in V : Chosen(v) => \A v' \in V : Chosen(v') => v = v')
+---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, M, V
+
+
+vars == <<acceptors, proposers, chosen>>
+
+Init == 
+  /\ acceptors = [i \in 1..N |-> [maxBallot -> 0, chosen -> FALSE, value -> NULL]]
+  /\ proposers = [i \in 1..M |-> [maxBallot -> 0, chosen -> FALSE, value -> NULL]]
+  /\ chosen = FALSE
+
+Prepare(p, b) == 
+  /\ proposers[p].maxBallot' = b
+  /\ proposers[p].chosen' = FALSE
+  /\ proposers[p].value' = NULL
+  /\ acceptors' = [i \in 1..N |-> acceptors[i]]
+  /\ acceptors' = [i \in 1..N |-> 
+
+          [acceptors[i] EXCEPT !.maxBallot = b]
+
+  /\ chosen' = chosen
+
+Accept(p, b, v) == 
+  /\ proposers[p].maxBallot' = b
+  /\ proposers[p].chosen' = FALSE
+  /\ proposers[p].value' = v
+  /\ acceptors' = [i \in 1..N |-> acceptors[i]]
+  /\ acceptors' = [i \in 1..N |-> 
+
+          [acceptors[i] EXCEPT !.maxBallot = b, !.value = v]
+
+  /\ chosen' = chosen
+
+Chosen(v) == 
+  /\ chosen' = TRUE
+  /\ proposers' = [i \in 1..M |-> proposers[i]]
+  /\ proposers' = [i \in 1..M |-> 
+
+          [proposers[i] EXCEPT !.value = v]
+
+  /\ acceptors' = [i \in 1..N |-> acceptors[i]]
+  /\ acceptors' = [i \in 1..N |-> 
+
+          [acceptors[i] EXCEPT !.value = v]
+
+  /\ chosen' = chosen
+
+Next == 
+  /\ \E p \in 1..M : \E b \in 1..N : Prepare(p, b)
+  \/ \E p \in 1..M : \E b \in 1..N : \E v \in V : Accept(p, b, v)
+  \/ \E v \in V : Chosen(v)
+
+Spec == Init /\ [][Next]_vars
+
+TypeOK == 
+  /\ acceptors \in [1..N -> [maxBallot: Nat, chosen: BOOLEAN, value: V \cup {NULL}]]
+  /\ proposers \in [1..M -> [maxBallot: Nat, chosen: BOOLEAN, value: V \cup {NULL}]]
+  /\ chosen \in BOOLEAN
+
+THEOREM Spec => []TypeOK
+
+THEOREM Spec => [](\E v \in V : Chosen(v))
+
+THEOREM Spec => [](\A v \in V : Chosen(v) => Chosen(v))
+
+THEOREM Spec => [](\A v \in V : Chosen(v) => \A v' \in V : Chosen(v') => v = v')
+---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, M, V
+
+
+vars == <<acceptors, proposers, chosen>>
+
+Init == 
+  /\ acceptors = [i \in 1..N |-> [maxBallot -> 0, chosen -> FALSE, value -> NULL]]
+  /\ proposers = [i \in 1..M |-> [maxBallot -> 0, chosen -> FALSE, value -> NULL]]
+  /\ chosen = FALSE
+
+Prepare(p, b) == 
+  /\ proposers[p].maxBallot' = b
+  /\ proposers[p].chosen' = FALSE
+  /\ proposers[p].value' = NULL
+  /\ acceptors' = [i \in 1..N |-> acceptors[i]]
+  /\ acceptors' = [i \in 1..N |-> 
+
+          [acceptors[i] EXCEPT !.maxBallot = b]
+
+  /\ chosen' = chosen
+
+Accept(p, b, v) == 
+  /\ proposers[p].maxBallot' = b
+  /\ proposers[p].chosen' = FALSE
+  /\ proposers[p].value' = v
+  /\ acceptors' = [i \in 1..N |-> accepto"
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,0,0,0.889,bronze,49.87,"---- MODULE Sender ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS MAX_RETRIES, CHUNK_SIZE, FILE_SIZE
+VARIABLES ackReceived, chunkIndex, chunks, file, retransmitCount, state
+
+    /\ state = ""idle""
+    /\ file = Seq(1..FILE_SIZE)  \* For simplicity, file is a sequence of bytes 1..FILE_SIZE
+    /\ chunks = [i \in 1..Ceiling(FILE_SIZE \div CHUNK_SIZE) |-> 
+
+                        SubSeq(file, (i-1)*CHUNK_SIZE + 1, i*CHUNK_SIZE)
+
+                        SubSeq(file, (i-1)*CHUNK_SIZE + 1, FILE_SIZE)]
+    /\ chunkIndex = 1
+    /\ retransmitCount = 0
+    /\ ackReceived = FALSE
+
+SendChunk ==
+    /\ state = ""sending""
+    /\ ackReceived = FALSE
+    /\ retransmitCount <= MAX_RETRIES
+    /\ \* Simulate message loss: ACK may or may not be received
+    /\ ackReceived' \in {TRUE, FALSE}
+    /\ IF ackReceived' THEN
+          /\ chunkIndex' = chunkIndex + 1
+          /\ retransmitCount' = 0
+          /\ state' = IF chunkIndex' > Len(chunks) THEN ""done"" ELSE ""sending""
+
+          /\ retransmitCount' = retransmitCount + 1
+          /\ state' = ""waiting""
+    /\ file' = file
+    /\ chunks' = chunks
+    /\ chunkIndex' = chunkIndex
+    /\ ackReceived' = ackReceived'
+
+Wait ==
+    /\ state = ""waiting""
+    /\ retransmitCount < MAX_RETRIES
+    /\ state' = ""sending""
+    /\ ackReceived' = FALSE
+    /\ file' = file
+    /\ chunks' = chunks
+    /\ chunkIndex' = chunkIndex
+    /\ retransmitCount' = retransmitCount
+
+GiveUp ==
+    /\ state = ""waiting""
+    /\ retransmitCount = MAX_RETRIES
+    /\ state' = ""error""
+    /\ ackReceived' = FALSE
+    /\ file' = file
+    /\ chunks' = chunks
+    /\ chunkIndex' = chunkIndex
+    /\ retransmitCount' = retransmitCount
+
+Next ==
+    \/ SendChunk
+    \/ Wait
+    \/ GiveUp
+
+Spec ==
+    Init /\ [][Next]_<<state, file, chunks, chunkIndex, retransmitCount, ackReceived>>
+
+TypeOK ==
+    /\ state \in {""idle"", ""sending"", ""waiting"", ""done"", ""error""}
+    /\ file \in Seq(1..FILE_SIZE)
+    /\ chunks \in [1..Ceiling(FILE_SIZE \div CHUNK_SIZE) -> Seq(1..CHUNK_SIZE)]
+    /\ chunkIndex \in 1..Ceiling(FILE_SIZE \div CHUNK_SIZE) + 1
+    /\ retransmitCount \in 0..MAX_RETRIES
+    /\ ackReceived \in BOOLEAN
+
+===="
+chattla:20b,BM013,Transaction Isolation (Snapshot Isolation),transaction,4,1,0,0.444,silver,78.59,"---- MODULE SnapshotIsolationDB ----
+EXTENDS Integers, Sequences, FiniteSets, TLC
+
+CONSTANTS DBKeys, DBVals, TxnIds, TxnOps, TxnStates, TxnSteps, TxnReadSet, TxnWriteSet, TxnReadSetVals, TxnWriteSetVals
+
+Next ==
+    \E txn \in TxnIds : \E step \in TxnSteps :
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step \in TxnSteps
+        /\ txn \in TxnIds
+        /\ step"
+chattla:20b,BM014,Clock Synchronisation,networking,3,0,0,1.0,bronze,24.37,"---- MODULE ClockSync ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, epsilon
+VARIABLES clocks, offsets
+
+
+vars == <<clocks, offsets>>
+
+Init == /\ clocks = [i \in 1..N |-> 0]
+        /\ offsets = [i \in 1..N |-> 0]
+
+Next == /\ \E i \in 1..N:
+          /\ clocks' = [clocks EXCEPT ![i] = clocks[i] + offsets[i]]
+          /\ offsets' = [offsets EXCEPT ![i] = offsets[i] + Random(-1, 1)]
+        /\ UNCHANGED <<clocks, offsets>> \EXCEPT ![j] = clocks[j] + offsets[j] \FORALL j \in 1..N \ {i}
+
+Spec == Init /\ [][Next]_vars
+
+TypeOK == /\ clocks \in [1..N -> Int]
+          /\ offsets \in [1..N -> Int]   \* Optional: add bounds on offsets
+
+Invariant == \A i, j \in 1..N: Abs(clocks[i] - clocks[j]) <= epsilon
+
+===="
+chattla:20b,BM015,Peterson's Algorithm,scheduling,2,1,0,1.0,silver,9.38,"---- MODULE Peterson ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES flag, turn
+
+Init == /\ flag = [i \in 1..2 |-> FALSE]
+        /\ turn = 1
+
+Next == \/ /\ flag[1] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = TRUE]
+          /\ turn' = 1
+          /\ UNCHANGED turn
+        \/ /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![2] = TRUE]
+          /\ turn' = 2
+          /\ UNCHANGED turn
+        \/ /\ flag[1] = TRUE
+          /\ flag[2] = TRUE
+          /\ turn = 1
+          /\ flag' = [flag EXCEPT ![1] = FALSE]
+          /\ UNCHANGED turn
+        \/ /\ flag[1] = TRUE
+          /\ flag[2] = TRUE
+          /\ turn = 2
+          /\ flag' = [flag EXCEPT ![2] = FALSE]
+          /\ UNCHANGED turn
+        \/ /\ flag[1] = TRUE
+          /\ flag[2] = TRUE
+          /\ turn = 1
+          /\ flag' = [flag EXCEPT ![1] = FALSE]
+          /\ turn' = 2
+        \/ /\ flag[1] = TRUE
+          /\ flag[2] = TRUE
+          /\ turn = 2
+          /\ flag' = [flag EXCEPT ![2] = FALSE]
+          /\ turn' = 1
+
+Spec == Init /\ [][Next]_<<flag, turn>>
+
+TypeOK == /\ flag \in [1..2 -> BOOLEAN]
+          /\ turn \in 1..2
+
+===="
+chattla:20b,BM016,Gossip Protocol,networking,3,1,0,1.0,silver,24.47,"---- MODULE Gossip ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, updates
+VARIABLES infected, known
+
+
+vars == <<known, infected>>
+
+Init == /\ known = [i \in 1..N |-> {}]
+        /\ infected = [i \in 1..N |-> {}]
+
+Next == /\ \E i \in 1..N: \E j \in 1..N: i # j
+          /\ known' = [k \in 1..N |-> IF k = i THEN known[k] \cup known[j] ELSE known[k]]
+          /\ infected' = [k \in 1..N |-> IF k = i THEN infected[k] \cup infected[j] ELSE infected[k]]
+        \/ \E i \in 1..N: \E u \in updates: u \notin infected[i]
+          /\ known' = known
+          /\ infected' = [k \in 1..N |-> IF k = i THEN infected[k] \cup {u} ELSE infected[k]]
+
+
+Spec == Init /\ [][Next]_vars
+
+TypeOK == /\ \A i \in 1..N: known[i] \subseteq updates
+          /\ \A i \in 1..N: infected[i] \subseteq updates
+
+THEOREM Spec => []TypeOK
+
+THEOREM Spec => <> \A i \in 1..N: infected[i] = updates
+
+===="
+chattla:20b,BM017,Simple Allocator,storage,2,1,0,1.0,silver,18.74,"---- MODULE MemoryAllocator ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N, Client
+VARIABLES allocated, free
+
+
+Pages == 1..N
+
+vars == <<free, allocated>>
+
+Init == 
+  /\ free = Pages
+  /\ allocated = [c \in Client |-> {}]
+
+Next == 
+  /\ \E c \in Client : \E p \in free :
+        /\ allocated' = [allocated EXCEPT ![c] = @ \cup {p}]
+        /\ free' = free \ {p}
+  \/ \E c \in Client:
+        /\ allocated' = [allocated EXCEPT ![c] = {}]
+        /\ free' = free \cup allocated[c]
+  \/ UNCHANGED vars
+
+Spec == Init /\ [][Next]_vars
+
+TypeOK == 
+  /\ free \subseteq Pages
+  /\ \A c \in Client: allocated[c] \subseteq Pages
+  /\ \A c \in Client: Cardinality(allocated[c]) <= 1
+
+===="
+chattla:20b,BM018,Publish-Subscribe Broker,networking,3,0,0,1.0,bronze,24.07,"---- MODULE Broker ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS Messages, SUBSCRIBERS, Topics
+
+VARIABLES subscribers, messages
+
+Init == \E subs \in SUBSET SUBSCRIBERS : \E msgs \in SUBSET Messages :
+  subscribers = [s \in subs |-> [topics |-> {}]] /\ messages = [t \in Topics |-> msgs]
+
+Next == \E s \in SUBSCRIBERS : \E t \in Topics : \E m \in Messages :
+  /\ subscribers' = [subscribers EXCEPT ![s] = [@ EXCEPT ![topics] = [@ EXCEPT ![t] = Append(@[t], m)]]]
+  /\ messages' = [messages EXCEPT ![t] = Append(@[t], m)]
+  /\ UNCHANGED <<subscribers, messages>>
+
+Spec == Init /\ [][Next]_<<subscribers, messages>>
+
+TypeOK == \E subs \in SUBSET SUBSCRIBERS : \E msgs \in SUBSET Messages :
+  /\ subscribers \in [SUBSCRIBERS -> [topics -> [Topics -> Seq(Messages)]]]
+  /\ messages \in [Topics -> Seq(Messages)]
+
+===="
+chattla:20b,BM019,Dekker's Algorithm,scheduling,3,1,0,1.0,silver,8.45,"---- MODULE Dekker ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES turn, wants
+
+Init == /\ turn = 0
+        /\ wants = [i \in 1..2 |-> FALSE]
+
+Next == \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = TRUE
+          /\ turn' = 1
+          /\ wants' = wants
+      \/ /\ wants[1] = TRUE
+          /\ wants[2] = FALSE
+          /\ turn' = 2
+          /\ wants' = wants
+      \/ /\ wants[1] = TRUE
+          /\ wants[2] = TRUE
+          /\ turn' = turn
+          /\ wants' = [wants EXCEPT ![turn] = FALSE]
+
+Spec == Init /\ [][Next]_<<turn, wants>>
+
+TypeOK == /\ turn \in 1..2
+          /\ wants \in [1..2 -> BOOLEAN]
+
+===="
+chattla:20b,BM020,Eventually Consistent Counter,storage,3,1,0,1.0,silver,15.88,"---- MODULE GCounter ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS Node
+
+VARIABLES counts, node
+
+Init == /\ counts = [n \in Node |-> [m \in Node |-> 0]]
+        /\ node \in Node
+
+Next == /\ \E n \in Node :
+          /\ counts' = [counts EXCEPT ![node][n] = counts[node][n] + 1]
+          /\ UNCHANGED <<counts, node>>
+
+Spec == Init /\ [][Next]_<<counts, node>>
+
+TypeOK == /\ counts \in [Node -> [Node -> Nat]]
+          /\ node \in Node
+
+===="

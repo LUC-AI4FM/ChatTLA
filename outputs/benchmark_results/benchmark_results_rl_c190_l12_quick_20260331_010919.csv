@@ -1,0 +1,201 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,0,0.444,silver,61.16,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, turn, flag
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,1,0,0.444,silver,203.58,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES participants, votes, decision, messages, state
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,0,0,1.0,bronze,41.86,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES forks, states
+
+(* Constants *)
+N == 5
+
+(* Helper functions *)
+LEFT(i) == IF i = 1 THEN N ELSE i - 1
+RIGHT(i) == IF i = N THEN 1 ELSE i + 1
+
+(* State predicates *)
+ForkFree(i) == forks[i] = 0
+ForkTaken(i) == forks[i] = i
+
+PhilosopherThinking(i) == states[i] = ""thinking""
+PhilosopherHungry(i) == states[i] = ""hungry""
+PhilosopherEating(i) == states[i] = ""eating""
+
+(* Initial state *)
+Init == /\ forks = [i \in 1..N |-> 0]
+        /\ states = [i \in 1..N |-> ""thinking""]
+
+(* Next-state relation *)
+Next == 
+    \/ (* Philosopher i becomes hungry *)
+        /\ \E i \in 1..N : PhilosopherThinking(i)
+        /\ states' = [states EXCEPT ![i] = ""hungry""]
+    \/ (* Philosopher i picks up forks if both are free *)
+        /\ \E i \in 1..N : PhilosopherHungry(i)
+        /\ ForkFree(LEFT(i)) /\ ForkFree(RIGHT(i))
+        /\ forks' = [forks EXCEPT ![LEFT(i)] = i, ![RIGHT(i)] = i]
+        /\ states' = [states EXCEPT ![i] = ""eating""]
+    \/ (* Philosopher i puts down forks *)
+        /\ \E i \in 1..N : PhilosopherEating(i)
+        /\ forks' = [forks EXCEPT ![LEFT(i)] = 0, ![RIGHT(i)] = 0]
+        /\ states' = [states EXCEPT ![i] = ""thinking""]
+
+(* Invariant: No two philosophers hold the same fork *)
+TypeOK == 
+    /\ \A i \in 1..N : forks[i] \in 0..N
+    /\ \A i \in 1..N : states[i] \in {""thinking"", ""hungry"", ""eating""}
+
+Spec == Init /\ [][Next]_<<forks, states>>
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,1,0,0.778,silver,213.43,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES num, flag
+
+Init == /\ num = 0
+      /\ flag = <<>>
+
+Next == /\ num' = num + 1
+      /\ flag' = Append(flag, 0)
+
+Spec == Init /\ [][Next]_<<num, flag>>
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,0,0.778,silver,6.5,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail
+
+Init == /\ q \in Seq(1..K)
+        /\ head \in 1..K
+        /\ tail \in 1..K
+        /\ Len(q) = 0
+        /\ head = 1
+        /\ tail = 1
+
+Producer == /\ Len(q) < K
+           /\ head' = head
+           /\ tail' = (tail % K) + 1
+           /\ q' = Append(q, head)
+
+Consumer == /\ Len(q) > 0
+           /\ head' = (head % K) + 1
+           /\ tail' = tail
+           /\ q' = Tail(q)
+
+Next == Producer \/ Consumer
+
+Spec == Init /\ [][Next]_<<q, head, tail>>
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,0,0,0.778,bronze,19.32,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+Init == /\ currentTerm = 0
+        /\ votedFor = {}
+        /\ state = ""Follower""
+
+Next == \/ /\ state = ""Follower""
+        /\ currentTerm' = currentTerm
+        /\ votedFor' = votedFor
+        /\ state' = ""Follower""
+        \/ /\ state = ""Candidate""
+        /\ currentTerm' = currentTerm + 1
+        /\ votedFor' = {currentTerm'}
+        /\ state' = ""Candidate""
+        \/ /\ state = ""Leader""
+        /\ currentTerm' = currentTerm
+        /\ votedFor' = votedFor
+        /\ state' = ""Leader""
+
+Spec == Init /\ [][Next]_<<currentTerm, votedFor, state>>
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,0,0,0.778,bronze,24.25,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES readers, writer_active
+
+Init == /\ readers = <<>>
+        /\ writer_active = FALSE
+
+Next == \/ /\ writer_active = FALSE
+          /\ \E r \in 1..10 : /\ r \notin readers
+              /\ writer_active' = FALSE
+                 /\ readers' = Append(readers, r)
+          \/ /\ writer_active = FALSE
+              /\ \E r \in 1..10 : r \in readers
+              /\ writer_active' = TRUE
+                 /\ readers' = <<>>
+          \/ /\ writer_active = TRUE
+              /\ \E r \in 1..10 : r \in readers
+              /\ writer_active' = FALSE
+                 /\ readers' = <<>>
+          \/ /\ writer_active = TRUE
+              /\ \E r \in 1..10 : r \notin readers
+              /\ writer_active' = TRUE
+                 /\ readers' = <<>>
+
+Spec == Init /\ [][Next]_<<readers, writer_active>>
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,1,0,0.444,silver,56.3,"---- MODULE DistributedSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, channel, markerSent, markerReceived, snapshotTaken
+
+===="
+chattla:20b,BM009,Token Ring,networking,2,1,1,0.667,gold,2.28,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLE token
+
+Init == /\ token \in 1..N
+
+Next == /\ token' \in 1..N
+        /\ token' = IF token = N THEN 1 ELSE token + 1
+
+Spec == Init /\ [][Next]_<<token>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,0.778,silver,9.85,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, Values
+
+VARIABLES store
+
+Init == /\ store \in [Keys -> Values]
+Next == /\ store' \in [Keys -> Values]
+      /\ \E k \in Keys : \E v \in Values : store' = [store EXCEPT ![k] = v]
+
+Spec == Init /\ [][Next]_<<store>>
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,0,0,0.444,bronze,306.68,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES acceptors, proposers, promises, accepted, chosen, chosenBallot, chosenValue, chosenBallotValue, chosenBallotValueValue, chosenBallotValueValueValue, chosenBallotValueValueValueValue, chosenBallotValueValueValueValueValue, chosenBallotValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue
+===="
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,1,0,0.444,silver,54.41,"---- MODULE FileTransfer ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES file, chunks, sentChunks, receivedChunks, retransmitCount, MAX_RETRIES, channel, lostChunks, timeout, ack, finished
+
+===="

@@ -1,0 +1,868 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,0,0.444,silver,9.04,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, turn, N
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,0,0,1.0,bronze,63.26,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES participants, votes, decisions
+
+
+
+(* State variables *)
+participants \in Seq(1..N)
+votes \in Seq(1..N) \cup <<>>
+decisions \in Seq(1..N) \cup <<>>
+
+(* Helper predicates *)
+AllParticipants(p) == p \in Seq(1..N)
+AllVotes(v) == v \in Seq(1..N) \cup <<>>
+AllDecisions(d) == d \in Seq(1..N) \cup <<>>
+
+AllYes(v) == \A i \in 1..N : i \in v
+
+(* Actions *)
+PrepareAll(p) == /\ p = participants
+                 /\ votes' = <<>>
+                 /\ decisions' = <<>>
+                 /\ UNCHANGED <<participants>>
+
+WaitForVotes(p) == /\ p = participants
+                 /\ votes' = Append(votes, i)
+                 /\ decisions' = decisions
+                 /\ UNCHANGED <<participants>>
+
+SendVoteYes(i) == /\ i \in participants
+                 /\ votes' = Append(votes, i)
+                 /\ decisions' = decisions
+                 /\ UNCHANGED <<participants>>
+
+SendVoteNo(i) == /\ i \in participants
+                 /\ votes' = <<>>
+                 /\ decisions' = decisions
+                 /\ UNCHANGED <<participants>>
+
+CommitAll(p) == /\ p = participants
+               /\ decisions' = Append(decisions, Commit)
+               /\ UNCHANGED <<participants, votes>>
+
+AbortAll(p) == /\ p = participants
+              /\ decisions' = Append(decisions, Abort)
+              /\ UNCHANGED <<participants, votes>>
+
+WaitForDecision(i) == /\ i \in participants
+                    /\ decisions' = decisions
+                    /\ UNCHANGED <<participants, votes>>
+
+Commit(i) == /\ i \in participants
+            /\ decisions' = Append(decisions, Commit)
+            /\ UNCHANGED <<participants, votes>>
+
+Abort(i) == /\ i \in participants
+           /\ decisions' = Append(decisions, Abort)
+           /\ UNCHANGED <<participants, votes>>
+
+(* Next action *)
+Next == \/ /\ PrepareAll(participants)
+        \/ /\ WaitForVotes(participants)
+        \/ /\ SendVoteYes(i)
+        \/ /\ SendVoteNo(i)
+        \/ /\ CommitAll(participants)
+        \/ /\ AbortAll(participants)
+        \/ /\ WaitForDecision(i)
+        \/ /\ Commit(i)
+        \/ /\ Abort(i)
+
+(* Initial state *)
+Init == /\ participants = <<1, 2, ..., N>>
+       /\ votes = <<>>
+       /\ decisions = <<>>
+
+(* Specification *)
+Spec == Init /\ [][Next]_<<participants, votes, decisions>>
+
+(* Type invariants *)
+TypeOK == /\ participants \in Seq(1..N)
+          /\ votes \in Seq(1..N) \cup <<>>
+          /\ decisions \in Seq(1..N) \cup <<>>
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,1,0,0.778,silver,94.38,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N
+
+VARIABLES forks, states
+
+(* forks is a set of integers from 1 to N *)
+(* states is a function from 1..N to {""thinking"", ""hungry"", ""eating""} *)
+
+Init == /\ forks = 1..N
+        /\ states = [i \in 1..N |-> ""thinking""]
+
+Next == \/ \E i \in 1..N :
+          /\ states[i] = ""thinking""
+          /\ states' = [states EXCEPT ![i] = ""hungry""]
+        \/ \E i \in 1..N :
+          /\ states[i] = ""hungry""
+          /\ forks[i] = ""free""
+          /\ forks' = [forks EXCEPT ![i] = ""occupied""]
+          /\ states' = [states EXCEPT ![i] = ""eating""]
+        \/ \E i \in 1..N :
+          /\ states[i] = ""eating""
+          /\ forks[i] = ""occupied""
+          /\ forks' = [forks EXCEPT ![i] = ""free""]
+          /\ states' = [states EXCEPT ![i] = ""thinking""]
+
+Spec == Init /\ [][Next]_<<forks, states>>
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,1,0,0.444,silver,134.57,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N
+
+VARIABLES num, flag
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,0,0.667,silver,58.38,"---- MODULE BoundedFIFO ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail
+
+Init == /\ q = <<>>
+        /\ head = 0
+        /\ tail = 0
+
+Next == 
+    \/ /\ head < tail
+        /\ head < K
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+        /\ head < Len(q)
+      "
+chattla:20b,BM006,Raft Leader Election,consensus,4,1,0,0.444,silver,89.84,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,0,0,0.778,bronze,204.67,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES readers, writer_active, r
+
+Init == /\ readers = <<>>
+       /\ writer_active = 0
+
+Next == \/ /\ writer_active = 0
+          /\ \E r \in 1..10 : /\ r \notin readers
+          /\ r' \in 1..10
+          /\ r' \notin readers
+          /\ writer_active' = writer_active
+          /\ readers' = Append(readers, r)
+        \/ /\ writer_active = 0
+          /\ \E r \in 1..10 : /\ r \in readers
+          /\ r' \in 1..10
+          /\ r' \in readers
+          /\ writer_active' = writer_active
+          /\ readers' = Tail(readers)
+        \/ /\ writer_active = 0
+          /\ \E r \in 1..10 : /\ r \notin readers
+          /\ r' \in 1..10
+          /\ r' \notin readers
+          /\ writer_active' = 1
+          /\ readers' = readers
+        \/ /\ writer_active = 1
+          /\ r' \in 1..10
+          /\ r' \notin readers
+          /\ writer_active' = 0
+          /\ readers' = readers
+
+Spec == Init /\ [][Next]_<<readers, writer_active>>
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,1,0,0.444,silver,31.83,"---- MODULE ChandyLamportSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, channel, snapshot, channelSnapshot
+
+===="
+chattla:20b,BM009,Token Ring,networking,2,1,1,0.667,gold,2.18,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLE token
+
+Init == /\ token \in 1..N
+
+Next == /\ token' \in 1..N
+        /\ token' = IF token = N THEN 1 ELSE token + 1
+
+Spec == Init /\ [][Next]_<<token>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,1.0,silver,6.28,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, Values
+VARIABLES kv, lastPut
+
+
+(* kv is a partial function from Keys to Values *)
+(* lastPut is a partial function from Keys to Values, recording the most recent value for each key *)
+
+TypeOK ==
+  /\ Keys \subseteq Nat
+  /\ Values \subseteq Nat
+  /\ kv \in [Keys -> Values]
+  /\ lastPut \in [Keys -> Values]
+
+Init ==
+  /\ kv = [k \in Keys |-> 0]  (* initial value 0 for all keys *)
+  /\ lastPut = [k \in Keys |-> 0]
+
+Next ==
+  \/ \E k \in Keys : \E v \in Values :
+       /\ kv' = [kv EXCEPT ![k] = v]
+       /\ lastPut' = [lastPut EXCEPT ![k] = v]
+  \/ \E k \in Keys :
+       /\ kv' = kv
+       /\ lastPut' = lastPut
+
+Spec == Init /\ [][Next]_<<kv, lastPut>>
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,1,0,0.444,silver,17.2,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES acceptors, proposers, promises, accepted, chosen, chosenBy
+
+===="
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,1,0,0.778,silver,33.62,"---- MODULE FileTransfer ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS MAX_RETRIES, CHUNK_SIZE, FILE_SIZE, CHANNEL_CAPACITY
+VARIABLES channel, chunks, file, retransmitCount, sentChunks
+
+Init ==
+    /\ file = <<>>  (* The file is initially empty *)
+    /\ chunks = <<>>  (* No chunks have been sent yet *)
+    /\ sentChunks = <<>>  (* No chunks have been sent yet *)
+    /\ retransmitCount = <<>>  (* No retransmissions yet *)
+    /\ channel = <<>>  (* No messages in the channel yet *)
+
+Next ==
+    \/ \E chunk \in Seq(1..CHUNK_SIZE) :  (* Generate a chunk of data *)
+        /\ chunks' = Append(chunks, chunk)
+        /\ sentChunks' = Append(sentChunks, chunk)
+        /\ retransmitCount' = Append(retransmitCount, 0)
+        /\ channel' = Append(channel, chunk)
+    \/ \E i \in 1..Len(sentChunks) :  (* Retransmit a chunk *)
+        /\ retransmitCount[i] < MAX_RETRIES
+        /\ channel' = Append(channel, sentChunks[i])
+        /\ retransmitCount' = [j \in 1..Len(retransmitCount) |-> IF j = i THEN retransmitCount[j] + 1 ELSE retransmitCount[j]]
+    \/ \E i \in 1..Len(channel) :  (* Receive a chunk *)
+        /\ channel' = Tail(channel)
+        /\ file' = Append(file, channel[i])
+    \/ \E i \in 1..Len(channel) :  (* Drop a chunk *)
+        /\ channel' = Tail(channel)
+        /\ file' = file
+        /\ retransmitCount' = retransmitCount
+
+Spec ==
+    Init /\ [][Next]_<<file, chunks, sentChunks, retransmitCount, channel>>
+
+===="

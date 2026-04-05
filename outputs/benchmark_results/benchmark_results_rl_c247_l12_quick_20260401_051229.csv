@@ -1,0 +1,669 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,0,0.444,silver,19.06,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, turn, N
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,1,0,0.778,silver,97.15,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, Participants, Prepare, VoteYes, VoteNo, Commit, Abort, Coordinator, AllParticipants, AllMessages, AllVotes, AllDecisions
+
+VARIABLES participants, messages, votes, decisions
+
+Init == /\ participants = Participants
+        /\ messages = <<>>
+        /\ votes = <<>>
+        /\ decisions = <<>>
+
+Next == /\ messages' = Append(messages, <<Prepare, Coordinator, AllParticipants>>)
+        /\ votes' = Append(votes, <<VoteYes, Coordinator, AllParticipants>>)
+        /\ decisions' = Append(decisions, <<Commit, Coordinator, AllParticipants>>)
+
+Spec == Init /\ [][Next]_<<participants, messages, votes, decisions>>
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,0,0,1.0,bronze,37.42,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES forks, states
+
+
+
+(* TLA+ translation of the algorithm *)
+
+(* Helper function to get the next philosopher/fork index *)
+Next(i) == IF i = N THEN 1 ELSE i + 1
+
+(* Initial condition: all forks are free, all philosophers are thinking *)
+Init == forks = [i \in 1..N |-> -> FALSE] /\ states = [i \in 1..N |-> -> ""thinking""]
+
+(* Next-state relation: each philosopher can transition from thinking to hungry, 
+   from hungry to eating if forks are free, and from eating to thinking after putting down forks *)
+Next == 
+  \E i \in 1..N :
+    /\ states[i] = ""thinking"" /\ states' = [states EXCEPT ![i] = ""hungry""]
+    \/ states[i] = ""hungry"" /\ forks[i] = FALSE /\ forks[Next(i)] = FALSE
+       /\ forks' = [forks EXCEPT ![i] = TRUE, ![Next(i)] = TRUE]
+       /\ states' = [states EXCEPT ![i] = ""eating""]
+    \/ states[i] = ""eating"" /\ forks' = [forks EXCEPT ![i] = FALSE, ![Next(i)] = FALSE]
+       /\ states' = [states EXCEPT ![i] = ""thinking""]
+
+(* Invariant: forks are either free or owned by a single philosopher *)
+TypeOK == 
+  \A i \in 1..N : forks[i] \in BOOLEAN /\ forks[Next(i)] \in BOOLEAN
+
+Spec == Init /\ [][Next]_<<forks, states>>
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,0,0,0.444,bronze,334.11,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS N
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+
+VARIABLES num, flag
+
+
+define
+  maxNum == Max(Seq(num))
+  choose(i) == LET
+    maxNum == Max(Seq(num))
+  IN
+
+
+
+  end
+  next(i) == LET
+    maxNum == Max(Seq(num))
+  IN
+
+
+
+    \E j \in 1..N : j /= i /\ flag[j] /\ (num[j] < num[i] \/ (num[j] = num[i] /\ j < i))
+  END
+  typeOK == /\ num \in [1..N -> Nat]
+  /\ flag \in [1..N -> BOOLEAN]
+  /\ \A i \in 1..N : num[i] >= 0
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN
+  /\ \A i \in 1..N : num[i] \in Nat
+  /\ \A i \in 1..N : flag[i] \in BOOLEAN"
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,1,1.0,gold,19.77,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES queue, head, tail, count
+
+Init == /\ queue = <<>>
+        /\ head = 1
+        /\ tail = 1
+        /\ count = 0
+
+ProducerAction == /\ count < K
+                 /\ head' = head
+                 /\ tail' = (tail % K) + 1
+                 /\ count' = count + 1
+                 /\ queue' = Append(queue, head)
+
+ConsumerAction == /\ count > 0
+                 /\ head' = (head % K) + 1
+                 /\ tail' = tail
+                 /\ count' = count - 1
+                 /\ queue' = Tail(queue)
+
+Next == ProducerAction \/ ConsumerAction
+
+TypeOK == /\ K \in Nat
+        /\ K > 0
+        /\ queue \in Seq(1..K)
+        /\ head \in 1..K
+        /\ tail \in 1..K
+        /\ count \in 0..K
+
+Spec == Init /\ [][Next]_<<queue, head, tail, count>>
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,0,0,0.889,bronze,198.17,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+
+
+(* State definitions *)
+Follower == state = Follower
+Candidate == state = Candidate
+Leader == state = Leader
+
+(* Type definitions *)
+Server == 1..N
+None == 0
+
+(* TypeOK definition *)
+TypeOK == /\ currentTerm \in Nat
+          /\ votedFor \in {None} \cup Server
+          /\ state \in {Follower, Candidate, Leader}
+
+(* Init action *)
+Init == /\ currentTerm = 0
+        /\ votedFor = None
+        /\ state = Follower
+
+(* Next action *)
+Next == 
+  (* Follower actions *)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm + 1
+      /\ votedFor' = None
+      /\ state' = Candidate)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follower)
+  \/ (Follower /\ currentTerm' = currentTerm
+      /\ votedFor' = votedFor
+      /\ state' = Follow"
+chattla:20b,BM007,Read-Write Lock,storage,2,0,0,0.778,bronze,202.87,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES readers, writer_active, r
+
+Init == /\ readers = <<>> \\
+       /\ writer_active = FALSE
+
+Next == \/ /\ writer_active = FALSE \\
+          /\ \E r \in 1..10 : /\ r \notin readers \\
+          /\ r' = r \\
+             /\ writer_active' = FALSE \\
+             /\ readers' = Append(readers, r) \\
+          \/ /\ writer_active = FALSE \\
+             /\ \E r \in 1..10 : /\ r \in readers \\
+             /\ r' = r \\
+                /\ writer_active' = TRUE \\
+                /\ readers' = <<>> \\
+          \/ /\ writer_active = TRUE \\
+             /\ \E r \in 1..10 : /\ r \notin readers \\
+             /\ r' = r \\
+                /\ writer_active' = TRUE \\
+                /\ readers' = readers \\
+          \/ /\ writer_active = TRUE \\
+             /\ \E r \in 1..10 : /\ r \in readers \\
+             /\ r' = r \\
+                /\ writer_active' = TRUE \\
+                /\ readers' = Tail(readers)
+
+Spec == Init /\ [][Next]_<<readers, writer_active>>
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,1,0,0.444,silver,37.67,"---- MODULE ChandyLamportSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, channel, snapshot, channelSnapshot
+
+===="
+chattla:20b,BM009,Token Ring,networking,2,1,1,0.667,gold,2.17,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLE token
+
+Init == /\ token \in 1..N
+
+Next == /\ token' \in 1..N
+        /\ token' = IF token = N THEN 1 ELSE token + 1
+
+Spec == Init /\ [][Next]_<<token>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,1.0,silver,5.59,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, Values
+
+VARIABLES store
+
+
+
+Init == /\ store \in [Keys -> Values]
+        /\ \A k \in Keys : store[k] = 0
+
+Next == /\ \E k \in Keys : \E v \in Values :
+          /\ store' = [store EXCEPT ![k] = v]
+        \/ \E k \in Keys :
+          /\ store' = store
+
+Spec == Init /\ [][Next]_<<store>>
+
+TypeOK == /\ store \in [Keys -> Values]
+          /\ \A k \in Keys : store[k] \in Values
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,1,0,0.444,silver,39.75,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES acceptors, proposers, ballots, values, promises, accepts, chosen
+
+===="
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,0,0,0.667,bronze,26.43,"---- MODULE FileTransfer ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS MAX_RETRIES, CHUNK_SIZE, FILE_SIZE, CHANNEL_LOSS_PROBABILITY
+VARIABLES channelState, retransmitCount, sentChunks
+
+    /\ fileChunks = [i \in 1..FILE_SIZE /-> i]
+    /\ sentChunks = <<>>
+    /\ retransmitCount = 0
+    /\ channelState = [i \in 1..FILE_SIZE /-> 0]
+
+Next ==
+    /\ sentChunks' = Append(sentChunks, lastChunk)
+    /\ retransmitCount' = IF lastChunk \in sentChunks THEN retransmitCount + 1 ELSE 0
+    /\ channelState' = [i \in 1..FILE_SIZE |-> IF i = lastChunk THEN 1 ELSE channelState[i]]
+    /\ lastChunk \in 1..FILE_SIZE
+    /\ lastChunk \notin sentChunks
+    /\ retransmitCount' <= MAX_RETRIES
+
+Spec ==
+    Init /\ [][Next]_<<fileChunks, sentChunks, retransmitCount, channelState>>
+
+===="

@@ -1,0 +1,486 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,0,0,1.0,bronze,23.24,"---- MODULE MutualExclusionN ----
+EXTENDS Integers, Sequences
+
+VARIABLES proc, state
+
+
+
+TypeOK == /\ proc \in [proc : 1..N]
+          /\ state \in [proc : {""idle"", ""trying"", ""critical""}]
+
+Init == /\ proc = 1..N
+        /\ state = [p \in proc |-> ""idle""]
+
+Next == \/ \* Process p attempts to enter critical section
+        /\ \E p \in proc : state[p] = ""idle"" /\ state' = [state EXCEPT ![p] = ""trying""]
+        \/ \* Process p enters critical section if no other process is in critical section
+        /\ \E p \in proc : state[p] = ""trying"" /\ \A q \in proc : q # p => state[q] # ""critical"" /\ state' = [state EXCEPT ![p] = ""critical""]
+        \/ \* Process p exits critical section
+        /\ \E p \in proc : state[p] = ""critical"" /\ state' = [state EXCEPT ![p] = ""idle""]
+
+Spec == Init /\ [][Next]_state
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,0,0,1.0,bronze,92.13,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets, TLC
+
+CONSTANTS N, Participants
+
+VARIABLES state, votes
+
+
+
+TypeOK == /\ state \in {""INIT"", ""PREPARE"", ""COMMIT"", ""ABORT""}
+          /\ votes \in Seq({TRUE) 
+          /\ Len(votes) <= N
+
+Init == /\ state = ""INIT""
+        /\ votes = <<>>
+
+Next == \/ /\ state = ""INIT""
+              /\ state' = ""PREPARE""
+              /\ votes' = <<>>
+          \/ /\ state = ""PREPARE""
+              /\ votes' = Append(votes, TRUE)
+              /\ state' = state
+          \/ /\ state = ""PREPARE""
+              /\ votes' = Append(votes, FALSE)
+              /\ state' = state
+          \/ /\ state = ""PREPARE""
+              /\ Len(votes) = N
+              /\ IF ALL(votes, v -> v) THEN
+                  state' = ""COMMIT""
+
+                  state' = ""ABORT""
+
+              /\ votes' = votes
+          \/ /\ state \in {""COMMIT"", ""ABORT""}
+              /\ state' = state
+              /\ votes' = votes
+          END
+
+Spec == Init /\ [][Next]_<<state, votes>> /\ TypeOK
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,1,1,0.778,gold,4.98,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLES forks, state
+
+(* State can be ""thinking"", ""hungry"", or ""eating"" *)
+Init == 
+  /\ forks = [i \in 1..N |-> 0]  \* 0 means fork is free, 1 means taken
+  /\ state = [i \in 1..N |-> ""thinking""]
+
+Next == 
+  \E i \in 1..N :
+    \/ \E j \in 1..N :
+          /\ state[i] = ""hungry""
+          /\ forks[i] = 0
+          /\ forks[(i % N) + 1] = 0
+          /\ forks' = [forks EXCEPT ![i] = 1, ![(i % N) + 1] = 1]
+          /\ state' = [state EXCEPT ![i] = ""eating""]
+    \/ \E j \in 1..N :
+          /\ state[i] = ""eating""
+          /\ forks' = [forks EXCEPT ![i] = 0, ![(i % N) + 1] = 0]
+          /\ state' = [state EXCEPT ![i] = ""thinking""]
+    \/ \E j \in 1..N :
+          /\ state[i] = ""thinking""
+          /\ state' = [state EXCEPT ![i] = ""hungry""]
+          /\ forks' = forks
+
+Spec == Init /\ [][Next]_<<forks, state>>
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,0,0,0.778,bronze,67.63,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+
+VARIABLES num, flag
+
+Init == /\ num = [i \in 1..N |-> 0]
+        /\ flag = [i \in 1..N |-> FALSE]
+
+Next == \E i \in 1..N :
+          \/ /\ flag[i] = FALSE
+              /\ flag' = [flag EXCEPT ![i] = TRUE]
+              /\ num' = [num EXCEPT ![i] = 1 + Max(num)]
+          \/ /\ flag[i] = TRUE
+              /\ num' = num
+              /\ flag' = flag
+
+Spec == Init /\ [][Next]_<<num, flag>>
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,0,0,1.0,bronze,32.72,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail, size
+
+
+
+    (* consumer reads from q[head] *)
+
+
+
+
+TypeOK == /\ q \in [1..K -> Nat]
+          /\ head \in 1..K
+          /\ tail \in 1..K
+          /\ size \in 0..K
+
+Init == /\ q = [i \in 1..K |-> 0]
+        /\ head = 1
+        /\ tail = 1
+        /\ size = 0
+
+Next == \/ (* Producer action *)
+          /\ size < K
+          /\ var item = 0 (* placeholder for producer input *)
+          /\ q' = [q EXCEPT ![tail] = item]
+          /\ tail' = IF tail = K THEN 1 ELSE tail + 1
+          /\ size' = size + 1
+          /\ head' = head
+          /\ q = q'
+        \/ (* Consumer action *)
+          /\ size > 0
+          /\ var item = q[head] (* placeholder for consumer output *)
+          /\ head' = IF head = K THEN 1 ELSE head + 1
+          /\ size' = size - 1
+          /\ tail' = tail
+          /\ q' = q
+
+Spec == Init /\ [][Next]_<<q, head, tail, size>> /\ TypeOK
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,1,1,0.778,gold,70.64,"---- MODULE RaftElection ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS NULL, Server
+
+VARIABLES currentTerm, votedFor, state
+
+Init == /\ currentTerm = 0
+        /\ votedFor = [s \in Server |-> NULL]
+        /\ state = [s \in Server |-> ""Follower""]
+
+Next == \/ \E s \in Server:
+          /\ state[s] = ""Follower""
+          /\ state' = [state EXCEPT ![s] = ""Candidate""]
+          /\ currentTerm' = currentTerm + 1
+          /\ votedFor' = [votedFor EXCEPT ![s] = s]
+        \/ \E s \in Server:
+          /\ state[s] = ""Candidate""
+          /\ state' = [state EXCEPT ![s] = ""Leader""]
+          /\ currentTerm' = currentTerm
+          /\ votedFor' = votedFor
+        \/ \E s \in Server:
+          /\ state[s] = ""Leader""
+          /\ state' = state
+          /\ currentTerm' = currentTerm
+          /\ votedFor' = votedFor
+
+Spec == Init /\ [][Next]_<<currentTerm, votedFor, state>>
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,0,0,0.778,bronze,17.51,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES readers, writer_active
+
+Init == 
+  /\ readers = 0
+  /\ writer_active = FALSE
+
+Next == 
+  \/ /\ reader_enter
+     /\ readers' = readers + 1
+     /\ writer_active' = writer_active
+  \/ /\ reader_exit
+     /\ readers' = readers - 1
+     /\ writer_active' = writer_active
+  \/ /\ writer_enter
+     /\ writer_active' = TRUE
+     /\ readers' = readers
+  \/ /\ writer_exit
+     /\ writer_active' = FALSE
+     /\ readers' = readers
+
+Spec == Init /\ [][Next]_<<readers, writer_active>>
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,0,0,1.0,bronze,212.28,"---- MODULE ChandyLamportSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, Channels
+
+
+
+VARIABLES state, localState, channelState, markerSent
+
+Init == 
+  /\ state = [i \in 1..N |-> ""initial""]
+  /\ localState = [i \in 1..N |-> 0]
+  /\ channelState = [c \in Channels |-> <<>>]
+  /\ markerSent = [c \in Channels |-> FALSE]
+
+RecordState(i) == 
+  /\ state[i] = ""initial""
+  /\ state' = [state EXCEPT ![i] = ""recorded""]
+  /\ localState' = [localState EXCEPT ![i] = localState[i] + 1]
+  /\ channelState' = [channelState EXCEPT ![c] = <<>> \mid c \in Channels \land c[1] = i]
+  /\ markerSent' = [markerSent EXCEPT ![c] = TRUE \mid c \in Channels \land c[1] = i]
+  /\ UNCHANGED <<state, localState, channelState, markerSent>>
+
+ReceiveMarker(c) ==
+  /\ markerSent[c] = TRUE
+  /\ channelState' = [channelState EXCEPT ![c] = <<localState[c[2]]>>]
+  /\ markerSent' = [markerSent EXCEPT ![c] = FALSE]
+  /\ UNCHANGED <<state, localState, channelState, markerSent>>
+
+Next == 
+  \E i \in 1..N : RecordState(i)
+  \/ \E c \in Channels : ReceiveMarker(c)
+
+Spec == Init /\ [][Next]_<<state, localState, channelState, markerSent>> 
+
+TypeOK == 
+  /\ state \in [1..N -> {""initial"", ""recorded""}]
+  /\ localState \in [1..N -> Nat]
+  /\ channelState \in [Channels -> Seq(Nat)]
+  /\ markerSent \in [Channels -> BOOLEAN]
+
+===="
+chattla:20b,BM009,Token Ring,networking,2,1,1,0.667,gold,1.98,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences
+
+CONSTANT N
+
+VARIABLE token
+
+Init == token = 1
+
+Next == token' = IF token = N THEN 1 ELSE token + 1
+
+Spec == Init /\ [][Next]_token
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,1.0,silver,8.95,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS FiniteSet, NULL
+
+VARIABLES store
+
+Keys == {""k1"", ""k2"", ""k3""}  \* Example finite key set
+Values == {""v1"", ""v2"", ""v3""} \* Example finite value set
+
+Init == store = [k \in Keys |-> NULL]
+
+Next == \/ \E k \in Keys : \E v \in Values :
+          store' = [store EXCEPT ![k] = v]
+        \/ store' = store
+
+Spec == Init /\ [][Next]_store
+
+TypeOK == /\ store \in [Keys -> Values \cup {NULL}]
+          /\ Keys \in FiniteSet
+          /\ Values \in FiniteSet
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,0,0,0.889,bronze,209.83,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES acceptors, proposers, chosen
+
+CONSTANT N, M, V, NULL
+
+TypeOK == acceptors \in [1..N -> [ballot: Nat, value: V]] /\ proposers \in [1..M -> [ballot: Nat, value: V]] /\ chosen \in V
+
+Init == acceptors = [i \in 1..N |-> [ballot |-> 0, value |-> NULL]] /\ proposers = [i \in 1..M |-> [ballot |-> 0, value |-> NULL]] /\ chosen = NULL
+
+Prepare(p) == LET b == proposers[p].ballot + 1 IN
+  proposers' = [proposers EXCEPT ![p] = [ballot |-> b, value |-> proposers[p].value]] /\ acceptors' = acceptors
+
+Promise(p) == LET b == proposers[p].ballot IN
+  acceptors' = [acceptors EXCEPT ![i] = [ballot |-> b, value |-> acceptors[i].value] : i \in 1..N]
+
+Accept(p) == LET b == proposers[p].ballot, v == proposers[p].value IN
+  acceptors' = [acceptors EXCEPT ![i] = [ballot |-> b, value |-> v] : i \in 1..N]
+
+Chosen(v) == acceptors' = acceptors /\ chosen' = v
+
+Next == \/ /\ \E p \in 1..M : /\ proposers[p].ballot > 0 /\ proposers[p].value # NULL
+          /\ \E v \in V : /\ \E p \in 1..M : proposers[p].value = v
+          /\ \E p \in 1..M : proposers[p].ballot > 0
+          /\ \E v \in V : \E p \in 1..M : proposers[p].value = v
+          /\ \E p \in 1..M : proposers[p].ballot > 0
+          /\ \E v \in V : \E p \in 1..M : proposers[p].value = v
+          /\ \E p \in 1..M : proposers[p].ballot > 0
+          /\ \E v \in V : \E p \in 1..M : proposers[p].value = v
+          /\ \E p \in 1..M : proposers[p].ballot > 0
+          /\ \E v \in V : \E p \in 1..M : proposers[p].value = v
+          /\ \E p \in 1..M : proposers[p].ballot > 0
+          /\ \E v \in V : \E p \in 1..M : proposers[p].value = v
+          /\ \E p \in 1..M : proposers[p].ballot > 0
+          /\ \E v \in V : \E p \in 1..M : proposers[p].value = v
+          /\ \E p \in 1..M : proposers[p].ballot > 0
+          /\ \E v \in V : \E p \in 1..M : proposers[p].value = v
+          /\ \E p \in 1..M : proposers[p].ballot > 0
+          /\ \E v \in V : \E p \in 1..M : proposers[p].value = v
+          /\ \E p \in 1..M : proposers[p].ballot > 0
+          /\ \E v \in V : \E p \in 1..M : proposers[p].value = v
+          /\ \E p \in 1..M : proposers[p].ballot > 0
+          /\ \E v \in V : \E p \in 1..M : proposers[p].value = v
+          /\ \E p \in 1..M : proposers[p].ballot > 0
+          /\ \E v \in V : \E p \in 1..M : proposers[p].value = v
+          /\ \E p \in 1..M : proposers[p].ballot > 0
+          /\ \E v \in V : \E p \in 1..M : proposers[p].value = v
+          /\ \E p \in 1..M : proposers[p].ballot > 0
+          /\ \E v \in V : \E p \in 1..M : proposers[p].value = v
+          /\ \E p \in 1..M : proposers[p].ballot > 0
+          /\ \E v \in V : \E p \in 1..M : proposers[p].value = v
+          /\ \E p \in 1..M : proposers[p].ballot > 0
+          /\ \E v \in V : \E p \in 1..M : proposers[p].value = v
+          /\ \E p \in 1..M : proposers[p].ballot > 0
+          /\ \E v \in V : \E p \in 1..M : proposers[p].value = v
+          /\ \E p \in 1..M : proposers[p].ballot > 0
+          /\ \E v \in V : \E p \in 1..M : proposers[p].value = v
+          /\ \E p \in 1..M : proposers[p].ballot > 0
+          /\ \E v \in V : \E p \in 1..M : proposers[p].value = v
+          /\ \E p \in 1..M : proposers[p].ballot > 0
+          /\ \E v \in V : \E p \in 1..M : proposers[p].value = v
+          /\ \E p \in 1..M : proposers[p].ballot > 0
+          /\ \E v \in V : \E p \in 1..M : proposers[p].value = v
+          /\ \E p \in 1..M : proposers[p].ballot > 0
+          /\ \E v \in V : \E p \in 1..M : proposers[p].value = v
+          /\ \E p \in 1..M : proposers[p].ballot > 0
+          /\ \E v \in V : \E p \in 1..M : proposers[p].value = v
+          /\ \E p \in 1..M : proposers[p].ballot > 0
+          /\ \E v \in V : \E p \in 1..M : proposers[p].value = v
+          /\ \E p \in 1..M : proposers[p].ballot > 0
+          /\ \E v \in V : \E p \in 1..M : proposers[p].value = v
+          /\ \E p \in 1..M : proposers[p].ballot > 0
+          /\ \E v \in V : \E p \in 1..M : proposers[p].value = v
+          /\ \E p \in 1..M : proposers[p].ballot > 0
+          /\ \E v \in V : \E p \in 1..M : proposers[p].value = v
+          /\ \E p \in 1..M : proposers[p].ballot > 0
+          /\ \E v \in V : \E p \in 1..M : proposers[p].value = v
+          /\ \E p \in 1..M : proposers[p].ballot > 0
+          /\ \E v \in V : \E p \in 1..M : proposers[p].value = v
+          /\ \E p \in 1..M : proposers[p].ballot > 0
+          /\ \E v \in V : \E p \in 1..M : proposers[p].value = v
+          /\ \E p \in 1..M : proposers[p].ballot > 0
+          /\ \E v \in V : \E p \in 1..M : proposers[p].value = v
+          /\ \E p \in 1..M : proposers[p].ballot > 0
+          /\ \E v \in V : \E p \in 1..M : proposers[p].value = v
+          /\ \E p \in 1..M : proposers[p].ballot > 0
+          /\ \E v \in V : \E p \in 1..M : proposers[p].value = v
+          /\ \E p \in 1..M : proposers[p].ballot > 0
+          /\ \E v \in V : \E p \in 1..M : proposers[p].value = v
+          /\ \E p \in 1..M : proposers[p].ballot > 0
+          /\ \E v \in V : \E p \in 1..M : proposers[p].value = v
+          /\ \E p \in 1..M : proposers[p].ballot > 0
+          /\ \E v \in V : \E p \in 1..M : proposers[p].value = v
+          /\ \E p \in 1..M : proposers[p].ballot > 0
+          /\ \E v \in V : \E p \in 1..M : proposers[p].value = v
+          /\ \E p \in 1..M : proposers[p].ballot > 0
+          /\ \E v \in V : \E p \in 1..M : proposers[p].value = v
+          /\ \E p \in 1..M : proposers[p].ballot > 0
+          /\ \E v \in V : \E p \in 1..M : proposers[p].value = v
+          /\ \E p \in 1..M : proposers[p].ballot > 0
+          /\ \E v \in V : \E p \in 1..M : proposers[p].value = v
+          /\ \E p \in 1..M : proposers[p].ballot > 0
+          /\ \E v \in V : \E p \in 1..M : proposers[p].value = v
+          /\ \E p \in 1..M : proposers[p].ballot > 0
+          /\ \E v \in V : \E p \in 1..M : proposers[p].value = v
+          /\ \E p \in 1..M : proposers[p].ballot > 0
+          /\ \E v \in V : \E p \in 1..M : proposers[p].value = v
+          /\ \E p \in 1..M : proposers[p].ballot > 0
+          /\ \E v \in V : \E p \in 1..M : proposers[p].value = v
+          /\ \E p \in 1..M : proposers[p].ballot > 0
+          /\ \E v \in V : \E p \in 1..M : proposers[p].value = v
+          /\ \E p \in 1..M : proposers[p].ballot > 0
+          /\ \E v \in V : \E p \in 1..M : proposers[p].value = v
+          /\ \E p \in 1..M : proposers[p].ballot > 0
+          /\ \E v \in V : \E p \in 1..M : proposers[p].value = v
+          /\ \E p \in 1..M : proposers[p].ballot > 0
+          /\ \E v \in V : \E p \in 1..M : proposers[p].value = v
+          /\ \E p \in 1..M : proposers[p].ballot > 0
+          /\ \E v \in V : \E p \in 1..M : proposers[p].value = v
+          /\ \E p \in 1..M : proposers[p].ballot > 0
+          /\ \E v \in V : \E p \in 1..M : proposers[p].value = v
+          /\ \E p \in 1..M : proposers[p].ballot > 0
+          /\ \E v \in V : \E p \in 1..M : proposers[p].value = v
+          /\ \E p \in 1..M : proposers[p].ballot > 0
+          /\ \E v \in V : \E p \in 1..M : proposers[p].value = v
+          /\ \E p \in 1..M : proposers[p].ballot > 0
+          /\ \E v \in V : \E p \in 1..M : proposers[p].value = v
+          /\ \E p \in 1..M : proposers[p].ballot > 0
+          /\ \E v \in V : \E p \in 1..M : proposers[p].value = v
+          /\ \E p \in 1..M : proposers[p].ballot > 0
+          /\ \E v \in V : \E p \in 1..M : proposers[p].value = v
+          /\ \E p \in 1..M : proposers[p].ballot > 0
+          /\ \E v \in V : \E p \in 1..M : proposers[p].value = v
+          /\ \E p \in 1..M : proposers[p].ballot > 0
+          /\ \E v \in V : \E p \in 1..M : proposers[p].value = v
+          /\ \E p \in 1..M : proposers[p].ballot > 0
+          /\ \E v \in V : \E p \in 1..M : proposers[p].value = v
+          /\ \E p \in 1..M : proposers[p].ballot > 0
+          /\ \E v \in V : \E p \in 1..M : proposers[p].value = v
+          /\ \E p \in 1..M : proposers[p].ballot > 0
+          /\ \E v \in V : \E p \"
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,0,0,0.889,bronze,50.5,"---- MODULE FileSender ----
+EXTENDS Integers, Sequences, FiniteSets, TLC
+
+CONSTANTS File, ChunkSize, MaxRetries, Timeout
+VARIABLES acked, chunks, retransmits, sent, timer
+
+    /\ chunks = SubSeq(File, 1, ChunkSize) \* Initial chunk sequence
+    /\ sent = {} \* No chunks sent yet
+    /\ acked = {} \* No chunks acknowledged yet
+    /\ retransmits = [i \in 1..Len(chunks) |-> 0] \* No retransmissions yet
+    /\ timer = 0 \* No timeout yet
+
+Next ==
+    /\ \E i \in 1..Len(chunks) :
+        /\ i \notin sent \* Chunk not yet sent
+        /\ sent' = sent \cup {i} \* Mark chunk as sent
+        /\ retransmits' = [retransmits EXCEPT ![i] = 0] \* Reset retransmission count
+        /\ timer' = Timeout \* Reset timeout counter
+    \/ \E i \in sent \setminus acked :
+        /\ timer = 0 \* No timeout yet
+        /\ timer' = Timeout \* Reset timeout counter
+    \/ \E i \in sent \setminus acked :
+        /\ timer > 0 \* Timeout counter active
+        /\ timer' = timer - 1 \* Decrement timeout counter
+        \/ /\ timer' = 0 \* Timeout counter reached zero
+           /\ retransmits[i] < MaxRetries \* Retransmission count below maximum
+           /\ retransmits' = [retransmits EXCEPT ![i] = retransmits[i] + 1] \* Increment retransmission count
+        \/ /\ timer' = 0 \* Timeout counter reached zero
+           /\ retransmits[i] >= MaxRetries \* Retransmission count at or above maximum
+           /\ sent' = sent \setminus {i} \* Remove chunk from sent set
+           /\ retransmits' = [retransmits EXCEPT ![i] = 0] \* Reset retransmission count
+    \/ \E i \in acked :
+        /\ acked' = acked \setminus {i} \* Remove chunk from acknowledged set
+    \/ /\ chunks' = chunks \* No changes to chunk sequence
+        /\ sent' = sent \* No changes to sent set
+        /\ acked' = acked \* No changes to acknowledged set
+        /\ retransmits' = retransmits \* No changes to retransmission count
+        /\ timer' = timer \* No changes to timeout counter
+
+Spec ==
+    Init /\ [][Next]_<<chunks, sent, acked, retransmits, timer>>
+
+TypeOK ==
+    /\ chunks \in Seq(Seq(File))
+    /\ sent \in SUBSET 1..Len(chunks)
+    /\ acked \in SUBSET 1..Len(chunks)
+    /\ retransmits \in [1..Len(chunks) -> 0..MaxRetries]
+    /\ timer \in 0..Timeout
+
+===="

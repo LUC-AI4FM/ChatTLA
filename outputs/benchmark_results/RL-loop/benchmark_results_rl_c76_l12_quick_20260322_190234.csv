@@ -1,0 +1,480 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,0,0.444,silver,47.08,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, turn, flag
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,1,0,0.444,silver,13.46,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES participants, votes, commit, abort, messages, state
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,0,0,1.0,bronze,43.27,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES forks, states
+
+(* Constants *)
+N == 5
+
+(* Helper functions *)
+LEFT(i) == IF i = 1 THEN N ELSE i - 1
+RIGHT(i) == IF i = N THEN 1 ELSE i + 1
+
+(* State predicates *)
+TypeOK == 
+  /\ forks \in [1..N |-> 0..N]
+  /\ states \in [1..N |-> {""thinking"", ""hungry"", ""eating""}]
+
+(* Initial state *)
+Init == 
+  /\ forks = [i \in 1..N |-> 0]
+  /\ states = [i \in 1..N |-> ""thinking""]
+
+(* Next-state relation *)
+Next == 
+  \/ (* Philosopher i picks up forks *)
+     /\ \E i \in 1..N :
+        /\ states[i] = ""hungry""
+        /\ forks[i] = 0
+        /\ forks[LEFT(i)] = 0
+        /\ forks[i] = i
+        /\ forks[LEFT(i)] = LEFT(i)
+        /\ states[i] = ""eating""
+  \/ (* Philosopher i puts down forks *)
+     /\ \E i \in 1..N :
+        /\ states[i] = ""eating""
+        /\ forks[i] = 0
+        /\ forks[LEFT(i)] = 0
+        /\ states[i] = ""thinking""
+
+(* Specification *)
+Spec == Init /\ [][Next]_<<forks, states>>
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,1,0,0.444,silver,13.98,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES num, flag
+
+
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,0,0.778,silver,189.52,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail
+
+Init == /\ q \in Seq(1..K)
+        /\ head \in 1..K
+        /\ tail \in 1..K
+        /\ Len(q) = 0
+        /\ head = 1
+        /\ tail = 1
+
+Producer == /\ Len(q) < K
+           /\ head' = head
+           /\ tail' = (tail % K) + 1
+           /\ q' = Append(q, head)
+
+Consumer == /\ Len(q) > 0
+           /\ head' = (head % K) + 1
+           /\ tail' = tail
+           /\ q' = Tail(q)
+
+Next == Producer \/ Consumer
+
+Spec == Init /\ [][Next]_<<q, head, tail>>
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,0,0,0.667,bronze,197.16,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLE currentTerm, votedFor, state
+
+Init == /\ currentTerm = 0
+        /\ votedFor = {}
+        /\ state = ""Follower""
+
+Next == \/ /\ state = ""Follower""
+        /\ currentTerm' = currentTerm
+        /\ votedFor' = votedFor
+        /\ state' = ""Candidate""
+        /\ currentTerm' = currentTerm + 1
+        /\ votedFor' = {currentTerm'}
+   \/ /\ state = ""Candidate""
+        /\ currentTerm' = currentTerm
+        /\ votedFor' = votedFor
+        /\ state' = ""Leader""
+   \/ /\ state = ""Leader""
+        /\ currentTerm' = currentTerm
+        /\ votedFor' = votedFor
+        /\ state' = ""Leader""
+
+Spec == Init /\ [][Next]_<<currentTerm, votedFor, state>>
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,1,0,0.667,silver,232.19,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES readers, writer_active
+
+Init == /\ readers = <<>>
+        /\ writer_active = FALSE
+
+Next == \/ /\ writer_active = FALSE
+          /\ \E r \in Seq(1..10) : /\ r \in readers
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in readers)
+          /\ r \in readers
+          /\ ~(r \in rea"
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,1,0,0.444,silver,90.19,"---- MODULE DistributedSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, channel, markerSent, markerReceived, recorded
+===="
+chattla:20b,BM009,Token Ring,networking,2,1,1,0.667,gold,2.27,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLE token
+
+Init == /\ token \in 1..N
+
+Next == /\ token' \in 1..N
+        /\ token' = IF token = N THEN 1 ELSE token + 1
+
+Spec == Init /\ [][Next]_<<token>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,0.778,silver,9.42,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, Values
+
+VARIABLES store
+
+Init == /\ store \in [Keys -> Values]
+Next == /\ store' \in [Keys -> Values]
+      /\ \E k \in Keys : \E v \in Values : store' = [store EXCEPT ![k] = v]
+
+Spec == Init /\ [][Next]_<<store>>
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,1,0,0.444,silver,16.0,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES acceptors, proposers, promises, accepts, chosen, ballots, values
+
+===="
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,0,0,0.667,bronze,29.56,"---- MODULE Sender ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS MAX_RETRIES, CHUNK_SIZE, FILE_SIZE
+VARIABLES channel, retransmitCount, sentChunks
+
+    /\ file \in Seq
+    /\ Len(file) = FILE_SIZE
+    /\ chunks \in Seq
+    /\ Len(chunks) = Ceiling(FILE_SIZE \div CHUNK_SIZE)
+    /\ sentChunks \in Seq
+    /\ Len(sentChunks) = 0
+    /\ retransmitCount \in Seq
+    /\ Len(retransmitCount) = 0
+    /\ channel \in Seq
+    /\ Len(channel) = 0
+
+Next ==
+    /\ sentChunks' = Append(sentChunks, lastChunk)
+    /\ retransmitCount' = Append(retransmitCount, 0)
+    /\ channel' = Append(channel, lastChunk)
+    /\ UNCHANGED <<file, chunks, sentChunks, retransmitCount>>
+
+Retransmit ==
+    /\ sentChunks' = Append(sentChunks, lastChunk)
+    /\ retransmitCount' = Append(retransmitCount, retransmitCount[lastChunk] + 1)
+    /\ channel' = Append(channel, lastChunk)
+    /\ UNCHANGED <<file, chunks, sentChunks, retransmitCount>>
+
+lastChunk ==
+
+        Head(chunks)
+
+        <<>>
+
+Spec ==
+    Init /\ [][Next]_vars
+
+===="

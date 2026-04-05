@@ -1,0 +1,258 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,1,0.889,gold,11.17,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLE state
+
+Init == /\ state = [i \in 1..N |-> ""idle""]
+
+Next == \/ \E i \in 1..N :
+          /\ state[i] = ""idle""
+          /\ state' = [state EXCEPT ![i] = ""trying""]
+        \/ \E i \in 1..N :
+          /\ state[i] = ""trying""
+          /\ \A j \in 1..N : j # i => state[j] # ""critical""
+          /\ state' = [state EXCEPT ![i] = ""critical""]
+        \/ \E i \in 1..N :
+          /\ state[i] = ""critical""
+          /\ state' = [state EXCEPT ![i] = ""idle""]
+
+Spec == Init /\ [][Next]_<<state>>
+
+TypeOK == /\ state \in [1..N -> {""idle"", ""trying"", ""critical""}]
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,0,0,1.0,bronze,54.58,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLES participants, coordinator, messages
+
+(* Participants are numbered 1..N *)
+Participants == 1..N
+
+(* Messages are tuples: [sender \in Participants \cup {coordinator},
+                        receiver \in Participants \cup {coordinator},
+                        type \in {""Prepare"", ""VoteYes"", ""VoteNo"", ""Commit"", ""Abort""},
+                        payload \in BOOLEAN] *)
+
+Init ==
+  /\ participants = [i \in Participants |-> ""Idle""]
+  /\ coordinator = ""Idle""
+  /\ messages = <<>>
+
+Prepare ==
+  /\ coordinator = ""Idle""
+  /\ coordinator' = ""Preparing""
+  /\ messages' = Append(messages, [sender |-> coordinator,
+                                   receiver |-> i,
+                                   type |-> ""Prepare"",
+                                   payload |-> TRUE]) \* payload unused
+  /\ UNCHANGED participants
+
+VoteYes ==
+  /\ \E i \in Participants :
+       /\ participants[i] = ""Idle""
+       /\ messages = <<[sender |-> coordinator,
+                         receiver |-> i,
+                         type |-> ""Prepare"",
+                         payload |-> TRUE]>> \* only one Prepare message
+       /\ participants' = [participants EXCEPT ![i] = ""VotingYes""]
+       /\ coordinator' = ""Idle""
+       /\ messages' = <<[sender |-> i,
+                         receiver |-> coordinator,
+                         type |-> ""VoteYes"",
+                         payload |-> TRUE]>> \* payload unused
+  /\ UNCHANGED <<>>
+
+VoteNo ==
+  /\ \E i \in Participants :
+       /\ participants[i] = ""Idle""
+       /\ messages = <<[sender |-> coordinator,
+                         receiver |-> i,
+                         type |-> ""Prepare"",
+                         payload |-> TRUE]>> \* only one Prepare message
+       /\ participants' = [participants EXCEPT ![i] = ""VotingNo""]
+       /\ coordinator' = ""Idle""
+       /\ messages' = <<[sender |-> i,
+                         receiver |-> coordinator,
+                         type |-> ""VoteNo"",
+                         payload |-> TRUE]>> \* payload unused
+  /\ UNCHANGED <<>>
+
+Commit ==
+  /\ coordinator = ""Idle""
+  /\ \E i \in Participants :
+       /\ participants[i] = ""VotingYes""
+       /\ messages = <<[sender |-> i,
+                         receiver |-> coordinator,
+                         type |-> ""VoteYes"",
+                         payload |-> TRUE]>> \* only one VoteYes message
+       /\ participants' = [participants EXCEPT ![i] = ""Committed""]
+       /\ coordinator' = ""Idle""
+       /\ messages' = <<[sender |-> coordinator,
+                         receiver |-> i,
+                         type |-> ""Commit"",
+                         payload |-> TRUE]>> \* payload unused
+  /\ UNCHANGED <<>>
+
+Abort ==
+  /\ coordinator = ""Idle""
+  /\ \E i \in Participants :
+       /\ participants[i] = ""VotingNo""
+       /\ messages = <<[sender |-> i,
+                         receiver |-> coordinator,
+                         type |-> ""VoteNo"",
+                         payload |-> TRUE]>> \* only one VoteNo message
+       /\ participants' = [participants EXCEPT ![i] = ""Aborted""]
+       /\ coordinator' = ""Idle""
+       /\ messages' = <<[sender |-> coordinator,
+                         receiver |-> i,
+                         type |-> ""Abort"",
+                         payload |-> TRUE]>> \* payload unused
+  /\ UNCHANGED <<>>
+
+Next == Prepare \/ VoteYes \/ VoteNo \/ Commit \/ Abort
+
+TypeOK ==
+  /\ participants \in [Participants -> {""Idle"", ""VotingYes"", ""VotingNo"", ""Committed"", ""Aborted""}]
+  /\ coordinator \in {""Idle"", ""Preparing""}
+  /\ messages \in Seq([sender \in Participants \cup {coordinator})
+
+Spec == Init /\ [][Next]_<<participants, coordinator, messages>>
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,0,0,1.0,bronze,35.33,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLES forks, state, can
+
+(* Forks: forks[i] = i if fork i is free, otherwise forks[i] = j if philosopher j holds fork i *)
+(* State: state[i] = ""thinking"" | ""hungry"" | ""eating"" *)
+
+Init == /\ forks = [i \in 1..N |-> i]
+        /\ state = [i \in 1..N |-> ""thinking""]
+
+Left(i) == IF i = 1 THEN N ELSE i - 1
+Right(i) == IF i = N THEN 1 ELSE i + 1
+
+CanEat(i) == forks[Left(i)] = i /\ forks[Right(i)] = i
+
+TakeForks(i) == /\ forks'[Left(i)] = i
+              /\ forks'[Right(i)] = i
+              /\ state'[i] = ""eating""
+
+PutForks(i) == /\ forks'[Left(i)] = Left(i)
+             /\ forks'[Right(i)] = Right(i)
+             /\ state'[i] = ""thinking""
+
+Hungry(i) == state'[i] = ""hungry""
+
+Next == \/ \E i \in 1..N : state[i] = ""thinking"" /\ CanEat(i) /\ TakeForks(i)
+      \/ \E i \in 1..N : state[i] = ""eating"" /\ PutForks(i)
+      \/ \E i \in 1..N : state[i] = ""thinking"" /\ PutForks(i)  (* philosopher gives up if can't eat *)
+      \/ \E i \in 1..N : state[i] = ""thinking"" /\ Hungry(i)
+
+TypeOK == /\ forks \in [1..N -> 1..N]
+        /\ state \in [1..N -> {""thinking"", ""hungry"", ""eating""}]
+
+Spec == Init /\ [][Next]_<<forks, state>>
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,1,0,1.0,silver,7.42,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+
+CONSTANT N
+
+VARIABLES num, flag
+
+(* num[i] is the ticket number of process i; 0 means not choosing a number *)
+(* flag[i] is TRUE if process i is choosing a number *)
+
+Init == /\ num = [i \in 1..N |-> 0]
+        /\ flag = [i \in 1..N |-> FALSE]
+
+Next == 
+  \E i \in 1..N :
+    /\ flag' = [flag EXCEPT ![i] = TRUE]
+    /\ num' = [num EXCEPT ![i] = 1 + Max(Seq(1..N))]
+    /\ flag' = [flag EXCEPT ![i] = FALSE]
+    /\ UNCHANGED <<num, flag>>
+
+Spec == Init /\ [][Next]_<<num, flag>>
+
+(* Mutual exclusion: no two processes can be in the critical section simultaneously *)
+TypeOK == /\ num \in [1..N -> Nat]
+           /\ flag \in [1..N -> BOOLEAN]
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,0,0,0.889,bronze,24.37,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail, size
+
+(* q is a sequence of length K, holding the queue contents *)
+(* head is the index of the next element to dequeue *)
+(* tail is the index of the next free slot for enqueue *)
+(* size is the current number of elements in the queue *)
+
+Init == /\ q = <<>>  (* empty sequence *)
+        /\ head = 0
+        /\ tail = 0
+        /\ size = 0
+
+Enqueue(v) == 
+    /\ size < K
+    /\ q' = Append(q, v)
+    /\ tail' = (tail + 1) \mod K
+    /\ size' = size + 1
+    /\ head' = head
+
+Dequeue == 
+    /\ size > 0
+    /\ head' = (head + 1) \mod K
+    /\ size' = size - 1
+    /\ q' = SubSeq(q, 0, size - 1)  (* remove the first element *)
+    /\ tail' = tail
+
+Next == Enqueue(v) \/ Dequeue
+
+TypeOK == /\ K \in Nat
+          /\ K > 0
+          /\ q \in Seq(1..K)
+          /\ head \in 0..K-1
+          /\ tail \in 0..K-1
+          /\ size \in 0..K
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,0,0,0.778,bronze,17.33,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+Init ==
+  /\ currentTerm = 0
+  /\ votedFor = NULL
+  /\ state = ""Follower""
+
+Next ==
+  \/ /\ state = ""Follower""
+     /\ currentTerm' = currentTerm + 1
+     /\ votedFor' = NULL
+     /\ state' = ""Candidate""
+  \/ /\ state = ""Candidate""
+     /\ currentTerm' = currentTerm
+     /\ votedFor' = NULL
+     /\ state' = ""Leader""
+
+Spec == Init /\ [][Next]_<<currentTerm, votedFor, state>>
+
+===="

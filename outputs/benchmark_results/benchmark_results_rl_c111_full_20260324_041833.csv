@@ -1,0 +1,465 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,0,0.444,silver,57.83,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, turn, flag
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,1,0,0.444,silver,131.55,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES participants, votes, commitDecided, abortDecided
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,0,0,1.0,bronze,55.66,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES forks, states
+
+(* Constants *)
+N == 5
+
+(* Helper functions *)
+Left(i) == (i + N - 1) \mod N
+Right(i) == (i + 1) \mod N
+
+(* State predicates *)
+ForksOK == \A i \in 0..N-1: forks[i] \in 0..N-1
+StatesOK == \A i \in 0..N-1: states[i] \in {""thinking"", ""hungry"", ""eating""}
+
+(* Initial state *)
+Init == /\ forks == [i \in 0..N-1 |-> i]
+        /\ states = [i \in 0..N-1 |-> ""thinking""]
+
+(* Next-state relation *)
+Next == \E i \in 0..N-1:
+          /\ states[i] = ""thinking""
+          /\ states[i] = ""hungry""
+          /\ forks[i] = i
+          /\ forks[Left(i)] = Left(i)
+          /\ forks[Right(i)] = Right(i)
+          /\ states[i] = ""eating""
+          /\ forks[i] = i
+          /\ forks[Left(i)] = i
+          /\ forks[Right(i)] = i
+          /\ states[i] = ""thinking""
+
+(* Invariant *)
+TypeOK == ForksOK /\ StatesOK
+
+(* Specification *)
+Spec == Init /\ [][Next]_<<forks, states>>
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,1,0,0.778,silver,203.94,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES num, flag
+
+Init == /\ num = 0
+      /\ flag = <<>>
+
+
+Next == /\ num' = num + 1
+      /\ flag' = Append(flag, 0)
+
+Spec == Init /\ [][Next]_<<num, flag>>
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,0,0.778,silver,193.22,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail
+
+Init == /\ q \in Seq(1..K)
+        /\ head \in 1..K
+        /\ tail \in 1..K
+        /\ Len(q) = 0
+        /\ head = 1
+        /\ tail = 1
+
+Producer == /\ Len(q) < K
+           /\ head' = head + 1
+           /\ tail' = tail
+           /\ q' = Append(q, head)
+
+Consumer == /\ Len(q) > 0
+           /\ head' = head
+           /\ tail' = tail + 1
+           /\ q' = Tail(q)
+
+Next == Producer \/ Consumer
+
+Spec == Init /\ [][Next]_<<q, head, tail>>
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,1,0,0.778,silver,22.87,"---- MODULE RaftElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+Init ==
+  /\ currentTerm = 0
+  /\ votedFor = {}
+  /\ state = ""Follower""
+
+Next ==
+  \/ \E newTerm \in Nat :
+       /\ state = ""Follower""
+       /\ currentTerm' = newTerm
+       /\ votedFor' = {}
+       /\ state' = ""Follower""
+  \/ \E newTerm \in Nat :
+       /\ state = ""Candidate""
+       /\ currentTerm' = newTerm
+       /\ votedFor' = {}
+       /\ state' = ""Candidate""
+  \/ \E newTerm \in Nat :
+       /\ state = ""Leader""
+       /\ currentTerm' = newTerm
+       /\ votedFor' = {}
+       /\ state' = ""Leader""
+
+Spec ==
+  Init /\ [][Next]_<<currentTerm, votedFor, state>>
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,0,0,0.778,bronze,219.23,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES readers, writer_active
+
+Init == /\ readers = <<>>
+        /\ writer_active = FALSE
+
+Next == \/ /\ writer_active = FALSE
+          /\ \E r \in 1..10 : /\ r \notin readers
+              /\ writer_active' = FALSE
+                 /\ readers' = Append(readers, r)
+          \/ /\ writer_active = FALSE
+              /\ \E r \in 1..10 : r \in readers
+              /\ writer_active' = TRUE
+                 /\ readers' = <<>>
+          \/ /\ writer_active = TRUE
+              /\ \E r \in 1..10 : r \in readers
+              /\ writer_active' = FALSE
+                 /\ readers' = <<>>
+          \/ /\ writer_active = TRUE
+              /\ \E r \in 1..10 : r \notin readers
+              /\ writer_active' = TRUE
+                 /\ readers' = <<>>
+
+Spec == Init /\ [][Next]_<<readers, writer_active>>
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,1,0,0.444,silver,60.39,"---- MODULE DistributedSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, channel, marker, snapshot, recorded, finished
+===="
+chattla:20b,BM009,Token Ring,networking,2,0,0,0.778,bronze,33.23,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS N
+
+VARIABLES token, messages
+
+Init == /\ token \in 1..N
+        /\ messages \in 1..N -> 1..N
+
+Next == /\ token' \in 1..N
+        /\ messages' \in 1..N -> 1..N
+        /\ token' = IF token = N THEN 1 ELSE token + 1
+           /\ messages' = [i \in 1..N |-> IF i = token THEN token' ELSE messages[i]]
+        \/ /\ token' = token
+           /\ messages' = [i \in 1..N |-> IF i = token THEN token' ELSE messages[i]]
+        \/ /\ token' = token
+           /\ messages' = [i \in 1..N |-> IF i = token THEN token' ELSE messages[i]]
+
+Spec == Init /\ [][Next]_<<token, messages>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,1.0,silver,7.85,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, Values
+
+VARIABLES store
+
+Init == /\ store \in [Keys -> Values]
+Next == \/ /\ \E k \in Keys : \E v \in Values : /\ store' = [store EXCEPT ![k] = v]
+          \/ /\ \E k \in Keys: /\ store' = [store EXCEPT ![k] = store[k]]
+TypeOK == /\ store \in [Keys -> Values]
+Spec == Init /\ [][Next]_<<store>>
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,1,0,0.444,silver,97.6,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES acceptors, proposers, promises, accepted, chosen, chosenBallot, chosenValue, chosenBallotValue, chosenValueBallot, chosenBallotValueValue, chosenValueBallotValue, chosenBallotValueBallot, chosenValueBallotBallot, chosenBallotValueValueValue, chosenValueBallotValueValue, chosenBallotValueBallotBallot, chosenValueBallotBallotBallot, chosenBallotValueValueValueValue, chosenValueBallotValueValueValue, chosenBallotValueBallotBallotBallot, chosenValueBallotBallotBallotBallot, chosenBallotValueValueValueValueValue, chosenValueBallotValueValueValueValue, chosenBallotValueBallotBallotBallotBallot, chosenValueBallotBallotBallotBallotBallot, chosenBallotValueValueValueValueValueValue, chosenValueBallotValueValueValueValueValue, chosenBallotValueBallotBallotBallotBallotBallot, chosenValueBallotBallotBallotBallotBallotBallot, chosenBallotValueValueValueValueValueValueValue, chosenValueBallotValueValueValueValueValueValue, chosenBallotValueBallotBallotBallotBallotBallotBallot, chosenValueBallotBallotBallotBallotBallotBallotBallot, chosenBallotValueValueValueValueValueValueValueValue, chosenValueBallotValueValueValueValueValueValueValue, chosenBallotValueBallotBallotBallotBallotBallotBallotBallot, chosenValueBallotBallotBallotBallotBallotBallotBallotBallot, chosenBallotValueValueValueValueValueValueValueValueValue, chosenValueBallotValueValueValueValueValueValueValueValue, chosenBallotValueBallotBallotBallotBallotBallotBallotBallotBallot, chosenValueBallotBallotBallotBallotBallotBallotBallotBallotBallot, chosenBallotValueValueValueValueValueValueValueValueValueValue, chosenValueBallotValueValueValueValueValueValueValueValueValue, chosenBallotValueBallotBallotBallotBallotBallotBallotBallotBallotBallot, chosenValueBallotBallotBallotBallotBallotBallotBallotBallotBallotBallot, chosenBallotValueValueValueValueValueValueValueValueValueValueValue, chosenValueBallotValueValueValueValueValueValueValueValueValueValue, chosenBallotValueBallotBallotBallotBallotBallotBallotBallotBallotBallotBallot, chosenValueBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallot, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValue, chosenValueBallotValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallot, chosenValueBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallot, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenValueBallotValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallot, chosenValueBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallot, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenValueBallotValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallot, chosenValueBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallot, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenValueBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallot, chosenValueBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallot, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenValueBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallot, chosenValueBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallot, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenValueBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallot, chosenValueBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallot, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenValueBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallot, chosenValueBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallot, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenValueBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallot, chosenValueBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallot, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenValueBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallot, chosenValueBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallot, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenValueBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallot, chosenValueBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallot, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenValueBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallot, chosenValueBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallot, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenValueBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallot, chosenValueBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallot, chosenBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenValueBallotValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValueValue, chosenBallotValueBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallot, chosenValueBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBallotBall"
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,1,0,0.444,silver,388.25,"---- MODULE Sender ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES file, chunkSize, maxRetries, retransmitCount, sentChunks, receivedChunks
+
+===="
+chattla:20b,BM013,Transaction Isolation (Snapshot Isolation),transaction,4,1,0,0.444,silver,242.73,"---- MODULE SnapshotIsolation ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES db, txns, nextTxId, committed, aborted, snapshot, writes, reads, status
+===="
+chattla:20b,BM014,Clock Synchronisation,networking,3,0,0,0.778,bronze,248.43,"---- MODULE ClockSync ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS N
+
+VARIABLES clocks, epsilon
+
+Init == /\ clocks \in [1..N -> Int]
+        /\ epsilon \in Nat
+
+Next == /\ \E i \in 1..N :
+          /\ clocks' = [clocks EXCEPT ![i] = clocks[i] + delta[i]]
+          /\ delta[i] \in [-maxDrift..maxDrift]
+        /\ \A i \in 1..N :
+              /\ clocks'[i] = (1/N) * Sum(j \in 1..N : clocks[j])
+              /\ \E j \in 1..N :
+                    /\ clocks'[j] = (1/N) * Sum(k \in 1..N : clocks[k])
+        /\ \A i \in 1..N :
+              /\ clocks'[i] \in Int
+        /\ \A i, j \in 1..N :
+              /\ clocks'[i] - clocks'[j] \in [-epsilon..epsilon]
+
+Spec == Init /\ [][Next]_<<clocks, epsilon>>
+
+===="
+chattla:20b,BM015,Peterson's Algorithm,scheduling,2,1,0,0.778,silver,384.23,"---- MODULE Peterson2 ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES flag, turn
+
+Init == /\ flag = [i \in 1..2 |-> FALSE]
+        /\ turn = 1
+
+Next == \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag[1] = TRUE
+          /\ turn' = 2
+          /\ flag' = [flag EXCEPT ![2] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ flag[2] = TRUE
+          /\ turn' = 1
+          /\ flag' = [flag EXCEPT ![1] = FALSE]
+        \/ /\ flag[1] = TRUE
+          /\ turn[1] = 1
+          /\ flag[2] = TRUE
+          /\ turn[2] = 2
+          /\ flag' = flag
+        \/ /\ flag[1] = TRUE
+          /\ turn[1] = 2
+          /\ flag[2] = TRUE
+          /\ turn[2] = 1
+          /\ flag' = flag
+
+Spec == Init /\ [][Next]_<<flag, turn>>
+
+===="
+chattla:20b,BM016,Gossip Protocol,networking,3,1,0,0.778,silver,432.46,"---- MODULE GossipProtocol ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES known, infected
+
+Init == /\ known = <<>> /\ infected = <<>> /\ Len(known) = Len(infected)
+
+Next == /\ known' = known
+      /\ infected' = Append(infected, known)
+
+Spec == Init /\ [][Next]_<<known, infected>>
+
+===="
+chattla:20b,BM017,Simple Allocator,storage,2,1,0,0.889,silver,23.68,"---- MODULE MemoryAllocator ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, Clients, Pages
+
+VARIABLE free, allocated
+
+Init == /\ free = Pages
+       /\ allocated = [c \in Clients |-> {}]
+
+Next == /\ \E c \in Clients :
+          /\ c \in free
+          /\ free' = free \ {c}
+          /\ allocated' = [allocated EXCEPT ![c] = @ \cup {c}]
+       \/ \E c \in Clients :
+          /\ c \in Pages
+          /\ c \in allocated
+          /\ free' = free \cup {c}
+          /\ allocated' = [allocated EXCEPT ![c] = @ \ {c}]
+
+TypeOK == /\ free \subseteq Pages
+          /\ allocated \subseteq [Clients -> SUBSET Pages]
+          /\ \A c \in Clients : allocated[c] \subseteq Pages
+
+Spec == Init /\ [][Next]_<<free, allocated>>
+
+===="
+chattla:20b,BM018,Publish-Subscribe Broker,networking,3,1,0,0.444,silver,125.37,"---- MODULE Broker ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES subscribers, publishers, topicSubs, topicMsgs, msgTopic, msgSeqNum, msgContent, msgDelivered, msgDeliveredSeqNum, msgDeliveredContent
+===="
+chattla:20b,BM019,Dekker's Algorithm,scheduling,3,1,1,0.778,gold,6.07,"---- MODULE Dekker ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES turn, wants
+
+Init == /\ turn \in {0,1}
+        /\ wants \in {0,1}
+
+Next == 
+  \/ /\ turn = 0
+     /\ wants = 1
+     /\ turn' = 1
+     /\ wants' = 0
+  \/ /\ turn = 1
+     /\ wants = 0
+     /\ turn' = 0
+     /\ wants' = 1
+  \/ /\ turn' = turn
+     /\ wants' = wants
+
+Spec == Init /\ [][Next]_<<turn, wants>>
+
+===="
+chattla:20b,BM020,Eventually Consistent Counter,storage,3,1,0,0.667,silver,104.94,"---- MODULE GCounter ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS Node
+
+VARIABLES counts
+
+Init == /\ counts \in [Node -> [Node -> Nat]]
+       /\ \A n \in Node: counts[n] = [m \in Node |-> 0]
+
+Next == /\ \E n \in Node:
+          /\ counts' = [counts EXCEPT ![n] = [m \in Node |-> 
+                IF m = n THEN counts[n][m] + 1 ELSE counts[n][m]]]
+          /\ \A m \in Node: m \in Node
+          /\ \A m \in Node: counts'[m] \in [Node -> Nat]
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+          /\ \A m \in Node: \A k \in Node: counts'[m][k] \in Nat
+      "

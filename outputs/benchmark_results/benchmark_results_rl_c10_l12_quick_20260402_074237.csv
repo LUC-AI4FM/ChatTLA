@@ -1,0 +1,764 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,0,0.889,silver,20.61,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS N
+
+VARIABLES state, turn, it
+
+(* State can be ""idle"", ""trying"", or ""critical"" *)
+State == {""idle"", ""trying"", ""critical""}
+
+(* Initialization: all processes are idle, turn is arbitrary *)
+Init == /\ state \in [1..N -> State]
+        /\ turn \in 1..N
+
+(* Transition relation: each process can move from idle to trying,
+   from trying to critical if it's its turn, and from critical to idle *)
+Next == \E i \in 1..N:
+          \/ /\ state[i] = ""idle""
+             /\ state' = [state EXCEPT ![i] = ""trying""]
+          \/ /\ state[i] = ""trying""
+             /\ turn = i
+             /\ state' = [state EXCEPT ![i] = ""critical""]
+          \/ /\ state[i] = ""critical""
+             /\ state' = [state EXCEPT ![i] = ""idle""]
+          /\ turn' = turn
+
+Spec == Init /\ [][Next]_<<state, turn>>
+
+(* Mutual exclusion: no two processes can be in critical section simultaneously *)
+MutualExclusion == \A i, j \in 1..N: i /= j => ~(state[i] = ""critical"" /\ state[j] = ""critical"")
+
+(* Liveness: if a process is trying, it will eventually enter critical section *)
+Liveness == \A i \in 1..N: state[i] = ""trying"" => <> (state[i] = ""critical"")
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,0,0,0.889,bronze,40.52,"---- MODULE TwoPhaseCommitProtocol ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, participants, coordinator
+VARIABLES decision, state, votes
+
+        /\ votes = [p \in participants |-> ""None""]
+        /\ decision = ""None""
+
+Prepare(p) == /\ state[p] = ""Init""
+              /\ state' = [state EXCEPT ![p] = ""Prepared""]
+              /\ UNCHANGED <<votes, decision>>
+
+VoteYes(p) == /\ state[p] = ""Prepared""
+              /\ votes' = [votes EXCEPT ![p] = ""Yes""]
+              /\ UNCHANGED <<state, decision>>
+
+VoteNo(p) == /\ state[p] = ""Prepared""
+             /\ votes' = [votes EXCEPT ![p] = ""No""]
+             /\ UNCHANGED <<state, decision>>
+
+Commit(p) == /\ state[p] = ""Prepared""
+            /\ state' = [state EXCEPT ![p] = ""Committed""]
+            /\ UNCHANGED <<votes, decision>>
+
+Abort(p) == /\ state[p] = ""Prepared""
+           /\ state' = [state EXCEPT ![p] = ""Aborted""]
+           /\ UNCHANGED <<votes, decision>>
+
+CoordinatorDecision == /\ decision = ""None""
+                      /\ decision' = IF \A p \in participants: votes[p] = ""Yes""
+                                      THEN ""Commit""
+
+                      /\ UNCHANGED <<state, votes>>
+
+Next == \/ \E p \in participants: Prepare(p)
+        \/ \E p \in participants: VoteYes(p)
+        \/ \E p \in participants: VoteNo(p)
+        \/ \E p \in participants: Commit(p)
+        \/ \E p \in participants: Abort(p)
+        \/ CoordinatorDecision
+
+Spec == Init /\ [][Next]_vars
+
+TypeOK == /\ state \in [participants -> {""Init"", ""Prepared"", ""Committed"", ""Aborted""}]
+          /\ votes \in [participants -> {""Yes"", ""No"", ""None""}]
+          /\ decision \in {""Commit"", ""Abort"", ""None""}
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,1,0,1.0,silver,67.94,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+\* State variables
+VARIABLES forks, states
+
+\* Type invariant
+TypeOK == 
+    /\ forks \in [1..N -> 1..N]  \* fork i is owned by philosopher forks[i]
+    /\ states \in [1..N -> {""thinking"", ""hungry"", ""eating""}]
+
+\* Initial state: all philosophers are thinking, forks are free
+Init == 
+    /\ forks = [i \in 1..N |-> i]  \* fork i is free (owned by philosopher i)
+    /\ states = [i \in 1..N |-> ""thinking""]
+
+\* Helper predicates
+Left(i) == IF i = 1 THEN N ELSE i - 1
+Right(i) == IF i = N THEN 1 ELSE i + 1
+
+\* Action: philosopher i picks up left fork
+PickLeft(i) == 
+    /\ states[i] = ""hungry""
+    /\ forks[i] = i  \* left fork is free
+    /\ forks' = [forks EXCEPT ![i] = i]  \* philosopher i owns left fork
+    /\ UNCHANGED states
+
+\* Action: philosopher i picks up right fork
+PickRight(i) == 
+    /\ states[i] = ""hungry""
+    /\ forks[Right(i)] = Right(i)  \* right fork is free
+    /\ forks' = [forks EXCEPT ![Right(i)] = i]  \* philosopher i owns right fork
+    /\ UNCHANGED states
+
+\* Action: philosopher i starts eating
+StartEating(i) == 
+    /\ states[i] = ""hungry""
+    /\ forks[i] = i  \* left fork is owned by philosopher i
+    /\ forks[Right(i)] = i  \* right fork is owned by philosopher i
+    /\ states' = [states EXCEPT ![i] = ""eating""]
+    /\ UNCHANGED forks
+
+\* Action: philosopher i puts down left fork
+PutLeft(i) == 
+    /\ states[i] = ""eating""
+    /\ forks[i] = i  \* left fork is owned by philosopher i
+    /\ forks' = [forks EXCEPT ![i] = i]  \* left fork is free
+    /\ UNCHANGED states
+
+\* Action: philosopher i puts down right fork
+PutRight(i) == 
+    /\ states[i] = ""eating""
+    /\ forks[Right(i)] = i  \* right fork is owned by philosopher i
+    /\ forks' = [forks EXCEPT ![Right(i)] = Right(i)]  \* right fork is free
+    /\ UNCHANGED states
+
+\* Action: philosopher i stops eating
+StopEating(i) == 
+    /\ states[i] = ""eating""
+    /\ forks[i] = i  \* left fork is owned by philosopher i
+    /\ forks[Right(i)] = i  \* right fork is owned by philosopher i
+    /\ states' = [states EXCEPT ![i] = ""thinking""]
+    /\ UNCHANGED forks
+
+\* Next-state relation
+Next == 
+    \/ \E i \in 1..N: PickLeft(i)
+    \/ \E i \in 1..N: PickRight(i)
+    \/ \E i \in 1..N: StartEating(i)
+    \/ \E i \in 1..N: PutLeft(i)
+    \/ \E i \in 1..N: PutRight(i)
+    \/ \E i \in 1..N: StopEating(i)
+
+\* Specification
+Spec == Init /\ [][Next]_<<forks, states>>
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,0,0,1.0,bronze,179.99,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+ASSUME N \in Nat, N > 0
+
+VARIABLES num, flag
+
+vars == <<num, flag>>
+
+Init == /\ num = [i \in 1..N |-> 0]
+        /\ flag = [i \in 1..N |-> FALSE]
+
+Next == \E i \in 1..N :
+          /\ flag[i] = FALSE
+          /\ LET maxNum == MAX(num)
+             IN flag[i] = TRUE
+                /\ num[i] = maxNum + 1
+                /\ flag[i] = FALSE
+
+Spec == Init /\ [][Next]_vars
+
+TypeOK == /\ num \in [1..N -> Nat]
+          /\ flag \in [1..N -> BOOLEAN]
+
+THEOREM MutualExclusion == Spec => []~(num[1] > 0 /\ num[2] > 0)   -- medium
+---- MODULE End ----
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,0,1.0,silver,9.03,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail, size
+
+vars == <<q, head, tail, size>>
+
+Init == /\ q = [i \in 1..K |-> 0]
+        /\ head = 1
+        /\ tail = 1
+        /\ size = 0
+
+ProducerAction == /\ size < K
+                 /\ q[tail] = 0
+                 /\ q' = [q EXCEPT ![tail] = 1]
+                 /\ tail' = IF tail = K THEN 1 ELSE tail + 1
+                 /\ size' = size + 1
+                 /\ head' = head
+
+ConsumerAction == /\ size > 0
+                 /\ q[head] = 1
+                 /\ q' = [q EXCEPT ![head] = 0]
+                 /\ head' = IF head = K THEN 1 ELSE head + 1
+                 /\ size' = size - 1
+                 /\ tail' = tail
+
+Next == ProducerAction \/ ConsumerAction
+
+Spec == Init /\ [][Next]_vars
+
+TypeOK == /\ head \in 1..K
+          /\ tail \in 1..K
+          /\ size \in 0..K
+          /\ \A i \in 1..K: q[i] \in {0,1}
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,1,0,0.778,silver,59.21,"---- MODULE RaftElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, majority, NULL
+
+VARIABLES currentTerm, votedFor, state
+
+Init ==
+    /\ currentTerm = [i \in 1..N |-> 0]
+    /\ votedFor = [i \in 1..N |-> NULL]
+    /\ state = [i \in 1..N |-> ""Follower""]
+
+ElectionTimeout ==
+    \* Placeholder: In a real system, this would be a random timeout
+    TRUE
+
+StartElection ==
+    \* Transition to Candidate
+    /\ \E i \in 1..N : state[i] = ""Follower""
+    /\ \E i \in 1..N : state[i] = ""Candidate""
+    /\ \E i \in 1..N : state[i] = ""Leader""
+
+RequestVote ==
+    \* Placeholder: In a real system, this would involve network communication
+    TRUE
+
+VoteGranted ==
+    \* Placeholder: In a real system, this would involve network communication
+    TRUE
+
+Next ==
+    \* Transition to Candidate
+    \/ /\ \E i \in 1..N : state[i] = ""Follower""
+       /\ \E i \in 1..N : state[i] = ""Candidate""
+       /\ \E i \in 1..N : state[i] = ""Leader""
+
+Spec == Init /\ [][Next]_<<currentTerm, votedFor, state>>
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,1,0,1.0,silver,16.66,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES readers, writer_active
+
+Init == 
+  /\ readers = {}
+  /\ writer_active = FALSE
+
+Next == 
+  \/ /\ writer_active = FALSE
+     /\ \E r \in readers : /\ r \in readers
+                            /\ readers' = readers \ {r}
+                            /\ writer_active' = FALSE
+  \/ /\ writer_active = FALSE
+     /\ \E r \in readers : /\ ~(r \in readers)
+                            /\ readers' = readers \cup {r}
+                            /\ writer_active' = FALSE
+  \/ /\ writer_active = FALSE
+     /\ \E r \in readers : /\ ~(r \in readers)
+                            /\ readers' = readers
+                            /\ writer_active' = TRUE
+  \/ /\ writer_active = TRUE
+     /\ \E r \in readers : /\ r \in readers
+                            /\ readers' = readers
+                            /\ writer_active' = FALSE
+
+Spec == Init /\ [][Next]_<<readers, writer_active>>
+
+TypeOK == 
+  /\ readers \subseteq 1..100
+  /\ writer_active \in BOOLEAN
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,0,0,0.556,bronze,143.45,"---- MODULE DistributedSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, Channels, InitState, InitChannelState, Messages
+VARIABLES channelState, localState, markerReceived, markerSent, recorded
+
+    /\ localState = InitState
+    /\ channelState = InitChannelState
+    /\ \A p \in 1..N: recorded[p] = FALSE
+    /\ \A p \in 1..N: \A q \in 1..N: markerSent[p][q] = FALSE
+    /\ \A p \in 1..N: \A q \in 1..N: markerReceived[p][q] = FALSE
+
+SendMessage(p, q, msg) ==
+    /\ channelStatep..q = [state |-> Append(channelStatep..q.state, msg)]
+    /\ channelStatep..q = [state |-> Append(channelStatep..q.state, msg)]
+
+ReceiveMessage(p, q) ==
+    /\ channelStatep..q.state /= <<>>
+    /\ channelStatep..q = [state |-> Tail(channelStatep..q.state)]
+
+RecordState(p) ==
+    /\ recorded[p] = FALSE
+    /\ localState' = [localState EXCEPT ![p] = RecordLocalState(localState[p])]
+    /\ recorded' = [recorded EXCEPT ![p] = TRUE]
+    /\ markerSent' = [markerSent EXCEPT ![p] = [q \in 1..N |-> FALSE]]
+    /\ markerReceived' = [markerReceived EXCEPT ![p] = [q \in 1..N |-> FALSE]]
+    /\ UNCHANGED <<channelState, localState, recorded, markerSent, markerReceived>>
+
+SendMarker(p, q) ==
+    /\ markerSent[p][q] = FALSE
+    /\ markerSent' = [markerSent EXCEPT ![p][q] = TRUE]
+    /\ channelState' = [channelState EXCEPT ![p][q] = Append(channelState[p][q], Marker)]
+    /\ UNCHANGED <<localState, recorded, markerReceived>>
+
+ReceiveMarker(p, q) ==
+    /\ markerReceived[p][q] = FALSE
+    /\ markerReceived' = [markerReceived EXCEPT ![p][q] = TRUE]
+    /\ UNCHANGED <<localState, recorded, markerSent, channelState>>
+
+Next ==
+    \E p, q \in 1..N:
+        /\ p \in 1..N
+        /\ q \in 1..N
+        /\ p \in 1..N
+           /\ q \in 1..N
+           /\ channelStatep..q.state /= <<>>
+              /\ channelStatep..q.state[1] \in Messages
+              /\ localState[p] = [state |-> state + 1]
+                 /\ channelStatep..q = [state |-> Tail(channelStatep..q.state)]
+              /\ localState[p] = [state |-> state + 1]
+                 /\ channelStatep..q = [state |-> Tail(channelStatep..q.state)]
+           \/ /\ channelStatep..q.state /= <<>>
+              /\ channelStatep..q.state[1] = Marker
+              /\ localState[p] = [state |-> state + 1]
+                 /\ channelStatep..q = [state |-> Tail(channelStatep..q.state)]
+              /\ localState[p] = [state |-> state + 1]
+                 /\ channelStatep..q = [state |-> Tail(channelStatep..q.state)]
+        \/ /\ localState[p] = [state |-> state + 1]
+           /\ channelStatep..q = [state |-> Tail(channelStatep..q.state)]
+        \/ /\ localState[p] = [state |-> state + 1]
+           /\ channelStatep..q = [state |-> Tail(channelStatep..q.state)]
+        \/ /\ localState[p] = [state |-> state + 1]
+           /\ channelStatep..q = [state |-> Tail(channelStatep..q.state)]
+        \/ /\ localState[p] = [state |-> state + 1]
+           /\ channelStatep..q = [state |-> Tail(channelStatep..q.state)]
+        \/ /\ localState[p] = [state |-> state + 1]
+           /\ channelStatep..q = [state |-> Tail(channelStatep..q.state)]
+        \/ /\ localState[p] = [state |-> state + 1]
+           /\ channelStatep..q = [state |-> Tail(channelStatep..q.state)]
+        \/ /\ localState[p] = [state |-> state + 1]
+           /\ channelStatep..q = [state |-> Tail(channelStatep..q.state)]
+        \/ /\ localState[p] = [state |-> state + 1]
+           /\ channelStatep..q = [state |-> Tail(channelStatep..q.state)]
+        \/ /\ localState[p] = [state |-> state + 1]
+           /\ channelStatep..q = [state |-> Tail(channelStatep..q.state)]
+        \/ /\ localState[p] = [state |-> state + 1]
+           /\ channelStatep..q = [state |-> Tail(channelStatep..q.state)]
+        \/ /\ localState[p] = [state |-> state + 1]
+           /\ channelStatep..q = [state |-> Tail(channelStatep..q.state)]
+        \/ /\ localState[p] = [state |-> state + 1]
+           /\ channelStatep..q = [state |-> Tail(channelStatep..q.state)]
+        \/ /\ localState[p] = [state |-> state + 1]
+           /\ channelStatep..q = [state |-> Tail(channelStatep..q.state)]
+        \/ /\ localState[p] = [state |-> state + 1]
+           /\ channelStatep..q = [state |-> Tail(channelStatep..q.state)]
+        \/ /\ localState[p] = [state |-> state + 1]
+           /\ channelStatep..q = [state |-> Tail(channelStatep..q.state)]
+        \/ /\ localState[p] = [state |-> state + 1]
+           /\ channelStatep..q = [state |-> Tail(channelStatep..q.state)]
+        \/ /\ localState[p] = [state |-> state + 1]
+           /\ channelStatep..q = [state |-> Tail(channelStatep..q.state)]
+        \/ /\ localState[p] = [state |-> state + 1]
+           /\ channelStatep..q = [state |-> Tail(channelStatep..q.state)]
+        \/ /\ localState[p] = [state |-> state + 1]
+           /\ channelStatep..q = [state |-> Tail(channelStatep..q.state)]
+        \/ /\ localState[p] = [state |-> state + 1]
+           /\ channelStatep..q = [state |-> Tail(channelStatep..q.state)]
+        \/ /\ localState[p] = [state |-> state + 1]
+           /\ channelStatep..q = [state |-> Tail(channelStatep..q.state)]
+        \/ /\ localState[p] = [state |-> state + 1]
+           /\ channelStatep..q = [state |-> Tail(channelStatep..q.state)]
+        \/ /\ localState[p] = [state |-> state + 1]
+           /\ channelStatep..q = [state |-> Tail(channelStatep..q.state)]
+        \/ /\ localState[p] = [state |-> state + 1]
+           /\ channelStatep..q = [state |-> Tail(channelStatep..q.state)]
+        \/ /\ localState[p] = [state |-> state + 1]
+           /\ channelStatep..q = [state |-> Tail(channelStatep..q.state)]
+        \/ /\ localState[p] = [state |-> state + 1]
+           /\ channelStatep..q = [state |-> Tail(channelStatep..q.state)]
+        \/ /\ localState[p] = [state |-> state + 1]
+           /\ channelStatep..q = [state |-> Tail(channelStatep..q.state)]
+        \/ /\ localState[p] = [state |-> state + 1]
+           /\ channelStatep..q = [state |-> Tail(channelStatep..q.state)]
+        \/ /\ localState[p] = [state |-> state + 1]
+           /\ channelStatep..q = [state |-> Tail(channelStatep..q.state)]
+        \/ /\ localState[p] = [state |-> state + 1]
+           /\ channelStatep..q = [state |-> Tail(channelStatep..q.state)]
+        \/ /\ localState[p] = [state |-> state + 1]
+           /\ channelStatep..q = [state |-> Tail(channelStatep..q.state)]
+        \/ /\ localState[p] = [state |-> state + 1]
+           /\ channelStatep..q = [state |-> Tail(channelStatep..q.state)]
+        \/ /\ localState[p] = [state |-> state + 1]
+           /\ channelStatep..q = [state |-> Tail(channelStatep..q.state)]
+        \/ /\ localState[p] = [state |-> state + 1]
+           /\ channelStatep..q = [state |-> Tail(channelStatep..q.state)]
+        \/ /\ localState[p] = [state |-> state + 1]
+           /\ channelStatep..q = [state |-> Tail(channelStatep..q.state)]
+        \/ /\ localState[p] = [state |-> state + 1]
+           /\ channelStatep..q = [state |-> Tail(channelStatep..q.state)]
+        \/ /\ localState[p] = [state |-> state + 1]
+           /\ channelStatep..q = [state |-> Tail(channelStatep..q.state)]
+        \/ /\ localState[p] = [state |-> state + 1]
+           /\ channelStatep..q = [state |-> Tail(channelStatep..q.state)]
+        \/ /\ localState[p] = [state |-> state + 1]
+           /\ channelStatep..q = [state |-> Tail(channelStatep..q.state)]
+        \/ /\ localState[p] = [state |-> state + 1]
+           /\ channelStatep..q = [state |-> Tail(channelStatep..q.state)]
+        \/ /\ localState[p] = [state |-> state + 1]
+           /\ channelStatep..q = [state |-> Tail(channelStatep..q.state)]
+        \/ /\ localState[p] = [state |-> state + 1]
+           /\ channelStatep..q = [state |-> Tail(channelStatep..q.state)]
+        \/ /\ localState[p] = [state |-> state + 1]
+           /\ channelStatep..q = [state |-> Tail(channelStatep..q.state)]
+        \/ /\ localState[p] = [state |-> state + 1]
+           /\ channelStatep..q = [state |-> Tail(cha"
+chattla:20b,BM009,Token Ring,networking,2,0,0,1.0,bronze,194.82,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, Msg
+VARIABLES messages, token
+
+
+vars == <<token, messages>>
+
+Init == /\ token = 1
+        /\ messages = [i \in 1..N |-> {}]
+
+Next == /\ token' = %(token, N) + 1
+        /\ messages' = [messages EXCEPT ![token] = @ \cup {%(token, N) + 1}]
+
+Spec == Init /\ [][Next]_vars
+
+TypeOK == /\ token \in 1..N
+          /\ messages \in [1..N -> SUBSET 1..N]
+          /\ \A i \in 1..N: token \notin messages[i]
+          /\ \A i \in 1..N: messages[i] \subseteq 1..N
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%(token, N) + 1}
+          /\ \A i \in 1..N: messages[i] \subseteq {%("
+chattla:20b,BM010,Simple Key-Value Store,storage,3,0,0,1.0,bronze,19.59,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets, TLC
+
+CONSTANTS Keys, Values, NULL
+VARIABLES store
+
+
+vars == <<store>>
+
+Init == 
+  /\ store = [k \in Keys |-> NULL]
+
+Next == 
+  \/ /\ op = ""Put""
+     /\ k \in Keys
+     /\ v \in Values
+     /\ store' = [store EXCEPT ![k] = v]
+  \/ /\ op = ""Get""
+     /\ k \in Keys
+     /\ store' = store
+
+Spec == Init /\ [][Next]_vars
+
+TypeOK == 
+  /\ Keys \subseteq [1..MaxKey]
+  /\ Values \subseteq [1..MaxValue]
+  /\ store \in [Keys -> Values \cup {NULL}]
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,0,0,1.0,bronze,220.41,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, M, V, Ballot
+
+VARIABLES acceptors, proposers, chosen
+
+vars == <<acceptors, proposers, chosen>>
+
+Init == 
+  /\ acceptors = [i \in 1..N |-> [maxBallot -> 0, chosen -> FALSE, value -> NULL]]
+  /\ proposers = [i \in 1..M |-> [maxBallot -> 0, chosen -> FALSE, value -> NULL]]
+  /\ chosen = [i \in 1..N |-> [chosen -> FALSE, value -> NULL]]
+
+Prepare(p, b) == 
+  /\ proposers[p].maxBallot = b
+  /\ proposers[p].chosen = FALSE
+  /\ acceptors' = [i \in 1..N |-> acceptors[i] \cup [maxBallot -> b]]
+  /\ proposers' = [proposers EXCEPT ![p] = [proposers[p] EXCEPT !.chosen = FALSE]]
+  /\ chosen' = chosen
+
+Promise(p, b) == 
+  /\ proposers[p].maxBallot = b
+  /\ proposers[p].chosen = FALSE
+  /\ acceptors' = [i \in 1..N |-> acceptors[i] \cup [maxBallot -> b]]
+  /\ proposers' = [proposers EXCEPT ![p] = [proposers[p] EXCEPT !.chosen = FALSE]]
+  /\ chosen' = chosen
+
+Accept(p, b, v) == 
+  /\ proposers[p].maxBallot = b
+  /\ proposers[p].chosen = FALSE
+  /\ proposers[p].value = v
+  /\ acceptors' = [i \in 1..N |-> acceptors[i] \cup [chosen -> TRUE, value -> v]]
+  /\ proposers' = [proposers EXCEPT ![p] = [proposers[p] EXCEPT !.chosen = FALSE]]
+  /\ chosen' = chosen
+
+Chosen(p, b, v) == 
+  /\ proposers[p].maxBallot = b
+  /\ proposers[p].chosen = FALSE
+  /\ proposers[p].value = v
+  /\ acceptors' = acceptors
+  /\ proposers' = [proposers EXCEPT ![p] = [proposers[p] EXCEPT !.chosen = TRUE]]
+  /\ chosen' = [i \in 1..N |-> acceptors[i] \cup [chosen -> TRUE, value -> v]]
+
+Next == 
+  /\ \E p \in 1..M : \E b \in 1..N : Prepare(p, b)
+  \/ \E p \in 1..M : \E b \in 1..N : Promise(p, b)
+  \/ \E p \in 1..M : \E b \in 1..N : \E v \in V : Accept(p, b, v)
+  \/ \E p \in 1..M : \E b \in 1..N : \E v \in V : Chosen(p, b, v)
+
+Spec == Init /\ [][Next]_vars
+
+TypeOK == 
+  /\ acceptors \in [1..N -> [maxBallot : Nat, chosen : BOOLEAN, value : V \cup {NULL}]]
+  /\ proposers \in [1..M -> [maxBallot : Nat, chosen : BOOLEAN, value : V \cup {NULL}]]
+  /\ chosen \in [1..N -> [chosen : BOOLEAN, value : V \cup {NULL}]]
+  /\ acceptors = [i \in 1..N |-> [maxBallot -> acceptors[i].maxBallot, chosen -> acceptors[i].chosen, value -> acceptors[i].value]]
+  /\ proposers = [i \in 1..M |-> [maxBallot -> proposers[i].maxBallot, chosen -> proposers[i].chosen, value -> proposers[i].value]]
+  /\ chosen = [i \in 1..N |-> [chosen -> chosen[i].chosen, value -> chosen[i].value]]
+  /\ acceptors' = [i \in 1..N |-> [maxBallot -> acceptors'[i].maxBallot, chosen -> acceptors'[i].chosen, value -> acceptors'[i].value]]
+  /\ proposers' = [i \in 1..M |-> [maxBallot -> proposers'[i].maxBallot, chosen -> proposers'[i].chosen, value -> proposers'[i].value]]
+  /\ chosen' = [i \in 1..N |-> [chosen -> chosen'[i].chosen, value -> chosen'[i].value]]
+  /\ acceptors' = [i \in 1..N |-> [maxBallot -> acceptors'[i].maxBallot, chosen -> acceptors'[i].chosen, value -> acceptors'[i].value]]
+  /\ proposers' = [i \in 1..M |-> [maxBallot -> proposers'[i].maxBallot, chosen -> proposers'[i].chosen, value -> proposers'[i].value]]
+  /\ chosen' = [i \in 1..N |-> [chosen -> chosen'[i].chosen, value -> chosen'[i].value]]
+  /\ acceptors' = [i \in 1..N |-> [maxBallot -> acceptors'[i].maxBallot, chosen -> acceptors'[i].chosen, value -> acceptors'[i].value]]
+  /\ proposers' = [i \in 1..M |-> [maxBallot -> proposers'[i].maxBallot, chosen -> proposers'[i].chosen, value -> proposers'[i].value]]
+  /\ chosen' = [i \in 1..N |-> [chosen -> chosen'[i].chosen, value -> chosen'[i].value]]
+  /\ acceptors' = [i \in 1..N |-> [maxBallot -> acceptors'[i].maxBallot, chosen -> acceptors'[i].chosen, value -> acceptors'[i].value]]
+  /\ proposers' = [i \in 1..M |-> [maxBallot -> proposers'[i].maxBallot, chosen -> proposers'[i].chosen, value -> proposers'[i].value]]
+  /\ chosen' = [i \in 1..N |-> [chosen -> chosen'[i].chosen, value -> chosen'[i].value]]
+  /\ acceptors' = [i \in 1..N |-> [maxBallot -> acceptors'[i].maxBallot, chosen -> acceptors'[i].chosen, value -> acceptors'[i].value]]
+  /\ proposers' = [i \in 1..M |-> [maxBallot -> proposers'[i].maxBallot, chosen -> proposers'[i].chosen, value -> proposers'[i].value]]
+  /\ chosen' = [i \in 1..N |-> [chosen -> chosen'[i].chosen, value -> chosen'[i].value]]
+  /\ acceptors' = [i \in 1..N |-> [maxBallot -> acceptors'[i].maxBallot, chosen -> acceptors'[i].chosen, value -> acceptors'[i].value]]
+  /\ proposers' = [i \in 1..M |-> [maxBallot -> proposers'[i].maxBallot, chosen -> proposers'[i].chosen, value -> proposers'[i].value]]
+  /\ chosen' = [i \in 1..N |-> [chosen -> chosen'[i].chosen, value -> chosen'[i].value]]
+  /\ acceptors' = [i \in 1..N |-> [maxBallot -> acceptors'[i].maxBallot, chosen -> acceptors'[i].chosen, value -> acceptors'[i].value]]
+  /\ proposers' = [i \in 1..M |-> [maxBallot -> proposers'[i].maxBallot, chosen -> proposers'[i].chosen, value -> proposers'[i].value]]
+  /\ chosen' = [i \in 1..N |-> [chosen -> chosen'[i].chosen, value -> chosen'[i].value]]
+  /\ acceptors' = [i \in 1..N |-> [maxBallot -> acceptors'[i].maxBallot, chosen -> acceptors'[i].chosen, value -> acceptors'[i].value]]
+  /\ proposers' = [i \in 1..M |-> [maxBallot -> proposers'[i].maxBallot, chosen -> proposers'[i].chosen, value -> proposers'[i].value]]
+  /\ chosen' = [i \in 1..N |-> [chosen -> chosen'[i].chosen, value -> chosen'[i].value]]
+  /\ acceptors' = [i \in 1..N |-> [maxBallot -> acceptors'[i].maxBallot, chosen -> acceptors'[i].chosen, value -> acceptors'[i].value]]
+  /\ proposers' = [i \in 1..M |-> [maxBallot -> proposers'[i].maxBallot, chosen -> proposers'[i].chosen, value -> proposers'[i].value]]
+  /\ chosen' = [i \in 1..N |-> [chosen -> chosen'[i].chosen, value -> chosen'[i].value]]
+  /\ acceptors' = [i \in 1..N |-> [maxBallot -> acceptors'[i].maxBallot, chosen -> acceptors'[i].chosen, value -> acceptors'[i].value]]
+  /\ proposers' = [i \in 1..M |-> [maxBallot -> proposers'[i].maxBallot, chosen -> proposers'[i].chosen, value -> proposers'[i].value]]
+  /\ chosen' = [i \in 1..N |-> [chosen -> chosen'[i].chosen, value -> chosen'[i].value]]
+  /\ acceptors' = [i \in 1..N |-> [maxBallot -> acceptors'[i].maxBallot, chosen -> acceptors'[i].chosen, value -> acceptors'[i].value]]
+  /\ proposers' = [i \in 1..M |-> [maxBallot -> proposers'[i].maxBallot, chosen -> proposers'[i].chosen, value -> proposers'[i].value]]
+  /\ chosen' = [i \in 1..N |-> [chosen -> chosen'[i].chosen, value -> chosen'[i].value]]
+  /\ acceptors' = [i \in 1..N |-> [maxBallot -> acceptors'[i].maxBallot, chosen -> acceptors'[i].chosen, value -> acceptors'[i].value]]
+  /\ proposers' = [i \in 1..M |-> [maxBallot -> proposers'[i].maxBallot, chosen -> proposers'[i].chosen, value -> proposers'[i].value]]
+  /\ chosen' = [i \in 1..N |-> [chosen -> chosen'[i].chosen, value -> chosen'[i].value]]
+  /\ acceptors' = [i \in 1..N |-> [maxBallot -> acceptors'[i].maxBallot, chosen -> acceptors'[i].chosen, value -> acceptors'[i].value]]
+  /\ proposers' = [i \in 1..M |-> [maxBallot -> proposers'[i].maxBallot, chosen -> proposers'[i].chosen, value -> proposers'[i].value]]
+  /\ chosen' = [i \in 1..N |-> [chosen -> chosen'[i].chosen, value -> chosen'[i].value]]
+  /\ acceptors' = [i \in 1..N |-> [maxBallot -> acceptors'[i].maxBallot, chosen -> acceptors'[i].chosen, value -> acceptors'[i].value]]
+  /\ proposers' = [i \in 1..M |-> [maxBallot -> proposers'[i].maxBallot, chosen -> proposers'[i].chosen, value -> proposers'[i].value]]
+  /\ chosen' = [i \in 1..N |-> [chosen -> chosen'[i].chosen, value -> chosen'[i].value]]
+  /\ acceptors' = [i \in 1..N |-> [maxBallot -> acceptors'[i].maxBallot, chosen -> acceptors'[i].chosen, value -> acceptors'[i].value]]
+  /\ proposers' = [i \in 1..M |-> [maxBallot -> proposers'[i].maxBallot, chosen -> proposers'[i].chosen, value -> proposers'[i].value]]
+  /\ chosen' = [i \in 1..N |-> [chosen -> chosen'[i].chosen, value -> chosen'[i].value]]
+  /\ acceptors' = [i \in 1..N |-> [maxBallot -> acceptors'[i].maxBallot, chosen -> acceptors'[i].chosen, value -> acceptors'[i].value]]
+  /\ proposers' = [i \in 1..M |-> "
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,0,0,0.889,bronze,97.11,"---- MODULE FileSender ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS MAX_RETRIES, CHUNK_SIZE, FILE_SIZE
+VARIABLES ackedChunks, retransmitCount, sentChunks
+
+    /\ file = Seq(1..FILE_SIZE) \* File represented as a sequence of bytes
+    /\ chunks = [i \in 1..Ceiling(FILE_SIZE \div CHUNK_SIZE) |-> 
+
+                      SubSeq(file, (i-1)*CHUNK_SIZE + 1, i*CHUNK_SIZE)
+
+                      SubSeq(file, (i-1)*CHUNK_SIZE + 1, FILE_SIZE)]
+    /\ sentChunks = {}
+    /\ ackedChunks = {}
+    /\ retransmitCount = [i \in 1..Ceiling(FILE_SIZE \div CHUNK_SIZE) |-> 0]
+
+SendChunk(i) ==
+    /\ i \in 1..Ceiling(FILE_SIZE \div CHUNK_SIZE)
+    /\ i \notin sentChunks
+    /\ sentChunks' = sentChunks \cup {i}
+    /\ retransmitCount' = [retransmitCount EXCEPT ![i] = 0]
+    /\ UNCHANGED <<file, chunks, ackedChunks>>
+
+AckChunk(i) ==
+    /\ i \in sentChunks
+    /\ i \notin ackedChunks
+    /\ ackedChunks' = ackedChunks \cup {i}
+    /\ UNCHANGED <<file, chunks, sentChunks, retransmitCount>>
+
+RetransmitChunk(i) ==
+    /\ i \in sentChunks
+    /\ i \notin ackedChunks
+    /\ retransmitCount[i] < MAX_RETRIES
+    /\ retransmitCount' = [retransmitCount EXCEPT ![i] = retransmitCount[i] + 1]
+    /\ UNCHANGED <<file, chunks, sentChunks, ackedChunks>>
+
+Next ==
+    \/ \E i \in 1..Ceiling(FILE_SIZE \div CHUNK_SIZE) : SendChunk(i)
+    \/ \E i \in sentChunks \setminus ackedChunks : AckChunk(i)
+    \/ \E i \in sentChunks \setminus ackedChunks : RetransmitChunk(i)
+    \/ UNCHANGED <<file, chunks, sentChunks, ackedChunks, retransmitCount>>
+
+Spec ==
+    Init /\ [][Next]_<<file, chunks, sentChunks, ackedChunks, retransmitCount>>
+
+TypeOK ==
+    /\ file \in Seq(1..FILE_SIZE)
+    /\ chunks \in [1..Ceiling(FILE_SIZE \div CHUNK_SIZE) -> Seq(1..CHUNK_SIZE)]
+    /\ sentChunks \in SUBSET 1..Ceiling(FILE_SIZE \div CHUNK_SIZE)
+    /\ ackedChunks \in SUBSET 1..Ceiling(FILE_SIZE \div CHUNK_SIZE)
+    /\ retransmitCount \in [1..Ceiling(FILE_SIZE \div CHUNK_SIZE) -> Nat]
+===="

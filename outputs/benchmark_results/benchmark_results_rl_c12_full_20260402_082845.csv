@@ -1,0 +1,780 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,1,1.0,gold,259.09,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N
+
+VARIABLES state, turn
+
+Init == /\ state = [p \in 1..N |-> ""idle""]
+        /\ turn = 1
+
+Next == \E p \in 1..N :
+          \/ /\ state[p] = ""idle""
+             /\ state' = [state EXCEPT ![p] = ""trying""]
+          \/ /\ state[p] = ""trying""
+             /\ turn = p
+             /\ state' = [state EXCEPT ![p] = ""critical""]
+          \/ /\ state[p] = ""critical""
+             /\ state' = [state EXCEPT ![p] = ""idle""]
+          /\ UNCHANGED turn
+
+Spec == Init /\ [][Next]_<<state, turn>>
+
+TypeOK == /\ state \in [1..N -> {""idle"", ""trying"", ""critical""}]
+          /\ turn \in 1..N
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,1,0,0.778,silver,54.65,"---- MODULE TwoPhaseCommitProtocol ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N, Participants, Coordinator
+VARIABLES coordinator, participants, state, votes
+
+
+vars == << participants, coordinator >>
+
+Init == 
+  /\ participants = [p \in Participants |-> [state |-> ""Init"", vote |-> ""None""]]
+  /\ coordinator = [state |-> ""Init"", votes |-> <<>>]
+
+Prepare == 
+  /\ coordinator.state = ""Init""
+  /\ coordinator.state' = ""Prepare""
+  /\ UNCHANGED participants
+
+VoteYes == 
+  /\ \A p \in Participants: participants[p].state = ""Init""
+  /\ \A p \in Participants: participants[p].state' = ""VoteYes""
+  /\ coordinator.state' = ""VoteYes""
+  /\ coordinator.votes' = Append(coordinator.votes, ""Yes"")
+  /\ UNCHANGED coordinator
+
+VoteNo == 
+  /\ \A p \in Participants: participants[p].state = ""Init""
+  /\ \A p \in Participants: participants[p].state' = ""VoteNo""
+  /\ coordinator.state' = ""VoteNo""
+  /\ coordinator.votes' = Append(coordinator.votes, ""No"")
+  /\ UNCHANGED coordinator
+
+Commit == 
+  /\ coordinator.state = ""VoteYes""
+  /\ \A p \in Participants: participants[p].state = ""VoteYes""
+  /\ \A p \in Participants: participants[p].state' = ""Commit""
+  /\ coordinator.state' = ""Commit""
+  /\ UNCHANGED coordinator
+
+Abort == 
+  /\ coordinator.state = ""VoteNo""
+  /\ \A p \in Participants: participants[p].state = ""VoteNo""
+  /\ \A p \in Participants: participants[p].state' = ""Abort""
+  /\ coordinator.state' = ""Abort""
+  /\ UNCHANGED coordinator
+
+Next == 
+  \/ Prepare
+  \/ VoteYes
+  \/ VoteNo
+  \/ Commit
+  \/ Abort
+
+Spec == Init /\ [][Next]_vars
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,1,0,0.778,silver,202.37,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+VARIABLES forks, philosophers
+
+
+vars == <<philosophers, forks>>
+
+Init == 
+  /\ philosophers = [i \in 1..N |-> ""thinking""]
+  /\ forks = [i \in 1..N |-> ""free""]
+
+Next == 
+  \E i \in 1..N :
+    \/ /\ philosophers[i] = ""thinking""
+       /\ philosophers' = [philosophers EXCEPT ![i] = ""hungry""]
+    \/ /\ philosophers[i] = ""hungry""
+       /\ forks[i] = ""free""
+       /\ forks[(i % N) + 1] = ""free""
+       /\ philosophers' = [philosophers EXCEPT ![i] = ""eating""]
+       /\ forks' = [forks EXCEPT ![i] = ""occupied"", ![(i % N) + 1] = ""occupied""]
+    \/ /\ philosophers[i] = ""eating""
+       /\ philosophers' = [philosophers EXCEPT ![i] = ""thinking""]
+       /\ forks' = [forks EXCEPT ![i] = ""free"", ![(i % N) + 1] = ""free""]
+    \/ /\ philosophers' = philosophers
+       /\ forks' = forks
+
+Spec == Init /\ [][Next]_vars
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,1,0,1.0,silver,8.98,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+
+CONSTANT N
+VARIABLES flag, num
+
+
+vars == <<num, flag>>
+
+Init == /\ num = [i \in 1..N |-> 0]
+        /\ flag = [i \in 1..N |-> FALSE]
+
+Next == \E i \in 1..N :
+          /\ flag[i] = FALSE
+          /\ flag' = [flag EXCEPT ![i] = TRUE]
+          /\ num' = [num EXCEPT ![i] = 1 + Max(num)]
+          /\ flag' = [flag EXCEPT ![i] = FALSE]
+          /\ num' = [num EXCEPT ![i] = 0]
+          /\ UNCHANGED <<num, flag>>
+
+Spec == Init /\ [][Next]_vars
+
+TypeOK == /\ num \in [1..N -> Nat]
+          /\ flag \in [1..N -> BOOLEAN]
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,0,1.0,silver,73.12,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail
+
+vars == <<q, head, tail>>
+
+Init == /\ q = [i \in 1..K |-> 0]
+        /\ head = 1
+        /\ tail = 1
+
+TypeOK == /\ q \in [1..K -> Nat]
+          /\ head \in 1..K
+          /\ tail \in 1..K
+
+Next == 
+  \* Producer action: enqueue
+  \/ /\ head = tail
+     /\ head' = head + 1
+     /\ tail' = tail
+     /\ q' = [q EXCEPT ![head] = 1]
+  \* Consumer action: dequeue
+  \/ /\ head # tail
+     /\ head' = head + 1
+     /\ tail' = tail
+     /\ q' = [q EXCEPT ![head] = 0]
+  \* No-op
+  \/ /\ head' = head
+     /\ tail' = tail
+     /\ q' = q
+
+Spec == Init /\ [][Next]_vars
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,0,0,1.0,bronze,45.64,"---- MODULE RaftElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, majority
+
+VARIABLES currentTerm, votedFor, state
+
+TypeOK == /\ currentTerm \in Nat
+          /\ votedFor \in 1..N \cup {None}
+          /\ state \in {""Follower"", ""Candidate"", ""Leader""}
+
+Init == /\ currentTerm = 0
+        /\ votedFor = None
+        /\ state = ""Follower""
+
+RequestVote(term, candidateId) == 
+  /\ state = ""Follower""
+  /\ term >= currentTerm
+  /\ (votedFor = None \/ votedFor = candidateId)
+  /\ currentTerm' = term
+     /\ votedFor' = candidateId
+     /\ state' = ""Follower""
+  \/ /\ currentTerm' = currentTerm
+     /\ votedFor' = votedFor
+     /\ state' = ""Follower""
+
+StartElection == 
+  /\ state = ""Follower""
+  /\ currentTerm' = currentTerm + 1
+  /\ votedFor' = id
+  /\ state' = ""Candidate""
+
+VoteGranted == 
+  /\ state = ""Candidate""
+  /\ currentTerm' = currentTerm
+  /\ votedFor' = votedFor
+  /\ state' = ""Leader""
+
+Next == \/ /\ state = ""Follower""
+          /\ \E term, candidateId \in 1..N : RequestVote(term, candidateId)
+        \/ /\ state = ""Follower""
+            /\ StartElection
+        \/ /\ state = ""Candidate""
+            /\ VoteGranted
+
+Spec == Init /\ [][Next]_vars
+where vars == <<currentTerm, votedFor, state>>
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,1,0,1.0,silver,187.81,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES readers, writer_active
+
+Init == /\ readers = {} /\ writer_active = FALSE
+
+Next == \/ /\ writer_active = FALSE
+          /\ \A r \in readers : ~(r \in readers')
+          /\ readers' = readers
+          /\ writer_active' = FALSE
+       \/ /\ writer_active = FALSE
+          /\ \A r \in readers : ~(r \in readers')
+          /\ writer_active' = TRUE
+       \/ /\ writer_active = TRUE
+          /\ \A r \in readers : ~(r \in readers')
+          /\ writer_active' = FALSE
+
+Spec == Init /\ [][Next]_<<readers, writer_active>>
+
+TypeOK == /\ readers \subseteq Nat
+          /\ writer_active \in BOOLEAN
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,0,0,0.778,bronze,196.09,"---- MODULE DistributedSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets, TLC
+
+CONSTANT N, Channels, InitState, InitChannelState
+VARIABLES channelState, state
+
+
+vars == <<state, channelState>>
+
+Init == /\ state = [p \in 1..N |-> InitState[p]]
+        /\ channelState = [c \in Channels |-> InitChannelState[c]]
+
+Next == /\ \E p \in 1..N :
+          /\ state' = [state EXCEPT ![p] = NextState[p, state[p], channelState]]
+          /\ channelState' = [c \in Channels |-> NextChannelState[c, state, channelState]]
+        \/ \E c \in Channels :
+          /\ channelState' = [channelState EXCEPT ![c] = NextChannelState[c, state, channelState]]
+          /\ state' = state
+
+Spec == Init /\ [][Next]_vars
+
+===="
+chattla:20b,BM009,Token Ring,networking,2,1,1,0.778,gold,7.62,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+VARIABLES token
+
+
+vars == <<token>>
+
+Init == token = 1
+
+Next == /\ token' = %(token, N) + 1
+
+Spec == Init /\ [][Next]_vars
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,0,0,1.0,bronze,16.52,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets, TLC
+
+CONSTANTS Keys, Values, NULL
+VARIABLES store
+
+
+vars == <<store>>
+
+Init == 
+  /\ store = [k \in Keys |-> NULL]
+
+Next == 
+  \/ /\ action = ""Put""
+     /\ key \in Keys
+     /\ value \in Values
+     /\ store' = [store EXCEPT ![key] = value]
+  \/ /\ action = ""Get""
+     /\ key \in Keys
+     /\ store' = store
+
+Spec == Init /\ [][Next]_vars
+
+TypeOK == 
+  /\ store \in [Keys -> Values \cup {NULL}]
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,0,0,1.0,bronze,79.59,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+
+CONSTANTS N, M, V, Ballot, Value
+
+VARIABLES acceptors, proposers, chosen
+
+vars == <<acceptors, proposers, chosen>>
+
+Init == 
+  /\ acceptors = [i \in 1..N |-> [maxBallot -> 0, promisedBallot -> 0, chosenBallot -> 0, chosenValue -> NULL]]
+  /\ proposers = [i \in 1..M |-> [maxBallot -> 0, chosenBallot -> 0, chosenValue -> NULL]]
+  /\ chosen = <<>> 
+
+Prepare(p, b) == 
+  /\ proposers[p].maxBallot = b
+  /\ acceptors' = [i \in 1..N |-> acceptors[i] \cup [promisedBallot -> b]]
+  /\ proposers' = [i \in 1..M |-> IF i = p THEN proposers[i] ELSE proposers[i]]
+  /\ chosen' = chosen
+
+Promise(p, b) == 
+  /\ proposers[p].maxBallot = b
+  /\ acceptors' = acceptors
+  /\ proposers' = [i \in 1..M |-> IF i = p THEN 
+        LET maxBallotVal == Max({acceptors[j].chosenBallot : j \in 1..N}) 
+            maxBallotValVal == IF maxBallotVal = 0 THEN NULL ELSE acceptors[CHOOSE j \in 1..N : acceptors[j].chosenBallot = maxBallotVal].chosenValue
+        IN proposers[i] \cup [chosenBallot -> maxBallotVal, chosenValue -> maxBallotValVal]
+
+  /\ chosen' = chosen
+
+Accept(p, b, v) == 
+  /\ proposers[p].maxBallot = b
+  /\ proposers[p].chosenBallot = b
+  /\ proposers[p].chosenValue = v
+  /\ acceptors' = [i \in 1..N |-> acceptors[i] \cup [chosenBallot -> b, chosenValue -> v]]
+  /\ proposers' = proposers
+  /\ chosen' = chosen
+
+Accepted(p, b, v) == 
+  /\ proposers[p].maxBallot = b
+  /\ proposers[p].chosenBallot = b
+  /\ proposers[p].chosenValue = v
+  /\ acceptors' = acceptors
+  /\ proposers' = proposers
+  /\ chosen' = Append(chosen, <<b, v>>)
+
+Next == 
+  /\ \E p \in 1..M : \E b \in 1..N : 
+        /\ proposers[p].maxBallot = 0
+        /\ proposers[p].chosenBallot = 0
+        /\ proposers[p].chosenValue = NULL
+        /\ Prepare(p, b)
+  \/ \E p \in 1..M : \E b \in 1..N : 
+        /\ proposers[p].maxBallot = b
+        /\ proposers[p].chosenBallot = 0
+        /\ proposers[p].chosenValue = NULL
+        /\ Promise(p, b)
+  \/ \E p \in 1..M : \E b \in 1..N : \E v \in V : 
+        /\ proposers[p].maxBallot = b
+        /\ proposers[p].chosenBallot = b
+        /\ proposers[p].chosenValue = v
+        /\ Accept(p, b, v)
+  \/ \E p \in 1..M : \E b \in 1..N : \E v \in V : 
+        /\ proposers[p].maxBallot = b
+        /\ proposers[p].chosenBallot = b
+        /\ proposers[p].chosenValue = v
+        /\ Accepted(p, b, v)
+
+Spec == Init /\ [][Next]_vars
+
+TypeOK == 
+  /\ acceptors \in [1..N -> [maxBallot: Nat, promisedBallot: Nat, chosenBallot: Nat, chosenValue: V \cup {NULL}]]
+  /\ proposers \in [1..M -> [maxBallot: Nat, chosenBallot: Nat, chosenValue: V \cup {NULL}]]
+  /\ chosen \in Seq(Nat \cup V)
+
+===="
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,0,0,0.889,bronze,49.7,"---- MODULE Sender ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS MAX_RETRIES, CHUNK_SIZE, FILE_SIZE, CHUNK_COUNT
+VARIABLES ackedChunks, retransmitCount, sentChunks
+
+    /\ sentChunks = {}
+    /\ ackedChunks = {}
+    /\ retransmitCount = [i \in 1..CHUNK_COUNT |-> 0]
+
+SendChunk(i) == 
+    /\ i \in 1..CHUNK_COUNT
+    /\ i \notin sentChunks
+    /\ sentChunks' = sentChunks \cup {i}
+    /\ retransmitCount' = [retransmitCount EXCEPT ![i] = 0]
+    /\ UNCHANGED <<ackedChunks>>
+
+AckChunk(i) == 
+    /\ i \in sentChunks
+    /\ i \notin ackedChunks
+    /\ ackedChunks' = ackedChunks \cup {i}
+    /\ UNCHANGED <<sentChunks, retransmitCount>>
+
+RetransmitChunk(i) == 
+    /\ i \in sentChunks
+    /\ i \notin ackedChunks
+    /\ retransmitCount[i] < MAX_RETRIES
+    /\ retransmitCount' = [retransmitCount EXCEPT ![i] = retransmitCount[i] + 1]
+    /\ UNCHANGED <<sentChunks, ackedChunks>>
+
+Next == 
+    \E i \in 1..CHUNK_COUNT :
+        \/ SendChunk(i)
+        \/ AckChunk(i)
+        \/ RetransmitChunk(i)
+
+Spec == Init /\ [][Next]_vars
+
+TypeOK == 
+    /\ sentChunks \subseteq 1..CHUNK_COUNT
+    /\ ackedChunks \subseteq 1..CHUNK_COUNT
+    /\ retransmitCount \in [1..CHUNK_COUNT -> Nat]
+    /\ retransmitCount[i] <= MAX_RETRIES \forall i \in 1..CHUNK_COUNT
+
+===="
+chattla:20b,BM013,Transaction Isolation (Snapshot Isolation),transaction,4,0,0,0.444,bronze,344.3,"---- MODULE SnapshotIsolationDB ----
+EXTENDS Integers, Sequences, FiniteSets, TLC
+
+CONSTANTS Txns, Keys, Values, MaxSteps
+VARIABLES t, txnStart, txnState, txnSteps, txnWrites
+
+        /\ txnState = [t \in Txns |-> ""idle""]
+        /\ txnStart = [t \in Txns |-> 0]
+        /\ txnWrites = [t \in Txns |-> [k \in Keys |-> 0]]
+        /\ txnSteps = [t \in Txns |-> 0]
+
+ReadTxn(t, k) == db[k] = txnWrites[t][k]
+
+WriteTxn(t, k, v) == txnWrites[t][k] = v
+
+BeginTxn(t) == /\ txnState[t] = ""idle""
+              /\ txnState' = [txnState EXCEPT ![t] = ""active""]
+              /\ txnStart' = [txnStart EXCEPT ![t] = CurrentTime]
+              /\ txnWrites' = txnWrites
+              /\ txnSteps' = txnSteps
+
+CommitTxn(t) == /\ txnState[t] = ""active""
+               /\ \A k \in Keys: db[k] = txnWrites[t][k]
+               /\ \A t' \in Txns: t' /= t => txnState[t'] /= ""active""
+               /\ \A k \in Keys: \E t' \in Txns: t' /= t /\ txnState[t'] = ""active"" => db[k] = txnWrites[t'][k]
+               /\ \A t' \in Txns: t' /= t => txnState[t'] /= ""committed""
+               /\ \A t' \in Txns: t' /= t => txnState[t'] /= ""aborted""
+               /\ \A t' \in Txns: t' /= t => txnStart[t'] <= txnStart[t]
+               /\ \A t' \in Txns: t' /= t => txnStart[t'] >= txnStart[t]
+               /\ \A t' \in Txns: t' /= t => txnState[t'] /= ""idle""
+               /\ \A t' \in Txns: t' /= t => txnStart[t'] /= 0
+               /\ \A t' \in Txns: t' /= t => txnWrites[t'] = [k \in Keys |-> 0]
+               /\ \A t' \in Txns: t' /= t => txnSteps[t'] = 0
+               /\ \A k \in Keys: db[k] = txnWrites[t][k]
+               /\ \A k \in Keys: txnWrites[t][k] = 0
+               /\ \A t' \in Txns: t' /= t => txnState[t'] /= ""idle""
+               /\ \A t' \in Txns: t' /= t => txnStart[t'] /= 0
+               /\ \A t' \in Txns: t' /= t => txnWrites[t'] = [k \in Keys |-> 0]
+               /\ \A t' \in Txns: t' /= t => txnSteps[t'] = 0
+               /\ \A k \in Keys: db[k] = txnWrites[t][k]
+               /\ \A k \in Keys: txnWrites[t][k] = 0
+               /\ \A t' \in Txns: t' /= t => txnState[t'] /= ""idle""
+               /\ \A t' \in Txns: t' /= t => txnStart[t'] /= 0
+               /\ \A t' \in Txns: t' /= t => txnWrites[t'] = [k \in Keys |-> 0]
+               /\ \A t' \in Txns: t' /= t => txnSteps[t'] = 0
+               /\ \A k \in Keys: db[k] = txnWrites[t][k]
+               /\ \A k \in Keys: txnWrites[t][k] = 0
+               /\ \A t' \in Txns: t' /= t => txnState[t'] /= ""idle""
+               /\ \A t' \in Txns: t' /= t => txnStart[t'] /= 0
+               /\ \A t' \in Txns: t' /= t => txnWrites[t'] = [k \in Keys |-> 0]
+               /\ \A t' \in Txns: t' /= t => txnSteps[t'] = 0
+               /\ \A k \in Keys: db[k] = txnWrites[t][k]
+               /\ \A k \in Keys: txnWrites[t][k] = 0
+               /\ \A t' \in Txns: t' /= t => txnState[t'] /= ""idle""
+               /\ \A t' \in Txns: t' /= t => txnStart[t'] /= 0
+               /\ \A t' \in Txns: t' /= t => txnWrites[t'] = [k \in Keys |-> 0]
+               /\ \A t' \in Txns: t' /= t => txnSteps[t'] = 0
+               /\ \A k \in Keys: db[k] = txnWrites[t][k]
+               /\ \A k \in Keys: txnWrites[t][k] = 0
+               /\ \A t' \in Txns: t' /= t => txnState[t'] /= ""idle""
+               /\ \A t' \in Txns: t' /= t => txnStart[t'] /= 0
+               /\ \A t' \in Txns: t' /= t => txnWrites[t'] = [k \in Keys |-> 0]
+               /\ \A t' \in Txns: t' /= t => txnSteps[t'] = 0
+               /\ \A k \in Keys: db[k] = txnWrites[t][k]
+               /\ \A k \in Keys: txnWrites[t][k] = 0
+               /\ \A t' \in Txns: t' /= t => txnState[t'] /= ""idle""
+               /\ \A t' \in Txns: t' /= t => txnStart[t'] /= 0
+               /\ \A t' \in Txns: t' /= t => txnWrites[t'] = [k \in Keys |-> 0]
+               /\ \A t' \in Txns: t' /= t => txnSteps[t'] = 0
+               /\ \A k \in Keys: db[k] = txnWrites[t][k]
+               /\ \A k \in Keys: txnWrites[t][k] = 0
+               /\ \A t' \in Txns: t' /= t => txnState[t'] /= ""idle""
+               /\ \A t' \in Txns: t' /= t => txnStart[t'] /= 0
+               /\ \A t' \in Txns: t' /= t => txnWrites[t'] = [k \in Keys |-> 0]
+               /\ \A t' \in Txns: t' /= t => txnSteps[t'] = 0
+               /\ \A k \in Keys: db[k] = txnWrites[t][k]
+               /\ \A k \in Keys: txnWrites[t][k] = 0
+               /\ \A t' \in Txns: t' /= t => txnState[t'] /= ""idle""
+               /\ \A t' \in Txns: t' /= t => txnStart[t'] /= 0
+               /\ \A t' \in Txns: t' /= t => txnWrites[t'] = [k \in Keys |-> 0]
+               /\ \A t' \in Txns: t' /= t => txnSteps[t'] = 0
+               /\ \A k \in Keys: db[k] = txnWrites[t][k]
+               /\ \A k \in Keys: txnWrites[t][k] = 0
+               /\ \A t' \in Txns: t' /= t => txnState[t'] /= ""idle""
+               /\ \A t' \in Txns: t' /= t => txnStart[t'] /= 0
+               /\ \A t' \in Txns: t' /= t => txnWrites[t'] = [k \in Keys |-> 0]
+               /\ \A t' \in Txns: t' /= t => txnSteps[t'] = 0
+               /\ \A k \in Keys: db[k] = txnWrites[t][k]
+               /\ \A k \in Keys: txnWrites[t][k] = 0
+               /\ \A t' \in Txns: t' /= t => txnState[t'] /= ""idle""
+               /\ \A t' \in Txns: t' /= t => txnStart[t'] /= 0
+               /\ \A t' \in Txns: t' /= t => txnWrites[t'] = [k \in Keys |-> 0]
+               /\ \A t' \in Txns: t' /= t => txnSteps[t'] = 0
+               /\ \A k \in Keys: db[k] = txnWrites[t][k]
+               /\ \A k \in Keys: txnWrites[t][k] = 0
+               /\ \A t' \in Txns: t' /= t => txnState[t'] /= ""idle""
+               /\ \A t' \in Txns: t' /= t => txnStart[t'] /= 0
+               /\ \A t' \in Txns: t' /= t => txnWrites[t'] = [k \in Keys |-> 0]
+               /\ \A t' \in Txns: t' /= t => txnSteps[t'] = 0
+               /\ \A k \in Keys: db[k] = txnWrites[t][k]
+               /\ \A k \in Keys: txnWrites[t][k] = 0
+               /\ \A t' \in Txns: t' /= t => txnState[t'] /= ""idle""
+               /\ \A t' \in Txns: t' /= t => txnStart[t'] /= 0
+               /\ \A t' \in Txns: t' /= t => txnWrites[t'] = [k \in Keys |-> 0]
+               /\ \A t' \in Txns: t' /= t => txnSteps[t'] = 0
+               /\ \A k \in Keys: db[k] = txnWrites[t][k]
+               /\ \A k \in Keys: txnWrites[t][k] = 0
+               /\ \A t' \in Txns: t' /= t => txnState[t'] /= ""idle""
+               /\ \A t' \in Txns: t' /= t => txnStart[t'] /= 0
+               /\ \A t' \in Txns: t' /= t => txnWrites[t'] = [k \in Keys |-> 0]
+               /\ \A t' \in Txns: t' /= t => txnSteps[t'] = 0
+               /\ \A k \in Keys: db[k] = txnWrites[t][k]
+               /\ \A k \in Keys: txnWrites[t][k] = 0
+               /\ \A t' \in Txns: t' /= t => txnState[t'] /= ""idle""
+               /\ \A t' \in Txns: t' /= t => txnStart[t'] /= 0
+               /\ \A t' \in Txns: t' /= t => txnWrites[t'] = [k \in Keys |-> 0]
+               /\ \A t' \in Txns: t' /= t => txnSteps[t'] = 0
+               /\ \A k \in Keys: db[k] = txnWrites[t][k]
+               /\ \A k \in Keys: txnWrites[t][k] = 0
+               /\ \A t' \in Txns: t' /= t => txnState[t'] /= ""idle""
+               /\ \A t' \in Txns: t' /= t => txnStart[t'] /= 0
+               /\ \A t' \in Txns: t' /= t => txnWrites[t'] = [k \in Keys |-> 0]
+               /\ \A t' \in Txns: t' /= t => txnSteps[t'] = 0
+               /\ \A k \in Keys: db[k] = txnWrites[t][k]
+               /\ \A k \in Keys: txnWrites[t][k] = 0
+               /\ \A t' \in Txns: t' /= t => txnState[t'] /= ""idle""
+               /\ \A t' \in Txns: t' /= t => txnStart[t'] /= 0
+               /\ \A t' \in Txns: t' /= t => txnWrites[t'] = [k \in Keys |-> 0]
+               /\ \A t' \in Txns: t' /= t => txnSteps[t'] = 0
+               /\ \A k \in Keys: db[k] = txnWrites[t][k]
+               /\ \A k \in Keys: txnWrites[t][k] = 0
+               /\ \A t' \in Txns: t' /= t => txnState[t'] /= ""idle""
+               /\ \A t' \in Txns: t' /= t => txnStart[t'] /= 0
+               /\ \A t' \in Txns: t' /= t => txnWrites[t'] = [k \in Keys |-> 0]
+            "
+chattla:20b,BM014,Clock Synchronisation,networking,3,0,0,1.0,bronze,22.87,"---- MODULE ClockSync ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, epsilon
+VARIABLES clocks, offsets
+
+
+vars == <<clocks, offsets>>
+
+Init == /\ clocks = [i \in 1..N |-> 0]
+        /\ offsets = [i \in 1..N |-> 0]
+
+Next == /\ \E i \in 1..N :
+          /\ clocks' = [clocks EXCEPT ![i] = clocks[i] + offsets[i]]
+          /\ offsets' = [offsets EXCEPT ![i] = offsets[i] + RandomOffset]
+        /\ UNCHANGED <<clocks, offsets>> \EXCEPT ![i] = offsets[i] + RandomOffset
+
+RandomOffset == CHOOSE o \in -5..5
+
+Spec == Init /\ [][Next]_vars
+
+TypeOK == /\ clocks \in [1..N -> Nat]
+          /\ offsets \in [1..N -> Int]   \* offsets can be negative
+
+===="
+chattla:20b,BM015,Peterson's Algorithm,scheduling,2,1,0,1.0,silver,15.68,"---- MODULE Peterson ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES flag, turn
+
+Init == /\ flag = [i \in 1..2 |-> FALSE]
+        /\ turn = 1
+
+Next == \/ /\ flag[1] = FALSE
+          /\ flag' = [flag EXCEPT ![1] = TRUE]
+          /\ turn' = 1
+          /\ UNCHANGED turn
+        \/ /\ flag[2] = FALSE
+          /\ flag' = [flag EXCEPT ![2] = TRUE]
+          /\ turn' = 2
+          /\ UNCHANGED turn
+        \/ /\ flag[1] = TRUE
+          /\ flag[2] = TRUE
+          /\ turn = 1
+          /\ flag' = [flag EXCEPT ![1] = FALSE]
+          /\ UNCHANGED turn
+        \/ /\ flag[1] = TRUE
+          /\ flag[2] = TRUE
+          /\ turn = 2
+          /\ flag' = [flag EXCEPT ![2] = FALSE]
+          /\ UNCHANGED turn
+        \/ /\ flag[1] = TRUE
+          /\ flag[2] = TRUE
+          /\ turn = 1
+          /\ flag' = [flag EXCEPT ![1] = FALSE]
+          /\ turn' = 2
+        \/ /\ flag[1] = TRUE
+          /\ flag[2] = TRUE
+          /\ turn = 2
+          /\ flag' = [flag EXCEPT ![2] = FALSE]
+          /\ turn' = 1
+
+Spec == Init /\ [][Next]_<<flag, turn>>
+
+TypeOK == /\ flag \in [1..2 -> BOOLEAN]
+          /\ turn \in 1..2
+
+===="
+chattla:20b,BM016,Gossip Protocol,networking,3,0,0,1.0,bronze,138.79,"---- MODULE Gossip ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, Updates
+VARIABLES infected, known
+
+
+vars == <<known, infected>>
+
+Init == /\ known = [i \in 1..N |-> {}]
+        /\ infected = [i \in 1..N |-> {}]
+
+Next == /\ \E i \in 1..N: \E j \in 1..N: i # j
+          /\ known' = [k \in 1..N |-> IF k = i THEN known[k] \cup known[j]
+
+          /\ infected' = [k \in 1..N |-> IF k = i THEN infected[k] \cup infected[j]
+
+        \/ \E i \in 1..N: \E u \in Updates: u \notin known[i]
+          /\ known' = [k \in 1..N |-> IF k = i THEN known[k] \cup {u}
+
+          /\ infected' = [k \in 1..N |-> IF k = i THEN infected[k] \cup {u}
+
+        \/ \E i \in 1..N: \E u \in Updates: u \in known[i] /\ u \notin infected[i]
+          /\ known' = known
+          /\ infected' = [k \in 1..N |-> IF k = i THEN infected[k] \cup {u}
+
+        \/ known' = known /\ infected' = infected
+
+Spec == Init /\ [][Next]_vars
+
+TypeOK == /\ \A i \in 1..N: known[i] \subseteq Updates
+          /\ \A i \in 1..N: infected[i] \subseteq Updates
+
+===="
+chattla:20b,BM017,Simple Allocator,storage,2,1,0,1.0,silver,20.35,"---- MODULE MemoryAllocator ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N, Client
+VARIABLES allocated, free
+
+
+Pages == 1..N
+
+vars == <<free, allocated>>
+
+Init == /\ free = Pages
+        /\ allocated = [c \in Client |-> {}]
+
+Next == /\ \E c \in Client : \E p \in free :
+          /\ free' = free \ {p}
+          /\ allocated' = [allocated EXCEPT ![c] = @ \cup {p}]
+        \/ \E c \in Client:
+          /\ free' = free \cup allocated[c]
+          /\ allocated' = [allocated EXCEPT ![c] = {}]
+
+Spec == Init /\ [][Next]_vars
+
+TypeOK == /\ free \subseteq Pages
+          /\ allocated \subseteq [Client -> SUBSET Pages]
+          /\ \A c \in Client: allocated[c] \subseteq Pages
+          /\ \A c \in Client: \A p \in allocated[c]: p \in Pages
+
+===="
+chattla:20b,BM018,Publish-Subscribe Broker,networking,3,1,0,0.778,silver,13.51,"---- MODULE Broker ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS Message, Subscriber, Topic
+
+VARIABLES subscribers, messages
+
+(* Subscribers register interest in topics. *)
+Init == 
+  subscribers \in [Topic -> SUBSET Subscriber] /\ 
+  messages \in [Topic -> Seq(Message)]
+
+(* Publishers post messages on topics. *)
+Next == 
+  \E topic \in Topic : \E msg \in Message :
+    /\ messages' = [messages EXCEPT ![topic] = Append(messages[topic], msg)]
+    /\ subscribers' = subscribers
+
+Spec == Init /\ [][Next]_<<subscribers, messages>>
+
+===="
+chattla:20b,BM019,Dekker's Algorithm,scheduling,3,1,0,1.0,silver,19.8,"---- MODULE Dekker ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES turn, wants
+
+Init == /\ turn = 0
+        /\ wants = [i \in 1..2 |-> FALSE]
+
+Next == \/ /\ wants[1] = FALSE
+          /\ wants' = [wants EXCEPT ![1] = TRUE]
+          /\ turn' = turn
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+        \/ /\ wants[2] = FALSE
+          /\ wants' = [wants EXCEPT ![2] = TRUE]
+          /\ turn' = turn
+          /\ wants[1] = FALSE
+          /\ turn' = turn
+        \/ /\ wants[1] = TRUE
+          /\ wants[2] = TRUE
+          /\ turn' = 1 - turn
+          /\ wants' = wants
+
+Spec == Init /\ [][Next]_<<turn, wants>>
+
+TypeOK == /\ turn \in 0..1
+          /\ wants \in [1..2 -> BOOLEAN]
+
+Safety == TypeOK /\ ~(\E i \in 1..2 : wants[i] /\ wants[3-i])
+
+Liveness == TypeOK /\ []<>(wants[1] = FALSE \/ wants[2] = FALSE)
+
+===="
+chattla:20b,BM020,Eventually Consistent Counter,storage,3,1,0,1.0,silver,12.79,"---- MODULE GCounter ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, Node
+VARIABLES counts
+
+
+vars == <<counts>>
+
+Init == /\ counts = [n \in Node |-> [m \in Node |-> 0]]
+
+Next == /\ \E n \in Node : \E m \in Node :
+          /\ counts' = [counts EXCEPT ![n][m] = counts[n][m] + 1]
+          /\ UNCHANGED <<counts>>
+
+Spec == Init /\ [][Next]_vars
+
+TypeOK == /\ counts \in [Node -> [Node -> Nat]]
+          /\ \A n \in Node : counts[n] \in [Node -> Nat]
+          /\ \A n \in Node : \A m \in Node : counts[n][m] \in Nat
+
+===="

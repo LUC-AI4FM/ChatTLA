@@ -1,0 +1,1037 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,0,0,0.889,bronze,201.14,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS N
+
+VARIABLES state, turn
+N \in Nat
+N > 0
+
+(* State variables *)
+state \in [1..N -> {""idle"", ""trying"", ""critical""}]
+turn \in 1..N
+
+(* Type invariant *)
+TypeOK == /\ state \in [1..N -> {""idle"", ""trying"", ""critical""}]
+          /\ turn \in 1..N
+
+(* Initial state *)
+Init == /\ turn \in 1..N
+        /\ state \in [1..N -> {""idle"", ""trying"", ""critical""}]
+        /\ \A p \in 1..N : state[p] = ""idle""
+
+(* Next-state relation *)
+Next == \E p \in 1..N :
+          /\ state' = [state EXCEPT ![p] = ""trying""]
+          /\ turn' = p
+          /\ \A q \in 1..N :
+                /\ q # p
+                /\ state[q] = ""critical""
+                /\ turn' = q
+          /\ \A q \in 1..N :
+                /\ q # p
+                /\ state[q] = ""idle""
+                /\ turn' = turn
+          /\ \A q \in 1..N :
+                /\ q # p
+                /\ state[q] = ""trying""
+                /\ turn' = turn
+          /\ \A q \in 1..N :
+                /\ q # p
+                /\ state[q] = ""critical""
+                /\ turn' = turn
+          /\ \A q \in 1..N :
+                /\ q # p
+                /\ state[q] = ""idle""
+                /\ turn' = turn
+          /\ \A q \in 1..N :
+                /\ q # p
+                /\ state[q] = ""trying""
+                /\ turn' = turn
+          /\ \A q \in 1..N :
+                /\ q # p
+                /\ state[q] = ""critical""
+                /\ turn' = turn
+          /\ \A q \in 1..N :
+                /\ q # p
+                /\ state[q] = ""idle""
+                /\ turn' = turn
+          /\ \A q \in 1..N :
+                /\ q # p
+                /\ state[q] = ""trying""
+                /\ turn' = turn
+          /\ \A q \in 1..N :
+                /\ q # p
+                /\ state[q] = ""critical""
+                /\ turn' = turn
+          /\ \A q \in 1..N :
+                /\ q # p
+                /\ state[q] = ""idle""
+                /\ turn' = turn
+          /\ \A q \in 1..N :
+                /\ q # p
+                /\ state[q] = ""trying""
+                /\ turn' = turn
+          /\ \A q \in 1..N :
+                /\ q # p
+                /\ state[q] = ""critical""
+                /\ turn' = turn
+          /\ \A q \in 1..N :
+                /\ q # p
+                /\ state[q] = ""idle""
+                /\ turn' = turn
+          /\ \A q \in 1..N :
+                /\ q # p
+                /\ state[q] = ""trying""
+                /\ turn' = turn
+          /\ \A q \in 1..N :
+                /\ q # p
+                /\ state[q] = ""critical""
+                /\ turn' = turn
+          /\ \A q \in 1..N :
+                /\ q # p
+                /\ state[q] = ""idle""
+                /\ turn' = turn
+          /\ \A q \in 1..N :
+                /\ q # p
+                /\ state[q] = ""trying""
+                /\ turn' = turn
+          /\ \A q \in 1..N :
+                /\ q # p
+                /\ state[q] = ""critical""
+                /\ turn' = turn
+          /\ \A q \in 1..N :
+                /\ q # p
+                /\ state[q] = ""idle""
+                /\ turn' = turn
+          /\ \A q \in 1..N :
+                /\ q # p
+                /\ state[q] = ""trying""
+                /\ turn' = turn
+          /\ \A q \in 1..N :
+                /\ q # p
+                /\ state[q] = ""critical""
+                /\ turn' = turn
+          /\ \A q \in 1..N :
+                /\ q # p
+                /\ state[q] = ""idle""
+                /\ turn' = turn
+          /\ \A q \in 1..N :
+                /\ q # p
+                /\ state[q] = ""trying""
+                /\ turn' = turn
+          /\ \A q \in 1..N :
+                /\ q # p
+                /\ state[q] = ""critical""
+                /\ turn' = turn
+          /\ \A q \in 1..N :
+                /\ q # p
+                /\ state[q] = ""idle""
+                /\ turn' = turn
+          /\ \A q \in 1..N :
+                /\ q # p
+                /\ state[q] = ""trying""
+                /\ turn' = turn
+          /\ \A q \in 1..N :
+                /\ q # p
+                /\ state[q] = ""critical""
+                /\ turn' = turn
+          /\ \A q \in 1..N :
+                /\ q # p
+                /\ state[q] = ""idle""
+                /\ turn' = turn
+          /\ \A q \in 1..N :
+                /\ q # p
+                /\ state[q] = ""trying""
+                /\ turn' = turn
+          /\ \A q \in 1..N :
+                /\ q # p
+                /\ state[q] = ""critical""
+                /\ turn' = turn
+          /\ \A q \in 1..N :
+                /\ q # p
+                /\ state[q] = ""idle""
+                /\ turn' = turn
+          /\ \A q \in 1..N :
+                /\ q # p
+                /\ state[q] = ""trying""
+                /\ turn' = turn
+          /\ \A q \in 1..N :
+                /\ q # p
+                /\ state[q] = ""critical""
+                /\ turn' = turn
+          /\ \A q \in 1..N :
+                /\ q # p
+                /\ state[q] = ""idle""
+                /\ turn' = turn
+          /\ \A q \in 1..N :
+                /\ q # p
+                /\ state[q] = ""trying""
+                /\ turn' = turn
+          /\ \A q \in 1..N :
+                /\ q # p
+                /\ state[q] = ""critical""
+                /\ turn' = turn
+          /\ \A q \in 1..N :
+                /\ q # p
+                /\ state[q] = ""idle""
+                /\ turn' = turn
+          /\ \A q \in 1..N :
+                /\ q # p
+                /\ state[q] = ""trying""
+                /\ turn' = turn
+          /\ \A q \in 1..N :
+                /\ q # p
+                /\ state[q] = ""critical""
+                /\ turn' = turn
+          /\ \A q \in 1..N :
+                /\ q # p
+                /\ state[q] = ""idle""
+                /\ turn' = turn
+          /\ \A q \in 1..N :
+                /\ q # p
+                /\ state[q] = ""trying""
+                /\ turn' = turn
+          /\ \A q \in 1..N :
+                /\ q # p
+                /\ state[q] = ""critical""
+                /\ turn' = turn
+          /\ \A q \in 1..N :
+                /\ q # p
+                /\ state[q] = ""idle""
+                /\ turn' = turn
+          /\ \A q \in 1..N :
+                /\ q # p
+                /\ state[q] = ""trying""
+                /\ turn' = turn
+          /\ \A q \in 1..N :
+                /\ q # p
+                /\ state[q] = ""critical""
+                /\ turn' = turn
+          /\ \A q \in 1..N :
+                /\ q # p
+                /\ state[q] = ""idle""
+                /\ turn' = turn
+          /\ \A q \in 1..N :
+                /\ q # p
+                /\ state[q] = ""trying""
+                /\ turn' = turn
+          /\ \A q \in 1..N :
+                /\ q # p
+                /\ state[q] = ""critical""
+                /\ turn' = turn
+          /\ \A q \in 1..N :
+                /\ q # p
+                /\ state[q] = ""idle""
+                /\ turn' = turn
+          /\ \A q \in 1..N :
+                /\ q # p
+                /\ state[q] = ""trying""
+                /\ turn' = turn
+          /\ \A q \in 1..N :
+                /\ q # p
+                /\ state[q] = ""critical""
+                /\ turn' = turn
+          /\ \A q \in 1..N :
+                /\ q # p
+                /\ state[q] = ""idle""
+                /\ turn' = turn
+          /\ \A q \in 1..N :
+                /\ q # p
+                /\ state[q] = ""trying""
+                /\ turn' = turn
+          /\ \A q \in 1..N :
+                /\ q # p
+                /\ state[q] = ""critical""
+                /\ turn' = turn
+          /\ \A q \in 1..N :
+                /\ q # p
+                /\ state[q] = ""idle""
+                /\ turn' = turn
+          /\ \A q \in 1..N :
+                /\ q # p
+                /\ state[q] = ""trying""
+                /\ turn' = turn
+          /\ \A q \in 1..N :
+                /\ q # p
+                /\ state[q] = ""critical""
+                /\ turn' = turn
+          /\ \A q \in 1..N :
+                /\ q # p
+                /\ state[q] = ""idle""
+                /\ turn' = turn
+          /\ \A q \in 1"
+chattla:20b,BM002,Two-Phase Commit,transaction,3,1,0,0.444,silver,47.15,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES participants, votes, decision, messages, state
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,0,0,0.444,bronze,67.47,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES forks, states
+
+
+  states = [i \in 1..N |-> -> ""thinking""];  (* ""thinking"", ""hungry"", ""eating"" *)
+
+      pickUp(i);
+
+      putDown(i);
+
+    pickUp(i);
+
+    putDown(i);
+
+  Init /\ [][Next]_<<forks, states>>
+
+
+
+      pickUp(i);
+
+      putDown(i);
+
+    pickUp(i);
+
+    putDown(i);
+
+  Init /\ [][Next]_<<forks, states>>
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,1,0,0.444,silver,151.06,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N
+
+VARIABLES num, flag
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,1,1.0,gold,14.74,"---- MODULE BoundedFIFO ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail, size
+
+(* TypeOK ensures the queue is a sequence of length <= K *)
+TypeOK == 
+  /\ q \in Seq(1..K)
+  /\ head \in 1..K
+  /\ tail \in 1..K
+  /\ size \in 0..K
+
+(* Init sets the queue to empty *)
+Init == 
+  /\ q = <<>>
+  /\ head = 1
+  /\ tail = 1
+  /\ size = 0
+
+(* Next action: either producer or consumer *)
+Next == 
+  \/ (* Producer *)
+     /\ size < K
+     /\ q' = Append(q, 1)  (* Enqueue 1 *)
+     /\ tail' = IF tail = K THEN 1 ELSE tail + 1
+     /\ size' = size + 1
+     /\ head' = head
+  \/ (* Consumer *)
+     /\ size > 0
+     /\ q' = Tail(q)
+     /\ head' = IF head = K THEN 1 ELSE head + 1
+     /\ size' = size - 1
+     /\ tail' = tail
+
+Spec == Init /\ [][Next]_<<q, head, tail, size>>
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,1,0,0.444,silver,58.46,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,0,0,0.778,bronze,208.57,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES readers, writer_active, r
+
+Init == /\ readers = <<>> 
+      /\ writer_active = 0
+
+Next == \/ /\ writer_active = 0
+          /\ \E r \in 1..10 : /\ r \notin readers
+          /\ r' \in 1..10
+          /\ r' \notin readers
+          /\ writer_active' = writer_active
+          /\ readers' = Append(readers, r)
+      \/ /\ writer_active = 0
+          /\ \E r \in 1..10 : /\ r \in readers
+          /\ r' \in 1..10
+          /\ r' \in readers
+          /\ writer_active' = writer_active
+          /\ readers' = Remove(readers, r)
+      \/ /\ writer_active = 0
+          /\ \E r \in 1..10 : /\ r \notin readers
+          /\ r' \in 1..10
+          /\ r' \notin readers
+          /\ writer_active' = 1
+          /\ readers' = readers
+      \/ /\ writer_active = 1
+          /\ \E r \in 1..10 : /\ r \in readers
+          /\ r' \in 1..10
+          /\ r' \in readers
+          /\ writer_active' = writer_active
+          /\ readers' = Remove(readers, r)
+      \/ /\ writer_active = 1
+          /\ \E r \in 1..10 : /\ r \notin readers
+          /\ r' \in 1..10
+          /\ r' \notin readers
+          /\ writer_active' = 0
+          /\ readers' = readers
+
+Spec == Init /\ [][Next]_vars
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,1,0,0.667,silver,139.27,"---- MODULE ChandyLamportSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS M, N
+
+VARIABLES state, channel, snapshot, channelState, markerSent, markerReceived, finished
+
+Init == /\ state = [p \in N |-> 0]
+        /\ channel = [p \in N, q \in N |-> {}]
+        /\ snapshot = [p \in N |-> 0]
+        /\ channelState = [p \in N, q \in N |-> {}]
+        /\ markerSent = [p \in N, q \in N |-> FALSE]
+        /\ markerReceived = [p \in N, q \in N |-> FALSE]
+        /\ finished = [p \in N |-> FALSE]
+
+Next == \/ \E p \in N : \E q \in N : \E m \in M :
+          /\ state[p] = m
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ markerSent[p][q] = FALSE
+          /\ markerReceived[p][q] = FALSE
+          /\ finished[p] = FALSE
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p][q] = channel[p][q] \cup {m}
+          /\ channel[p"
+chattla:20b,BM009,Token Ring,networking,2,1,1,0.667,gold,2.22,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLE token
+
+Init == /\ token \in 1..N
+
+Next == /\ token' \in 1..N
+        /\ token' = IF token = N THEN 1 ELSE token + 1
+
+Spec == Init /\ [][Next]_<<token>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,0.778,silver,4.92,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, Values, NULL
+
+VARIABLES store
+
+Init == store = [k \in Keys |-> NULL]
+
+Next == \/ /\ \E k \in Keys : \E v \in Values : /\ store' = [store EXCEPT ![k] = v]
+      \/ /\ \E k \in Keys : /\ store' = [store EXCEPT ![k] = NULL]
+
+Spec == Init /\ [][Next]_<<store>>
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,1,1,0.778,gold,93.61,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES acceptors, proposers, promises, accepted, chosen, chosenBallot, chosenValue, chosenBallotValue
+
+Init == /\ acceptors = {}
+        /\ proposers = {}
+        /\ promises = {}
+        /\ accepted = {}
+        /\ chosen = {}
+        /\ chosenBallot = {}
+        /\ chosenValue = {}
+        /\ chosenBallotValue = {}
+
+Next == /\ acceptors' = acceptors
+        /\ proposers' = proposers
+        /\ promises' = promises
+        /\ accepted' = accepted
+        /\ chosen' = chosen
+        /\ chosenBallot' = chosenBallot
+        /\ chosenValue' = chosenValue
+        /\ chosenBallotValue' = chosenBallotValue
+
+Spec == Init /\ [][Next]_<<acceptors, proposers, promises, accepted, chosen, chosenBallot, chosenValue, chosenBallotValue>>
+
+===="
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,0,0,0.778,bronze,40.43,"---- MODULE FileTransfer ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS MAX_RETRIES, CHUNK_SIZE, FILE_SIZE, CHANNEL_LOSS_PROBABILITY, FiniteSet
+VARIABLES channel, chunks, file, retransmitCount, sentChunks
+
+    /\ file \in Seq
+    /\ chunks \in Seq
+    /\ sentChunks \in FiniteSet
+    /\ retransmitCount \in FiniteSet
+    /\ channel \in FiniteSet
+
+Init ==
+    /\ file = Seq
+    /\ chunks = [i \in 1..Ceiling(FILE_SIZE \div CHUNK_SIZE) |-> 
+
+            SubSeq(file, (i-1)*CHUNK_SIZE + 1, i*CHUNK_SIZE)
+
+            SubSeq(file, (i-1)*CHUNK_SIZE + 1, FILE_SIZE)
+        ]
+    /\ sentChunks = {}
+    /\ retransmitCount = {}
+    /\ channel = {}
+
+Next ==
+    /\ \E i \in 1..Ceiling(FILE_SIZE \div CHUNK_SIZE) :
+        /\ i \notin sentChunks
+        /\ i \in retransmitCount
+            => retransmitCount' = [retransmitCount EXCEPT ![i] = retransmitCount[i] + 1]
+        /\ i \notin retransmitCount
+            => retransmitCount' = [retransmitCount EXCEPT ![i] = 1]
+        /\ i \in retransmitCount
+            /\ retransmitCount[i] <= MAX_RETRIES
+            /\ channel' = Append(channel, chunks[i])
+        /\ i \in retransmitCount
+            /\ retransmitCount[i] > MAX_RETRIES
+            /\ channel' = channel
+        /\ sentChunks' = sentChunks \cup {i}
+    /\ \E msg \in channel :
+        /\ channel' = Delete(channel, msg)
+    /\ \E msg \in channel :
+        /\ channel' = Delete(channel, msg)
+    /\ channel' = channel
+
+Spec ==
+    Init /\ [][Next]_<<file, chunks, sentChunks, retransmitCount, channel>>
+
+===="

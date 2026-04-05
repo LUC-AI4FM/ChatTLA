@@ -1,0 +1,567 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,0,0.444,silver,17.62,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, turn, flag
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,1,0,0.444,silver,14.35,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES participants, votes, commitDecided, abortDecided
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,0,0,1.0,bronze,49.61,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES forks, states
+
+(* Constants *)
+N == 5
+
+(* Types *)
+Fork == 1..N
+Philosopher == 1..N
+State == {""thinking"", ""hungry"", ""eating""}
+
+(* Helper functions *)
+LeftFork == [p \in Philosopher |-> p]
+RightFork == [p \in Philosopher |-> IF p = N THEN 1 ELSE p + 1]
+
+(* Initial state *)
+Init == /\ forks = [f \in Fork |-> 0]
+        /\ states = [p \in Philosopher |-> ""thinking""]
+
+(* Next state *)
+Next == \/ (* Philosopher p becomes hungry *)
+          /\ \E p \in Philosopher : states[p] = ""thinking"" /\ states' = [states EXCEPT ![p] = ""hungry""]
+        \/ (* Philosopher p picks up forks if hungry and forks are free *)
+          /\ \E p \in Philosopher : states[p] = ""hungry"" /\ forks[LeftFork[p]] = 0 /\ forks[RightFork[p]] = 0
+          /\ forks' = [forks EXCEPT ![LeftFork[p]] = p, ![RightFork[p]] = p]
+          /\ states' = [states EXCEPT ![p] = ""eating""]
+        \/ (* Philosopher p puts down forks if eating *)
+          /\ \E p \in Philosopher : states[p] = ""eating""
+          /\ forks' = [forks EXCEPT ![LeftFork[p]] = 0, ![RightFork[p]] = 0]
+          /\ states' = [states EXCEPT ![p] = ""thinking""]
+
+(* Specification *)
+Spec == Init /\ [][Next]_<<forks, states>>
+
+(* Type invariant *)
+TypeOK == /\ forks \in [Fork -> 0..N]
+          /\ states \in [Philosopher -> State]
+          /\ \A p \in Philosopher : forks[LeftFork[p]] = 0 \/ forks[LeftFork[p]] = p
+          /\ \A p \in Philosopher : forks[RightFork[p]] = 0 \/ forks[RightFork[p]] = p
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,0,0,0.444,bronze,113.15,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+
+VARIABLES num, flag
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+(* --algorithm Bakery
+
+  \* Each process i
+  \* 1. flag[i] := TRUE
+  \* 2. num[i] := 1 + Max(num)
+  \* 3. flag[i] := FALSE
+  \* 4. Wait until all j != i satisfy either num[j] = 0 or (num[j], j) > (num[i], i)
+  \* 5. Critical section
+  \* 6. num[i] := 0
+end
+*)
+
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,1,0.778,gold,3.53,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail, count
+
+Init == /\ q = <<>>
+        /\ head = 1
+        /\ tail = 1
+        /\ count = 0
+
+Next == 
+  \/ /\ count < K
+      /\ head' = head
+         /\ tail' = (tail % K) + 1
+         /\ count' = count + 1
+         /\ q' = Append(q, head)
+  \/ /\ count > 0
+      /\ head' = (head % K) + 1
+         /\ tail' = tail
+         /\ count' = count - 1
+         /\ q' = Tail(q)
+
+Spec == Init /\ [][Next]_<<q, head, tail, count>>
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,1,0,0.444,silver,91.29,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,1,0,0.778,silver,13.44,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS Readers
+
+VARIABLES readers, writer_active
+
+Init == /\ readers = <<>>
+        /\ writer_active = FALSE
+
+Next == \/ /\ writer_active = FALSE
+          /\ \E r \in Readers : /\ r \in readers
+          /\ ~(r \in readers)
+          /\ writer_active' = TRUE
+        \/ /\ writer_active = TRUE
+          /\ \E r \in Readers : /\ r \in readers
+          /\ ~(r \in readers)
+          /\ writer_active' = FALSE
+        \/ /\ writer_active = FALSE
+          /\ \E r \in Readers : /\ ~(r \in readers)
+          /\ r \in readers
+          /\ writer_active' = FALSE
+
+Spec == Init /\ [][Next]_<<readers, writer_active>>
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,1,0,0.444,silver,91.17,"---- MODULE DistributedSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, channel, recorded, markerSent, markerReceived
+===="
+chattla:20b,BM009,Token Ring,networking,2,1,1,0.667,gold,2.51,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLE token
+
+Init == /\ token \in 1..N
+
+Next == /\ token' \in 1..N
+        /\ token' = IF token = N THEN 1 ELSE token + 1
+
+Spec == Init /\ [][Next]_<<token>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,0.778,silver,54.46,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, Values
+
+VARIABLES store
+
+Init == /\ store \in [Keys -> Values]
+Next == /\ store' \in [Keys -> Values]
+      /\ \E k \in Keys : \E v \in Values : store' = [store EXCEPT ![k] = v]
+
+Spec == Init /\ [][Next]_<<store>>
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,1,0,0.444,silver,90.62,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES acceptors, proposers, promises, accepts, chosen, chosenBy, chosenBallot, chosenByBallot, chosenValue, chosenByValue, chosenBallotValue, chosenByBallotValue, chosenValueBallot, chosenByValueBallot, chosenValueBallotValue, chosenByValueBallotValue, chosenValueBallotValueBallot, chosenByValueBallotValueBallot, chosenValueBallotValueBallotValue, chosenByValueBallotValueBallotValue, chosenValueBallotValueBallotValueBallot, chosenByValueBallotValueBallotValueBallot, chosenValueBallotValueBallotValueBallotValue, chosenByValueBallotValueBallotValueBallotValue, chosenValueBallotValueBallotValueBallotValueBallot, chosenByValueBallotValueBallotValueBallotValueBallot, chosenValueBallotValueBallotValueBallotValueBallotValue, chosenByValueBallotValueBallotValueBallotValueBallotValue, chosenValueBallotValueBallotValueBallotValueBallotValueBallot, chosenByValueBallotValueBallotValueBallotValueBallotValueBallot, chosenValueBallotValueBallotValueBallotValueBallotValueBallotValue, chosenByValueBallotValueBallotValueBallotValueBallotValueBallotValue, chosenValueBallotValueBallotValueBallotValueBallotValueBallotValueBallot, chosenByValueBallotValueBallotValueBallotValueBallotValueBallotValueBallot, chosenValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValue, chosenByValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValue, chosenValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallot, chosenByValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallot, chosenValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValue, chosenByValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValue, chosenValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallot, chosenByValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallot, chosenValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValue, chosenByValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValue, chosenValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallot, chosenByValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallot, chosenValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValue, chosenByValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValue, chosenValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallot, chosenByValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallot, chosenValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValue, chosenByValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValue, chosenValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallot, chosenByValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValue, chosenValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallot, chosenByValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValue, chosenValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallot, chosenByValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValue, chosenValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallot, chosenByValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValue, chosenValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallot, chosenByValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValue, chosenValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallot, chosenByValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValue, chosenValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallot, chosenByValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValue, chosenValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallot, chosenByValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValue, chosenValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallot, chosenByValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValue, chosenValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallot, chosenByValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValue, chosenValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallot, chosenByValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValue, chosenValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallot, chosenByValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallot, chosenValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallotValueBallot, c"
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,1,0,0.444,silver,91.23,"---- MODULE FileTransfer ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES file, chunks, sentChunks, receivedChunks, retransmitCount, MAX_RETRIES, channel, lostChunks, timeout, ackedChunks
+===="

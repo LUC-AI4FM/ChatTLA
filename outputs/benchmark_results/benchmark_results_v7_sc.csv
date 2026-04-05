@@ -1,0 +1,819 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,0,0,1.0,bronze,36.23,"---- MODULE MutualExclusion ----
+EXTENDS Naturals, Sequences
+
+VARIABLES state, turn, N
+CONSTANTS N
+
+(* State definitions *)
+Idle(i) == state[i] = ""idle""
+Trying(i) == state[i] = ""trying""
+Critical(i) == state[i] = ""critical""
+
+(* Type invariant *)
+TypeOK == /\ N ∈ Nat
+        /\ N > 0
+        /\ state ∈ [1..N -> {""idle"", ""trying"", ""critical""}]
+        /\ turn ∈ 1..N
+
+(* Initial state *)
+Init == /\ state = [i ∈ 1..N |-> ""idle""]
+        /\ turn = 1
+
+(* Next-state relation *)
+Next == \/ \E i ∈ 1..N : /\ Idle(i)
+                     /\ state' = [state EXCEPT ![i] = ""trying""]
+                     /\ turn' = turn
+        \/ \E i ∈ 1..N : /\ Trying(i)
+                     /\ turn = i
+                     /\ state' = [state EXCEPT ![i] = ""critical""]
+                     /\ turn' = turn
+        \/ \E i ∈ 1..N : /\ Critical(i)
+                     /\ state' = [state EXCEPT ![i] = ""idle""]
+                     /\ turn' = (i % N) + 1
+
+(* Specification *)
+Spec == Init /\ [][Next]_<<state, turn>>
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,0,0,0.667,bronze,91.55,"---- MODULE TwoPhaseCommit ----
+EXTENDS Naturals, Sequences, TLC
+
+CONSTANTS N, Participants, Coordinator
+
+(* State definitions *)
+StateOK == ""OK""
+StatePrepare == ""Prepare""
+StateVoteYes == ""VoteYes""
+StateVoteNo == ""VoteNo""
+StateCommit == ""Commit""
+StateAbort == ""Abort""
+
+(* Message definitions *)
+PrepareMsg == [type |-> ""Prepare"", from |-> Coordinator, to |-> <<>>]
+VoteYesMsg == [type |-> ""VoteYes"", from |-> <<>>, to |-> Coordinator]
+VoteNoMsg == [type |-> ""VoteNo"", from |-> <<>>, to |-> Coordinator]
+CommitMsg == [type |-> ""Commit"", from |-> Coordinator, to |-> <<>>]
+AbortMsg == [type |-> ""Abort"", from |-> Coordinator, to |-> <<>>]
+
+VARIABLES state, messages
+
+(* Initial state *)
+Init == /\ state = [id \in Participants \cup {Coordinator} |-> StateOK]
+      /\ messages = <<>>
+
+(* Next-state relation *)
+Next == 
+  \/ /\ state[Coordinator] = StateOK
+     /\ messages' = Append(messages, PrepareMsg)
+     /\ state' = [state EXCEPT ![Coordinator] = StatePrepare]
+  \/ /\ state[Coordinator] = StatePrepare
+     /\ messages = << m |-> [type |-> ""Prepare"", from |-> Coordinator, to |-> <<>>] >>
+     /\ state' = [state EXCEPT ![Coordinator] = StatePrepare]
+     /\ messages' = <<>>
+     /\ \* All participants vote Yes
+     /\ \* For each participant, send VoteYes
+     /\ \* We will model that all participants vote Yes in a single step
+     /\ \* So we will send VoteYes messages from all participants to Coordinator
+     /\ \* For each participant, send VoteYes
+     /\ \* We will model that all participants vote Yes in a single step
+     /\ \* So we will send VoteYes messages from all participants to Coordinator
+     /\ \* For each participant, send VoteYes
+     /\ \* We will model that all participants vote Yes in a single step
+     /\ \* So we will send VoteYes messages from all participants to Coordinator
+     /\ \* For each participant, send VoteYes
+     /\ \* We will model that all participants vote Yes in a single step
+     /\ \* So we will send VoteYes messages from all participa"
+chattla:20b,BM003,Dining Philosophers,scheduling,2,0,0,1.0,bronze,28.86,"---- MODULE DiningPhilosophers ----
+EXTENDS Naturals, Sequences, TLC
+
+CONSTANT N
+
+VARIABLES forks, states
+
+(* fork ownership: forks[i] = j means philosopher j owns fork i; forks[i] = -1 means fork i is free *)
+(* philosopher states: states[i] = ""thinking"" | ""hungry"" | ""eating"" *)
+
+TypeOK == 
+  /\ forks \in [1..N -> 1..N \cup {-1}]
+  /\ states \in [1..N -> {""thinking"", ""hungry"", ""eating""}]
+  /\ \A i \in 1..N : forks[i] = -1 \/ forks[i] \in 1..N
+
+Init == 
+  /\ forks = [i \in 1..N |-> -1]
+  /\ states = [i \in 1..N |-> ""thinking""]
+
+Next == 
+  \E i \in 1..N :
+    /\ states[i] = ""thinking""
+    /\ forks[i] = -1
+    /\ forks[Mod(i,N)+1] = -1
+    /\ forks' = [forks EXCEPT ![i] = i, ![Mod(i,N)+1] = i]
+    /\ states' = [states EXCEPT ![i] = ""eating""]
+  \/ \E i \in 1..N :
+    /\ states[i] = ""eating""
+    /\ forks[i] = i
+    /\ forks[Mod(i,N)+1] = i
+    /\ forks' = [forks EXCEPT ![i] = -1, ![Mod(i,N)+1] = -1]
+    /\ states' = [states EXCEPT ![i] = ""thinking""]
+  \/ \E i \in 1..N :
+    /\ states[i] = ""thinking""
+    /\ forks[i] = -1
+    /\ forks[Mod(i,N)+1] = -1
+    /\ states' = [states EXCEPT ![i] = ""hungry""]
+  \/ \E i \in 1..N :
+    /\ states[i] = ""hungry""
+    /\ forks[i] = -1
+    /\ forks[Mod(i,N)+1] = -1
+    /\ forks' = [forks EXCEPT ![i] = i, ![Mod(i,N)+1] = i]
+    /\ states' = [states EXCEPT ![i] = ""eating""]
+  \/ \E i \in 1..N :
+    /\ states[i] = ""hungry""
+    /\ forks[i] = -1
+    /\ forks[Mod(i,N)+1] = -1
+    /\ states' = [states EXCEPT ![i] = ""thinking""]
+
+Spec == Init /\ [][Next]_<<forks, states>> /\ TypeOK
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,0,0,0.444,bronze,92.5,"---- MODULE Bakery ----
+EXTENDS Naturals, Sequences, TLC
+
+VARIABLES num, flag
+
+CONSTANT N
+
+ASSUME
+  /\ N \in Nat
+  /\ num \in [1..N] -> 0..N
+  /\ flag \in [1..N] -> BOOLEAN
+
+DEFINE
+  maxNum == MAX(num[1..N])
+  maxNum' == MAX(num'[1..N])
+  maxNum' == maxNum + 1
+  maxNum' == 0
+  maxNum' == maxNum
+  maxNum' == 0
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum' == maxNum
+  maxNum'"
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,0,0,1.0,bronze,36.36,"---- MODULE BoundedFIFO ----
+EXTENDS Naturals, Sequences, TLC
+
+CONSTANT K
+
+VARIABLES q, head, tail
+
+(* Type invariant *)
+TypeOK == 
+  /\ head \in 1..K
+  /\ tail \in 1..K
+  /\ q \in Seq(1..K)
+
+(* Initial state *)
+Init == 
+  /\ head = 1
+  /\ tail = 1
+  /\ q = [i \in 1..K |-> 0]
+
+(* Next-state relation *)
+Next == 
+  /\ head' = head
+  /\ tail' = tail
+  /\ q' = q
+  /\ 
+    (* Queue is empty *)
+    (head = tail /\ q[head] = 0) 
+    -> 
+      (* Wait: no state change *)
+      UNCHANGED <<head, tail, q>>
+  \/ 
+    (* Queue is not empty *)
+    (head <> tail /\ q[head] # 0) 
+    -> 
+      /\ consume(q[head])
+      /\ head' = head + 1
+      /\ IF head' > K THEN head' := 1
+      /\ UNCHANGED <<tail, q>>
+  \/ 
+    (* Queue is full *)
+    (head <> tail /\ q[head] = 0 /\ q[tail] = 0) 
+    -> 
+      (* Wait: no state change *)
+      UNCHANGED <<head, tail, q>>
+  \/ 
+    (* Queue is not full *)
+    (head <> tail /\ q[head] = 0 /\ q[tail] # 0) 
+    -> 
+      /\ produce(q[tail])
+      /\ tail' = tail + 1
+      /\ IF tail' > K THEN tail' := 1
+      /\ UNCHANGED <<head, q>>
+
+Spec == Init /\ [][Next]_<<head, tail, q>>
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,1,0,0.444,silver,9.19,"---- MODULE RaftLeaderElection ----
+EXTENDS Naturals, Sequences, TLC
+
+VARIABLES currentTerm, votedFor, state
+
+(* --operator
+  Init == 
+    /\ currentTerm = 0
+    /\ votedFor = None
+    /\ state = ""Follower""
+
+  Next == 
+    \/ (* Transition to Candidate *)
+       /\ state = ""Follower""
+       /\ currentTerm' = currentTerm + 1
+       /\ votedFor' = currentTerm' (* Candidate votes for itself *)
+       /\ state' = ""Candidate""
+    \/ (* Transition to Leader *)
+       /\ state = ""Candidate""
+       /\ currentTerm' = currentTerm
+       /\ votedFor' = votedFor
+       /\ state' = ""Leader""
+    \/ (* Stay in Follower *)
+       /\ state = ""Follower""
+       /\ currentTerm' = currentTerm
+       /\ votedFor' = votedFor
+       /\ state' = ""Follower""
+    \/ (* Stay in Candidate *)
+       /\ state = ""Candidate""
+       /\ currentTerm' = currentTerm
+       /\ votedFor' = votedFor
+       /\ state' = ""Candidate""
+    \/ (* Stay in Leader *)
+       /\ state = ""Leader""
+       /\ currentTerm' = currentTerm
+       /\ votedFor' = votedFor
+       /\ state' = ""Leader""
+
+  Spec == Init /\ [][Next]_<<currentTerm, votedFor, state>>
+
+  TypeOK == 
+    /\ currentTerm \in Nat
+    /\ votedFor \in Nat \cup {None}
+    /\ state \in {""Follower"", ""Candidate"", ""Leader""}
+*)
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,0,0,1.0,bronze,9.45,"---- MODULE ReadWriteLock ----
+EXTENDS Naturals, Sequences
+
+VARIABLES readers, writer_active
+
+Init == /\ readers = <<>>
+       /\ writer_active = FALSE
+
+Next == \/ /\ writer_active = FALSE
+          /\ readers' = Append(readers, 1)
+          /\ writer_active' = writer_active
+       \/ /\ writer_active = FALSE
+          /\ readers' = Remove(readers, 1)
+          /\ writer_active' = writer_active
+       \/ /\ writer_active = FALSE
+          /\ readers' = <<>>
+          /\ writer_active' = TRUE
+       \/ /\ writer_active = TRUE
+          /\ readers' = <<>>
+          /\ writer_active' = FALSE
+
+Spec == Init /\ [][Next]_<<readers, writer_active>>
+
+TypeOK == /\ readers \in Seq(Nat)
+          /\ writer_active \in BOOLEAN
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,1,0,0.333,silver,1.57,"---- MODULE ChandyLamportSnapshot ----
+EXTENDS Naturals, Sequences, TLC
+
+CONSTANT N
+
+===="
+chattla:20b,BM009,Token Ring,networking,2,1,1,0.667,gold,2.39,"---- MODULE TokenRing ----
+EXTENDS Naturals, Sequences
+
+CONSTANT N \* Number of nodes in the ring
+
+VARIABLE token \* Current holder of the token (1..N)
+
+Init == 
+  /\ token \in 1..N
+
+Next == 
+  /\ token' \in 1..N
+  /\ token' = IF token = N THEN 1 ELSE token + 1
+
+Spec == 
+  /\ Init
+  /\ [][Next]_token
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,0,0,0.889,bronze,29.79,"---- MODULE KeyValueStore ----
+EXTENDS Naturals, Sequences, TLC
+
+CONSTANTS Keys, Values, defaultValue
+
+VARIABLE store
+
+(* Type invariant *)
+TypeOK == /\ store \in [Keys -> Values]
+
+(* Initial state: all keys map to a default value *)
+Init == /\ store = [k \in Keys |-> defaultValue]
+
+(* Get operation *)
+Get(k) == store[k]
+
+(* Next-state relation *)
+Next == \/ /\ \E k \in Keys, v \in Values :
+          /\ store' = [store EXCEPT ![k] = v]
+        \/ /\ \E k \in Keys :
+          /\ store' = store
+          /\ \E v \in Values :
+              /\ store[k] = v
+              /\ Get(k) = v
+
+Spec == Init /\ [][Next]_store
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,0,0,1.0,bronze,40.38,"---- MODULE SingleDecreePaxos ----
+EXTENDS Naturals, Sequences, TLC
+
+VARIABLES acceptors, proposers, promises, accepts, chosen, ballots, values
+
+TypeOK == 
+    /\ acceptors \in SUBSET 1..N
+    /\ proposers \in SUBSET 1..M
+    /\ promises \in acceptors -> (⊥ \/ [ballot: Nat, value: Nat])
+    /\ accepts \in acceptors -> (⊥ \/ [ballot: Nat, value: Nat])
+    /\ chosen \in Nat \/ ⊥
+    /\ ballots \in proposers -> Nat
+    /\ values \in proposers -> Nat
+
+(* Initial state *)
+Init == 
+    /\ acceptors = 1..N
+    /\ proposers = 1..M
+    /\ promises = [a \in acceptors |-> ⊥]
+    /\ accepts = [a \in acceptors |-> ⊥]
+    /\ chosen = ⊥
+    /\ ballots = [p \in proposers |-> 0]
+    /\ values = [p \in proposers |-> 0]
+
+(* Prepare phase: proposer p sends a proposal with ballot b *)
+Prepare(p, b) == 
+    /\ p \in proposers
+    /\ b > ballots[p]
+    /\ ballots' = [ballots EXCEPT ![p] = b]
+    /\ UNCHANGED <<acceptors, proposers, promises, accepts, chosen, values>>
+
+(* Promise phase: acceptor a responds to proposal with ballot b *)
+Promise(a, p, b) == 
+    /\ a \in acceptors
+    /\ p \in proposers
+    /\ b = ballots[p]
+    /\ promises' = [promises EXCEPT ![a] = [ballot |-> b, value |-> values[p]]]
+    /\ UNCHANGED <<acceptors, proposers, accepts, chosen, ballots, values>>
+
+(* Accept phase: proposer p sends accept request with ballot b and value v *)
+Accept(p, b, v) == 
+    /\ p \in proposers
+    /\ b = ballots[p]
+    /\ v = values[p]
+    /\ UNCHANGED <<acceptors, proposers, promises, chosen, ballots, values>>
+
+(* Accepted phase: acceptor a accepts proposal with ballot b and value v *)
+Accepted(a, p, b, v) == 
+    /\ a \in acceptors
+    /\ p \in proposers
+    /\ b = ballots[p]
+    /\ v = values[p]
+    /\ accepts' = [accepts EXCEPT ![a] = [ballot |-> b, value |-> v]]
+    /\ UNCHANGED <<acceptors, proposers, promises, chosen, ballots, values>>
+
+(* Choose phase: proposer p chooses value v if it has majority of accepts with ballot b *)
+Choose(p, b, v) == 
+    /\ p \in proposers
+    /\ b = ba"
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,0,0,0.889,bronze,22.1,"---- MODULE FileTransfer ----
+EXTENDS Naturals, Sequences, TLC
+
+CONSTANTS MAX_RETRIES, CHUNK_SIZE, FILE_SIZE
+
+(* The file is represented as a sequence of bytes *)
+TypeOK == 
+    /\ file \in Seq(0..255)
+    /\ chunks \in Seq(0..255)
+    /\ sentChunks \in Seq(0..255)
+    /\ retransmitCount \in Nat
+    /\ channel \in Seq(0..255)
+
+(* Initialize the file and split it into chunks *)
+Init == 
+    /\ file \in Seq(0..255)
+    /\ chunks == SubSeq(file, 1, CHUNK_SIZE)
+    /\ sentChunks == <<>>
+    /\ retransmitCount == 0
+    /\ channel == <<>>
+
+(* Transmit a chunk over the channel *)
+Transmit == 
+    /\ sentChunks' == Append(sentChunks, Last(chunks))
+    /\ channel' == Append(channel, Last(chunks))
+    /\ retransmitCount' == 0
+    /\ UNCHANGED <<file, chunks>>
+
+(* Retransmit the last sent chunk *)
+Retransmit == 
+    /\ sentChunks' == sentChunks
+    /\ channel' == Append(channel, Last(sentChunks))
+    /\ retransmitCount' == retransmitCount + 1
+    /\ UNCHANGED <<file, chunks>>
+
+(* Drop the last sent chunk from the channel *)
+Drop == 
+    /\ sentChunks' == sentChunks
+    /\ channel' == SubSeq(channel, 1, Len(channel) - 1)
+    /\ retransmitCount' == retransmitCount
+    /\ UNCHANGED <<file, chunks>>
+
+(* The sender can either transmit a new chunk, retransmit the last chunk, or drop the last chunk *)
+Next == 
+    \/ /\ Len(sentChunks) < Len(chunks)
+       /\ Transmit
+    \/ /\ Len(sentChunks) = Len(chunks)
+       /\ retransmitCount < MAX_RETRIES
+       /\ Retransmit
+    \/ /\ Len(sentChunks) = Len(chunks)
+       /\ retransmitCount = MAX_RETRIES
+       /\ Drop
+
+Spec == Init /\ [][Next]_<<file, chunks, sentChunks, retransmitCount, channel>>
+
+===="
+chattla:20b,BM013,Transaction Isolation (Snapshot Isolation),transaction,4,0,0,1.0,bronze,37.28,"---- MODULE SnapshotIsolationDB ----
+EXTENDS Naturals, Sequences, TLC
+
+VARIABLES data, txns, snapshot, writeSet, status
+
+TxId == [id: Nat, start: Nat, end: Nat]
+
+TxStatus == {""active"", ""committed"", ""aborted""}
+
+Data == [k: Nat |-> Nat]
+
+Txns == [t: TxId |-> TxStatus]
+
+Snapshot == [t: TxId |-> [k: Nat |-> Nat]]
+
+WriteSet == [t: TxId |-> SUBSET Nat]
+
+Status == [t: TxId |-> TxStatus]
+
+Init ==
+    /\ data = [k: Nat |-> 0]
+    /\ txns = [t: TxId |-> ""active""]
+    /\ snapshot = [t: TxId |-> data]
+    /\ writeSet = [t: TxId |-> {}]
+    /\ status = [t: TxId |-> ""active""]
+
+BeginTxn ==
+    /\ \E t: TxId : t \notin DOMAIN txns
+    /\ txns' = [txns EXCEPT ![t] = ""active""]
+    /\ snapshot' = [snapshot EXCEPT ![t] = data]
+    /\ writeSet' = [writeSet EXCEPT ![t] = {}]
+    /\ status' = [status EXCEPT ![t] = ""active""]
+
+Read(k) ==
+    /\ \E t: TxId : t \in DOMAIN txns /\ status[t] = ""active""
+    /\ k \in DOMAIN snapshot[t]
+    /\ \E v: Nat : v = snapshot[t][k]
+
+Write(k, v) ==
+    /\ \E t: TxId : t \in DOMAIN txns /\ status[t] = ""active""
+    /\ k \in DOMAIN data
+    /\ writeSet' = [writeSet EXCEPT ![t] = writeSet[t] \cup {k}]
+    /\ status' = [status EXCEPT ![t] = ""active""]
+
+Commit(t) ==
+    /\ t \in DOMAIN txns
+    /\ status[t] = ""active""
+    /\ \A k \in writeSet[t] : \E t': TxId : t' \in DOMAIN txns /\ status[t'] = ""active"" /\ t' # t /\ k \in writeSet[t']
+    /\ data' = [data EXCEPT ![k] = snapshot[t][k] : k \in writeSet[t]]
+    /\ txns' = [txns EXCEPT ![t] = ""committed""]
+    /\ status' = [status EXCEPT ![t] = ""committed""]
+
+Abort(t) ==
+    /\ t \in DOMAIN txns
+    /\ status[t] = ""active""
+    /\ txns' = [txns EXCEPT ![t] = ""aborted""]
+    /\ status' = [status EXCEPT ![t] = ""aborted""]
+
+Next ==
+    \/ BeginTxn
+    \/ \E t, k, v : Read(k)
+    \/ \E t, k, v : Write(k, v)
+    \/ \E t : Commit(t)
+    \/ \E t : Abort(t)
+
+Spec ==
+    Init /\ [][Next]_<<data, txns, snapshot, writeSet, status>>
+
+TypeOK ==
+    /\ data \in Data
+    /\ txns \in [TxId |-> TxStatus]
+    /\ snapshot \in [TxId |-> Dat"
+chattla:20b,BM014,Clock Synchronisation,networking,3,0,0,0.889,bronze,31.76,"---- MODULE ClockSync ----
+EXTENDS Naturals, Sequences, TLC
+
+VARIABLE clocks
+
+Init == /\ clocks \in [1..N -> Int]
+        /\ \A i \in 1..N : clocks[i] = 0
+
+Next == /\ \A i \in 1..N : clocks[i] = clocks[i] + 1
+        /\ \A i \in 1..N : clocks[i] = clocks[i] + \E j \in 1..N : (j \ne i) : (clocks[j] - clocks[i]) / N
+
+Spec == Init /\ [][Next]_<<clocks>>
+
+TypeOK == /\ clocks \in [1..N -> Int]
+
+Invariant == \A i \in 1..N : \A j \in 1..N : |clocks[i] - clocks[j]| <= epsilon
+
+Safety == Invariant
+
+Liveness == \A i \in 1..N : <> (clocks[i] = 0)
+
+Property == Safety /\ Liveness
+
+Spec == Init /\ [][Next]_<<clocks>> /\ Property
+
+===="
+chattla:20b,BM015,Peterson's Algorithm,scheduling,2,1,0,0.444,silver,22.22,"---- MODULE Peterson2 ----
+EXTENDS Naturals, Sequences, TLC
+
+VARIABLES flag, turn
+
+
+===="
+chattla:20b,BM016,Gossip Protocol,networking,3,0,0,1.0,bronze,10.9,"---- MODULE GossipProtocol ----
+EXTENDS Naturals, Sequences, TLC
+
+VARIABLES known, infected
+
+Init == 
+  /\ known = [i \in 1..N |-> FALSE]
+  /\ infected = [i \in 1..N |-> FALSE]
+
+Next == 
+  \E i \in 1..N :
+    /\ infected[i]
+    /\ known' = [known EXCEPT ![i] = TRUE]
+    /\ infected' = [infected EXCEPT ![j] = TRUE \E j \in 1..N \E j # i]
+
+Spec == Init /\ [][Next]_<< known, infected >>
+
+TypeOK == 
+  /\ known \in [1..N -> BOOLEAN]
+  /\ infected \in [1..N -> BOOLEAN]
+===="
+chattla:20b,BM017,Simple Allocator,storage,2,1,0,0.889,silver,4.41,"---- MODULE MemoryAllocator ----
+EXTENDS Naturals, TLC
+
+CONSTANTS N, Pages, Clients
+
+VARIABLE free, allocated
+
+(* TypeOK: free is a subset of Pages, allocated is a function from Clients to subsets of Pages *)
+TypeOK == free \subseteq Pages /\ allocated \in [Clients -> SUBSET Pages]
+
+(* Init: all pages are free, no client has any pages allocated *)
+Init == /\ free = Pages
+        /\ allocated = [c \in Clients |-> {}]
+
+(* Allocate: client c requests a page p from free *)
+Allocate(c, p) == /\ c \in Clients
+                    /\ p \in free
+                    /\ free' = free \ {p}
+                    /\ allocated' = [allocated EXCEPT ![c] = @ \cup {p}]
+                    /\ UNCHANGED << allocated >>
+
+(* Release: client c releases page p back to free *)
+Release(c, p) == /\ c \in Clients
+                   /\ p \in allocated[c]
+                   /\ free' = free \cup {p}
+                   /\ allocated' = [allocated EXCEPT ![c] = @ \ {p}]
+                   /\ UNCHANGED << allocated >>
+
+(* Next: either Allocate or Release *)
+Next == \E c \in Clients, p \in Pages : Allocate(c, p) \/ Release(c, p)
+
+Spec == Init /\ [][Next]_<< free, allocated >>
+
+===="
+chattla:20b,BM018,Publish-Subscribe Broker,networking,3,0,0,0.444,bronze,92.64,"---- MODULE Broker ----
+EXTENDS Naturals, Sequences, TLC
+
+VARIABLES subscribers, messages, nextMsgId, nextSubId
+
+\* Topics are represented as natural numbers
+\* Messages are natural numbers (message IDs)
+\* Subscribers are natural numbers
+
+\* Type definitions
+\* subscriberId \in SUBSCRIBER
+\* topicId \in TOPIC
+\* messageId \in MESSAGE
+
+\* Helper definitions
+\* All subscriber IDs
+AllSubscribers == DOMAIN subscribers
+
+\* All topic IDs
+AllTopics == DOMAIN messages
+
+\* All messages for a topic
+TopicMessages(topic) == messages[topic]
+
+\* All messages for a subscriber
+SubscriberMessages(sub) == 
+  \* For each topic the subscriber is interested in, collect messages
+  \* Since messages are sequences, we can concatenate them
+  \* For simplicity, we can define as a sequence of message IDs
+  \* In a real system, we might need to handle message ordering per topic
+  \* Here, we assume messages arrive in order per topic
+  \* So we can concatenate sequences
+  \* For each topic in subscribers[sub], get messages[topic]
+  \* Then concatenate them
+  \* Since messages are sequences, we can use Append
+  \* But we need to handle empty topics
+  \* For simplicity, we can define as a sequence of message IDs
+  \* For each topic in subscribers[sub], get messages[topic]
+  \* Then concatenate them
+  \* Since messages are sequences, we can use Append
+  \* But we need to handle empty topics
+  \* For simplicity, we can define as a sequence of message IDs
+  \* For each topic in subscribers[sub], get messages[topic]
+  \* Then concatenate them
+  \* Since messages are sequences, we can use Append
+  \* But we need to handle empty topics
+  \* For simplicity, we can define as a sequence of message IDs
+  \* For each topic in subscribers[sub], get messages[topic]
+  \* Then concatenate them
+  \* Since messages are sequences, we can use Append
+  \* But we need to handle empty topics
+  \* For simplicity, we can define as a sequence of message IDs
+  \* For each topic in subscribers[sub], get messages[topic]
+  "
+chattla:20b,BM019,Dekker's Algorithm,scheduling,3,0,0,0.778,bronze,33.6,"---- MODULE Dekker ----
+EXTENDS Naturals, Sequences, TLC
+
+VARIABLES turn, wants
+
+turn \in {1, 2}
+wants \in [1..2 -> BOOLEAN]
+
+Init == 
+  /\ turn \in {1, 2}
+  /\ wants \in [1..2 -> BOOLEAN]
+  /\ turn = 1
+  /\ wants = [1 |-> FALSE, 2 |-> FALSE]
+
+Next == 
+  \/ /\ turn = 1
+     /\ wants[1] = FALSE
+     /\ wants' = [wants EXCEPT ![1] = TRUE]
+     /\ turn' = 2
+  \/ /\ turn = 2
+     /\ wants[2] = FALSE
+     /\ wants' = [wants EXCEPT ![2] = TRUE]
+     /\ turn' = 1
+  \/ /\ turn = 1
+     /\ wants[1] = TRUE
+     /\ wants[2] = TRUE
+     /\ turn' = 1
+  \/ /\ turn = 2
+     /\ wants[1] = TRUE
+     /\ wants[2] = TRUE
+     /\ turn' = 2
+
+Spec == Init /\ [][Next]_<<turn, wants>>
+
+===="
+chattla:20b,BM020,Eventually Consistent Counter,storage,3,0,0,1.0,bronze,13.2,"---- MODULE GCounter ----
+EXTENDS Naturals, Sequences, TLC
+
+CONSTANTS N, Node
+
+VARIABLES counts
+
+(* Type invariant: counts is a function from Node to a function from Node to Nat *)
+TypeOK == counts \in [Node -> [Node -> Nat]]
+
+(* Initial state: all counts are zero *)
+Init == counts = [n \in Node |-> [m \in Node |-> 0]]
+
+(* Increment operation: node n increments its own slot *)
+Increment(n) == counts' = [counts EXCEPT ![n][n] = @ + 1]
+
+(* Merge operation: node n merges its counts with those of node m *)
+Merge(n, m) ==
+  counts' = [counts EXCEPT ![n][k] = Max(@, counts[m][k]) : k \in Node]
+
+(* Next-state relation: either an increment or a merge *)
+Next == \E n \in Node : Increment(n) \lor \E m \in Node : Merge(n, m)
+
+(* Total count: sum over all nodes of the maximum count for each node *)
+Total == \Sum n \in Node : Max(counts[][n])
+
+(* Specification: initial state and next-state relation *)
+Spec == Init /\ [][Next]_counts
+
+===="

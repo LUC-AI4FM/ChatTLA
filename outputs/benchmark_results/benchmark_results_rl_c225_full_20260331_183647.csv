@@ -1,0 +1,1374 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,0,0.444,silver,58.24,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state
+
+
+
+
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,1,0,0.444,silver,12.91,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES participants, votes, decisions, coordinator
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,1,0,0.444,silver,92.54,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES forks, states
+
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,1,0,0.444,silver,179.81,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N
+
+VARIABLES num, flag
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,0,0,1.0,bronze,25.94,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail, count
+
+Init == /\ q = <<>>
+        /\ head = 0
+        /\ tail = 0
+        /\ count = 0
+
+ProducerAction == /\ count < K
+                 /\ head' = head
+                 /\ tail' = (tail + 1) \mod K
+                 /\ q' = Append(q, head)
+                 /\ count' = count + 1
+
+ConsumerAction == /\ count > 0
+                 /\ head' = (head + 1) \mod K
+                 /\ tail' = tail
+                 /\ q' = Tail(q)
+                 /\ count' = count - 1
+
+Next == ProducerAction \/ ConsumerAction
+
+Spec == Init /\ [][Next]_<<q, head, tail, count>>
+
+TypeOK == /\ K \in Nat
+          /\ q \in Seq(0..K-1)
+          /\ head \in 0..K-1
+          /\ tail \in 0..K-1
+          /\ count \in 0..K
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,1,0,0.444,silver,56.21,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,1,0,0.667,silver,283.36,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES readers, writer_active
+
+Init == /\ readers = <<>>
+       /\ writer_active = 0
+
+Next == \/ /\ writer_active = 0
+          /\ \E r \in 1..10 : /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+          /\ r \in 1..10
+          /\ r \notin readers
+  "
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,1,0,0.444,silver,79.41,"---- MODULE ChandyLamportSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, channel, snapshot, marker, recorded, channelState, N, Channels, InitState, InitChannel
+===="
+chattla:20b,BM009,Token Ring,networking,2,0,0,0.778,bronze,17.03,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS N
+
+VARIABLES token, messages
+
+Init == /\ token \in 1..N
+        /\ messages \in 1..N -> [msg \in 1..N -> BOOLEAN]
+
+Next == /\ token' \in 1..N
+        /\ messages' \in 1..N -> [msg \in 1..N -> BOOLEAN]
+        /\ token' = IF token = N THEN 1 ELSE token + 1
+           /\ messages' = [i \in 1..N |-> IF i = token THEN [msg \in 1..N |-> FALSE] ELSE messages[i] ]
+
+Spec == Init /\ [][Next]_<<token, messages>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,1.0,silver,5.61,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, Values, NULL
+
+VARIABLES store
+
+Init == store = [k \in Keys |-> NULL]
+
+Next == \/ /\ \E k \in Keys : \E v \in Values : /\ store' = [store EXCEPT ![k] = v]
+      \/ /\ \E k \in Keys : /\ store' = [store EXCEPT ![k] = NULL]
+
+Spec == Init /\ [][Next]_<<store>>
+
+TypeOK == /\ store \in [Keys -> Values]
+          /\ \A k \in Keys : store[k] \in Values
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,1,0,0.444,silver,52.2,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES acceptors, proposers, chosen
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+===="
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,1,0,0.778,silver,138.46,"---- MODULE FileTransfer ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS MAX_RETRIES, CHUNK_SIZE, FILE_SIZE, CHANNEL_CAPACITY
+VARIABLES channel, chunks, file, retransmitCount, sentChunks
+
+Init ==
+    /\ file = <<>>
+    /\ chunks = <<>>
+    /\ sentChunks = <<>>
+    /\ retransmitCount = <<>>
+    /\ channel = <<>>
+
+Next ==
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ channel' = channel
+    \/ /\ file' = Append(file, <<>>)
+       /\ chunks' = Append(chunks, <<>>)
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = retransmitCount
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = Append(sentChunks, <<>>)
+       /\ retransmitCount' = Append(retransmitCount, 0)
+       /\ channel' = channel
+    \/ /\ file' = file
+       /\ chunks' = chunks
+       /\ sentChunks' = sentChunks
+       /\ retransmitCount' = Append(retransmitCount, 0)
+       /\ channel' = Append(channel, <<>>)
+
+Spec == Init /\ [][Next]_<<channel, chunks, file, retransmitCount, sentChunks>>
+
+===="
+chattla:20b,BM013,Transaction Isolation (Snapshot Isolation),transaction,4,0,0,1.0,bronze,238.02,"---- MODULE SnapshotIsolation ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS Keys, Txns, Values
+
+VARIABLES db, txns, txnState, txnReadSet, txnWriteSet, txnWriteVals, t, transaction
+TxnState == {""active"", ""committed"", ""aborted""}
+
+(* The initial state: empty database, no active transactions *)
+Init == /\ db = <<>>
+       /\ txns = <<>>
+       /\ txnState = [t \in Txns |-> ""active""]
+       /\ txnReadSet = [t \in Txns |-> <<>>
+       /\ txnWriteSet = [t \in Txns |-> <<>>
+       /\ txnWriteVals = [t \in Txns |-> <<>>]
+
+(* Begin a transaction: add it to the set of active transactions *)
+BeginTxn(t) == /\ t \notin txns
+              /\ txns' = Append(txns, t)
+              /\ txnState' = [txnState EXCEPT ![t] = ""active""]
+              /\ txnReadSet' = [txnReadSet EXCEPT ![t] = <<>>
+              /\ txnWriteSet' = [txnWriteSet EXCEPT ![t] = <<>>
+              /\ txnWriteVals' = [txnWriteVals EXCEPT ![t] = <<>>]
+              /\ UNCHANGED <<db>>
+
+(* Read a key: add it to the transaction's read set *)
+Read(t, k) == /\ t \in txns
+              /\ k \in Keys(db)
+              /\ txnReadSet' = [txnReadSet EXCEPT ![t] = Append(txnReadSet[t], k)]
+              /\ UNCHANGED <<db, txns, txnState, txnWriteSet, txnWriteVals>>
+
+(* Write a key: add it to the transaction's write set and record the intended value *)
+Write(t, k, v) == /\ t \in txns
+                  /\ k \in Keys(db)
+                  /\ txnWriteSet' = [txnWriteSet EXCEPT ![t] = Append(txnWriteSet[t], k)]
+                  /\ txnWriteVals' = [txnWriteVals EXCEPT ![t] = [txnWriteVals[t] EXCEPT ![k] = v]]
+                  /\ UNCHANGED <<db, txns, txnState, txnReadSet>>
+
+(* Commit a transaction: check for write-write conflicts *)
+Commit(t) == /\ t \in txns
+              /\ txnState[t] = ""active""
+              /\ \A k \in txnWriteSet[t] : \A t' \in txns : t' # t /\ txnState[t'] = ""committed"" /\ k \in txnWriteSet[t']
+              /\ db' = [db EXCEPT ![k] = txnWriteVals[t][k] : k \in txnWriteSet[t]]
+              /\ txns' = [txns EXCEPT ![t] = UNCHANGED]
+              /\ txnState' = [txnState EXCEPT ![t] = ""committed""]
+              /\ txnReadSet' = [txnReadSet EXCEPT ![t] = UNCHANGED]
+              /\ txnWriteSet' = [txnWriteSet EXCEPT ![t] = UNCHANGED]
+              /\ txnWriteVals' = [txnWriteVals EXCEPT ![t] = UNCHANGED]
+
+(* Abort a transaction: discard its writes *)
+Abort(t) == /\ t \in txns
+              /\ txnState[t] = ""active""
+              /\ txns' = [txns EXCEPT ![t] = UNCHANGED]
+              /\ txnState' = [txnState EXCEPT ![t] = ""aborted""]
+              /\ txnReadSet' = [txnReadSet EXCEPT ![t] = UNCHANGED]
+              /\ txnWriteSet' = [txnWriteSet EXCEPT ![t] = UNCHANGED]
+              /\ txnWriteVals' = [txnWriteVals EXCEPT ![t] = UNCHANGED]
+              /\ UNCHANGED <<db>>
+
+(* The Next action: a nondeterministic choice among BeginTxn, Read, Write, Commit, Abort *)
+Next == \/ \E t \in Txns : BeginTxn(t)
+      \/ \E t \in Txns : \E k \in Keys(db) : Read(t, k)
+      \/ \E t \in Txns : \E k \in Keys(db) : \E v \in Values : Write(t, k, v)
+      \/ \E t \in Txns : Commit(t)
+      \/ \E t \in Txns : Abort(t)
+
+(* The specification *)
+Spec == Init /\ [][Next]_<<db, txns, txnState, txnReadSet, txnWriteSet, txnWriteVals>>
+
+(* Type checking *)
+TypeOK == /\ db \in [Keys(db) \in Seq(Values)]
+           /\ txns \in Seq(Txns)
+           /\ txnState \in [Txns -> TxnState]
+           /\ txnReadSet \in [Txns -> Seq(Keys(db))]
+           /\ txnWriteSet \in [Txns -> Seq(Keys(db))]
+           /\ txnWriteVals \in [Txns -> [Keys(db) -> Values]]
+
+===="
+chattla:20b,BM014,Clock Synchronisation,networking,3,1,0,0.444,silver,90.25,"---- MODULE ClockSync ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES clocks, offsets
+
+
+===="
+chattla:20b,BM015,Peterson's Algorithm,scheduling,2,1,1,0.778,gold,6.48,"---- MODULE Peterson2 ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES flag, turn
+
+Init == /\ flag = [i \in 1..2 |-> FALSE]
+        /\ turn = 1
+
+Next == \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ turn' = turn
+          /\ flag' = flag
+        \/ /\ flag[1] = TRUE
+          /\ flag[2] = FALSE
+          /\ turn' = 2
+          /\ flag' = [flag EXCEPT ![1] = FALSE]
+        \/ /\ flag[1] = FALSE
+          /\ flag[2] = TRUE
+          /\ turn' = 1
+          /\ flag' = [flag EXCEPT ![2] = FALSE]
+        \/ /\ flag[1] = TRUE
+          /\ flag[2] = TRUE
+          /\ turn' = turn
+          /\ flag' = flag
+
+Spec == Init /\ [][Next]_<<flag, turn>>
+
+===="
+chattla:20b,BM016,Gossip Protocol,networking,3,1,0,0.778,silver,191.69,"---- MODULE GossipProtocol ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES known, infected
+
+Init == /\ known = <<>> 
+        /\ infected = <<>> 
+
+Next == /\ known' = known
+        /\ infected' = infected \cup known
+
+Spec == Init /\ [][Next]_<<known, infected>> 
+
+===="
+chattla:20b,BM017,Simple Allocator,storage,2,1,0,0.889,silver,6.75,"---- MODULE MemoryAllocator ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, Pages, Clients
+
+VARIABLE free, allocated
+
+Init == /\ free = Pages
+        /\ allocated = [c \in Clients |-> {}]
+
+Next == /\ \E c \in Clients:
+          /\ c \in free
+          /\ free' = free \ {c}
+          /\ allocated' = [allocated EXCEPT ![c] = @ \cup {c}]
+        \/ \E c \in Clients:
+          /\ c \in allocated
+          /\ free' = free \cup {c}
+          /\ allocated' = [allocated EXCEPT ![c] = @ \ {c}]
+
+TypeOK == /\ free \subseteq Pages
+          /\ \A c \in Clients: allocated[c] \subseteq Pages
+          /\ \A c \in Clients: allocated[c] \subseteq free'
+
+Spec == Init /\ [][Next]_<<free, allocated>>
+
+===="
+chattla:20b,BM018,Publish-Subscribe Broker,networking,3,1,0,0.444,silver,48.68,"---- MODULE Broker ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES subscribers, messages, nextMsgId, nextSubId
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+===="
+chattla:20b,BM019,Dekker's Algorithm,scheduling,3,1,1,0.778,gold,6.06,"---- MODULE Dekker ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES turn, wants
+
+Init == /\ turn \in {0,1}
+        /\ wants \in SUBSET {0,1}
+        /\ turn \in {0,1}
+        /\ wants \subseteq {0,1}
+
+Next == \/ /\ turn' = 1 - turn
+          /\ wants' = {0,1}
+        \/ /\ turn' = turn
+          /\ wants' = wants \cup {0}
+        \/ /\ turn' = turn
+          /\ wants' = wants \cup {1}
+        \/ /\ turn' = turn
+          /\ wants' = wants \ {0}
+        \/ /\ turn' = turn
+          /\ wants' = wants \ {1}
+
+Spec == Init /\ [][Next]_<<turn, wants>>
+
+===="
+chattla:20b,BM020,Eventually Consistent Counter,storage,3,1,0,0.778,silver,62.41,"---- MODULE GCounter ----
+EXTENDS Integers, Sequences, FiniteSets
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+
+CONSTANTS Node
+
+VARIABLES counts
+
+(* --state Init
+counts = [n \in Node |-> [m \in Node |-> 0]]
+*)
+
+(* --state Increment
+counts[n][n] = counts[n][n] + 1
+*)
+
+(* --state Merge
+counts = [n \in Node |-> [m \in Node |-> Max(counts[n][m], counts'[n][m])]]
+*)
+
+(* --state GlobalCount
+globalCount = Sum([n \in Node |-> Max({counts[n][m] : m \in Node})])
+*)
+
+(* --state TypeOK
+TypeOK == /\ counts \in [Node -> [Node -> Nat]]
+*)
+
+(* --state Spec
+Spec == Init /\ [][Next]_vars
+*)
+
+===="

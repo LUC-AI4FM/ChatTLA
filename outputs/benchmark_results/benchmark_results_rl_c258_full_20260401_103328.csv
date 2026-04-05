@@ -1,0 +1,697 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,0,0,1.0,bronze,65.35,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES state, turn
+StateSpace == [p \in 1..N |-> state[p] \in {idle, trying, critical}]
+
+(* Type invariant *)
+TypeOK == /\ N \in Nat
+          /\ N > 0
+          /\ state \in StateSpace
+          /\ turn \in 1..N
+
+(* Initial condition *)
+Init == /\ turn \in 1..N
+        /\ \A p \in 1..N : state[p] = idle
+
+(* Next action *)
+Next == \E p \in 1..N :
+          /\ state' = [state EXCEPT ![p] = \*]
+          /\ turn' = \*  \* turn may change or stay the same
+
+Spec == Init /\ [][Next]_<<state, turn>>
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,1,0,0.444,silver,48.15,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES participants, votes, decisions, coordinator, messages, finished
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,1,0,0.444,silver,61.35,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES forks, states
+
+
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,1,0,0.444,silver,61.54,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES num, flag
+
+
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,0,0.444,silver,57.73,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT K
+
+VARIABLES q, head, tail
+
+(* The queue is represented as a sequence of length K. *)
+(* head and tail are indices into the sequence. *)
+
+(* The queue is empty when head = tail. *)
+(* The queue is full when (tail + 1) \mod K = head. *)
+
+(* The queue holds at most K elements. *)
+(* The queue holds at least 0 elements. *)
+
+(* The queue is a sequence of length K. *)
+(* The queue holds elements from a set of values. *)
+
+(* The queue is a finite set. *)
+
+(* The queue is a bounded FIFO queue. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FIFO queue with one producer and one consumer. *)
+
+(* The queue is a bounded FI"
+chattla:20b,BM006,Raft Leader Election,consensus,4,1,0,0.444,silver,89.89,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES currentTerm, votedFor, state
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,1,0,0.778,silver,191.41,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES readers, writer_active
+
+Init == /\ readers = <<>>
+        /\ writer_active = FALSE
+
+Next == \/ /\ writer_active = FALSE
+          /\ \A r \in readers : r = r
+        \/ /\ writer_active = TRUE
+          /\ \A r \in readers : r = r
+
+Spec == Init /\ [][Next]_<<readers, writer_active>>
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,0,0,1.0,bronze,220.72,"---- MODULE ChandyLamportSnapshot ----
+EXTENDS Integers, Sequences, FiniteSets
+CONSTANTS N
+
+VARIABLES state, channel, snapshot, markerSent, markerReceived, finished
+\* All processes are numbered 1..N
+\* All channels are pairs (i,j) where i and j are process numbers
+\* The set of all channels is Channels == { (i,j) \in N \X N : i \in N /\ j \in N /\ i # j }
+
+Channels == { (i,j) \in N \X N : i \in N /\ j \in N /\ i # j }
+
+\* Initial state: all processes have initial local state 0, all channels are empty,
+\* no markers sent or received, and no process has finished recording
+Init == /\ state = [i \in N |-> 0]
+        /\ channel = [c \in Channels |-> <<>>]
+        /\ snapshot = [i \in N |-> [localState \in N, channelState \in [Channels \X N |-> N]]]
+        /\ markerSent = [c \in Channels |-> FALSE]
+        /\ markerReceived = [c \in Channels |-> FALSE]
+        /\ finished = [i \in N |-> FALSE]
+
+\* Next action: either send a marker on an outgoing channel or receive a message
+Next == 
+  \E i \in N : 
+    /\ state[i] = state[i] + 1
+    /\ channel = [channel EXCEPT !i..j = Append(channeli..j, state[i])]
+  \/ \E i \in N : \E j \in N : i # j /\ markerSenti..j = FALSE
+    /\ finished[i] = FALSE
+    /\ state[i] = state[i] + 1
+    /\ channel = [channel EXCEPT !i..j = Append(channeli..j, state[i])]
+    /\ markerSent = [markerSent EXCEPT !i..j = TRUE]
+  \/ \E i \in N : \E j \in N : i # j /\ markerReceivedi..j = FALSE
+    /\ finished[i] = FALSE
+    /\ channeli..j \in N
+    /\ channel = [channel EXCEPT !i..j = Tail(channeli..j)]
+    /\ markerReceived = [markerReceived EXCEPT !i..j = TRUE]
+  \/ \E i \in N : 
+    /\ finished[i] = FALSE
+    /\ \A j \in N : j # i /\ markerReceivedi..j = TRUE
+    /\ finished = [finished EXCEPT ![i] = TRUE]
+    /\ snapshot = [snapshot EXCEPT ![i] = [localState \in state[i], channelState \in [Channels \X N |-> N] : 
+          /\ c \in Channels
+          /\ c[2] = i
+          /\ channelState[c] = channel[c] ]]
+
+Spec == Init /\ [][Next]_<<state, channel, snapshot, markerSent, markerReceived, finished>>
+
+\* Type invariants
+TypeOK == /\ state \in [N |-> N]
+          /\ channel \in [Channels |-> Seq(N)]
+          /\ snapshot \in [N |-> [localState \in N, channelState \in [Channels \X N |-> N]]]
+          /\ markerSent \in [Channels |-> BOOLEAN]
+          /\ markerReceived \in [Channels |-> BOOLEAN]
+          /\ finished \in [N |-> BOOLEAN]
+
+===="
+chattla:20b,BM009,Token Ring,networking,2,1,1,0.667,gold,2.26,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+VARIABLE token
+
+Init == /\ token \in 1..N
+
+Next == /\ token' \in 1..N
+        /\ token' = IF token = N THEN 1 ELSE token + 1
+
+Spec == Init /\ [][Next]_<<token>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,0.778,silver,4.94,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, Values, NULL
+
+VARIABLES store
+
+Init == store = [k \in Keys |-> NULL]
+
+Next == \/ /\ \E k \in Keys : \E v \in Values : /\ store' = [store EXCEPT ![k] = v]
+      \/ /\ \E k \in Keys : /\ store' = [store EXCEPT ![k] = NULL]
+
+Spec == Init /\ [][Next]_<<store>>
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,1,0,0.444,silver,15.57,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES acceptors, proposers, promises, accepted, chosen, values, ballots, chosenValue
+
+===="
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,0,0,0.667,bronze,25.48,"---- MODULE FileTransfer ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS MAX_RETRIES, CHUNK_SIZE, FILE_SIZE, CHANNEL_LOSS_PROBABILITY
+VARIABLES channelState, retransmitCount, sentChunks
+
+    /\ fileChunks = [i \in 1..FILE_SIZE /-> i]
+    /\ sentChunks = <<>>
+    /\ retransmitCount = 0
+    /\ channelState = [i \in 1..FILE_SIZE /-> 0]
+
+Next ==
+    /\ sentChunks' = Append(sentChunks, lastChunk)
+    /\ retransmitCount' = IF lastChunk \in sentChunks THEN retransmitCount + 1 ELSE 0
+    /\ channelState' = [i \in 1..FILE_SIZE |-> IF i = lastChunk THEN 1 ELSE channelState[i]]
+    /\ lastChunk \in 1..FILE_SIZE
+    /\ lastChunk \notin sentChunks
+    /\ retransmitCount' <= MAX_RETRIES
+
+Spec ==
+    Init /\ [][Next]_<<fileChunks, sentChunks, retransmitCount, channelState>>
+
+===="
+chattla:20b,BM013,Transaction Isolation (Snapshot Isolation),transaction,4,1,1,0.778,gold,70.1,"---- MODULE SnapshotIsolation ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES data, snapshot, readSet, writeSet, writeVals, status, commitLog, abortLog, txnId, nextTxnId, readOnly, writeOnly, readOnlyTxn, writeOnlyTxn, readOnlyTxnId, writeOnlyTxnId, readOnlySnapshot, writeOnlySnapshot, readOnlyReadSet, writeOnlyReadSet, writeOnlyWriteSet, writeOnlyWriteVals, readOnlyStatus, writeOnlyStatus
+
+Init == /\ data = <<>>
+       /\ snapshot = <<>>
+       /\ readSet = <<>>
+       /\ writeSet = <<>>
+       /\ writeVals = <<>>
+       /\ status = <<>>
+       /\ commitLog = <<>>
+       /\ abortLog = <<>>
+       /\ txnId = 0
+       /\ nextTxnId = 1
+       /\ readOnly = <<>>
+       /\ writeOnly = <<>>
+       /\ readOnlyTxn = <<>>
+       /\ writeOnlyTxn = <<>>
+       /\ readOnlyTxnId = <<>>
+       /\ writeOnlyTxnId = <<>>
+       /\ readOnlySnapshot = <<>>
+       /\ writeOnlySnapshot = <<>>
+       /\ readOnlyReadSet = <<>>
+       /\ writeOnlyReadSet = <<>>
+       /\ writeOnlyWriteSet = <<>>
+       /\ writeOnlyWriteVals = <<>>
+       /\ readOnlyStatus = <<>>
+       /\ writeOnlyStatus = <<>>
+
+Next == /\ data' = data
+       /\ snapshot' = snapshot
+       /\ readSet' = readSet
+       /\ writeSet' = writeSet
+       /\ writeVals' = writeVals
+       /\ status' = status
+       /\ commitLog' = commitLog
+       /\ abortLog' = abortLog
+       /\ txnId' = txnId
+       /\ nextTxnId' = nextTxnId
+       /\ readOnly' = readOnly
+       /\ writeOnly' = writeOnly
+       /\ readOnlyTxn' = readOnlyTxn
+       /\ writeOnlyTxn' = writeOnlyTxn
+       /\ readOnlyTxnId' = readOnlyTxnId
+       /\ writeOnlyTxnId' = writeOnlyTxnId
+       /\ readOnlySnapshot' = readOnlySnapshot
+       /\ writeOnlySnapshot' = writeOnlySnapshot
+       /\ readOnlyReadSet' = readOnlyReadSet
+       /\ writeOnlyReadSet' = writeOnlyReadSet
+       /\ writeOnlyWriteSet' = writeOnlyWriteSet
+       /\ writeOnlyWriteVals' = writeOnlyWriteVals
+       /\ readOnlyStatus' = readOnlyStatus
+       /\ writeOnlyStatus' = writeOnlyStatus
+
+Spec == Init /\ [][Next]_<<data, snapshot, readSet, writeSet, writeVals, status, commitLog, abortLog, txnId, nextTxnId, readOnly, writeOnly, readOnlyTxn, writeOnlyTxn, readOnlyTxnId, writeOnlyTxnId, readOnlySnapshot, writeOnlySnapshot, readOnlyReadSet, writeOnlyReadSet, writeOnlyWriteSet, writeOnlyWriteVals, readOnlyStatus, writeOnlyStatus>>
+
+===="
+chattla:20b,BM014,Clock Synchronisation,networking,3,1,0,0.444,silver,98.32,"---- MODULE ClockSync ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES clocks, offsets
+
+
+===="
+chattla:20b,BM015,Peterson's Algorithm,scheduling,2,1,1,0.778,gold,191.99,"---- MODULE Peterson2 ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES flag, turn
+
+Init == /\ flag = [i \in 1..2 |-> FALSE]
+        /\ turn = 1
+
+Next == \/ /\ flag[1] = FALSE
+          /\ flag[2] = FALSE
+          /\ turn' = turn
+          /\ flag' = flag
+        \/ /\ flag[1] = TRUE
+          /\ turn' = 2
+          /\ flag' = [flag EXCEPT ![2] = FALSE]
+        \/ /\ flag[2] = TRUE
+          /\ turn' = 1
+          /\ flag' = [flag EXCEPT ![1] = FALSE]
+
+Spec == Init /\ [][Next]_<<flag, turn>>
+
+===="
+chattla:20b,BM016,Gossip Protocol,networking,3,1,0,0.778,silver,10.33,"---- MODULE GossipProtocol ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES known, infected
+
+Init == /\ known = <<>> 
+        /\ infected = <<>> 
+
+Next == /\ known' = known
+        /\ infected' = infected \cup known
+
+Spec == Init /\ [][Next]_<<known, infected>> 
+
+===="
+chattla:20b,BM017,Simple Allocator,storage,2,0,0,1.0,bronze,24.19,"---- MODULE MemoryAllocator ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, Pages, Client
+
+VARIABLES free, allocated
+
+Init == /\ free = Pages
+        /\ allocated = [c \in Client |-> {}]
+
+Next == \/ /\ free # {}
+          /\ free' = free \ {p}
+             /\ allocated' = [c \in Client |-> IF c = client THEN allocated[c] \cup {p}
+
+          /\ client \in Client
+             /\ p \in free
+        \/ /\ allocated[client] # {}
+          /\ free' = free \cup {p}
+             /\ allocated' = [c \in Client |-> IF c = client THEN allocated[c] \ {p}
+
+          /\ client \in Client
+             /\ p \in allocated[client]
+
+TypeOK == /\ free \subseteq Pages
+          /\ \A c \in Client: allocated[c] \subseteq Pages
+          /\ \A c \in Client: \A p \in allocated[c]: p \in Pages
+          /\ \A c1, c2 \in Client: c1 # c2 => allocated[c1] \cap allocated[c2] = {}
+
+Spec == Init /\ [][Next]_<<free, allocated>>
+
+===="
+chattla:20b,BM018,Publish-Subscribe Broker,networking,3,1,0,0.444,silver,9.07,"---- MODULE Broker ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES subscribers, messages, nextMsgId, nextSubId
+
+===="
+chattla:20b,BM019,Dekker's Algorithm,scheduling,3,1,0,0.778,silver,49.82,"---- MODULE Dekker ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES turn, wants
+
+Init == /\ turn \in {0,1}
+        /\ wants \in {0,1}^2
+        /\ wants = <<FALSE, FALSE>>
+
+Next == /\ turn' \in {0,1}
+        /\ wants' \in {0,1}^2
+        /\ turn' = turn
+        /\ wants' = wants
+        /\ \/ /\ turn = 0
+            /\ wants[0] = FALSE
+            /\ wants' = <<TRUE, wants[1]>>
+        \/ /\ turn = 1
+            /\ wants[1] = FALSE
+            /\ wants' = <<wants[0], TRUE>>
+        \/ /\ turn = 0
+            /\ wants[0] = TRUE
+            /\ wants[1] = FALSE
+            /\ turn' = 1
+            /\ wants' = <<FALSE, FALSE>>
+        \/ /\ turn = 1
+            /\ wants[0] = FALSE
+            /\ wants[1] = TRUE
+            /\ turn' = 0
+            /\ wants' = <<FALSE, FALSE>>
+
+Spec == Init /\ [][Next]_<<turn, wants>>
+
+===="
+chattla:20b,BM020,Eventually Consistent Counter,storage,3,1,0,0.444,silver,90.0,"---- MODULE GCounter ----
+EXTENDS Integers, Sequences, FiniteSets
+
+VARIABLES counts
+
+
+===="
