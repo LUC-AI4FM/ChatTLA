@@ -82,6 +82,7 @@ def merge(
     output_path: Path = _MERGED_OUT,
     device: str = "auto",
     dpo_checkpoint_path: Path | None = None,
+    base_model: str | None = None,
 ) -> None:
     if checkpoint_path is None:
         checkpoint_path = find_latest_checkpoint(_CHECKPOINT_DIR)
@@ -92,14 +93,20 @@ def merge(
     if device != "cpu" and torch.cuda.is_available():
         torch.cuda.empty_cache()
 
-    print(f"[merge_lora] Loading base model: {MODEL_ID} (device={device})")
+    # Use --base-model if provided (critical for DPO-only mode where LoRA was
+    # trained on the merged model, not the original base model).
+    model_id = base_model or MODEL_ID
+    print(f"[merge_lora] Loading base model: {model_id} (device={device})")
     model = AutoModelForCausalLM.from_pretrained(
-        MODEL_ID,
+        model_id,
         torch_dtype=torch.bfloat16,
         device_map=device,
         trust_remote_code=True,    # gpt-oss requires custom modeling code
     )
-    tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
+    try:
+        tokenizer = AutoTokenizer.from_pretrained(model_id)
+    except Exception:
+        tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
 
     print(f"[merge_lora] Loading SFT LoRA adapter from: {checkpoint_path}")
     model = PeftModel.from_pretrained(model, str(checkpoint_path))
@@ -115,6 +122,14 @@ def merge(
         model = model.merge_and_unload()
 
     output_path.mkdir(parents=True, exist_ok=True)
+    # Clean old weight files before saving to avoid duplicates (e.g. 39GB safetensors + 39GB pytorch_model.bin)
+    for old_weights in output_path.glob("pytorch_model*.bin"):
+        old_weights.unlink()
+        print(f"[merge_lora] Cleaned old weights: {old_weights.name}")
+    for old_weights in output_path.glob("model*.safetensors"):
+        old_weights.unlink()
+        print(f"[merge_lora] Cleaned old weights: {old_weights.name}")
+
     print(f"[merge_lora] Saving merged model → {output_path}")
     # Use save_pretrained to write proper safetensors + index files that
     # llama.cpp's convert_hf_to_gguf.py expects.  Fall back to torch.save
@@ -148,6 +163,9 @@ if __name__ == "__main__":
     parser.add_argument("--dpo-checkpoint", default=None, help="DPO checkpoint dir for two-stage merge (default: latest in outputs/checkpoints_dpo if it exists)")
     parser.add_argument("--output",     default=str(_MERGED_OUT), help="Output directory for merged model")
     parser.add_argument("--device",     default="auto", help="Device map: 'auto', 'cuda', or 'cpu'")
+    parser.add_argument("--base-model", default=None,
+                        help="Path or HF ID to use as base model instead of openai/gpt-oss-20b "
+                             "(required when LoRA was trained on a previously merged model)")
     args = parser.parse_args()
 
     # Auto-detect DPO checkpoint if not specified and checkpoints_dpo/ exists
@@ -164,4 +182,5 @@ if __name__ == "__main__":
         output_path=Path(args.output),
         device=args.device,
         dpo_checkpoint_path=dpo_ckpt,
+        base_model=args.base_model,
     )

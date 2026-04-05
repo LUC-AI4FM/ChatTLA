@@ -39,8 +39,12 @@ _BENCHMARK_JSON = _REPO_ROOT / "data" / "benchmarks" / "benchmark_suite.json"
 _PROMPT_BANK = _REPO_ROOT / "data" / "processed" / "prompt_bank.json"
 
 # Defaults — overridden by env vars
+# If TEACHER_USE_HF=1, use HuggingFace Inference API instead of local Ollama.
+# This avoids loading a 60GB+ model locally and frees GPU VRAM for training.
 TEACHER_URL = os.environ.get("OLLAMA_TEACHER_URL", "http://localhost:11434")
 TEACHER_MODEL = os.environ.get("OLLAMA_TEACHER_MODEL", "llama3:70b")
+TEACHER_USE_HF = os.environ.get("TEACHER_USE_HF", "").strip().lower() in ("1", "true", "yes")
+TEACHER_HF_MODEL = os.environ.get("TEACHER_HF_MODEL", "Qwen/Qwen2.5-Coder-32B-Instruct")
 
 
 def _spec_hash(spec: str) -> str:
@@ -67,7 +71,61 @@ def _load_existing_hashes() -> set[str]:
     return hashes
 
 
-def call_teacher_model(
+_TEACHER_SYSTEM_PROMPT = (
+    "You are an expert TLA+ formal methods engineer. Generate complete, "
+    "syntactically correct TLA+ specifications that pass both SANY (parser) "
+    "and TLC (model checker) validation. Always include:\n"
+    "- EXTENDS Integers, Sequences, FiniteSets (as needed)\n"
+    "- CONSTANTS and VARIABLES declarations\n"
+    "- TypeOK invariant\n"
+    "- Init and Next operators\n"
+    "- Domain-specific safety invariants\n"
+    "- A TLC configuration comment block at the end\n\n"
+    "Output ONLY the TLA+ module. No markdown fences, no explanation outside the module."
+)
+
+
+def _call_hf_inference(
+    prompt: str,
+    *,
+    temperature: float = 0.1,
+    max_tokens: int = 4096,
+    timeout: int = 120,
+) -> Optional[str]:
+    """Call HuggingFace Inference API. Requires HF_TOKEN env var."""
+    import requests
+
+    hf_token = os.environ.get("HF_TOKEN", "")
+    if not hf_token:
+        log.warning("[teacher] HF_TOKEN not set, cannot use HF inference")
+        return None
+
+    api_url = f"https://router.huggingface.co/hf-inference/models/{TEACHER_HF_MODEL}/v1/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {hf_token}",
+        "Content-Type": "application/json",
+    }
+    payload = {
+        "model": TEACHER_HF_MODEL,
+        "messages": [
+            {"role": "system", "content": _TEACHER_SYSTEM_PROMPT},
+            {"role": "user", "content": prompt},
+        ],
+        "temperature": temperature,
+        "max_tokens": max_tokens,
+    }
+
+    try:
+        resp = requests.post(api_url, headers=headers, json=payload, timeout=timeout)
+        resp.raise_for_status()
+        data = resp.json()
+        return data["choices"][0]["message"]["content"]
+    except Exception as e:
+        log.warning(f"[teacher] HF inference failed: {e}")
+        return None
+
+
+def _call_ollama(
     prompt: str,
     *,
     url: str = "",
@@ -76,31 +134,18 @@ def call_teacher_model(
     max_tokens: int = 4096,
     timeout: int = 180,
 ) -> Optional[str]:
-    """Call the teacher model via Ollama and return the raw response text."""
+    """Call local Ollama teacher model."""
     import requests
 
     base = url or TEACHER_URL
     mdl = model or TEACHER_MODEL
-
-    system_prompt = (
-        "You are an expert TLA+ formal methods engineer. Generate complete, "
-        "syntactically correct TLA+ specifications that pass both SANY (parser) "
-        "and TLC (model checker) validation. Always include:\n"
-        "- EXTENDS Integers, Sequences, FiniteSets (as needed)\n"
-        "- CONSTANTS and VARIABLES declarations\n"
-        "- TypeOK invariant\n"
-        "- Init and Next operators\n"
-        "- Domain-specific safety invariants\n"
-        "- A TLC configuration comment block at the end\n\n"
-        "Output ONLY the TLA+ module. No markdown fences, no explanation outside the module."
-    )
 
     try:
         resp = requests.post(
             f"{base}/api/generate",
             json={
                 "model": mdl,
-                "system": system_prompt,
+                "system": _TEACHER_SYSTEM_PROMPT,
                 "prompt": prompt,
                 "stream": False,
                 "options": {
@@ -113,8 +158,23 @@ def call_teacher_model(
         resp.raise_for_status()
         return resp.json().get("response", "")
     except Exception as e:
-        log.warning(f"[teacher] Call failed: {e}")
+        log.warning(f"[teacher] Ollama call failed: {e}")
         return None
+
+
+def call_teacher_model(
+    prompt: str,
+    *,
+    url: str = "",
+    model: str = "",
+    temperature: float = 0.1,
+    max_tokens: int = 4096,
+    timeout: int = 180,
+) -> Optional[str]:
+    """Call teacher model via HF Inference API (if TEACHER_USE_HF=1) or local Ollama."""
+    if TEACHER_USE_HF:
+        return _call_hf_inference(prompt, temperature=temperature, max_tokens=max_tokens, timeout=timeout)
+    return _call_ollama(prompt, url=url, model=model, temperature=temperature, max_tokens=max_tokens, timeout=timeout)
 
 
 def extract_tla_block(text: str) -> str:
@@ -186,8 +246,8 @@ def generate_and_validate_teacher_spec(
             log.debug(f"[teacher] TLC error: {e}")
             continue
 
-        if not tlc_result.success:
-            log.debug(f"[teacher] TLC fail for {prompt_id} attempt {attempt + 1}")
+        if tlc_result.tier != "gold":
+            log.debug(f"[teacher] TLC fail for {prompt_id} attempt {attempt + 1} (tier={tlc_result.tier})")
             continue
 
         # Gold! Build the training example

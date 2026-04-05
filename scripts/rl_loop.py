@@ -93,7 +93,7 @@ _EVAL_JSONL      = _REPO_ROOT / "data" / "processed" / "eval.jsonl"
 # Config
 # ─────────────────────────────────────────────────────────────────────────────
 CYCLE_HOURS        = 0.0          # 0 = no sleep between cycles; >0 pads to target hours
-RETRAIN_THRESHOLD  = 10           # retrain after 10 new examples (was 25; train more, generate less)
+RETRAIN_THRESHOLD  = 9999         # DISABLED: DPO retrain consistently regresses; accumulate data only
 NIGHTTIME_START    = 22           # 10 PM
 NIGHTTIME_END      = 6            # 6 AM
 GPU_VRAM_CAP_DAY   = 0.75         # 75% VRAM cap during daytime (leave 25%)
@@ -178,6 +178,12 @@ class SpecResult:
     repair_type: str = ""            # "sany" or "tlc" — which verifier drove the repair
     error_class: str = ""            # classified error: syntax|invariant_violation|deadlock|unbounded_state|undefined_op|timeout|other
     critique_applied: bool = False   # whether self-critique was applied before validation
+    # Semantic quality (gold specs only)
+    semantic_score: float = 0.0      # 0.0–1.0 composite semantic quality
+    action_coverage: float = 0.0     # fraction of actions reachable from Init/Next
+    dead_actions: list[str] = field(default_factory=list)
+    mutation_caught: bool = False     # invariant caught a mutation test
+    trivial_invariant: bool = False   # invariant is vacuously true
 
 
 @dataclass
@@ -1307,6 +1313,22 @@ def _generate_for_prompt(
             log_tlc_error(pid, prompt_text, tier, tlc_violations, tlc_raw, spec[:1200])
 
         if tier == "gold":
+            # Attach semantic quality signals from TLC output
+            if hasattr(tlc_result, 'semantic') and tlc_result.semantic:
+                sem = tlc_result.semantic
+                result.action_coverage = sem.action_coverage
+                result.dead_actions = list(sem.dead_actions)
+                result.mutation_caught = sem.mutation_caught
+                result.trivial_invariant = sem.trivial_invariant
+                # Composite score: coverage (40%) + mutation effectiveness (40%) + non-trivial (20%)
+                cov_score = sem.action_coverage
+                mut_score = 1.0 if sem.mutation_caught else (0.0 if sem.mutation_tested else 0.5)
+                triv_score = 0.0 if sem.trivial_invariant else 1.0
+                result.semantic_score = cov_score * 0.4 + mut_score * 0.4 + triv_score * 0.2
+                if sem.dead_actions:
+                    log.debug(f"  [{pid}] Dead actions: {sem.dead_actions}")
+                if sem.trivial_invariant:
+                    log.debug(f"  [{pid}] Trivial invariant detected")
             break
 
         # ── RLVR: verifier-guided repair ─────────────────────────────────
@@ -1350,9 +1372,19 @@ def _generate_for_prompt(
         tier_rank = {"gold": 3, "silver": 2, "bronze": 1}
         best = max(attempt_results, key=lambda r: tier_rank.get(r.tier, 0))
         out.extend(attempt_results)
+        sem_str = ""
+        if best.tier == "gold" and best.semantic_score > 0:
+            sem_str = f" sem={best.semantic_score:.2f} cov={best.action_coverage:.0%}"
+            if best.dead_actions:
+                sem_str += f" dead={best.dead_actions}"
+            if best.mutation_caught:
+                sem_str += " mut=CAUGHT"
+            if best.trivial_invariant:
+                sem_str += " TRIVIAL_INV"
         log.info(
             f"  [{pid}] tier={best.tier} sany={best.sany_pass} "
-            f"tlc={best.tlc_pass} struct={best.structural_score:.2f} "
+            f"tlc={best.tlc_pass} struct={best.structural_score:.2f}"
+            f"{sem_str} "
             f"attempts={len(attempt_results)} (best of {len(attempt_results)})"
         )
 
@@ -1971,10 +2003,13 @@ def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT
         f"batch=1/device free_mb={free_mb} cap={max_gpu_memory_mb} MB/GPU"
     )
 
+    merged_model_dir = _REPO_ROOT / "outputs" / "merged_model"
+
     if retrain_mode == "dpo_only":
-        # DPO-only: skip SFT, just preference learning from gold DPO pairs.
-        # We still need train.py to load the model + LoRA, so pass --max-steps 2
-        # (essentially a no-op SFT warmup: 2 gradient steps) then DPO does the real work.
+        # DPO-only: load from the MERGED model (which already has TLA+ knowledge)
+        # and apply a fresh LoRA for DPO preference learning.
+        # Without --base-model, DPO would start from base gpt-oss-20b which
+        # knows nothing about TLA+ → catastrophic regression every time.
         train_cmd = [
             sys.executable, "-m", "src.training.train",
             "--epochs", "1",                          # needed but capped by max-steps
@@ -1986,7 +2021,18 @@ def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT
             "--gradient-accumulation-steps", str(grad_accum_steps),
             "--dpo-after",                            # DPO phase after minimal SFT
         ]
-        log.info(f"[retrain] DPO-only: 2-step SFT warmup (no-op) + DPO on {dpo_n} gold pairs (lr={lr})")
+        if merged_model_dir.exists() and (merged_model_dir / "config.json").exists():
+            train_cmd.extend(["--base-model", str(merged_model_dir)])
+            log.info(
+                f"[retrain] DPO-only: loading from merged model ({merged_model_dir}) "
+                f"+ DPO on {dpo_n} gold pairs (lr={lr})"
+            )
+        else:
+            log.warning(
+                f"[retrain] No merged model found at {merged_model_dir}; "
+                f"falling back to base model (DPO may regress!)"
+            )
+            log.info(f"[retrain] DPO-only: 2-step SFT warmup + DPO on {dpo_n} gold pairs (lr={lr})")
     else:
         # Incremental SFT with optional DPO-after
         train_cmd = [
@@ -2036,11 +2082,19 @@ def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT
     )
     merged_ok = False
 
+    # When DPO-only mode trained on the merged model, merge_lora must also
+    # load from the merged model (LoRA deltas are relative to whatever base
+    # was used during training).
+    merge_base_args: list[str] = []
+    if retrain_mode == "dpo_only" and merged_model_dir.exists():
+        merge_base_args = ["--base-model", str(merged_model_dir)]
+        log.info(f"[retrain] Merge will use base: {merged_model_dir}")
+
     def _merge_cpu() -> subprocess.CompletedProcess:
         cpu_env = os.environ.copy()
         cpu_env["CUDA_VISIBLE_DEVICES"] = ""
         return subprocess.run(
-            [sys.executable, "-m", "src.training.merge_lora", "--device", "cpu"],
+            [sys.executable, "-m", "src.training.merge_lora", "--device", "cpu"] + merge_base_args,
             cwd=str(_REPO_ROOT),
             env=cpu_env,
             capture_output=True,
@@ -2050,7 +2104,7 @@ def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT
 
     def _merge_gpu() -> subprocess.CompletedProcess:
         return subprocess.run(
-            [sys.executable, "-m", "src.training.merge_lora"],
+            [sys.executable, "-m", "src.training.merge_lora"] + merge_base_args,
             cwd=str(_REPO_ROOT),
             env=merge_env,
             capture_output=True,
@@ -2155,7 +2209,7 @@ def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT
                         # Also check TLC for specs that pass SANY
                         try:
                             tr = tlc_validate(spec, module_name=mod_name, timeout=30)
-                            tlc_pass += int(tr.success)
+                            tlc_pass += int(tr.tier == "gold")
                         except Exception:
                             pass  # TLC failure doesn't block, just informational
                 except Exception as e:
@@ -2477,14 +2531,27 @@ def run_cycle(
         if TEACHER_ENABLED and cycle_id % TEACHER_HARVEST_EVERY == 0:
             log.info(f"[phase0] Teacher gold harvest (every {TEACHER_HARVEST_EVERY} cycles)...")
             try:
-                from scripts.teacher_gold_gen import harvest_teacher_gold
-                teacher_n = harvest_teacher_gold(
-                    cycle_id=cycle_id,
-                    max_prompts=TEACHER_MAX_PROMPTS,
-                )
-                log.info(f"[phase0] Teacher harvest: {teacher_n} new gold examples")
-                # Teacher gold counts toward accumulated_new for retrain trigger
-                accumulated_new += teacher_n
+                import signal
+
+                def _teacher_timeout_handler(signum, frame):
+                    raise TimeoutError("Teacher harvest timed out")
+
+                # 10 min hard limit — 120b on 2x48GB is very slow
+                old_handler = signal.signal(signal.SIGALRM, _teacher_timeout_handler)
+                signal.alarm(600)
+                try:
+                    from scripts.teacher_gold_gen import harvest_teacher_gold
+                    teacher_n = harvest_teacher_gold(
+                        cycle_id=cycle_id,
+                        max_prompts=TEACHER_MAX_PROMPTS,
+                    )
+                    log.info(f"[phase0] Teacher harvest: {teacher_n} new gold examples")
+                    accumulated_new += teacher_n
+                finally:
+                    signal.alarm(0)
+                    signal.signal(signal.SIGALRM, old_handler)
+            except TimeoutError:
+                log.warning("[phase0] Teacher harvest timed out after 10 min (non-fatal, continuing)")
             except Exception as e:
                 log.warning(f"[phase0] Teacher harvest failed (non-fatal): {e}")
         elif TEACHER_ENABLED:
@@ -2594,6 +2661,21 @@ def run_cycle(
         log.info(f"[phase1] Results: gold={stats.gold_count} silver={stats.silver_count} "
                  f"bronze={stats.bronze_count} sany={stats.sany_pass}/{stats.specs_generated} "
                  f"tlc={stats.tlc_pass}/{stats.specs_generated}")
+
+        # Log semantic quality for gold specs
+        gold_results = [r for r in results if r.tier == "gold" and r.semantic_score > 0]
+        if gold_results:
+            avg_sem = sum(r.semantic_score for r in gold_results) / len(gold_results)
+            avg_cov = sum(r.action_coverage for r in gold_results) / len(gold_results)
+            n_mut = sum(1 for r in gold_results if r.mutation_caught)
+            n_triv = sum(1 for r in gold_results if r.trivial_invariant)
+            dead = [a for r in gold_results for a in r.dead_actions]
+            log.info(
+                f"[phase1] Semantic: avg_score={avg_sem:.2f} coverage={avg_cov:.0%} "
+                f"mutation_caught={n_mut}/{len(gold_results)} trivial_inv={n_triv}"
+            )
+            if dead:
+                log.info(f"[phase1] Dead actions (unreachable): {dead[:10]}")
         if stats.sany_repairs_attempted:
             log.info(f"[phase1] SANY repairs: {stats.sany_repairs_succeeded}/{stats.sany_repairs_attempted} succeeded")
         if stats.critiques_applied:
