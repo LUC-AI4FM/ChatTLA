@@ -4,8 +4,8 @@ library_name: transformers
 model_name: checkpoints_dpo
 tags:
 - generated_from_trainer
-- dpo
 - trl
+- dpo
 licence: license
 ---
 

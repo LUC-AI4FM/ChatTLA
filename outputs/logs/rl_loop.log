@@ -1388,3 +1388,66 @@ train.py: error: unrecognized arguments: --per-device-train-batch-size 1 --gradi
     sent = os.sendfile(outfd, infd, offset, blocksize)
 OSError: [Errno 28] No space left on device: '/home/espencer2/ChatTLA/outputs/gguf/chattla-20b-Q8_0.gguf' -> '/home/espencer2/ChatTLA/outputs/gguf_backup/chattla-20b-pre-c39.gguf'
 
+2026-04-05 11:25:55 INFO ============================================================
+2026-04-05 11:25:55 INFO   ChatTLA Autonomous RL Loop (v2: DPO-first + teacher harvest)
+2026-04-05 11:25:55 INFO   Inter-cycle pause: 0.0h (none)
+2026-04-05 11:25:55 INFO   Eval: full benchmark every 3 cycles (2 attempts); quick eval (12×2) otherwise
+2026-04-05 11:25:55 INFO   Retrain strategy: DPO-first (≥4 DPO pairs) or incremental SFT (epochs=2, capped at 2)
+2026-04-05 11:25:55 INFO   Retrain threshold: 10 | Min training size: 200
+2026-04-05 11:25:55 INFO   Eval gate: 10 benchmarks, need ≥3 SANY + TLC check, rollback on failure
+2026-04-05 11:25:55 INFO   Teacher model: ENABLED (every 5 cycles, 5 prompts)
+2026-04-05 11:25:55 INFO     URL: http://localhost:11434
+2026-04-05 11:25:55 INFO     Model: gpt-oss:120b
+2026-04-05 11:25:55 INFO   Phase 1 workers: auto (3 night / 2 day)
+2026-04-05 11:25:55 INFO   Daytime retrain: ENABLED (--allow-daytime-retrain)
+2026-04-05 11:25:55 INFO   Hugging Face publish: ENABLED → EricSpencer00/chattla-20b (quality-gated: TLC must match/exceed best)
+2026-04-05 11:25:55 INFO   Max cycles: infinite
+2026-04-05 11:25:55 INFO   PID: 2175586
+2026-04-05 11:25:55 INFO ============================================================
+2026-04-05 11:25:55 INFO [startup] Loaded 13 gold prompts from benchmark results
+2026-04-05 11:25:55 INFO [startup] Total 39 gold prompts (including state cache)
+2026-04-05 11:25:55 INFO Resuming with accumulated_new=187 (from state)
+2026-04-05 11:25:55 INFO Resuming from cycle 39
+2026-04-05 11:25:55 INFO ============================================================
+2026-04-05 11:25:55 INFO CYCLE 39 | DAYTIME | difficulty_cap=3 | max_prompts=10
+2026-04-05 11:25:55 INFO Pacing: 3.0s between prompts
+2026-04-05 11:25:55 INFO ============================================================
+2026-04-05 11:25:55 INFO [phase0] Skipping teacher harvest (next at cycle 40)
+2026-04-05 11:25:55 INFO [phase1] Loading prompt bank...
+2026-04-05 11:25:55 INFO [prompt_bank] Injected condensed descriptions for 11 benchmark prompt(s)
+2026-04-05 11:25:55 INFO [phase1] Stratified: anchors=2 hard=0 random=5
+2026-04-05 11:25:55 INFO [phase1] Generating and validating 7 specs...
+2026-04-05 11:25:55 INFO [phase1] Parallel generation: 4 workers for 7 prompts
+2026-04-05 11:26:28 INFO   [SYN012] tier=gold sany=True tlc=True struct=0.78 attempts=1 (best of 1)
+2026-04-05 11:26:53 INFO   [BM012] RLVR repair round 1: GOLD — verifier-guided fix succeeded
+2026-04-05 11:26:53 INFO   [BM012] tier=gold sany=True tlc=True struct=0.89 attempts=2 (best of 2)
+2026-04-05 11:27:02 INFO   [BM014] tier=bronze sany=False tlc=False struct=0.89 attempts=2 (best of 2)
+2026-04-05 11:27:05 INFO   [BM020] tier=bronze sany=False tlc=False struct=0.89 attempts=2 (best of 2)
+2026-04-05 11:27:06 INFO   [SYN013] tier=bronze sany=False tlc=False struct=0.78 attempts=2 (best of 2)
+2026-04-05 11:27:26 INFO   [SYN009] tier=bronze sany=False tlc=False struct=0.89 attempts=2 (best of 2)
+2026-04-05 11:27:31 INFO   [RL016] tier=bronze sany=False tlc=False struct=0.78 attempts=2 (best of 2)
+2026-04-05 11:27:31 INFO [phase1] Prompt improvements: 1 prompts upgraded tier
+2026-04-05 11:27:31 INFO [gold_cache] Added 2 new gold specs to cross-cycle cache
+2026-04-05 11:27:31 INFO [phase1] Error taxonomy: {'syntax': 10, 'other': 1}
+2026-04-05 11:27:31 INFO [phase1] Results: gold=2 silver=1 bronze=10 sany=3/13 tlc=2/13
+2026-04-05 11:27:31 INFO [phase1] Self-critiques applied: 5
+2026-04-05 11:27:31 INFO [phase2] Building training data from results...
+2026-04-05 11:27:31 INFO [phase2] Built 4 SFT examples, 2 DPO pairs (from 13 results, 7 prompts)
+2026-04-05 11:27:31 INFO [phase2] Tracking 40 prompts with gold results (skip in future cycles)
+2026-04-05 11:27:31 INFO [phase2] Persisted 2 SFT examples, 2 DPO pairs. Accumulated: 189
+2026-04-05 11:27:31 INFO [phase3] Retrain threshold reached (daytime (--allow-daytime-retrain)) (189 >= 10)
+2026-04-05 11:27:31 INFO [retrain] Moved GGUF → chattla-20b-pre-c39.gguf (zero-copy rename)
+2026-04-05 11:27:31 INFO [retrain] Disk free: 94.3 GB
+2026-04-05 11:27:31 INFO [retrain] Rebuilding training dataset...
+2026-04-05 11:27:38 INFO [retrain] Dataset rebuilt. [dataset_builder] eval =4  examples → /home/espencer2/ChatTLA/data/processed/eval.jsonl
+2026-04-05 11:27:38 INFO [retrain] Mode: DPO-only (39 gold DPO pairs, lr=5e-6, epochs=2)
+2026-04-05 11:27:38 INFO [retrain] GPU memory cleaned (empty_cache + gc)
+2026-04-05 11:27:41 INFO [retrain] Unloaded Ollama model to free GPU VRAM
+2026-04-05 11:27:41 INFO [retrain] Per-GPU free VRAM: [47462] MB → cap=33223 MB/GPU
+2026-04-05 11:27:41 INFO [retrain] VRAM 47462MB free. grad_accum=8
+2026-04-05 11:27:41 INFO [retrain] Training (dpo_only): lr=5e-6 epochs=2 max_length=2048 grad_accum=8 batch=1/device free_mb=47462 cap=33223 MB/GPU
+2026-04-05 11:27:41 INFO [retrain] DPO-only: 2-step SFT warmup (no-op) + DPO on 39 gold pairs (lr=5e-6)
+2026-04-05 11:33:40 INFO [retrain] Training complete (dpo_only).
+2026-04-05 11:33:40 INFO [retrain] Merging LoRA weights (GPU)...
+2026-04-05 11:35:02 INFO [retrain] LoRA merged.
+2026-04-05 11:35:02 INFO [retrain] Converting to GGUF (temp) for eval gate...
