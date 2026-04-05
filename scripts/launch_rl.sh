@@ -141,7 +141,7 @@ do_start() {
         echo \"=== Starting RL loop ===\"
         nice -n 10 python3 scripts/rl_loop.py \
             --cycle-hours 0 \
-            --retrain-threshold 9999 \
+            --retrain-threshold 25 \
             --allow-daytime-retrain \
             --benchmark-every 3 \
             --sft-epochs 2 \
