@@ -74,3 +74,5 @@
 {"timestamp": "2026-04-06T08:26:29.818200", "kind": "retrain_fail_streak", "summary": "Retrain failed 2 times in a row", "accumulated_new": 25, "action": "reset accumulated_new to 0 to stop hammering retrain"}
 {"timestamp": "2026-04-06T08:26:29.818766", "kind": "zero_gold_cycle", "summary": "Zero gold specs in cycle 60 (25 specs tried)", "sany_pass": 12, "bronze_count": 13, "action": "model may have regressed; check recent retrain"}
 {"timestamp": "2026-04-06T08:51:06.332449", "kind": "zero_gold_cycle", "summary": "Zero gold specs in cycle 62 (24 specs tried)", "sany_pass": 13, "bronze_count": 11, "action": "model may have regressed; check recent retrain"}
+{"timestamp": "2026-04-06T09:25:26.749372", "kind": "zero_gold_cycle", "summary": "Zero gold specs in cycle 65 (18 specs tried)", "sany_pass": 7, "bronze_count": 11, "action": "model may have regressed; check recent retrain"}
+{"timestamp": "2026-04-06T09:49:13.910975", "kind": "zero_gold_cycle", "summary": "Zero gold specs in cycle 67 (30 specs tried)", "sany_pass": 21, "bronze_count": 9, "action": "model may have regressed; check recent retrain"}

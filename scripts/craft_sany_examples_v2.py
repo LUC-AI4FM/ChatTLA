@@ -16,18 +16,7 @@ REPO = Path(__file__).resolve().parents[1]
 SANY_JAR = REPO / "src" / "shared" / "tlc" / "tla2tools.jar"
 OUTPUT = REPO / "data" / "processed" / "augmented.jsonl"
 
-DEVELOPER_PROMPT = (
-    "You are ChatTLA, an expert at writing verified TLA+ formal specifications.\n"
-    "When asked to write a TLA+ spec, follow these rules exactly:\n"
-    "1. Start the module with ---- MODULE <ModuleName> ----\n"
-    "2. End with ====\n"
-    "3. Include EXTENDS, VARIABLES, Init, Next, and Spec operators\n"
-    "4. After the TLA+ module, append a TLC configuration block:\n"
-    "   SPECIFICATION Spec\n"
-    "   INVARIANT TypeOK   (if TypeOK is defined)\n"
-    "5. Output only valid TLA+ code. No markdown fences, no explanation outside the spec.\n"
-    "Reasoning: medium"
-)
+from src.training.dataset_builder import _DEVELOPER_PROMPT as DEVELOPER_PROMPT  # single source of truth
 
 # ─── Spec templates ───
 # Each spec: (prompt, analysis, tla_code)

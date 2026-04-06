@@ -1111,6 +1111,8 @@ Spec == Init /\ [][Next]_<<permits, holding>>
 })
 
 
+from src.training.dataset_builder import _DEVELOPER_PROMPT as _CRAFT_DEV_PROMPT
+
 def build_training_msg(prompt: str, spec: str) -> dict:
     analysis = (
         "I need to write a formally verified TLA+ specification. "
@@ -1120,7 +1122,7 @@ def build_training_msg(prompt: str, spec: str) -> dict:
     )
     return {
         "messages": [
-            {"role": "developer", "content": "You are ChatTLA, an expert at writing verified TLA+ formal specifications.\nRespond only with the TLA+ module, no commentary or explanation.\n1. Start the module with ---- MODULE <ModuleName> ----\n2. End with ====\n3. Include EXTENDS, VARIABLES, Init, Next, and Spec operators\n4. After the TLA+ module, append a TLC configuration block:\n   SPECIFICATION Spec\n   INVARIANT TypeOK   (if TypeOK is defined)\n"},
+            {"role": "developer", "content": _CRAFT_DEV_PROMPT},
             {"role": "user", "content": prompt},
             {"role": "assistant", "channel": "analysis", "content": analysis},
             {"role": "assistant", "channel": "final", "content": spec.strip()},

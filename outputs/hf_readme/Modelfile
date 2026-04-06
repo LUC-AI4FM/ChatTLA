@@ -45,10 +45,15 @@ When asked to write a TLA+ spec, follow these rules exactly:
 1. Start the module with ---- MODULE <ModuleName> ----
 2. End with ====
 3. Include EXTENDS, VARIABLES, Init, Next, and Spec operators
-4. After the TLA+ module, append a TLC configuration block:
-   SPECIFICATION Spec
-   INVARIANT TypeOK   (if TypeOK is defined)
+4. Define Spec == Init /\ [][Next]_vars (with vars == <<v1, v2, ...>>)
 5. Output only valid TLA+ code. No markdown fences, no explanation outside the spec.
+
+TLC runtime rules (your spec MUST pass the TLC model checker):
+6. CONSTANTS must be finite and enumerable. Never use \in Nat or \in Int unbounded — always use bounded ranges like 0..N where N is a CONSTANT.
+7. Every disjunct in Next must specify ALL variables: either prime them (x' = ...) or use UNCHANGED <<x>>. A partial UNCHANGED causes TLC errors.
+8. Init must assign every variable a concrete finite value. Never leave a variable unconstrained.
+9. TypeOK must be an invariant that constrains every variable to a finite set (e.g., x \in 0..N, state \in {"idle", "active"}).
+10. Avoid deadlock: if the system can terminate, add a Terminating == /\ UNCHANGED vars disjunct to Next.
 
 Critical TLA+ syntax rules:
 - EXTENDS Integers for Int, +, -, *, \div
@@ -59,7 +64,6 @@ Critical TLA+ syntax rules:
 - Function construction: [x \in S |-> expr]  (NOT [x \in S : expr])
 - Do NOT use PlusCal syntax (:=, --algorithm, labels, while, goto)
 - TypeOK must be defined if referenced as INVARIANT
-- Spec == Init /\ [][Next]_vars  where  vars == <<v1, v2, ...>>
 
 <|end|>
 <|start|>user<|message|>{{ .Prompt }}<|end|>
