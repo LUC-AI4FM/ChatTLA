@@ -3348,3 +3348,149 @@ KeyboardInterrupt
 2026-04-06 09:15:56 INFO [phase1] Stratified: anchors=2 hard=0 random=3
 2026-04-06 09:15:56 INFO [phase1] Generating and validating 5 specs...
 2026-04-06 09:15:56 INFO [phase1] Parallel generation: 4 workers for 5 prompts
+2026-04-06 09:18:33 INFO   [BM014] tier=bronze sany=False tlc=False struct=0.89 attempts=3 (best of 3)
+2026-04-06 09:18:35 INFO   [SYN007] tier=bronze sany=False tlc=False struct=0.78 attempts=3 (best of 3)
+2026-04-06 09:18:37 INFO   [SYN017] tier=bronze sany=False tlc=False struct=0.67 attempts=3 (best of 3)
+2026-04-06 09:18:40 INFO   [BM004] tier=silver sany=True tlc=False struct=0.89 attempts=6 (best of 6)
+2026-04-06 09:21:47 INFO   [SYN009] tier=silver sany=True tlc=False struct=0.78 attempts=3 (best of 3)
+2026-04-06 09:21:47 WARNING [phase1] PROMPT REGRESSIONS: 2 prompts degraded: SYN017: gold→bronze, SYN007: silver→bronze
+2026-04-06 09:21:47 INFO [phase1] Error taxonomy: {'syntax': 11, 'unbounded_state': 1, 'timeout': 3}
+2026-04-06 09:21:47 INFO [phase1] Results: diamond=0 gold=0 silver=7 bronze=11 sany=7/18 tlc=0/18
+2026-04-06 09:21:47 INFO [phase1] Self-critiques applied: 2
+2026-04-06 09:21:47 INFO [phase2] Building training data from results...
+2026-04-06 09:21:47 INFO [phase2] Built 2 SFT examples, 0 DPO pairs (from 18 results, 5 prompts)
+2026-04-06 09:21:47 INFO [phase2] Tracking 52 prompts with gold results (skip in future cycles)
+2026-04-06 09:21:47 INFO [phase2] Persisted 0 SFT examples, 0 DPO pairs. Accumulated: 4
+2026-04-06 09:21:47 INFO [phase3] Skipping retrain (4/25 examples accumulated)
+2026-04-06 09:21:47 INFO [benchmark] Running 12-problem quick eval (cycle 65, attempts=2)...
+2026-04-06 09:25:26 INFO [benchmark] Results: sany=75% (9/12) tlc=33% (4/12)
+2026-04-06 09:25:26 INFO [benchmark] Quick eval is noisy; full-suite TLC rate is the primary metric (compare across retrains).
+2026-04-06 09:25:26 WARNING [diag:zero_gold_cycle] Zero gold specs in cycle 65 (18 specs tried)
+2026-04-06 09:25:26 WARNING [alert] No SMTP password found. Set CHATTLA_SMTP_PASSWORD env var or create /home/espencer2/.chattla_smtp_password
+2026-04-06 09:25:26 INFO 
+────────────────────────────────────────────────────────────
+2026-04-06 09:25:26 INFO CYCLE 65 SUMMARY (9.5 min)
+2026-04-06 09:25:26 INFO   Specs: 18 | SANY: 7 | TLC: 0
+2026-04-06 09:25:26 INFO   Gold: 0 | Silver: 7 | Bronze: 11
+2026-04-06 09:25:26 INFO   New SFT: 0 | New DPO: 0
+2026-04-06 09:25:26 INFO   Retrained: False | Deployed: False
+2026-04-06 09:25:26 INFO   Errors: syntax=11 | unbounded_state=1 | timeout=3
+2026-04-06 09:25:26 INFO   Self-critiques applied: 2
+2026-04-06 09:25:26 INFO   Prompt deltas: +0 improved, -2 regressed
+2026-04-06 09:25:26 INFO   Benchmark (quick): SANY=75% TLC=33%
+2026-04-06 09:25:26 INFO ────────────────────────────────────────────────────────────
+
+2026-04-06 09:25:26 INFO ============================================================
+2026-04-06 09:25:26 INFO CYCLE 66 | DAYTIME | difficulty_cap=3 | max_prompts=10
+2026-04-06 09:25:26 INFO Pacing: 3.0s between prompts
+2026-04-06 09:25:26 INFO ============================================================
+2026-04-06 09:25:26 INFO [phase1] Loading prompt bank...
+2026-04-06 09:25:26 INFO [prompt_bank] Injected condensed descriptions for 11 benchmark prompt(s)
+2026-04-06 09:25:26 INFO [phase1] Stratified: anchors=2 hard=0 random=3
+2026-04-06 09:25:26 INFO [phase1] Generating and validating 5 specs...
+2026-04-06 09:25:26 INFO [phase1] Parallel generation: 4 workers for 5 prompts
+2026-04-06 09:25:37 INFO   [SYN015] tier=gold sany=True tlc=True struct=0.78 sem=0.40 cov=0% attempts=1 (best of 1)
+2026-04-06 09:25:48 INFO   [SYN007] SANY repair round 1: silver — SANY fixed, TLC silver
+2026-04-06 09:26:49 INFO   [SYN007] tier=silver sany=True tlc=False struct=0.33 attempts=4 (best of 4)
+2026-04-06 09:26:54 INFO   [SYN020] tier=bronze sany=False tlc=False struct=0.78 attempts=3 (best of 3)
+2026-04-06 09:26:58 INFO   [BM014] tier=bronze sany=False tlc=False struct=0.89 attempts=3 (best of 3)
+2026-04-06 09:27:03 INFO   [SYN009] tier=silver sany=True tlc=False struct=0.89 attempts=9 (best of 9)
+2026-04-06 09:27:03 INFO [phase1] Prompt improvements: 1 prompts upgraded tier
+2026-04-06 09:27:03 INFO [phase1] Error taxonomy: {'syntax': 10, 'other': 1, 'deadlock': 1}
+2026-04-06 09:27:03 INFO [phase1] Results: diamond=0 gold=1 silver=9 bronze=10 sany=10/20 tlc=1/20
+2026-04-06 09:27:03 INFO [phase1] Semantic: avg_score=0.40 coverage=0% mutation_caught=0/1 trivial_inv=0 diamond=0/1
+2026-04-06 09:27:03 INFO [phase1] SANY repairs: 1/1 succeeded
+2026-04-06 09:27:03 INFO [phase1] Self-critiques applied: 1
+2026-04-06 09:27:03 INFO [phase2] Building training data from results...
+2026-04-06 09:27:03 INFO [phase2] Built 2 SFT examples, 0 DPO pairs (from 20 results, 5 prompts)
+2026-04-06 09:27:03 INFO [phase2] Tracking 52 prompts with gold results (skip in future cycles)
+2026-04-06 09:27:03 INFO [phase2] Persisted 1 SFT examples, 0 DPO pairs. Accumulated: 5
+2026-04-06 09:27:03 INFO [phase3] Skipping retrain (5/25 examples accumulated)
+2026-04-06 09:27:03 INFO [benchmark] Full suite timeout 14400s (20 problems × 2 attempts; override with --full-benchmark-timeout)
+2026-04-06 09:27:03 INFO [benchmark] Running full benchmark suite (cycle 66, attempts=2)...
+2026-04-06 09:37:10 INFO [benchmark] Results: sany=80% (16/20) tlc=25% (5/20)
+2026-04-06 09:37:10 INFO [benchmark] Full suite: prioritize TLC rate for model comparison (SANY is the funnel).
+2026-04-06 09:37:10 INFO 
+────────────────────────────────────────────────────────────
+2026-04-06 09:37:10 INFO CYCLE 66 SUMMARY (11.7 min)
+2026-04-06 09:37:10 INFO   Specs: 20 | SANY: 10 | TLC: 1
+2026-04-06 09:37:10 INFO   Gold: 1 | Silver: 9 | Bronze: 10
+2026-04-06 09:37:10 INFO   New SFT: 1 | New DPO: 0
+2026-04-06 09:37:10 INFO   Retrained: False | Deployed: False
+2026-04-06 09:37:10 INFO   Errors: syntax=10 | deadlock=1 | other=1
+2026-04-06 09:37:10 INFO   SANY repairs: 1/1 succeeded
+2026-04-06 09:37:10 INFO   Self-critiques applied: 1
+2026-04-06 09:37:10 INFO   Prompt deltas: +1 improved, -0 regressed
+2026-04-06 09:37:10 INFO   Benchmark (FULL): SANY=80% TLC=25%
+2026-04-06 09:37:10 INFO ────────────────────────────────────────────────────────────
+
+2026-04-06 09:37:10 INFO ============================================================
+2026-04-06 09:37:10 INFO CYCLE 67 | DAYTIME | difficulty_cap=3 | max_prompts=10
+2026-04-06 09:37:10 INFO Pacing: 3.0s between prompts
+2026-04-06 09:37:10 INFO ============================================================
+2026-04-06 09:37:10 INFO [phase1] Loading prompt bank...
+2026-04-06 09:37:10 INFO [prompt_bank] Injected condensed descriptions for 11 benchmark prompt(s)
+2026-04-06 09:37:10 INFO [phase1] Stratified: anchors=2 hard=0 random=3
+2026-04-06 09:37:10 INFO [phase1] Generating and validating 5 specs...
+2026-04-06 09:37:10 INFO [phase1] Parallel generation: 4 workers for 5 prompts
+2026-04-06 09:39:08 INFO   [BM015] tier=silver sany=True tlc=False struct=0.78 attempts=9 (best of 9)
+2026-04-06 09:39:10 INFO   [SYN018] tier=bronze sany=False tlc=False struct=0.78 attempts=3 (best of 3)
+2026-04-06 09:39:12 INFO   [BM014] tier=bronze sany=False tlc=False struct=0.89 attempts=3 (best of 3)
+2026-04-06 09:39:41 INFO   [SYN009] tier=silver sany=True tlc=False struct=0.89 attempts=6 (best of 6)
+2026-04-06 09:39:56 INFO   [SYN007] tier=silver sany=True tlc=False struct=0.89 attempts=9 (best of 9)
+2026-04-06 09:39:56 INFO [phase1] Prompt improvements: 1 prompts upgraded tier
+2026-04-06 09:39:56 INFO [phase1] Error taxonomy: {'syntax': 9, 'other': 5, 'timeout': 1}
+2026-04-06 09:39:56 INFO [phase1] Results: diamond=0 gold=0 silver=21 bronze=9 sany=21/30 tlc=0/30
+2026-04-06 09:39:56 INFO [phase1] Self-critiques applied: 2
+2026-04-06 09:39:56 INFO [phase2] Building training data from results...
+2026-04-06 09:39:56 INFO [phase2] Built 0 SFT examples, 0 DPO pairs (from 30 results, 5 prompts)
+2026-04-06 09:39:56 INFO [phase2] Tracking 52 prompts with gold results (skip in future cycles)
+2026-04-06 09:39:56 INFO [phase2] Persisted 0 SFT examples, 0 DPO pairs. Accumulated: 5
+2026-04-06 09:39:56 INFO [phase3] Skipping retrain (5/25 examples accumulated)
+2026-04-06 09:39:56 INFO [benchmark] Running 12-problem quick eval (cycle 67, attempts=2)...
+2026-04-06 09:49:13 INFO [benchmark] Results: sany=67% (8/12) tlc=25% (3/12)
+2026-04-06 09:49:13 INFO [benchmark] Quick eval is noisy; full-suite TLC rate is the primary metric (compare across retrains).
+2026-04-06 09:49:13 WARNING [diag:zero_gold_cycle] Zero gold specs in cycle 67 (30 specs tried)
+2026-04-06 09:49:13 WARNING [alert] No SMTP password found. Set CHATTLA_SMTP_PASSWORD env var or create /home/espencer2/.chattla_smtp_password
+2026-04-06 09:49:13 INFO 
+────────────────────────────────────────────────────────────
+2026-04-06 09:49:13 INFO CYCLE 67 SUMMARY (12.1 min)
+2026-04-06 09:49:13 INFO   Specs: 30 | SANY: 21 | TLC: 0
+2026-04-06 09:49:13 INFO   Gold: 0 | Silver: 21 | Bronze: 9
+2026-04-06 09:49:13 INFO   New SFT: 0 | New DPO: 0
+2026-04-06 09:49:13 INFO   Retrained: False | Deployed: False
+2026-04-06 09:49:13 INFO   Errors: syntax=9 | timeout=1 | other=5
+2026-04-06 09:49:13 INFO   Self-critiques applied: 2
+2026-04-06 09:49:13 INFO   Prompt deltas: +1 improved, -0 regressed
+2026-04-06 09:49:13 INFO   Benchmark (quick): SANY=67% TLC=25%
+2026-04-06 09:49:13 INFO ────────────────────────────────────────────────────────────
+
+2026-04-06 09:49:13 INFO ============================================================
+2026-04-06 09:49:13 INFO CYCLE 68 | DAYTIME | difficulty_cap=3 | max_prompts=10
+2026-04-06 09:49:13 INFO Pacing: 3.0s between prompts
+2026-04-06 09:49:13 INFO ============================================================
+2026-04-06 09:49:13 INFO [phase1] Loading prompt bank...
+2026-04-06 09:49:13 INFO [prompt_bank] Injected condensed descriptions for 11 benchmark prompt(s)
+2026-04-06 09:49:13 INFO [phase1] Stratified: anchors=2 hard=0 random=3
+2026-04-06 09:49:13 INFO [phase1] Generating and validating 5 specs...
+2026-04-06 09:49:13 INFO [phase1] Parallel generation: 4 workers for 5 prompts
+2026-04-06 09:50:09 INFO   [SYN007] SANY repair round 1: silver — SANY fixed, TLC silver
+2026-04-06 09:50:24 INFO   [SYN006] tier=gold sany=True tlc=True struct=0.78 sem=0.40 cov=0% attempts=5 (best of 5)
+2026-04-06 09:51:07 INFO   [SYN007] tier=silver sany=True tlc=False struct=0.33 attempts=4 (best of 4)
+2026-04-06 09:51:08 INFO   [RL002] RLVR repair round 2: GOLD — verifier-guided fix succeeded
+2026-04-06 09:51:08 INFO   [RL002] tier=gold sany=True tlc=True struct=0.78 attempts=5 (best of 5)
+2026-04-06 09:51:29 INFO   [BM014] tier=silver sany=True tlc=False struct=0.78 attempts=3 (best of 3)
+2026-04-06 09:53:36 INFO   [SYN009] tier=silver sany=True tlc=False struct=0.78 attempts=3 (best of 3)
+2026-04-06 09:53:36 INFO [phase1] Prompt improvements: 2 prompts upgraded tier
+2026-04-06 09:53:36 INFO [gold_cache] Added 1 new gold specs to cross-cycle cache
+2026-04-06 09:53:36 INFO [phase1] Error taxonomy: {'syntax': 7, 'deadlock': 1, 'other': 1, 'timeout': 4}
+2026-04-06 09:53:36 INFO [phase1] Results: diamond=0 gold=2 silver=11 bronze=7 sany=13/20 tlc=2/20
+2026-04-06 09:53:36 INFO [phase1] Semantic: avg_score=0.40 coverage=0% mutation_caught=0/1 trivial_inv=0 diamond=0/1
+2026-04-06 09:53:36 INFO [phase1] SANY repairs: 1/1 succeeded
+2026-04-06 09:53:36 INFO [phase1] Self-critiques applied: 1
+2026-04-06 09:53:36 INFO [phase2] Building training data from results...
+2026-04-06 09:53:36 INFO [phase2] Built 3 SFT examples, 1 DPO pairs (from 20 results, 5 prompts)
+2026-04-06 09:53:36 INFO [phase2] Tracking 52 prompts with gold results (skip in future cycles)
+2026-04-06 09:53:36 INFO [phase2] Persisted 2 SFT examples, 1 DPO pairs. Accumulated: 7
+2026-04-06 09:53:36 INFO [phase3] Skipping retrain (7/25 examples accumulated)
+2026-04-06 09:53:36 INFO [benchmark] Running 12-problem quick eval (cycle 68, attempts=2)...
