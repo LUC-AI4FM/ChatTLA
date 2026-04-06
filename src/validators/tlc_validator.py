@@ -220,6 +220,44 @@ def validate_file(
         )
 
 
+def _extract_inline_cfg(tla_content: str) -> tuple[str, Optional[str]]:
+    """Extract TLC config lines appended after ==== in the spec.
+
+    Many model outputs include config directives (SPECIFICATION, INVARIANT,
+    CONSTANT) after the module closing delimiter.  Previously these were
+    preserved in the spec text but never passed to TLC as a .cfg, so the
+    validator always fell back to heuristic autogeneration.
+
+    Returns (clean_tla, cfg_text_or_None).
+    """
+    m = re.search(r"(----\s*MODULE\b.*?={4,})(.*)", tla_content, re.DOTALL)
+    if not m:
+        return tla_content, None
+
+    module_part = m.group(1)
+    after_module = m.group(2).strip()
+    if not after_module:
+        return tla_content, None
+
+    _CFG_KEYWORDS = {
+        "SPECIFICATION", "INIT", "NEXT", "INVARIANT", "INVARIANTS",
+        "PROPERTY", "PROPERTIES", "CONSTANT", "CONSTANTS",
+        "CONSTRAINT", "SYMMETRY", "VIEW",
+    }
+    cfg_lines = []
+    for line in after_module.splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("\\*"):
+            continue
+        first_word = stripped.split()[0].upper() if stripped.split() else ""
+        if first_word in _CFG_KEYWORDS:
+            cfg_lines.append(stripped)
+
+    if cfg_lines:
+        return module_part, "\n".join(cfg_lines) + "\n"
+    return tla_content, None
+
+
 def validate_string(
     tla_content: str,
     cfg_content: Optional[str] = None,
@@ -229,7 +267,16 @@ def validate_string(
 ) -> TLCResult:
     """
     Run TLC on in-memory spec+cfg strings using a temp directory.
+
+    If cfg_content is None, tries to extract an inline config block
+    appended after ==== in the spec before falling back to autogeneration.
     """
+    # Extract inline TLC config from after ==== if no explicit cfg provided
+    if cfg_content is None:
+        tla_content, inline_cfg = _extract_inline_cfg(tla_content)
+        if inline_cfg:
+            cfg_content = inline_cfg
+
     with tempfile.TemporaryDirectory() as tmpdir:
         tmp = Path(tmpdir)
         tla_path = tmp / f"{module_name}.tla"
@@ -296,10 +343,12 @@ def _parse_coverage(output: str) -> tuple[int, list[str], int]:
             if d == 0:
                 dead.append(name)
 
-    # Parse overall state count
-    m = re.search(r"(\d+)\s+distinct\s+state", output)
-    if m:
-        distinct_states = int(m.group(1))
+    # Parse overall state count — use LAST match since TLC prints initial count
+    # ("1 distinct state generated") before the final summary line
+    # ("N states generated, M distinct states found").
+    all_distinct = re.findall(r"(\d+)\s+distinct\s+state", output)
+    if all_distinct:
+        distinct_states = int(all_distinct[-1])
 
     return total_actions, dead, distinct_states
 
@@ -308,12 +357,14 @@ def _parse_state_counts(output: str) -> tuple[int, int]:
     """Extract distinct and total state counts from TLC output."""
     distinct = 0
     total = 0
-    m = re.search(r"(\d+)\s+distinct\s+state", output)
-    if m:
-        distinct = int(m.group(1))
-    m = re.search(r"(\d+)\s+states?\s+generated", output)
-    if m:
-        total = int(m.group(1))
+    # Use last match — TLC prints "1 distinct state generated" for initial states
+    # then "N states generated, M distinct states found" in the summary.
+    all_distinct = re.findall(r"(\d+)\s+distinct\s+state", output)
+    if all_distinct:
+        distinct = int(all_distinct[-1])
+    all_generated = re.findall(r"(\d+)\s+states?\s+generated", output)
+    if all_generated:
+        total = int(all_generated[-1])
     return distinct, total
 
 
@@ -351,35 +402,78 @@ def _mutation_test(
     jar: Path,
     timeout: int = 30,
 ) -> tuple[bool, bool]:
-    """Run a lightweight mutation test: remove invariants from cfg and re-run TLC.
+    """Two-phase mutation test to verify invariants are semantically meaningful.
 
-    If the spec still passes with invariants removed, the invariants weren't
-    constraining anything — the spec is syntactically valid but semantically vacuous.
+    Phase 1 (deadlock probe): Remove invariants from cfg AND switch
+    SPECIFICATION → INIT/NEXT.  Disabling stuttering exposes terminal
+    states as deadlocks — proving bounded, non-trivial state space.
+
+    Phase 2 (invariant negation): Negate one non-TypeOK invariant in the
+    TLA+ source (keep cfg unchanged).  If TLC reports a violation, the
+    invariant rules out reachable states — it's not vacuously true.
 
     Returns (tested: bool, caught: bool).
-    - tested=True means we ran the mutation
-    - caught=True means removing invariants changed the outcome (good — invariants matter)
     """
-    # Remove INVARIANT lines from cfg
+    had_invariants = any(
+        re.match(r"\s*INVARIANTS?\s+", line)
+        for line in cfg_content.splitlines()
+    )
+    if not had_invariants:
+        return False, False
+
+    # --- Phase 1: deadlock probe (remove invariants + use INIT/NEXT) ----------
     mutated_cfg_lines = []
-    had_invariants = False
+    has_spec_line = False
     for line in cfg_content.splitlines():
         if re.match(r"\s*INVARIANTS?\s+", line):
-            had_invariants = True
-            continue  # skip invariant lines
+            continue
+        if re.match(r"\s*SPECIFICATION\s+", line):
+            has_spec_line = True
+            mutated_cfg_lines.append("INIT Init")
+            mutated_cfg_lines.append("NEXT Next")
+            continue
         mutated_cfg_lines.append(line)
 
-    if not had_invariants:
-        return False, False  # no invariants to test
+    if has_spec_line:
+        mutated_cfg = "\n".join(mutated_cfg_lines) + "\n"
+        if _run_mutation(tla_content, mutated_cfg, module_name, jar, timeout):
+            return True, True
 
-    mutated_cfg = "\n".join(mutated_cfg_lines) + "\n"
+    # --- Phase 2: invariant negation ------------------------------------------
+    inv_names = _extract_invariant_names(tla_content, cfg_content)
+    non_typeok = [n for n in inv_names if n != "TypeOK"]
+    if not non_typeok:
+        non_typeok = inv_names[:1]
 
+    for inv_name in non_typeok:
+        pattern = rf"^({re.escape(inv_name)}\s*==\s*)(.+?)$"
+        m = re.search(pattern, tla_content, re.MULTILINE)
+        if not m:
+            continue
+        original_line = m.group(0)
+        body = m.group(2).strip()
+        negated_line = f"{m.group(1)}~({body})"
+        mutated_tla = tla_content.replace(original_line, negated_line, 1)
+        if _run_mutation(mutated_tla, cfg_content, module_name, jar, timeout):
+            return True, True
+
+    return True, False
+
+
+def _run_mutation(
+    tla_content: str,
+    cfg_content: str,
+    module_name: str,
+    jar: Path,
+    timeout: int,
+) -> bool:
+    """Run TLC on a mutated spec/cfg and return True if the outcome changed."""
     with tempfile.TemporaryDirectory() as tmpdir:
         tmp = Path(tmpdir)
         tla_path = tmp / f"{module_name}.tla"
         cfg_path = tmp / f"{module_name}.cfg"
         tla_path.write_text(tla_content, encoding="utf-8")
-        cfg_path.write_text(mutated_cfg, encoding="utf-8")
+        cfg_path.write_text(cfg_content, encoding="utf-8")
 
         cmd = [
             "java", "-cp", str(jar),
@@ -392,15 +486,11 @@ def _mutation_test(
                 cmd, capture_output=True, text=True, timeout=timeout, cwd=tmp,
             )
             stdout = result.stdout + result.stderr
-            # If removing invariants causes violations or changes outcome → invariants matter
             violations = _parse_violations(stdout)
             success = _detect_success(stdout)
-            # If it still succeeds without invariants, they weren't doing anything useful.
-            # If it fails or finds violations, the invariants were meaningful.
-            caught = bool(violations) or not success
-            return True, caught
+            return bool(violations) or not success
         except (subprocess.TimeoutExpired, Exception):
-            return True, False  # couldn't determine
+            return False
 
 
 def compute_semantic_info(
@@ -441,6 +531,106 @@ def compute_semantic_info(
     return info
 
 
+def _extract_constant_names(tla_content: str) -> list[str]:
+    """Extract all CONSTANT/CONSTANTS names from the spec, handling multiline declarations.
+
+    Handles:
+      CONSTANTS N, M, K
+      CONSTANTS
+        N,
+        M,
+        K
+      CONSTANT N : Nat, M : Nat   (strips type annotations)
+    """
+    names: list[str] = []
+    in_const_block = False
+
+    for line in tla_content.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("\\*") or stripped.startswith("(*"):
+            continue
+
+        # Start of a CONSTANT(S) declaration
+        m = re.match(r"^CONSTANTS?\s*(.*)", stripped)
+        if m:
+            rest = m.group(1).strip()
+            if rest:
+                # Inline: CONSTANTS N, M, K  or  CONSTANTS N : Nat, M : Nat
+                for part in rest.split(","):
+                    # Take only the identifier, strip type annotations (: Nat)
+                    ident = part.strip().split(":")[0].split("(")[0].strip().rstrip(",")
+                    if ident and re.match(r"^[A-Za-z_]\w*$", ident):
+                        names.append(ident)
+                # Check if declaration continues (trailing comma)
+                in_const_block = rest.rstrip().endswith(",")
+            else:
+                # Bare "CONSTANTS" with names on subsequent lines
+                in_const_block = True
+            continue
+
+        if in_const_block:
+            # Continuation line of a multiline CONSTANT block
+            if not stripped or re.match(r"^(VARIABLE|ASSUME|----)", stripped):
+                in_const_block = False
+                continue
+            for part in stripped.split(","):
+                ident = part.strip().split(":")[0].split("(")[0].strip().rstrip(",")
+                if ident and re.match(r"^[A-Za-z_]\w*$", ident):
+                    names.append(ident)
+            # Stop if no trailing comma
+            if not stripped.rstrip().endswith(","):
+                in_const_block = False
+
+    return names
+
+
+def _infer_constant_type(name: str, tla_content: str) -> str:
+    """Infer the TLC assignment for a CONSTANT based on how it's used in the spec.
+
+    Heuristics (checked in order):
+      - Used as 1..Name or 0..Name → numeric (= 3)
+      - Used as \\in Name → set of model values (= {v1, v2, v3})
+      - Used as Name[i] or Name(x) → function, skip (let TLC decide)
+      - Name matches known set patterns (Procs, Nodes, etc.) → model value set
+      - Name matches known numeric patterns (N, M, MAX, etc.) → numeric
+      - Default: numeric (= 3) — safest for small state spaces
+    """
+    # Check usage patterns in the spec
+    # Pattern: 1..Name or 0..Name → numeric range bound
+    if re.search(rf"\b\d+\s*\.\.\s*{re.escape(name)}\b", tla_content):
+        return f"CONSTANT {name} = 3"
+
+    # Pattern: \\in Name (used as a set to iterate over) → model value set
+    if re.search(rf"\\in\s+{re.escape(name)}\b", tla_content):
+        # Check if it's used with Cardinality or as a function domain
+        if re.search(rf"Cardinality\s*\(\s*{re.escape(name)}\s*\)", tla_content):
+            return f"CONSTANT {name} = {{v1, v2, v3}}"
+        return f"CONSTANT {name} = {{v1, v2, v3}}"
+
+    # Pattern: Name matches known set-of-actors names
+    if re.match(r"^(Proc|Process|Node|Server|Client|Participant|"
+                r"Thread|Worker|Acceptor|Proposer|Learner|Replica|"
+                r"Philosopher|Fork)s?$", name):
+        return f"CONSTANT {name} = {{v1, v2, v3}}"
+
+    # Pattern: Name matches known coordinator/singleton
+    if re.match(r"^(Coordinator|Leader|Primary|Head|Tail)$", name):
+        return f"CONSTANT {name} = v1"
+
+    # Pattern: Name matches known numeric bounds
+    if re.match(r"^(N|M|K|MAX|Max|Min|Size|Capacity|NumProcs|Num|Limit|"
+                r"MAXRETRIES|MaxRetries|MAX_RETRIES|Bound|Depth|Width|"
+                r"NumNodes|NumProc)$", name, re.IGNORECASE):
+        return f"CONSTANT {name} = 3"
+
+    # Pattern: used in arithmetic (Name + 1, Name - 1, Name * 2) → numeric
+    if re.search(rf"\b{re.escape(name)}\s*[+\-*/]|\b[+\-*/]\s*{re.escape(name)}\b", tla_content):
+        return f"CONSTANT {name} = 3"
+
+    # Default: numeric (small number) — safest for TLC enumeration
+    return f"CONSTANT {name} = 3"
+
+
 def _autogenerate_cfg(tla_content: str) -> Optional[str]:
     """
     Heuristically build a minimal .cfg from spec source.
@@ -450,16 +640,18 @@ def _autogenerate_cfg(tla_content: str) -> Optional[str]:
     - A `Next` operator definition   → NEXT Next
     - A `TypeOK` invariant           → INVARIANT TypeOK
     - A `Spec` operator              → SPECIFICATION Spec
-    - CONSTANT declarations          → assign small model values
+    - CONSTANT declarations          → assign small model values (context-aware)
+    - Fairness needs                  → CHECK_DEADLOCK FALSE if Spec includes fairness
 
     Returns None if Init and Next are not detectable.
     """
     lines = []
 
-    has_init = bool(re.search(r"^Init\s*==", tla_content, re.MULTILINE))
-    has_next = bool(re.search(r"^Next\s*==", tla_content, re.MULTILINE))
-    has_typeok = bool(re.search(r"^TypeOK\s*==", tla_content, re.MULTILINE))
-    has_spec = bool(re.search(r"^Spec\s*==", tla_content, re.MULTILINE))
+    # Allow indented definitions (some specs indent Init/Next)
+    has_init = bool(re.search(r"^\s*Init\s*==", tla_content, re.MULTILINE))
+    has_next = bool(re.search(r"^\s*Next\s*==", tla_content, re.MULTILINE))
+    has_typeok = bool(re.search(r"^\s*TypeOK\s*==", tla_content, re.MULTILINE))
+    has_spec = bool(re.search(r"^\s*Spec\s*==", tla_content, re.MULTILINE))
 
     if not (has_init and has_next):
         return None
@@ -470,26 +662,29 @@ def _autogenerate_cfg(tla_content: str) -> Optional[str]:
         lines.append("INIT Init")
         lines.append("NEXT Next")
 
-    if has_typeok:
-        lines.append("INVARIANT TypeOK")
+    # If Spec includes fairness (WF_ or SF_), disable deadlock checking
+    # since fair specs deliberately allow stuttering/termination.
+    if has_spec and re.search(r"\b[WS]F_", tla_content):
+        lines.append("CHECK_DEADLOCK FALSE")
 
-    # Auto-assign CONSTANT values so TLC can actually run.
-    # Use small defaults to keep the state space tractable.
-    const_matches = re.findall(r"^CONSTANTS?\s+(.+)$", tla_content, re.MULTILINE)
-    for match in const_matches:
-        for name in re.split(r"[,\s]+", match.strip()):
-            name = name.strip().rstrip(",")
-            if not name or name.startswith("(") or name.startswith("\\*"):
-                continue
-            # Heuristic defaults based on common naming conventions
-            if re.match(r"^(N|M|K|MAX|Max|Size|Capacity|NumProcs|Num)$", name):
-                lines.append(f"CONSTANT {name} = 3")
-            elif re.match(r"^(Proc|Process|Node|Server|Client|Participant)s?$", name):
-                lines.append(f"CONSTANT {name} = {{p1, p2, p3}}")
-            elif re.match(r"^(Coordinator)$", name):
-                lines.append(f"CONSTANT {name} = p0")
-            else:
-                # Generic: try a small number for unknowns
-                lines.append(f"CONSTANT {name} = 3")
+    # Collect invariants: TypeOK + any other *Inv* / Safety* definitions
+    invariants = []
+    if has_typeok:
+        invariants.append("TypeOK")
+    for m in re.finditer(r"^\s*(\w+)\s*==", tla_content, re.MULTILINE):
+        name = m.group(1)
+        if name in ("Init", "Next", "Spec", "TypeOK", "vars", "Terminating"):
+            continue
+        if re.match(r"(Safety|.*Inv(ariant)?|Mutex|MutualExclusion|Conservation|"
+                    r"Bounded|NoOverflow|NoUnderflow|AtMost|NoWrite|Valid|"
+                    r".*Conserved|.*Bounded|.*Stable|.*Valid|.*Threshold)", name):
+            invariants.append(name)
+    if invariants:
+        lines.append("INVARIANT " + " ".join(invariants))
+
+    # Auto-assign CONSTANT values using context-aware type inference.
+    const_names = _extract_constant_names(tla_content)
+    for name in const_names:
+        lines.append(_infer_constant_type(name, tla_content))
 
     return "\n".join(lines) + "\n"

@@ -1,0 +1,364 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,0,0.444,silver,6.69,"---- MODULE MutualExclusion ----
+EXTENDS Naturals, Sequences, TLC
+
+VARIABLES state, N
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,1,0,0.444,silver,22.98,"---- MODULE TwoPhaseCommit ----
+EXTENDS Naturals, Sequences, TLC
+
+VARIABLES participants, coordinator, state, log, decision, votes
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,0,0,1.0,bronze,45.97,"---- MODULE DiningPhilosophers ----
+EXTENDS Naturals, TLC
+
+VARIABLES forks, states
+CONSTANT N \* number of philosophers and forks, N
+
+\* Helper definitions
+LEFT(i) == IF i = 1 THEN N ELSE i - 1
+RIGHT(i) == IF i = N THEN 1 ELSE i + 1
+
+\* TypeOK invariant
+TypeOK == 
+    /\ forks \in [1..N -> 0..N]
+    /\ states \in [1..N -> {""thinking"", ""hungry"", ""eating""}]
+    /\ \A i \in 1..N: forks[i] = 0 \/ forks[i] \in 1..N
+    /\ \A i \in 1..N: states[i] \in {""thinking"", ""hungry"", ""eating""}
+
+\* Init state
+Init == 
+    /\ forks = [i \in 1..N -> 0]
+    /\ states = [i \in 1..N -> ""thinking""]
+
+\* Next state
+Next == 
+    \E i \in 1..N:
+        /\ states[i] = ""thinking""
+        /\ forks[LEFT(i)] = 0
+        /\ forks[RIGHT(i)] = 0
+        /\ forks' = [forks EXCEPT ![LEFT(i)] = i, ![RIGHT(i)] = i]
+        /\ states' = [states EXCEPT ![i] = ""eating""]
+    \/ \E i \in 1..N:
+        /\ states[i] = ""eating""
+        /\ forks[LEFT(i)] = i
+        /\ forks[RIGHT(i)] = i
+        /\ forks' = [forks EXCEPT ![LEFT(i)] = 0, ![RIGHT(i)] = 0]
+        /\ states' = [states EXCEPT ![i] = ""thinking""]
+    \/ \E i \in 1..N:
+        /\ states[i] = ""thinking""
+        /\ forks[LEFT(i)] = 0
+        /\ forks[RIGHT(i)] = 0
+        /\ forks' = forks
+        /\ states' = [states EXCEPT ![i] = ""hungry""]
+
+Spec == Init /\ [][Next]_<<forks, states>>
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,0,0,1.0,bronze,79.01,"---- MODULE Bakery ----
+EXTENDS Naturals, Sequences, TLC
+CONSTANTS N
+
+VARIABLES num, flag
+
+(* num[i] is the ticket number of process i.
+   flag[i] is TRUE if process i is choosing a number, FALSE otherwise. *)
+
+(* TypeOK ensures that num and flag are functions from 1..N to Nat and Bool respectively. *)
+TypeOK == 
+  /\ num \in 1..N -> Nat
+  /\ flag \in 1..N -> Bool
+
+(* Init sets all tickets to 0 and all flags to FALSE. *)
+Init == 
+  /\ num = [i \in 1..N |-> 0]
+  /\ flag = [i \in 1..N |-> FALSE]
+
+(* Next defines the possible actions of each process i. *)
+Next == 
+  \E i \in 1..N :
+    (* Choosing phase: set flag[i] to TRUE. *)
+    /\ flag' = [flag EXCEPT ![i] = TRUE]
+    /\ num' = num
+    /\ flag[i] = FALSE
+    /\ UNCHANGED <<num, flag>> \* other variables unchanged
+
+  \/ \E i \in 1..N :
+    (* Assigning number: set flag[i] to FALSE and num[i] to 1 + max(num[j] | j \in 1..N). *)
+    /\ flag' = [flag EXCEPT ![i] = FALSE]
+    /\ num' = [num EXCEPT ![i] = 1 + MAX <<j \in 1..N : num[j]>>]
+    /\ flag[i] = TRUE
+    /\ UNCHANGED <<num, flag>> \* other variables unchanged
+
+  \/ \E i \in 1..N :
+    (* Entering critical section: process i waits until all other processes with lower numbers have exited. *)
+    /\ flag' = flag
+    /\ num' = num
+    /\ flag[i] = FALSE
+    /\ num[i] = 1 + MAX <<j \in 1..N : num[j]>> \* choosing phase
+    /\ UNCHANGED <<num, flag>> \* other variables unchanged
+
+  \/ \E i \in 1..N :
+    (* Exiting critical section: set num[i] to 0. *)
+    /\ flag' = flag
+    /\ num' = [num EXCEPT ![i] = 0]
+    /\ UNCHANGED <<num, flag>> \* other variables unchanged
+
+Spec == Init /\ [][Next]_<<num, flag>> /\ TypeOK
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,0,1.0,silver,22.4,"---- MODULE BoundedFIFO ----
+EXTENDS Naturals, Sequences, TLC
+
+CONSTANT K \* Queue capacity
+
+VARIABLES q, head, tail, size
+
+\* q is a sequence of length K, representing the queue slots
+\* head and tail are indices into q, ranging from 0 to K-1
+\* size is the number of elements currently in the queue
+
+TypeOK == 
+  /\ K \in Nat
+  /\ K > 0
+  /\ q \in Seq(K)
+  /\ head \in 0..K-1
+  /\ tail \in 0..K-1
+  /\ size \in 0..K
+
+Init == 
+  /\ q \in Seq(K)
+  /\ head \in 0..K-1
+  /\ tail \in 0..K-1
+  /\ size \in 0..K
+  /\ size = 0
+  /\ head = 0
+  /\ tail = 0
+  /\ q = [i \in 0..K-1 |-> 0]
+
+Producer == 
+  /\ size < K
+  /\ head' = (head + 1) % K
+  /\ tail' = tail
+  /\ size' = size + 1
+  /\ q' = [q EXCEPT ![head] = 1]
+  /\ UNCHANGED <<head, tail, size, q>>
+
+Consumer == 
+  /\ size > 0
+  /\ head' = head
+  /\ tail' = (tail + 1) % K
+  /\ size' = size - 1
+  /\ q' = [q EXCEPT ![tail] = 0]
+  /\ UNCHANGED <<head, tail, size, q>>
+
+Next == 
+  \/ Producer
+  \/ Consumer
+
+Spec == 
+  /\ TypeOK
+  /\ Init
+  /\ [][Next]_<<q, head, tail, size>>
+  /\ []<>(size < K) \* Producer blocks when full
+  /\ []<>(size > 0) \* Consumer blocks when empty
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,0,0,1.0,bronze,26.83,"---- MODULE RaftLeaderElection ----
+EXTENDS Naturals, Sequences, TLC
+
+VARIABLES currentTerm, votedFor, state
+
+(* --TYPE DEFINITIONS-- *)
+StateType == {""Follower"", ""Candidate"", ""Leader""}
+TypeOK == /\ currentTerm \in Nat
+          /\ votedFor \in {""Follower"", ""Candidate"", ""Leader""} \cup {None}
+          /\ state \in StateType
+
+(* --INITIALIZATION-- *)
+Init == /\ currentTerm = 0
+        /\ votedFor = None
+        /\ state = ""Follower""
+
+(* --STATE TRANSITIONS-- *)
+FollowerToCandidate == /\ state = ""Follower""
+                      /\ state' = ""Candidate""
+                      /\ currentTerm' = currentTerm + 1
+                      /\ votedFor' = state
+                      /\ UNCHANGED <<currentTerm, votedFor, state>>
+
+CandidateToLeader == /\ state = ""Candidate""
+                    /\ votedFor' = state
+                    /\ state' = ""Leader""
+                    /\ UNCHANGED <<currentTerm, votedFor, state>>
+
+(* --NEXT STATE-- *)
+Next == FollowerToCandidate
+      \/ CandidateToLeader
+
+(* --SPECIFICATION-- *)
+Spec == Init /\ [][Next]_<<currentTerm, votedFor, state>> /\ TypeOK
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,1,0,1.0,silver,127.39,"---- MODULE ReadWriteLock ----
+EXTENDS Naturals, TLC
+
+VARIABLES readers, writer_active
+
+TypeOK == /\ readers \in Nat
+        /\ writer_active \in BOOLEAN
+
+Init == /\ readers = 0
+        /\ writer_active = FALSE
+
+ReadAcquire == /\ writer_active = FALSE
+              /\ readers' = readers + 1
+              /\ writer_active' = writer_active
+
+ReadRelease == /\ writer_active = FALSE
+              /\ readers > 0
+              /\ readers' = readers - 1
+              /\ writer_active' = writer_active
+
+WriteAcquire == /\ writer_active = FALSE
+               /\ readers = 0
+               /\ writer_active' = TRUE
+               /\ readers' = readers
+
+WriteRelease == /\ writer_active = TRUE
+               /\ writer_active' = FALSE
+               /\ readers' = readers
+
+Next == \/ ReadAcquire
+      \/ ReadRelease
+      \/ WriteAcquire
+      \/ WriteRelease
+
+Spec == Init /\ [][Next]_<<readers, writer_active>> /\ TypeOK
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,1,0,0.444,silver,133.51,"---- MODULE ChandyLamportSnapshot ----
+EXTENDS Naturals, Sequences, TLC
+
+VARIABLES procState, chanState, markerSent, markerRecvd, recorded
+
+===="
+chattla:20b,BM009,Token Ring,networking,2,1,1,0.667,gold,45.7,"---- MODULE TokenRing ----
+EXTENDS Naturals, Sequences
+
+CONSTANT N
+
+VARIABLE token
+
+Init == 
+    /\ token \in 1..N
+
+Next == 
+    /\ token' \in 1..N
+    /\ token' = IF token = N THEN 1 ELSE token + 1
+
+Spec == 
+    Init /\ [][Next]_token
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,1,0,0.889,silver,17.22,"---- MODULE KeyValueStore ----
+EXTENDS Naturals, TLC, Sequences
+
+CONSTANTS Keys, Values, NULL
+
+VARIABLE store
+
+(* TypeOK ensures store is a partial function from Keys to Values *)
+TypeOK == store \in [Keys -> Values]
+
+(* Init: store is empty *)
+Init == store = [k \in Keys |-> NULL]
+
+(* Put operation: updates store with new value for key k *)
+Put(k, v) == /\ k \in Keys
+            /\ v \in Values
+            /\ store' = [store EXCEPT ![k] = v]
+
+(* Get operation: returns current value for key k *)
+Get(k, v) == /\ k \in Keys
+             /\ v \in Values
+             /\ v = store[k]
+             /\ store' = store
+
+(* Next: either a Put or a Get *)
+Next == \/ \E k \in Keys : \E v \in Values : Put(k, v)
+     \/ \E k \in Keys : \E v \in Values : Get(k, v)
+
+Spec == Init /\ [][Next]_store
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,1,0,1.0,silver,47.35,"---- MODULE SingleDecreePaxos ----
+EXTENDS Naturals, Sequences, TLC
+
+CONSTANTS N, M, V, None
+
+VARIABLES ballot, promised, promisedVal, accepted, acceptedVal, chosenVal
+BallotNum == [p \in 1..M |-> ballot[p]]
+PromisedNum == [a \in 1..N |-> promised[a]]
+AcceptedNum == [a \in 1..N |-> accepted[a]]
+PromisedVal == [a \in 1..N |-> promisedVal[a]]
+AcceptedVal == [a \in 1..N |-> acceptedVal[a]]
+
+\* Type invariant
+TypeOK == /\ ballot \in [1..M -> Nat]
+        /\ promised \in [1..N -> Nat]
+        /\ promisedVal \in [1..N -> V \cup {None}]
+        /\ accepted \in [1..N -> Nat]
+        /\ acceptedVal \in [1..N -> V \cup {None}]
+        /\ chosenVal \in V \cup {None}
+
+\* Initial state
+Init == /\ ballot = [p \in 1..M |-> 0]
+        /\ promised = [a \in 1..N |-> 0]
+        /\ promisedVal = [a \in 1..N |-> None]
+        /\ accepted = [a \in 1..N |-> 0]
+        /\ acceptedVal = [a \in 1..N |-> None]
+        /\ chosenVal = None
+
+\* Prepare/Promise phase
+Prepare(p, a) == /\ ballot[p] = a
+                 /\ promised[a] <= a
+                 /\ promised[a] = a
+                 /\ promisedVal[a] = IF accepted[a] > 0 THEN acceptedVal[a] ELSE None
+
+\* Accept/Accepted phase
+Accept(p, a, v) == /\ ballot[p] = a
+                  /\ promised[a] = a
+                  /\ accepted[a] = a
+                  /\ acceptedVal[a] = v
+
+\* Choose phase
+Choose(v) == /\ chosenVal = None
+            /\ chosenVal' = v
+
+\* Next-state relation
+Next == \/ \E p \in 1..M : \E a \in 1..N :
+          /\ ballot[p] = a
+          /\ Prepare(p, a)
+        \/ \E p \in 1..M : \E a \in 1..N : \E v \in V :
+          /\ ballot[p] = a
+          /\ promised[a] = a
+          /\ Accept(p, a, v)
+        \/ /\ chosenVal = None
+           /\ \E v \in V:
+              /\ \A a \in 1..N: accepted[a] = a
+              /\ \A a \in 1..N: acceptedVal[a] = v
+              /\ Choose(v)
+
+\* Specification
+Spec == Init /\ [][Next]_<<ballot, promised, promisedVal, accepted, acceptedVal, chosenVal>> /\ TypeOK
+
+===="
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,1,0,0.444,silver,28.59,"---- MODULE FileSender ----
+EXTENDS Naturals, Sequences, TLC
+
+VARIABLES file, chunks, sentChunks, retransmitCount, MAX_RETRIES, channel, deliveredChunks
+
+===="

@@ -22,27 +22,7 @@ _BENCHMARK_DIR = _REPO / "outputs" / "benchmark_results"
 _BENCHMARK_SUITE = _REPO / "data" / "benchmarks" / "benchmark_suite.json"
 _OUT = _REPO / "data" / "processed" / "gold_benchmark_sft.jsonl"
 
-_DEVELOPER_PROMPT = """\
-You are ChatTLA, an expert at writing verified TLA+ formal specifications.
-When asked to write a TLA+ spec, follow these rules exactly:
-1. Start the module with ---- MODULE <ModuleName> ----
-2. End with ====
-3. Include EXTENDS, VARIABLES, Init, Next, and Spec operators
-4. After the TLA+ module, append a TLC configuration block:
-   SPECIFICATION Spec
-   INVARIANT TypeOK   (if TypeOK is defined)
-5. Output only valid TLA+ code. No markdown fences, no explanation outside the spec.
-
-Critical TLA+ syntax rules:
-- EXTENDS Integers for Int, +, -, *, \\div; EXTENDS Sequences for Seq, Append, Len, Head, Tail; EXTENDS FiniteSets for Cardinality, IsFiniteSet
-- Declare ALL state variables in a VARIABLES line (every primed variable x' must appear in VARIABLES)
-- Use = (not ==) inside Init and Next action conjuncts: /\\ x = value
-- Function construction: [x \\in S |-> expr] (NOT [x \\in S : expr])
-- Use \\in SUBSET S for set quantification (NOT \\E x \\subseteq S)
-- Do NOT use PlusCal syntax (:=, --algorithm, labels, while, goto)
-- TypeOK must be defined if referenced as INVARIANT
-- Spec == Init /\\ [][Next]_vars where vars == <<v1, v2, ...>>\
-"""
+from src.training.dataset_builder import _DEVELOPER_PROMPT  # single source of truth
 
 
 def main() -> int:

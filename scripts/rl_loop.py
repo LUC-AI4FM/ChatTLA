@@ -913,12 +913,29 @@ This TLA+ specification fails TLC model-checking with the following errors:
 Broken spec:
 {broken_spec}
 
-Fix ALL errors. The most common causes are:
-1. Unbounded sets: replace \\IN Nat/Int with \\IN 0..N (declare CONSTANTS N)
-2. Deadlock: every state must have a successor — add UNCHANGED <<vars>> to actions that terminate
-3. Integer overflow: guard incrementing ops with x < MAX precondition
-4. Undefined CONSTANTS: declare them and assign values in the TLC config block at the end
-5. Non-enumerable initial states: ensure Init assigns concrete finite values
+Fix ALL errors. Common fixes with examples:
+
+1. "not enumerable" / "cannot enumerate Nat":
+   WRONG:  x \\in Nat       →  RIGHT:  x \\in 0..N   (add CONSTANT N)
+   WRONG:  f \\in [Nat -> V] →  RIGHT:  f \\in [0..N -> V]
+
+2. Deadlock / "no successor state":
+   Add to Next:  Terminating == /\\ \\A variable preconditions are FALSE
+                                /\\ UNCHANGED <<all, vars, here>>
+
+3. "Cardinality requires a set, got an int":
+   WRONG:  Cardinality(N)   →  RIGHT:  Cardinality(S)  where S is the set, N is its size
+
+4. Contradictory UNCHANGED — same variable primed AND unchanged:
+   WRONG:  /\\ x' = x + 1 /\\ UNCHANGED <<x, y>>
+   RIGHT:  /\\ x' = x + 1 /\\ UNCHANGED <<y>>
+
+5. Missing UNCHANGED — Next disjunct doesn't mention all variables:
+   Every disjunct of Next must either prime OR UNCHANGED every declared variable.
+
+6. Init must assign concrete values (not just type constraints):
+   WRONG:  x \\in {{0,1,2}}    →  RIGHT:  x = 0   (pick one starting value)
+   Exception: finite sets are OK if small:  state \\in {{"idle"}} means state = "idle"
 
 Output ONLY the corrected TLA+ spec. No explanation.\
 """
@@ -1183,13 +1200,21 @@ def _attempt_sany_repair(
 # Self-critique — model reviews its own spec before validation
 # ─────────────────────────────────────────────────────────────────────────────
 _CRITIQUE_PROMPT_TEMPLATE = """\
-Review this TLA+ specification for correctness BEFORE we run the model checker.
-Check for these common issues:
-1. Unbounded sets (\\IN Nat or \\IN Int instead of bounded ranges like 0..N)
-2. Missing UNCHANGED clauses (every action must specify unchanged variables)
-3. Deadlock potential (can the system get stuck with no valid next state?)
-4. Undefined operators or constants not declared
-5. Non-finite initial states (Init must assign concrete finite values)
+Review this TLA+ specification for TLC model-checker correctness.
+Check for these issues (in order of frequency from our error logs):
+
+CRITICAL (causes TLC to crash or hang):
+1. Unbounded sets: \\in Nat or \\in Int → MUST use bounded range like 0..N with CONSTANT N
+2. Missing UNCHANGED: EVERY disjunct in Next must account for ALL variables — either prime them or use UNCHANGED <<var1, var2>>
+3. Contradictory updates: don't prime a variable AND include it in UNCHANGED in the same action
+4. Non-enumerable CONSTANTS: Cardinality(x) where x is an integer, not a set
+5. Init leaves variables unconstrained: every variable needs a concrete finite initial value
+
+COMMON (causes silver tier — SANY passes but TLC fails):
+6. ASSUME with undeclared identifiers: e.g., ASSUME Ids[i] where Ids isn't defined
+7. Deadlock: if the system can terminate, add Terminating == UNCHANGED vars as a Next disjunct
+8. Infinite state space: functions over Nat or SUBSET of an infinite set
+9. Type mismatch: applying Cardinality to a number, Head to a non-sequence, using \\cup on a function
 
 Spec:
 {spec}
@@ -1299,6 +1324,17 @@ def _generate_for_prompt(
 
         sany_result = sany_validate(spec, module_name=module_name)
         sany_ok = sany_result.valid
+
+        # ── Stub detection: reject truncated specs that pass SANY but ──
+        # have no behavioral content (no Init/Next, very short).
+        # These inflate silver counts without useful signal.
+        if sany_ok:
+            _has_init = bool(re.search(r"^Init\s*==", spec, re.MULTILINE))
+            _has_next = bool(re.search(r"^Next\s*==", spec, re.MULTILINE))
+            _spec_lines = len([l for l in spec.splitlines() if l.strip() and not l.strip().startswith("\\*")])
+            if not (_has_init and _has_next) or _spec_lines < 10:
+                sany_ok = False
+                log.debug(f"[{pid}] Stub spec rejected: Init={_has_init} Next={_has_next} lines={_spec_lines}")
 
         tlc_ok = False
         tlc_violations: list[str] = []
@@ -1585,8 +1621,11 @@ def build_training_data(results: list[SpecResult]) -> tuple[list[dict], list[dic
                     "feedback": feedback,
                 })
 
-        # Error-conditioned training: bug_fix pairs only when fix target is Diamond
-        if best.is_diamond:
+        # Error-conditioned training: bug_fix pairs when we have a gold+ best
+        # and a worse variant with TLC errors.  Previously gated on Diamond only,
+        # which meant 0 bugfix pairs when the model produces 0 diamonds.
+        # Now: any gold best can teach error correction from silver/bronze variants.
+        if best.tier == "gold":
             for r in group[1:]:
                 if r.tier in ("silver", "bronze") and (r.tlc_violations or not r.sany_pass):
                     feedback = extract_tlc_feedback(r) if r.tlc_violations else "SANY parse errors"
@@ -2005,8 +2044,12 @@ def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT
     if n_diamond >= 20 or n_train >= MIN_TRAIN_EXAMPLES:
         retrain_mode = "sft_incremental"
         num_epochs = SFT_EPOCHS  # capped at 2
-        lr = "1e-5"
-        # If we have diamond data, merge it into train.jsonl first
+        # Lower LR when diamond data is mixed in to reduce catastrophic forgetting.
+        # Diamond specs come from a different distribution than RL-loop examples;
+        # 1e-5 was causing canary regressions (0/5 gold pass after retrain).
+        lr = "5e-6" if n_diamond > 0 else "1e-5"
+        # If we have diamond data, merge it into train.jsonl first.
+        # Cap diamond at 30% of total to prevent it from drowning RL knowledge.
         if n_diamond > 0 and _diamond_sft_path.exists():
             _merged = 0
             existing_pids = set()
@@ -2018,19 +2061,96 @@ def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT
                                 existing_pids.add(json.loads(line).get("_prompt_id", ""))
                             except json.JSONDecodeError:
                                 pass
-            with open(_diamond_sft_path) as src, open(_TRAIN_JSONL, "a") as dst:
+            # Read all eligible diamond specs, then cap at 30% of RL data
+            _diamond_candidates = []
+            with open(_diamond_sft_path) as src:
                 for line in src:
                     if line.strip():
                         try:
                             obj = json.loads(line)
                             if obj.get("_prompt_id", "") not in existing_pids:
-                                dst.write(line)
-                                _merged += 1
+                                _diamond_candidates.append(line)
                         except json.JSONDecodeError:
                             pass
+            # Cap: diamond should be ≤30% of the final mix
+            # If n_train=445 → max diamond = 445 * 0.30 / 0.70 ≈ 190
+            _max_diamond = max(int(n_train * 0.30 / 0.70), 20)
+            if len(_diamond_candidates) > _max_diamond:
+                import random as _rng
+                _rng.shuffle(_diamond_candidates)
+                _diamond_candidates = _diamond_candidates[:_max_diamond]
+                log.info(f"[retrain] Capped diamond specs: {n_diamond} → {_max_diamond} (30% ratio cap)")
+            with open(_TRAIN_JSONL, "a") as dst:
+                for line in _diamond_candidates:
+                    dst.write(line)
+                    _merged += 1
             if _merged:
                 log.info(f"[retrain] Merged {_merged} Diamond specs into train.jsonl")
                 n_train += _merged
+        # Also merge gold_spec_cache to prevent canary regression.
+        # These are the specs that the canary check tests — if they're
+        # not in the training set, the retrained model may forget them.
+        # Oversample gold specs so they aren't drowned out by diamond data.
+        # With 209 diamond + 445 RL examples, gold specs need ~4x replay
+        # to maintain proportional gradient weight and prevent forgetting.
+        if _GOLD_SPEC_CACHE.exists():
+            _gold_merged = 0
+            from src.training.dataset_builder import _DEVELOPER_PROMPT
+            _dev_prompt = _DEVELOPER_PROMPT
+            existing_pids_gold = set()
+            if _TRAIN_JSONL.exists():
+                with open(_TRAIN_JSONL) as f:
+                    for line in f:
+                        if line.strip():
+                            try:
+                                existing_pids_gold.add(json.loads(line).get("_prompt_id", ""))
+                            except json.JSONDecodeError:
+                                pass
+            with open(_GOLD_SPEC_CACHE) as src, open(_TRAIN_JSONL, "a") as dst:
+                for line in src:
+                    if not line.strip():
+                        continue
+                    try:
+                        obj = json.loads(line)
+                        pid = obj.get("prompt_id", "")
+                        spec = obj.get("spec", "")
+                        prompt_text = obj.get("prompt_text", f"Write a TLA+ specification for problem {pid}")
+                        if pid in existing_pids_gold or not spec:
+                            continue
+                        # Build harmony-format SFT example
+                        sft_row = {
+                            "_tier": "gold_cache",
+                            "_prompt_id": pid,
+                            "messages": [
+                                {"role": "developer", "content": _dev_prompt},
+                                {"role": "user", "content": f"Write a TLA+ specification for the following:\n\n{prompt_text}"},
+                                {"role": "assistant", "channel": "analysis", "content": "I'll write a well-formed TLA+ specification."},
+                                {"role": "assistant", "channel": "final", "content": spec.strip()},
+                            ],
+                        }
+                        # Write gold specs 4x (replay oversample) to counterbalance
+                        # the diamond data volume and prevent catastrophic forgetting.
+                        _GOLD_REPLAY_FACTOR = 4
+                        for _ in range(_GOLD_REPLAY_FACTOR):
+                            dst.write(json.dumps(sft_row, ensure_ascii=False) + "\n")
+                        _gold_merged += 1
+                    except json.JSONDecodeError:
+                        pass
+            if _gold_merged:
+                _gold_total = _gold_merged * 4  # actual rows written
+                log.info(f"[retrain] Merged {_gold_merged} gold cache specs × 4 = {_gold_total} rows into train.jsonl (replay oversample)")
+                n_train += _gold_total
+        # Shuffle training data so diamond/gold aren't clustered at the end.
+        # Without shuffling, final training steps are dominated by appended data,
+        # causing recency bias in the model weights.
+        import random as _rng2
+        with open(_TRAIN_JSONL) as f:
+            _all_lines = [l for l in f if l.strip()]
+        _rng2.shuffle(_all_lines)
+        with open(_TRAIN_JSONL, "w") as f:
+            f.writelines(_all_lines)
+        log.info(f"[retrain] Shuffled {len(_all_lines)} training examples")
+
         log.info(f"[retrain] Mode: SFT incremental ({n_train} train, {n_diamond} diamond, lr={lr}, epochs={num_epochs})")
     else:
         log.warning(
