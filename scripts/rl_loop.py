@@ -198,6 +198,23 @@ class SpecResult:
     dead_actions: list[str] = field(default_factory=list)
     mutation_caught: bool = False     # invariant caught a mutation test
     trivial_invariant: bool = False   # invariant is vacuously true
+    distinct_states: int = 0          # number of distinct states TLC explored
+    invariants_checked: int = 0       # number of invariants checked by TLC
+
+    @property
+    def is_diamond(self) -> bool:
+        """Diamond tier: semantically meaningful gold spec.
+
+        Requires: distinct_states > 1, non-trivial invariant, invariants checked,
+        and mutation test caught (invariants actually constrain behavior).
+        """
+        return (
+            self.tier == "gold"
+            and self.distinct_states > 1
+            and not self.trivial_invariant
+            and self.invariants_checked > 0
+            and self.mutation_caught
+        )
 
 
 @dataclass
@@ -1334,6 +1351,8 @@ def _generate_for_prompt(
                 result.dead_actions = list(sem.dead_actions)
                 result.mutation_caught = sem.mutation_caught
                 result.trivial_invariant = sem.trivial_invariant
+                result.distinct_states = sem.distinct_states
+                result.invariants_checked = sem.invariants_checked
                 # Composite score: coverage (40%) + mutation effectiveness (40%) + non-trivial (20%)
                 cov_score = sem.action_coverage
                 mut_score = 1.0 if sem.mutation_caught else (0.0 if sem.mutation_tested else 0.5)
@@ -1343,6 +1362,9 @@ def _generate_for_prompt(
                     log.debug(f"  [{pid}] Dead actions: {sem.dead_actions}")
                 if sem.trivial_invariant:
                     log.debug(f"  [{pid}] Trivial invariant detected")
+                if result.is_diamond:
+                    log.info(f"  [{pid}] DIAMOND: states={sem.distinct_states} "
+                             f"cov={sem.action_coverage:.0%} mut={sem.mutation_caught}")
             break
 
         # ── RLVR: verifier-guided repair ─────────────────────────────────
@@ -1478,8 +1500,13 @@ def build_training_data(results: list[SpecResult]) -> tuple[list[dict], list[dic
 
     Returns (sft_examples, dpo_pairs).
 
-    SFT: gold always; silver when best tier is silver (SANY pass, TLC fail) — stored for
-    optional merge. DPO chosen must be gold. Bronze never as positive SFT.
+    SFT priority (highest first):
+      1. Diamond — semantically verified (passed mutation test, real state space)
+      2. Gold — TLC passes but may be vacuously correct (fallback only)
+      Silver/bronze specs are NEVER used as positive SFT examples.
+
+    DPO: chosen must be Diamond. This ensures preference learning drives
+    the model toward semantic correctness, not just silencing TLC.
     """
     sft_examples = []
     dpo_pairs = []
@@ -1490,19 +1517,39 @@ def build_training_data(results: list[SpecResult]) -> tuple[list[dict], list[dic
         by_prompt.setdefault(r.prompt_id, []).append(r)
 
     for pid, group in by_prompt.items():
-        # Sort by tier quality (gold > silver > bronze)
-        tier_rank = {"gold": 3, "silver": 2, "bronze": 1}
-        group.sort(key=lambda x: tier_rank.get(x.tier, 0), reverse=True)
+        # Sort by quality: diamond > gold > silver > bronze
+        def _rank(x: SpecResult) -> int:
+            base = {"gold": 3, "silver": 2, "bronze": 1}.get(x.tier, 0)
+            return base + (1 if x.is_diamond else 0)  # diamond = 4
+        group.sort(key=_rank, reverse=True)
 
         best = group[0]
 
-        # SFT: Gold is the target. High-structural Silver (SANY pass, high-score)
-        # serves as a fallback but is NOT labeled 'gold'.
-        # Never use a timed-out spec as SFT — it means the state space is unbounded.
         if best.tlc_timeout and best.tier != "gold":
             continue
 
-        if best.tier == "gold":
+        # SFT: Diamond is the primary target. Gold is kept as fallback
+        # but explicitly labeled so downstream training can filter.
+        if best.is_diamond:
+            sft_examples.append({
+                "_tier": "diamond",
+                "_prompt_id": pid,
+                "_semantic": {
+                    "distinct_states": best.distinct_states,
+                    "action_coverage": best.action_coverage,
+                    "mutation_caught": best.mutation_caught,
+                    "invariants_checked": best.invariants_checked,
+                },
+                "messages": [
+                    {"role": "developer", "content": _DEVELOPER_PROMPT},
+                    {"role": "user", "content": f"Write a TLA+ specification for the following:\n\n{best.prompt_text}"},
+                    {"role": "assistant", "channel": "analysis", "content": "I'll write a verified TLA+ specification with meaningful invariants that constrain behavior."},
+                    {"role": "assistant", "channel": "final", "content": best.spec.strip()},
+                ],
+            })
+        elif best.tier == "gold":
+            # Gold but not diamond — still useful, but labeled so we can
+            # prefer diamond examples during training data selection.
             sft_examples.append({
                 "_tier": "gold",
                 "_prompt_id": pid,
@@ -1513,54 +1560,36 @@ def build_training_data(results: list[SpecResult]) -> tuple[list[dict], list[dic
                     {"role": "assistant", "channel": "final", "content": best.spec.strip()},
                 ],
             })
-        elif best.tier == "silver" and getattr(best, "structural_score", 0) > 0.85:
-            # Silver SFT: Stricter filtering (0.85).
-            sft_examples.append({
-                "_tier": "silver",
-                "_prompt_id": pid,
-                "messages": [
-                    {"role": "developer", "content": _DEVELOPER_PROMPT},
-                    {"role": "user", "content": f"Write a TLA+ specification for the following:\n\n{best.prompt_text}"},
-                    {"role": "assistant", "channel": "analysis", "content": "I'll ensure the TLA+ syntax is correct and the core logic is sound."},
-                    {"role": "assistant", "channel": "final", "content": best.spec.strip()},
-                ],
-            })
 
-            # NOTE: Bugfix pairs where the "fix" target is silver (TLC-failing) were
-            # removed. Only gold specs should be used as correction targets — otherwise
-            # we teach the model that semantically broken specs are valid fixes.
-
-        # DPO: Gold (chosen) vs worse — teaches model to prefer TLC-passing specs
-        if best.tier == "gold" and len(group) > 1:
+        # DPO: Only when chosen is Diamond (semantically verified).
+        # This prevents teaching the model to prefer vacuously correct specs.
+        if best.is_diamond and len(group) > 1:
             worst = group[-1]
-            if worst.tier != "gold" and tier_rank.get(worst.tier, 0) < tier_rank.get(best.tier, 0):
+            if not worst.is_diamond and _rank(worst) < _rank(best):
                 feedback = ""
                 if worst.tlc_violations:
                     feedback = "\n".join(worst.tlc_violations[:5])
                 elif not worst.sany_pass:
                     feedback = "SANY parse errors (spec is syntactically invalid)"
+                elif worst.tier == "gold" and not worst.is_diamond:
+                    feedback = "TLC passes but spec is semantically vacuous (trivial invariants, no real constraints)"
                 else:
-                    feedback = f"TLC failed (silver) vs {best.tier}"
+                    feedback = f"TLC failed ({worst.tier}) vs diamond"
 
                 dpo_pairs.append({
                     "prompt": f"Write a TLA+ specification for the following:\n\n{best.prompt_text}",
                     "chosen": best.spec.strip(),
                     "rejected": worst.spec.strip(),
-                    "chosen_tier": best.tier,
+                    "chosen_tier": "diamond",
                     "rejected_tier": worst.tier,
                     "feedback": feedback,
                 })
-        # NOTE: Silver specs are ONLY added as SFT via the gated path above
-        # (structural_score > 0.85). An unconditional silver SFT path was removed
-        # here because it duplicated silver examples and trained on TLC-failing
-        # specs as if they were correct.
 
-        # Error-conditioned training: for silver specs with TLC violations,
-        # create bug_fix examples if we also have the gold version
-        if best.tier == "gold":
+        # Error-conditioned training: bug_fix pairs only when fix target is Diamond
+        if best.is_diamond:
             for r in group[1:]:
-                if r.tier == "silver" and r.tlc_violations:
-                    feedback = extract_tlc_feedback(r)
+                if r.tier in ("silver", "bronze") and (r.tlc_violations or not r.sany_pass):
+                    feedback = extract_tlc_feedback(r) if r.tlc_violations else "SANY parse errors"
                     if feedback:
                         sft_examples.append({
                             "_tier": "bugfix",
@@ -1958,34 +1987,55 @@ def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT
             n_train = sum(1 for line in f if line.strip())
 
     # ── 2. Determine retrain mode ──────────────────────────────────────
-    # Priority: KTO > SFT+DPO-after > skip
-    # KTO is preferred because:
-    #   - SFT on vacuously-correct gold specs teaches bad patterns
-    #   - DPO-only causes catastrophic forgetting on small pair counts
-    #   - KTO uses unpaired binary feedback (good/bad) + replay buffer,
-    #     which is more stable and doesn't reward vacuous correctness
+    # Priority: Diamond SFT > SFT incremental > skip
+    #
+    # KTO/DPO are deprecated: they used preference learning on noisy
+    # gold/silver labels where "gold" was vacuously correct (0% semantic
+    # coverage). Diamond SFT trains only on specs verified through
+    # SANY + TLC + semantic checks (mutation, non-trivial invariants).
     dpo_n = _count_dpo_gold_pairs()
-    kto_available = False
-    try:
-        from trl import KTOTrainer, KTOConfig
-        kto_available = True
-    except ImportError:
-        pass
 
-    if kto_available and (dpo_n >= 2 or n_train >= 50):
-        retrain_mode = "kto"
-        num_epochs = 1
-        lr = "5e-7"
-        log.info(f"[retrain] Mode: KTO ({dpo_n} DPO pairs + {n_train} SFT as replay, lr={lr}, epochs={num_epochs})")
-    elif n_train >= MIN_TRAIN_EXAMPLES:
+    # Count Diamond-tier examples in train.jsonl and diamond_sft.jsonl
+    _diamond_sft_path = _REPO_ROOT / "data" / "processed" / "diamond_sft.jsonl"
+    n_diamond = 0
+    if _diamond_sft_path.exists():
+        with open(_diamond_sft_path) as f:
+            n_diamond = sum(1 for line in f if line.strip())
+
+    if n_diamond >= 20 or n_train >= MIN_TRAIN_EXAMPLES:
         retrain_mode = "sft_incremental"
         num_epochs = SFT_EPOCHS  # capped at 2
         lr = "1e-5"
-        log.info(f"[retrain] Mode: SFT incremental ({n_train} train examples, lr={lr}, epochs={num_epochs})")
+        # If we have diamond data, merge it into train.jsonl first
+        if n_diamond > 0 and _diamond_sft_path.exists():
+            _merged = 0
+            existing_pids = set()
+            if _TRAIN_JSONL.exists():
+                with open(_TRAIN_JSONL) as f:
+                    for line in f:
+                        if line.strip():
+                            try:
+                                existing_pids.add(json.loads(line).get("_prompt_id", ""))
+                            except json.JSONDecodeError:
+                                pass
+            with open(_diamond_sft_path) as src, open(_TRAIN_JSONL, "a") as dst:
+                for line in src:
+                    if line.strip():
+                        try:
+                            obj = json.loads(line)
+                            if obj.get("_prompt_id", "") not in existing_pids:
+                                dst.write(line)
+                                _merged += 1
+                        except json.JSONDecodeError:
+                            pass
+            if _merged:
+                log.info(f"[retrain] Merged {_merged} Diamond specs into train.jsonl")
+                n_train += _merged
+        log.info(f"[retrain] Mode: SFT incremental ({n_train} train, {n_diamond} diamond, lr={lr}, epochs={num_epochs})")
     else:
         log.warning(
-            f"[retrain] Only {n_train} train examples and {dpo_n} DPO pairs. "
-            f"Need ≥{MIN_TRAIN_EXAMPLES} for SFT or ≥4 DPO pairs. Skipping."
+            f"[retrain] Only {n_train} train + {n_diamond} diamond examples. "
+            f"Need ≥{MIN_TRAIN_EXAMPLES} for SFT or ≥20 diamond. Skipping."
         )
         return "skipped_min_train"
 
@@ -2075,70 +2125,19 @@ def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT
 
     merged_model_dir = _REPO_ROOT / "outputs" / "merged_model"
 
-    if retrain_mode == "dpo_only":
-        # DPO-only: load from the MERGED model (which already has TLA+ knowledge)
-        # and apply a fresh LoRA for DPO preference learning.
-        # Without --base-model, DPO would start from base gpt-oss-20b which
-        # knows nothing about TLA+ → catastrophic regression every time.
-        train_cmd = [
-            sys.executable, "-m", "src.training.train",
-            "--epochs", "1",                          # needed but capped by max-steps
-            "--max-steps", "2",                       # ~no-op: 2 grad steps, not a full epoch
-            "--lr", lr,                               # 5e-6 — very conservative
-            "--max-gpu-memory-mb", str(max_gpu_memory_mb),
-            "--max-length", str(max_length),
-            "--per-device-batch-size", "1",
-            "--gradient-accumulation-steps", str(grad_accum_steps),
-            "--dpo-after",                            # DPO phase after minimal SFT
-        ]
-        if merged_model_dir.exists() and (merged_model_dir / "config.json").exists():
-            train_cmd.extend(["--base-model", str(merged_model_dir)])
-            log.info(
-                f"[retrain] DPO-only: loading from merged model ({merged_model_dir}) "
-                f"+ DPO on {dpo_n} gold pairs (lr={lr})"
-            )
-        else:
-            log.warning(
-                f"[retrain] No merged model found at {merged_model_dir}; "
-                f"falling back to base model (DPO may regress!)"
-            )
-            log.info(f"[retrain] DPO-only: 2-step SFT warmup + DPO on {dpo_n} gold pairs (lr={lr})")
-    elif retrain_mode == "kto":
-        # KTO: unpaired binary feedback with replay buffer
-        # Uses merged model as base to preserve TLA+ knowledge
-        # Clean old SFT/DPO checkpoints so merge_lora picks up KTO checkpoint
-        for old_dir in [_REPO_ROOT / "outputs" / "checkpoints",
-                        _REPO_ROOT / "outputs" / "checkpoints_dpo",
-                        _REPO_ROOT / "outputs" / "checkpoints_kto"]:
-            if old_dir.exists():
-                shutil.rmtree(old_dir, ignore_errors=True)
-                old_dir.mkdir(parents=True, exist_ok=True)
-        log.info("[retrain] Cleared old checkpoints for clean KTO run")
-        train_cmd = [
-            sys.executable, "-m", "src.training.train_kto",
-            "--lr", lr,
-            "--epochs", str(num_epochs),
-            "--max-length", str(max_length),
-        ]
-        if merged_model_dir.exists() and (merged_model_dir / "config.json").exists():
-            train_cmd.extend(["--base-model", str(merged_model_dir)])
-            log.info(f"[retrain] KTO: loading from merged model + {dpo_n} pairs + {n_train} replay (lr={lr})")
-        else:
-            log.info(f"[retrain] KTO: from base model + {dpo_n} pairs + {n_train} replay (lr={lr})")
-    else:
-        # Incremental SFT with optional DPO-after
-        train_cmd = [
-            sys.executable, "-m", "src.training.train",
-            "--epochs", str(num_epochs),
-            "--lr", lr,                               # 1e-5 — safe for incremental SFT
-            "--max-gpu-memory-mb", str(max_gpu_memory_mb),
-            "--max-length", str(max_length),
-            "--per-device-batch-size", "1",
-            "--gradient-accumulation-steps", str(grad_accum_steps),
-        ]
-        if dpo_n >= 2:
-            train_cmd.append("--dpo-after")
-            log.info(f"[retrain] SFT + DPO-after ({dpo_n} gold DPO pairs)")
+    # Incremental SFT on Diamond-filtered training data.
+    # DPO/KTO are deprecated — they used noisy gold/silver preference labels
+    # where "gold" was vacuously correct. Diamond SFT trains only on specs
+    # verified through SANY + TLC + semantic checks.
+    train_cmd = [
+        sys.executable, "-m", "src.training.train",
+        "--epochs", str(num_epochs),
+        "--lr", lr,                               # 1e-5 — safe for incremental SFT
+        "--max-gpu-memory-mb", str(max_gpu_memory_mb),
+        "--max-length", str(max_length),
+        "--per-device-batch-size", "1",
+        "--gradient-accumulation-steps", str(grad_accum_steps),
+    ]
 
     try:
         result = subprocess.run(
@@ -2174,11 +2173,9 @@ def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT
     )
     merged_ok = False
 
-    # When DPO-only mode trained on the merged model, merge_lora must also
-    # load from the merged model (LoRA deltas are relative to whatever base
-    # was used during training).
+    # merge_lora needs to know the base model used during training.
     merge_base_args: list[str] = []
-    if retrain_mode in ("dpo_only", "kto") and merged_model_dir.exists():
+    if merged_model_dir.exists() and (merged_model_dir / "config.json").exists():
         merge_base_args = ["--base-model", str(merged_model_dir)]
         log.info(f"[retrain] Merge will use base: {merged_model_dir}")
 
@@ -2834,7 +2831,8 @@ def run_cycle(
         if error_counts:
             log.info(f"[phase1] Error taxonomy: {error_counts}")
 
-        log.info(f"[phase1] Results: gold={stats.gold_count} silver={stats.silver_count} "
+        diamond_count = sum(1 for r in results if r.is_diamond)
+        log.info(f"[phase1] Results: diamond={diamond_count} gold={stats.gold_count} silver={stats.silver_count} "
                  f"bronze={stats.bronze_count} sany={stats.sany_pass}/{stats.specs_generated} "
                  f"tlc={stats.tlc_pass}/{stats.specs_generated}")
 
@@ -2848,7 +2846,8 @@ def run_cycle(
             dead = [a for r in gold_results for a in r.dead_actions]
             log.info(
                 f"[phase1] Semantic: avg_score={avg_sem:.2f} coverage={avg_cov:.0%} "
-                f"mutation_caught={n_mut}/{len(gold_results)} trivial_inv={n_triv}"
+                f"mutation_caught={n_mut}/{len(gold_results)} trivial_inv={n_triv} "
+                f"diamond={diamond_count}/{len(gold_results)}"
             )
             if dead:
                 log.info(f"[phase1] Dead actions (unreachable): {dead[:10]}")
