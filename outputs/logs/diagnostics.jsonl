@@ -76,3 +76,5 @@
 {"timestamp": "2026-04-06T08:51:06.332449", "kind": "zero_gold_cycle", "summary": "Zero gold specs in cycle 62 (24 specs tried)", "sany_pass": 13, "bronze_count": 11, "action": "model may have regressed; check recent retrain"}
 {"timestamp": "2026-04-06T09:25:26.749372", "kind": "zero_gold_cycle", "summary": "Zero gold specs in cycle 65 (18 specs tried)", "sany_pass": 7, "bronze_count": 11, "action": "model may have regressed; check recent retrain"}
 {"timestamp": "2026-04-06T09:49:13.910975", "kind": "zero_gold_cycle", "summary": "Zero gold specs in cycle 67 (30 specs tried)", "sany_pass": 21, "bronze_count": 9, "action": "model may have regressed; check recent retrain"}
+{"timestamp": "2026-04-06T10:07:05.672499", "kind": "zero_gold_cycle", "summary": "Zero gold specs in cycle 69 (30 specs tried)", "sany_pass": 20, "bronze_count": 10, "action": "model may have regressed; check recent retrain"}
+{"timestamp": "2026-04-06T10:49:10.216248", "kind": "zero_gold_cycle", "summary": "Zero gold specs in cycle 73 (22 specs tried)", "sany_pass": 16, "bronze_count": 6, "action": "model may have regressed; check recent retrain"}
