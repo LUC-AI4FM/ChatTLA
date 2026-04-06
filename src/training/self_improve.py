@@ -493,6 +493,69 @@ def fix_tla_syntax(spec: str, sany_errors: str = "") -> FixResult:
             fixed = new_fixed
         result.fixes_applied.append("removed bare module-level \\in expressions")
 
+    # ── Fix 23: Replace English quantifier keywords with TLA+ operators ───
+    # Models sometimes emit EXISTS/FORALL instead of \E/\A, or ALL/SOME.
+    # Must be careful not to replace inside strings or comments.
+    # EXISTS x \in S : P  →  \E x \in S : P
+    fixed_new = re.sub(r"\bEXISTS\s+(\w)", r"\\E \1", fixed)
+    if fixed_new != fixed:
+        result.fixes_applied.append("replaced EXISTS with \\E")
+        fixed = fixed_new
+    fixed_new = re.sub(r"\bFORALL\s+(\w)", r"\\A \1", fixed)
+    if fixed_new != fixed:
+        result.fixes_applied.append("replaced FORALL with \\A")
+        fixed = fixed_new
+    # Also handle ALL/SOME (less common but seen)
+    fixed_new = re.sub(r"\bALL\s+(\w+)\s*\\in\b", r"\\A \1 \\in", fixed)
+    if fixed_new != fixed:
+        result.fixes_applied.append("replaced ALL with \\A")
+        fixed = fixed_new
+    fixed_new = re.sub(r"\bSOME\s+(\w+)\s*\\in\b", r"\\E \1 \\in", fixed)
+    if fixed_new != fixed:
+        result.fixes_applied.append("replaced SOME with \\E")
+        fixed = fixed_new
+
+    # ── Fix 24: Remove invalid SUM/PRODUCT operators ─────────────────────
+    # TLA+ has no built-in SUM. Common pattern:
+    #   SUM(f) == ... or SUM({f[i] : i \in S})
+    # We can't auto-fix the semantics, but if SUM is used inline in a
+    # simple summation pattern, replace with a FoldFunction or remove.
+    # For now: if SANY errors mention "SUM" or "Unknown operator", and the
+    # spec uses SUM as a bare call, define a simple recursive sum helper.
+    if re.search(r"\bSUM\b", fixed) and not re.search(r"^\s*SUM\s*==", fixed, re.MULTILINE):
+        # Try to replace simple SUM(set) patterns with a set fold
+        # SUM(S) → LET __Sum[s \in SUBSET S] == ... is too complex.
+        # Simpler: if SUM is used as SUM(f, S) or SUM({...}), just define it.
+        # Insert a SUM definition after EXTENDS if not already defined.
+        sum_def = (
+            "\nSUM(S) == LET __SumHelper[ss \\in SUBSET S] ==\n"
+            "            IF ss = {} THEN 0\n"
+            "            ELSE LET x == CHOOSE x \\in ss : TRUE\n"
+            "                 IN x + __SumHelper[ss \\ {x}]\n"
+            "          IN __SumHelper[S]\n"
+        )
+        extends_end = re.search(r"^EXTENDS\s+.+$", fixed, re.MULTILINE)
+        if extends_end:
+            insert_at = extends_end.end()
+            fixed = fixed[:insert_at] + sum_def + fixed[insert_at:]
+            result.fixes_applied.append("auto-defined SUM operator")
+
+    # ── Fix 25: Fix UNCHANGED <<>> (empty tuple) ─────────────────────────
+    # UNCHANGED <<>> is invalid — remove the line entirely
+    fixed_new = re.sub(r"^\s*/\\.*UNCHANGED\s*<<\s*>>\s*$", "", fixed, flags=re.MULTILINE)
+    if fixed_new != fixed:
+        result.fixes_applied.append("removed UNCHANGED <<>> (empty tuple)")
+        fixed = fixed_new
+
+    # ── Fix 26: Fix EXCEPT with wrong comma placement ────────────────────
+    # Common error: [f EXCEPT ![a] = v1, ![b] = v2]
+    # Should be:    [f EXCEPT ![a] = v1, ![b] = v2]  (this is actually valid)
+    # But: [f EXCEPT ![a] = v1, [b] = v2]  (missing !) is invalid
+    fixed_new = re.sub(r",\s*\[(\w)", r", ![\1", fixed)
+    if fixed_new != fixed:
+        result.fixes_applied.append("fixed EXCEPT missing ! before [")
+        fixed = fixed_new
+
     # ── Fix 22: Detect and patch truncated specs ──────────────────────────
     # If the spec has no ==== ending, it was likely truncated.  We try to
     # close any open operator definitions and add a minimal terminator.

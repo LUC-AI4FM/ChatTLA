@@ -1,0 +1,678 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,0,0,1.0,bronze,43.44,"---- MODULE BakeryMutex ----
+EXTENDS Integers, Sequences, FiniteSets
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+Min(S) == CHOOSE x \in S : \A y \in S : x =< y
+
+
+CONSTANT N
+
+VARIABLES turn, state, q
+
+(* State values *)
+Idle == 0
+Trying == 1
+Critical == 2
+
+(* Helper to get the set of processes *)
+ProcSet == 1..N
+
+(* Initial state: all processes idle, no turn assigned *)
+Init == /\ turn = 0
+        /\ state = [p \in ProcSet |-> Idle]
+
+(* Action: process p picks a ticket (turn) and attempts to enter *)
+Enter(p) ==
+  /\ state[p] = Idle
+  /\ turn' = Max(turn, 1) + 1
+  /\ state' = [state EXCEPT ![p] = Trying]
+
+(* Action: process p enters critical section if it has the lowest ticket *)
+EnterCritical(p) ==
+  LET minProc == CHOOSE q \in ProcSet : state[q] = Trying /\ turn[q] = Min({turn[q'] : q' \in ProcSet : state[q'] = Trying})
+  IN /\ state[p] = Trying
+     /\ p = minProc
+     /\ state' = [state EXCEPT ![p] = Critical]
+
+(* Action: process p exits critical section *)
+Exit(p) ==
+  /\ state[p] = Critical
+  /\ state' = [state EXCEPT ![p] = Idle]
+  /\ turn' = turn
+
+(* Next-state relation: any process may attempt to enter, enter critical, or exit *)
+Next ==
+  \E p \in ProcSet :
+    Enter(p) \/ EnterCritical(p) \/ Exit(p)
+
+Spec == Init /\ [][Next]_<<turn, state>>
+
+(* Mutual exclusion invariant: at most one process in critical section *)
+TypeOK == \A i, j \in ProcSet : (state[i] = Critical /\ state[j] = Critical) => i = j
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,1,0,1.0,silver,43.84,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+(* Pure TLA+ specification of the Two-Phase Commit protocol *)
+
+(* ------------------------------------------------------------------ *)
+(* State variables *)
+VARIABLES participants, votes, state
+
+(* ------------------------------------------------------------------ *)
+(* Helper definitions *)
+Participants == 1..N
+
+(* ------------------------------------------------------------------ *)
+(* Initial state *)
+Init ==
+    /\ participants = Participants
+    /\ votes = [p \in participants |-> ""unknown""]
+    /\ state = ""init""
+
+(* ------------------------------------------------------------------ *)
+(* Action: send all participants a message *)
+SendAll(msg) ==
+    /\ state = ""init""
+    /\ state' = ""sent""
+
+(* ------------------------------------------------------------------ *)
+(* Action: wait for all votes *)
+WaitForVotes ==
+    /\ state = ""sent""
+    /\ state' = ""wait""
+
+(* ------------------------------------------------------------------ *)
+(* Action: commit the transaction *)
+Commit ==
+    /\ state = ""wait""
+    /\ state' = ""commit""
+
+(* ------------------------------------------------------------------ *)
+(* Action: abort the transaction *)
+Abort ==
+    /\ state = ""wait""
+    /\ state' = ""abort""
+
+(* ------------------------------------------------------------------ *)
+(* Next-state relation *)
+Next ==
+    \/ SendAll(""Prepare"")
+    \/ WaitForVotes
+    \/ Commit
+    \/ Abort
+
+(* ------------------------------------------------------------------ *)
+(* Temporal specification *)
+Spec == Init /\ [][Next]_<<participants, votes, state>>
+
+(* ------------------------------------------------------------------ *)
+(* Invariant: the state is always one of the defined values *)
+TypeOK ==
+    /\ participants \in SUBSET 1..N
+    /\ votes \in [1..N -> {""unknown"", ""yes"", ""no""}]
+    /\ state \in {""init"", ""sent"", ""wait"", ""commit"", ""abort""}
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,1,1,1.0,gold,78.88,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANT N
+
+(* Define philosophers and forks as the set {1, 2, ..., N} *)
+Philosophers == 1..N
+Forks == 1..N
+
+(* Helper functions to get left and right forks for a philosopher *)
+LeftFork(i) == IF i = 1 THEN N ELSE i - 1
+RightFork(i) == IF i = N THEN 1 ELSE i + 1
+
+(* State variables *)
+VARIABLES state, forks
+
+(* State can be ""thinking"", ""hungry"", or ""eating"" for each philosopher *)
+State == {""thinking"", ""hungry"", ""eating""}
+
+(* Initial state: all philosophers are thinking and all forks are free *)
+Init ==
+    /\ state = [p \in Philosophers |-> ""thinking""]
+    /\ forks = [f \in Forks |-> TRUE]
+
+(* Helper predicate: a philosopher can start eating if both adjacent forks are free *)
+CanEat(i) == forks[LeftFork(i)] /\ forks[RightFork(i)]
+
+(* Action: philosopher i picks up both forks and starts eating *)
+TakeForks(i) ==
+    /\ state[i] = ""hungry""
+    /\ CanEat(i)
+    /\ state' = [state EXCEPT ![i] = ""eating""]
+    /\ forks' = [forks EXCEPT ![LeftFork(i)] = FALSE, ![RightFork(i)] = FALSE]
+
+(* Action: philosopher i puts down both forks and goes back to thinking *)
+PutForks(i) ==
+    /\ state[i] = ""eating""
+    /\ state' = [state EXCEPT ![i] = ""thinking""]
+    /\ forks' = [forks EXCEPT ![LeftFork(i)] = TRUE, ![RightFork(i)] = TRUE]
+
+(* Action: philosopher i becomes hungry *)
+Hungry(i) ==
+    /\ state[i] = ""thinking""
+    /\ state' = [state EXCEPT ![i] = ""hungry""]
+    /\ forks' = forks
+
+(* Next-state relation: any philosopher can transition to the next state *)
+Next ==
+    \E i \in Philosophers :
+        TakeForks(i) \/ PutForks(i) \/ Hungry(i)
+
+(* Invariant: no two adjacent philosophers are eating simultaneously *)
+NoAdjacentEating ==
+    \A i \in Philosophers :
+        ~(state[i] = ""eating"" /\ state[IF i = N THEN 1 ELSE i + 1] = ""eating"")
+
+(* Invariant: a philosopher can only eat if both adjacent forks are free *)
+ForksFreeWhenEating ==
+    \A i \in Philosophers :
+        state[i] = ""eating"" => forks[LeftFork(i)] /\ forks[RightFork(i)]
+
+(* Invariant: a fork is held by at most one philosopher *)
+ForksHeldByAtMostOne ==
+    \A f \in Forks :
+        (\A i, j \in Philosophers :
+            (f = LeftFork(i) /\ f = LeftFork(j)) => i = j)
+
+(* Invariant: a philosopher can only pick up a fork if it is free *)
+ForksFreeBeforePickingUp ==
+    \A i \in Philosophers :
+        state[i] = ""hungry"" => forks[LeftFork(i)] /\ forks[RightFork(i)]
+
+(* Invariant: a philosopher can only put down a fork if it is holding it *)
+ForksHeldBeforePuttingDown ==
+    \A i \in Philosophers :
+        state[i] = ""eating"" => ~forks[LeftFork(i)] /\ ~forks[RightFork(i)]
+
+(* Invariant: a philosopher can only become hungry if it is not already hungry *)
+NotAlreadyHungry ==
+    \A i \in Philosophers :
+        state[i] = ""thinking"" => ~state[i] = ""hungry""
+
+(* Invariant: a philosopher can only become hungry if it is not already eating *)
+NotAlreadyEating ==
+    \A i \in Philosophers :
+        state[i] = ""thinking"" => ~state[i] = ""eating""
+
+(* Invariant: a philosopher can only become hungry if it is not already thinking *)
+NotAlreadyThinking ==
+    \A i \in Philosophers :
+        state[i] = ""thinking"" => ~state[i] = ""thinking""
+
+(* Specification *)
+Spec == Init /\ [][Next]_<<state, forks>>
+
+(* Type invariant *)
+TypeOK ==
+    /\ state \in [Philosophers -> State]
+    /\ forks \in [Forks -> BOOLEAN]
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,1,0,0.778,silver,23.38,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences, FiniteSets
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+
+CONSTANTS N, Proc
+ASSUME N \in Nat
+ASSUME Proc = 1..N
+
+VARIABLES num, flag
+
+Init == /\ num = [p \in Proc |-> 0]
+        /\ flag = [p \in Proc |-> FALSE]
+
+Next == \E i \in Proc :
+          \/ /\ flag[i] = FALSE
+             /\ flag' = [flag EXCEPT ![i] = TRUE]
+             /\ num' = [num EXCEPT ![i] = 1 + Max({num[j] : j \in Proc})]
+          \/ /\ flag[i] = TRUE
+             /\ flag' = [flag EXCEPT ![i] = FALSE]
+             /\ num' = num
+
+Spec == Init /\ [][Next]_<<num, flag>>
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,1,0.778,gold,4.06,"---- MODULE BoundedFIFO ----
+EXTENDS Integers, Sequences
+
+CONSTANT K
+
+VARIABLES q, head, tail, size
+
+(* q is a sequence of length K, holding the buffer contents.
+   head and tail are indices into q (0..K-1) indicating the
+   next position to read and write, respectively.
+   size is the number of items currently in the buffer. *)
+
+Init == 
+    /\ q = <<>> 
+    /\ head = 0
+    /\ tail = 0
+    /\ size = 0
+
+Producer == 
+    /\ size < K
+    /\ q' = Append(q, 1)  \* write a dummy value
+    /\ tail' = (tail + 1) % K
+    /\ size' = size + 1
+    /\ UNCHANGED head
+
+Consumer == 
+    /\ size > 0
+    /\ q' = Tail(q)  \* remove the first element
+    /\ head' = (head + 1) % K
+    /\ size' = size - 1
+    /\ UNCHANGED tail
+
+Next == Producer \/ Consumer
+
+Spec == Init /\ [][Next]_<<q, head, tail, size>>
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,0,0,1.0,bronze,70.38,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N \* number of servers, N, NULL
+ASSUME N \in Nat /\ N > 0
+
+VARIABLES currentTerm, votedFor, state, candidate
+
+(* State values *)
+Leader == ""Leader""
+Follower == ""Follower""
+Candidate == ""Candidate""
+
+(* Initial state: all servers are followers with term 0 and no votes *)
+Init == /\ currentTerm = [i \in 1..N |-> 0]
+        /\ votedFor = [i \in 1..N |-> NULL]
+        /\ state = [i \in 1..N |-> Follower]
+
+(* Helper: majority threshold *)
+Majority == (N \div 2) + 1
+
+(* RequestVote RPC: candidate i requests votes from others *)
+RequestVote(i, term) ==
+  /\ currentTerm[i] = term
+  /\ votedFor[i] = NULL \/ votedFor[i] = i
+  /\ votedFor' = [votedFor EXCEPT ![j] = i | j \in 1..N]
+  /\ UNCHANGED <<currentTerm, state>>
+
+(* Vote granted if candidate's term is at least as large *)
+VoteGranted(i, term) ==
+  /\ currentTerm[i] <= term
+  /\ currentTerm' = [currentTerm EXCEPT ![i] = term]
+  /\ UNCHANGED <<votedFor, state>>
+
+(* Candidate becomes leader if receives majority votes *)
+BecomeLeader(i, term) ==
+  /\ currentTerm[i] = term
+  /\ \E votes \in SUBSET 1..N : \card(votes) >= Majority
+  /\ state' = [state EXCEPT ![i] = Leader]
+  /\ UNCHANGED <<currentTerm, votedFor>>
+
+(* Candidate starts election *)
+StartElection(i) ==
+  /\ state[i] = Follower
+  /\ currentTerm' = [currentTerm EXCEPT ![i] = currentTerm[i] + 1]
+  /\ votedFor' = [votedFor EXCEPT ![i] = i]
+  /\ state' = [state EXCEPT ![i] = Candidate]
+  /\ UNCHANGED <<currentTerm, votedFor>>
+
+(* Leader sends heartbeats *)
+Heartbeat(i) ==
+  /\ state[i] = Leader
+  /\ UNCHANGED <<currentTerm, votedFor, state>>
+
+(* STRING server can step down if it sees higher term *)
+StepDown(i, term) ==
+  /\ currentTerm[i] < term
+  /\ currentTerm' = [currentTerm EXCEPT ![i] = term]
+  /\ state' = [state EXCEPT ![i] = Follower]
+  /\ votedFor' = [votedFor EXCEPT ![i] = NULL]
+  /\ UNCHANGED <<currentTerm, votedFor, state>>
+
+(* Next-state relation: nondeterministic choice among actions *)
+Next ==
+  \E i \in 1..N :
+    \E term \in Nat :
+      RequestVote(i, term) \/ VoteGranted(i, term) \/ BecomeLeader(i, term) \/
+      StartElection(i) \/ Heartbeat(i) \/ StepDown(i, term)
+
+Spec == Init /\ [][Next]_<<currentTerm, votedFor, state>>
+
+(* Invariant: no two leaders in same term *)
+TypeOK == /\ currentTerm \in [1..N -> Nat]
+          /\ votedFor \in [1..N -> {NULL} \cup 1..N]
+          /\ state \in [1..N -> {Follower, Candidate, Leader}]
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,1,1,1.0,gold,6.94,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N \* Number of readers
+
+VARIABLES readers, writer_active
+
+(* readers is a set of reader IDs currently holding the lock *)
+(* writer_active is a boolean: 1 if a writer holds the lock, 0 otherwise *)
+
+Init == /\ readers = {}
+        /\ writer_active = 0
+
+(* Reader i attempts to acquire the lock *)
+ReaderAcquire(i) == 
+    /\ i \in 1..N
+    /\ writer_active = 0
+    /\ readers' = readers \cup {i}
+    /\ UNCHANGED writer_active
+
+(* Reader i releases the lock *)
+ReaderRelease(i) == 
+    /\ i \in readers
+    /\ readers' = readers \ {i}
+    /\ UNCHANGED writer_active
+
+(* Writer attempts to acquire the lock *)
+WriterAcquire == 
+    /\ writer_active = 0
+    /\ readers = {}
+    /\ writer_active' = 1
+    /\ UNCHANGED readers
+
+(* Writer releases the lock *)
+WriterRelease == 
+    /\ writer_active = 1
+    /\ writer_active' = 0
+    /\ UNCHANGED readers
+
+Next == \/ \E i \in 1..N: ReaderAcquire(i)
+        \/ \E i \in readers: ReaderRelease(i)
+        \/ WriterAcquire
+        \/ WriterRelease
+
+Spec == Init /\ [][Next]_<<readers, writer_active>>
+
+(* Invariants *)
+TypeOK == /\ readers \subseteq 1..N
+          /\ writer_active \in {0,1}
+          /\ (writer_active = 1 => readers = {})
+
+NoConcurrentWriters == \A i, j \in 1..N: ~(i # j /\ i \in readers /\ j \in readers)
+
+NoReaderDuringWrite == \A i \in 1..N: ~(writer_active = 1 /\ i \in readers)
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,0,0,1.0,bronze,80.66,"---- MODULE ChandyLamport ----
+EXTENDS Integers, Sequences, FiniteSets, TLC
+
+CONSTANTS N, Proc, Chan
+(* Proc = 1..N, Chan = {<<p,q>> : p \in Proc /\ q \in Proc /\ p # q} *)
+
+(* State of each process: local counter and flag whether state recorded *)
+VARIABLES state, recorded, buf
+(* state[p] = counter value of process p
+   recorded[p] = TRUE iff process p has recorded its state *)
+
+(* Channel buffers: sequence of messages (0 for normal, 1 for marker) *)
+(* buf[c] = sequence of messages on channel c *)
+
+(* Initial state: all counters 0, no process recorded, all buffers empty *)
+Init == /\ state = [p \in Proc |-> 0]
+        /\ recorded = [p \in Proc |-> FALSE]
+        /\ buf = [c \in Chan |-> <<>>]
+
+(* Helper: send a normal message from p to q *)
+SendMsg(p, q) ==
+  LET c == <<p, q>> IN
+  /\ buf' = [buf EXCEPT ![c] = Append(buf[c], 0)]
+  /\ UNCHANGED <<state, recorded>>
+
+(* Helper: send a marker from p to q (after recording state) *)
+SendMarker(p, q) ==
+  LET c == <<p, q>> IN
+  /\ buf' = [buf EXCEPT ![c] = Append(buf[c], 1)]
+  /\ UNCHANGED <<state, recorded>>
+
+(* Receive a message on channel c = <<p, q>> by process q *)
+RecvMsg(c) ==
+  LET p == FIRST c
+      q == LAST c
+      m == Head(buf[c])
+  IN /\ buf' = [buf EXCEPT ![c] = Tail(buf[c])]
+      /\ IF m = 0 THEN state' = [state EXCEPT ![q] = state[q] + 1]
+
+      /\ UNCHANGED recorded
+
+(* Process p records its state and sends markers on all outgoing channels *)
+RecordState(p) ==
+  /\ recorded' = [recorded EXCEPT ![p] = TRUE]
+  /\ \A q \in Proc : q # p -> SendMarker(p, q)
+  /\ UNCHANGED state
+
+(* One step of the system: either a send, receive, or state recording *)
+Step ==
+  \E p \in Proc :
+    (recorded[p] = FALSE /\ RecordState(p))
+  \/ \E p, q \in Proc : p # q /\ SendMsg(p, q)
+  \/ \E c \in Chan : Len(buf[c]) > 0 /\ RecvMsg(c)
+
+Next == Step
+
+Spec == Init /\ [][Next]_<<state, recorded, buf>>
+
+(* Invariant: counters never exceed N *)
+TypeOK == \A p \in Proc : state[p] <= N
+
+===="
+chattla:20b,BM009,Token Ring,networking,2,1,1,1.0,gold,4.79,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N
+ASSUME N \in Nat \ {0}
+
+VARIABLES token, sent
+
+(* token: 1..N, the node currently holding the token
+   sent: set of nodes that have sent a message in the current round *)
+
+(* Helper to compute the next node in the ring *)
+NextNode(i) == IF i = N THEN 1 ELSE i + 1
+
+(* Initial state: token at node 1, no messages sent *)
+Init == token = 1 /\ sent = {}
+
+(* Transition: token passes to next node; the current holder may send a message *)
+Next ==
+  /\ token' = NextNode(token)
+  /\ sent' = IF token \in sent THEN sent ELSE sent \cup {token}
+
+Spec == Init /\ [][Next]_<<token, sent>>
+
+(* Invariant: token always stays within 1..N *)
+TypeOK == token \in 1..N
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,0,0,1.0,bronze,18.89,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS Keys, Values, NULL
+
+(* State: a partial function from Keys to Values *)
+VARIABLES store
+
+(* Helper: check that store is a function from Keys to Values *)
+TypeOK == store \in [Keys -> [Values]]
+
+(* Initial state: empty store *)
+Init == store = [k \in Keys |-> NULL]
+
+(* Put operation: set key k to value v *)
+Put(k, v) == /\ k \in Keys
+              /\ v \in Values
+              /\ store' = [store EXCEPT ![k] = v]
+
+(* Get operation: read key k (no state change) *)
+Get(k) == /\ k \in Keys
+          /\ UNCHANGED store
+
+(* Next-state relation: either Put or Get *)
+Next == \E k \in Keys : \E v \in Values : Put(k, v) \/ Get(k)
+
+Spec == Init /\ [][Next]_store
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,0,0,0.778,bronze,57.0,"---- MODULE PaxosSingleDecree ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, M, V, NULL
+
+VARIABLES ballots, promises, accepts, chosen, hasn
+
+(* ballots: [1..M -> Nat]  -- current ballot number for each proposer
+   promises: [1..N -> [ballot: Nat, value: V]]  -- highest promised ballot and value seen by each acceptor
+   accepts: [1..N -> [ballot: Nat, value: V]]  -- highest accepted ballot and value by each acceptor
+   chosen: [V -> BOOLEAN]  -- whether a value has been chosen *)
+
+(* Helper to get the maximum accepted value among acceptors for a given ballot *)
+MaxAccepted(b) ==
+  LET vals == {a.value : a \in CHOOSE s \in accepts : s.ballot = b}
+  IN IF vals = {} THEN NULL ELSE CHOOSE v \in vals : TRUE
+
+Init ==
+  /\ ballots = [i \in 1..M |-> 0]
+  /\ promises = [i \in 1..N |-> [ballot |-> 0, value |-> NULL]]
+  /\ accepts = [i \in 1..N |-> [ballot |-> 0, value |-> NULL]]
+  /\ chosen = [v \in V |-> FALSE]
+
+(* Proposer i starts a new proposal with value v *)
+Propose(i, v) ==
+  /\ ballots' = [ballots EXCEPT ![i] = @ + 1]
+  /\ UNCHANGED <<promises, accepts, chosen>>
+
+(* Prepare phase: proposer i sends prepare to all acceptors *)
+Prepare(i) ==
+  /\ \E a \in 1..N : promises[a].ballot < ballots[i]
+  /\ promises' = [promises EXCEPT ![a] = [ballot |-> ballots[i], value |-> promises[a].value] : a \in 1..N]
+  /\ UNCHANGED <<ballots, accepts, chosen>>
+
+(* Accept phase: proposer i sends accept request with value v to all acceptors *)
+Accept(i, v) ==
+  /\ \E a \in 1..N : promises[a].ballot = ballots[i]
+  /\ accepts' = [accepts EXCEPT ![a] = [ballot |-> ballots[i], value |-> v] : a \in 1..N]
+  /\ UNCHANGED <<ballots, promises, chosen>>
+
+(* Acceptor a accepts a proposal if it hasn't promised a higher ballot *)
+AcceptResponse(a, i, v) ==
+  /\ promises[a].ballot <= ballots[i]
+  /\ accepts' = [accepts EXCEPT ![a] = [ballot |-> ballots[i], value |-> v]]
+  /\ UNCHANGED <<ballots, promises, chosen>>
+
+(* Once a value is chosen, it is never changed *)
+Chosen(v) ==
+  /\ \E a \in 1..N : accepts[a].value = v
+  /\ chosen' = [chosen EXCEPT ![v] = TRUE]
+  /\ UNCHANGED <<ballots, promises, accepts>>
+
+Next ==
+  \E i \in 1..M : \E v \in V :
+    Propose(i, v) \/ Prepare(i) \/ Accept(i, v) \/ AcceptResponse(i, v) \/ Chosen(v)
+
+Spec == Init /\ [][Next]_<<ballots, promises, accepts, chosen>>
+
+===="
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,0,0,1.0,bronze,67.53,"---- MODULE FileTransfer ----
+\* Import basic temporal logic
+EXTENDS Naturals, Sequences, FiniteSets
+
+\* --------------------------------------------------------------------
+\* CONSTANTS
+\*   MAX_RETRIES   -- maximum number of retransmission attempts per chunk
+\* --------------------------------------------------------------------
+CONSTANTS MAX_RETRIES
+
+\* --------------------------------------------------------------------
+\* VARIABLES
+\*   sent      -- set of chunks that have been sent (including retransmits)
+\*   acked     -- set of chunks that have been acknowledged
+\*   retries   -- mapping from chunk -> number of retransmission attempts
+\* --------------------------------------------------------------------
+VARIABLES sent, acked, retries
+
+\* --------------------------------------------------------------------
+\* Helper definitions
+\* --------------------------------------------------------------------
+ChunkSet == 1..10  \* assume file consists of 10 chunks
+
+\* --------------------------------------------------------------------
+\* Init: initial state
+\* --------------------------------------------------------------------
+Init ==
+    /\ sent = {}
+    /\ acked = {}
+    /\ \A c \in ChunkSet : retries[c] = 0
+
+\* --------------------------------------------------------------------
+\* SendChunk(c): nondeterministically send chunk c
+\* --------------------------------------------------------------------
+SendChunk(c) ==
+    /\ c \in ChunkSet
+    /\ c \notin sent
+    /\ sent' = sent \cup {c}
+    /\ UNCHANGED <<acked, retries>>
+
+\* --------------------------------------------------------------------
+\* AckChunk(c): nondeterministically receive acknowledgment for chunk c
+\* --------------------------------------------------------------------
+AckChunk(c) ==
+    /\ c \in sent
+    /\ c \notin acked
+    /\ acked' = acked \cup {c}
+    /\ UNCHANGED <<sent, retries>>
+
+\* --------------------------------------------------------------------
+\* Retransmit(c): retransmit chunk c if retries < MAX_RETRIES
+\* --------------------------------------------------------------------
+Retransmit(c) ==
+    /\ c \in sent
+    /\ retries[c] < MAX_RETRIES
+    /\ retries' = [retries EXCEPT ![c] = @ + 1]
+    /\ UNCHANGED <<sent, acked>>
+
+\* --------------------------------------------------------------------
+\* Next: one step of the protocol
+\* --------------------------------------------------------------------
+Next ==
+    \E c \in ChunkSet :
+        \E action \in {SendChunk, AckChunk, Retransmit} :
+            action(c)
+
+\* --------------------------------------------------------------------
+\* Spec: temporal specification
+\* --------------------------------------------------------------------
+Spec == Init /\ [][Next]_<<sent, acked, retries>>
+
+\* --------------------------------------------------------------------
+\* Invariant: no chunk is acknowledged before being sent
+\* --------------------------------------------------------------------
+TypeOK ==
+    /\ sent \subseteq ChunkSet
+    /\ acked \subseteq ChunkSet
+    /\ \A c \in ChunkSet : retries[c] \in 0..MAX_RETRIES
+
+\* --------------------------------------------------------------------
+\* Liveness: every chunk eventually gets acknowledged
+\* --------------------------------------------------------------------
+SpecLiveness ==
+    \A c \in ChunkSet : <> (c \in acked)
+
+===="

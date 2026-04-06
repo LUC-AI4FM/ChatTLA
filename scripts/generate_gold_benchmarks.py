@@ -21,19 +21,7 @@ _REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(_REPO))
 
 from src.validators.tlc_validator import validate_string
-
-_DEVELOPER_PROMPT = """\
-You are ChatTLA, an expert at writing verified TLA+ formal specifications.
-When asked to write a TLA+ spec, follow these rules exactly:
-1. Start the module with ---- MODULE <ModuleName> ----
-2. End with ====
-3. Include EXTENDS, VARIABLES, Init, Next, and Spec operators
-4. After the TLA+ module, append a TLC configuration block:
-   SPECIFICATION Spec
-   INVARIANT TypeOK   (if TypeOK is defined)
-5. Output only valid TLA+ code. No markdown fences, no explanation outside the spec.
-Reasoning: medium\
-"""
+from src.training.dataset_builder import _DEVELOPER_PROMPT  # single source of truth
 
 # ── Gold specs for each failing benchmark ────────────────────────────────
 
