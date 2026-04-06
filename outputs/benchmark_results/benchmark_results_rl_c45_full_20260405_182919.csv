@@ -1,0 +1,1316 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,0,0.444,silver,30.12,"---- MODULE MutualExclusion ----
+EXTENDS Naturals, Sequences, TLC
+
+VARIABLES state, N
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,1,0,0.444,silver,54.01,"---- MODULE TwoPhaseCommit ----
+EXTENDS Naturals, Sequences, TLC
+
+VARIABLES participants, coordinator, state, msgLog, voteLog, commitLog
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,1,0,1.0,silver,56.15,"---- MODULE DiningPhilosophers ----
+EXTENDS Naturals, Sequences, TLC, Integers
+
+CONSTANT N
+
+VARIABLES forks, states
+
+(* fork ownership: forks[i] = j means fork i is owned by philosopher j; forks[i] = -1 means fork i is free *)
+(* philosopher states: states[i] = ""thinking"" | ""hungry"" | ""eating"" *)
+
+TypeOK == 
+  /\ forks \in [1..N -> 1..N \cup {-1}]
+  /\ states \in [1..N -> {""thinking"", ""hungry"", ""eating""}]
+  /\ \A i \in 1..N: forks[i] \in 1..N \cup {-1}
+  /\ \A i \in 1..N: states[i] \in {""thinking"", ""hungry"", ""eating""}
+
+Init == 
+  /\ forks = [i \in 1..N |-> -1]
+  /\ states = [i \in 1..N |-> ""thinking""]
+
+Hungry(i) == states[i] = ""hungry""
+Eating(i) == states[i] = ""eating""
+Thinking(i) == states[i] = ""thinking""
+
+LeftFork(i) == i
+RightFork(i) == IF i = N THEN 1 ELSE i + 1
+
+FreeFork(i) == forks[i] = -1
+
+CanEat(i) == 
+  /\ FreeFork(LeftFork(i))
+  /\ FreeFork(RightFork(i))
+
+TakeForks(i) == 
+  /\ forks' = [forks EXCEPT ![LeftFork(i)] = i, ![RightFork(i)] = i]
+  /\ states' = [states EXCEPT ![i] = ""eating""]
+
+PutForks(i) == 
+  /\ forks' = [forks EXCEPT ![LeftFork(i)] = -1, ![RightFork(i)] = -1]
+  /\ states' = [states EXCEPT ![i] = ""thinking""]
+
+HungryToEat(i) == 
+  /\ Hungry(i)
+  /\ CanEat(i)
+  /\ TakeForks(i)
+
+EatToThink(i) == 
+  /\ Eating(i)
+  /\ PutForks(i)
+
+Next == 
+  \E i \in 1..N:
+    (HungryToEat(i) \/ EatToThink(i))
+
+Spec == Init /\ [][Next]_<<forks, states>> /\ TypeOK
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,0,0,1.0,bronze,26.8,"---- MODULE Bakery ----
+EXTENDS Naturals, Sequences, TLC
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+
+VARIABLES num, flag
+
+(* num[i] is the ticket number of process i.
+   flag[i] is TRUE if process i is choosing a number, FALSE otherwise. *)
+
+(* The set of processes *)
+Processes == 1..N
+
+(* The type invariant *)
+TypeOK == /\ num \in [Processes -> Nat]
+          /\ flag \in [Processes -> BOOLEAN]
+
+(* The initial state *)
+Init == /\ num = [i \in Processes |-> 0]
+        /\ flag = [i \in Processes |-> FALSE]
+
+(* The Next state relation *)
+Next == \E i \in Processes :
+          /\ flag' = [flag EXCEPT ![i] = TRUE]
+          /\ num' = [num EXCEPT ![i] = 1 + Max([num EXCEPT ![j] = 0 | j \in Processes])]
+          /\ flag' = [flag EXCEPT ![i] = FALSE]
+          /\ UNCHANGED <<num, flag>> \* except for i
+
+Spec == Init /\ [][Next]_<<num, flag>> /\ TypeOK
+
+===="
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,0,1.0,silver,49.73,"---- MODULE BoundedFIFOQueue ----
+EXTENDS Naturals, Sequences, TLC
+
+CONSTANT K \* Queue capacity
+
+VARIABLES q, head, tail, count
+
+(* q is a sequence of length K, head and tail are indices into q, count is the number of items in the queue *)
+
+TypeOK == 
+  /\ q \in Seq(K)
+  /\ head \in 0..K-1
+  /\ tail \in 0..K-1
+  /\ count \in 0..K
+
+Init == 
+  /\ q \in Seq(K)
+  /\ head = 0
+  /\ tail = 0
+  /\ count = 0
+
+Producer == 
+  /\ count < K
+  /\ q' = q[1..K] \* q remains unchanged
+  /\ head' = head
+  /\ tail' = (tail + 1) % K
+  /\ count' = count + 1
+  /\ q[tail] = 1 \* Producer writes 1 at tail
+
+Consumer == 
+  /\ count > 0
+  /\ q' = q[1..K] \* q remains unchanged
+  /\ head' = (head + 1) % K
+  /\ tail' = tail
+  /\ count' = count - 1
+  /\ q[head] = 0 \* Consumer reads 0 at head
+
+Next == 
+  \/ Producer
+  \/ Consumer
+
+Spec == 
+  /\ TypeOK
+  /\ Init
+  /\ [][Next]_<<q, head, tail, count>>
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,1,0,0.444,silver,68.75,"---- MODULE RaftLeaderElection ----
+EXTENDS Naturals, TLC
+CONSTANTS State
+
+VARIABLES currentTerm, votedFor, state
+
+(* --TYPEDEF--
+   State == {""Follower"", ""Candidate"", ""Leader""}
+*)
+
+(* --TYPEDEF--
+   TypeOK == /\ currentTerm \in Nat
+           /\ votedFor \in {""Follower"", ""Candidate"", ""Leader""} \cup {None}
+           /\ state \in State
+*)
+
+(* --TYPEDEF--
+   Init ==
+     /\ currentTerm = 0
+     /\ votedFor = None
+     /\ state = ""Follower""
+*)
+
+(* --TYPEDEF--
+   Next ==
+     \/ /\ state = ""Follower""
+        /\ currentTerm' = currentTerm
+           /\ votedFor' = votedFor
+           /\ state' = ""Follower""
+     \/ /\ state = ""Candidate""
+        /\ currentTerm' = currentTerm + 1
+           /\ votedFor' = state
+           /\ state' = ""Candidate""
+     \/ /\ state = ""Leader""
+        /\ currentTerm' = currentTerm
+           /\ votedFor' = votedFor
+           /\ state' = ""Leader""
+*)
+
+(* --TYPEDEF--
+   Spec == Init /\ [][Next]_<<currentTerm, votedFor, state>> /\ TypeOK
+*)
+
+(* --TYPEDEF--
+   TypeOK == /\ currentTerm \in Nat
+           /\ votedFor \in {""Follower"", ""Candidate"", ""Leader""} \cup {None}
+           /\ state \in State
+*)
+
+(* --TYPEDEF--
+   Majority ==
+     currentTerm' > currentTerm
+     /\ votedFor' = state
+     /\ state' = ""Leader""
+*)
+
+(* --TYPEDEF--
+   Spec ==
+     Init
+     /\ [][Next]_<<currentTerm, votedFor, state>> 
+     /\ TypeOK
+*)
+
+(* --TYPEDEF--
+   TypeOK ==
+     /\ currentTerm \in Nat
+     /\ votedFor \in {""Follower"", ""Candidate"", ""Leader""} \cup {None}
+     /\ state \in State
+*)
+
+(* --TYPEDEF--
+   Next ==
+     \/ /\ state = ""Follower""
+        /\ currentTerm' = currentTerm
+           /\ votedFor' = votedFor
+           /\ state' = ""Follower""
+     \/ /\ state = ""Candidate""
+        /\ currentTerm' = currentTerm + 1
+           /\ votedFor' = state
+           /\ state' = ""Candidate""
+     \/ /\ state = ""Leader""
+        /\ currentTerm' = currentTerm
+           /\ votedFor' = votedFor
+           /\ state' = ""Leader""
+*)
+
+(* --TYPEDEF--
+   Init ==
+     /\ currentTerm = 0
+     /\ votedFor = None
+     /\ state = ""Follower""
+*)
+
+(* --TYPEDEF--
+   Spec ==
+     Init
+     /\ [][Next]_<<currentTerm, votedFor, state>> 
+     /\ TypeOK
+*)
+
+(* --TYPEDEF--
+   TypeOK ==
+     /\ currentTerm \in Nat
+     /\ votedFor \in {""Follower"", ""Candidate"", ""Leader""} \cup {None}
+     /\ state \in State
+*)
+
+(* --TYPEDEF--
+   Next ==
+     \/ /\ state = ""Follower""
+        /\ currentTerm' = currentTerm
+           /\ votedFor' = votedFor
+           /\ state' = ""Follower""
+     \/ /\ state = ""Candidate""
+        /\ currentTerm' = currentTerm + 1
+           /\ votedFor' = state
+           /\ state' = ""Candidate""
+     \/ /\ state = ""Leader""
+        /\ currentTerm' = currentTerm
+           /\ votedFor' = votedFor
+           /\ state' = ""Leader""
+*)
+
+(* --TYPEDEF--
+   Init ==
+     /\ currentTerm = 0
+     /\ votedFor = None
+     /\ state = ""Follower""
+*)
+
+(* --TYPEDEF--
+   Spec ==
+     Init
+     /\ [][Next]_<<currentTerm, votedFor, state>> 
+     /\ TypeOK
+*)
+
+(* --TYPEDEF--
+   TypeOK ==
+     /\ currentTerm \in Nat
+     /\ votedFor \in {""Follower"", ""Candidate"", ""Leader""} \cup {None}
+     /\ state \in State
+*)
+
+(* --TYPEDEF--
+   Next ==
+     \/ /\ state = ""Follower""
+        /\ currentTerm' = currentTerm
+           /\ votedFor' = votedFor
+           /\ state' = ""Follower""
+     \/ /\ state = ""Candidate""
+        /\ currentTerm' = currentTerm + 1
+           /\ votedFor' = state
+           /\ state' = ""Candidate""
+     \/ /\ state = ""Leader""
+        /\ currentTerm' = currentTerm
+           /\ votedFor' = votedFor
+           /\ state' = ""Leader""
+*)
+
+(* --TYPEDEF--
+   Init ==
+     /\ currentTerm = 0
+     /\ votedFor = None
+     /\ state = ""Follower""
+*)
+
+(* --TYPEDEF--
+   Spec ==
+     Init
+     /\ [][Next]_<<currentTerm, votedFor, state>> 
+     /\ TypeOK
+*)
+
+(* --TYPEDEF--
+   TypeOK ==
+     /\ currentTerm \in Nat
+     /\ votedFor \in {""Follower"", ""Candidate"", ""Leader""} \cup {None}
+     /\ state \in State
+*)
+
+(* --TYPEDEF--
+   Next ==
+     \/ /\ state = ""Follower""
+        /\ currentTerm' = currentTerm
+           /\ votedFor' = votedFor
+           /\ state' = ""Follower""
+     \/ /\ state = ""Candidate""
+        /\ currentTerm' = currentTerm + 1
+           /\ votedFor' = state
+           /\ state' = ""Candidate""
+     \/ /\ state = ""Leader""
+        /\ currentTerm' = currentTerm
+           /\ votedFor' = votedFor
+           /\ state' = ""Leader""
+*)
+
+(* --TYPEDEF--
+   Init ==
+     /\ currentTerm = 0
+     /\ votedFor = None
+     /\ state = ""Follower""
+*)
+
+(* --TYPEDEF--
+   Spec ==
+     Init
+     /\ [][Next]_<<currentTerm, votedFor, state>> 
+     /\ TypeOK
+*)
+
+(* --TYPEDEF--
+   TypeOK ==
+     /\ currentTerm \in Nat
+     /\ votedFor \in {""Follower"", ""Candidate"", ""Leader""} \cup {None}
+     /\ state \in State
+*)
+
+(* --TYPEDEF--
+   Next ==
+     \/ /\ state = ""Follower""
+        /\ currentTerm' = currentTerm
+           /\ votedFor' = votedFor
+           /\ state' = ""Follower""
+     \/ /\ state = ""Candidate""
+        /\ currentTerm' = currentTerm + 1
+           /\ votedFor' = state
+           /\ state' = ""Candidate""
+     \/ /\ state = ""Leader""
+        /\ currentTerm' = currentTerm
+           /\ votedFor' = votedFor
+           /\ state' = ""Leader""
+*)
+
+(* --TYPEDEF--
+   Init ==
+     /\ currentTerm = 0
+     /\ votedFor = None
+     /\ state = ""Follower""
+*)
+
+(* --TYPEDEF--
+   Spec ==
+     Init
+     /\ [][Next]_<<currentTerm, votedFor, state>> 
+     /\ TypeOK
+*)
+
+(* --TYPEDEF--
+   TypeOK ==
+     /\ currentTerm \in Nat
+     /\ votedFor \in {""Follower"", ""Candidate"", ""Leader""} \cup {None}
+     /\ state \in State
+*)
+
+(* --TYPEDEF--
+   Next ==
+     \/ /\ state = ""Follower""
+        /\ currentTerm' = currentTerm
+           /\ votedFor' = votedFor
+           /\ state' = ""Follower""
+     \/ /\ state = ""Candidate""
+        /\ currentTerm' = currentTerm + 1
+           /\ votedFor' = state
+           /\ state' = ""Candidate""
+     \/ /\ state = ""Leader""
+        /\ currentTerm' = currentTerm
+           /\ votedFor' = votedFor
+           /\ state' = ""Leader""
+*)
+
+(* --TYPEDEF--
+   Init ==
+     /\ currentTerm = 0
+     /\ votedFor = None
+     /\ state = ""Follower""
+*)
+
+(* --TYPEDEF--
+   Spec ==
+     Init
+     /\ [][Next]_<<currentTerm, votedFor, state>> 
+     /\ TypeOK
+*)
+
+(* --TYPEDEF--
+   TypeOK ==
+     /\ currentTerm \in Nat
+     /\ votedFor \in {""Follower"", ""Candidate"", ""Leader""} \cup {None}
+     /\ state \in State
+*)
+
+(* --TYPEDEF--
+   Next ==
+     \/ /\ state = ""Follower""
+        /\ currentTerm' = currentTerm
+           /\ votedFor' = votedFor
+           /\ state' = ""Follower""
+     \/ /\ state = ""Candidate""
+        /\ currentTerm' = currentTerm + 1
+           /\ votedFor' = state
+           /\ state' = ""Candidate""
+     \/ /\ state = ""Leader""
+        /\ currentTerm' = currentTerm
+           /\ votedFor' = votedFor
+           /\ state' = ""Leader""
+*)
+
+(* --TYPEDEF--
+   Init ==
+     /\ currentTerm = 0
+     /\ votedFor = None
+     /\ state = ""Follower""
+*)
+
+(* --TYPEDEF--
+   Spec ==
+     Init
+     /\ [][Next]_<<currentTerm, votedFor, state>> 
+     /\ TypeOK
+*)
+
+(* --TYPEDEF--
+   TypeOK ==
+     /\ currentTerm \in Nat
+     /\ votedFor \in {""Follower"", ""Candidate"", ""Leader""} \cup {None}
+     /\ state \in State
+*)
+
+(* --TYPEDEF--
+   Next ==
+     \/ /\ state = ""Follower""
+        /\ currentTerm' = currentTerm
+           /\ votedFor' = votedFor
+           /\ state' = ""Follower""
+     \/ /\ state = ""Candidate""
+        /\ currentTerm' = currentTerm + 1
+           /\ votedFor' = state
+           /\ state' = ""Candidate""
+     \/ /\ state = ""Leader""
+        /\ currentTerm' = currentTerm
+           /\ votedFor' = votedFor
+           /\ state' = ""Leader""
+*)
+
+(* --TYPEDEF--
+   Init ==
+     /\ currentTerm = 0
+     /\ votedFor = None
+     /\ state = ""Follower""
+*)
+
+(* --TYPEDEF--
+   Spec ==
+     Init
+     /\ [][Next]_<<currentTerm, votedFor, state>> 
+     /\ TypeOK
+*)
+
+(* --TYPEDEF--
+   TypeOK ==
+     /\ currentTerm \in Nat
+     /\ votedFor \in {""Follower"", ""Candidate"", ""Leader""} \cup {None}
+     /\ state \in State
+*)
+
+(* --TYPEDEF--
+   Next ==
+     \/ /\ state = ""Follower"
+chattla:20b,BM007,Read-Write Lock,storage,2,1,0,1.0,silver,57.76,"---- MODULE ReadWriteLock ----
+EXTENDS Naturals, TLC
+
+VARIABLES readers, writer_active
+
+TypeOK == /\ readers \in Nat
+        /\ writer_active \in BOOLEAN
+
+Init == /\ readers = 0
+        /\ writer_active = FALSE
+
+ReadAcquire == /\ writer_active = FALSE
+              /\ readers' = readers + 1
+              /\ writer_active' = writer_active
+
+ReadRelease == /\ writer_active = FALSE
+              /\ readers' = readers - 1
+              /\ writer_active' = writer_active
+
+WriteAcquire == /\ writer_active = FALSE
+               /\ readers = 0
+               /\ writer_active' = TRUE
+               /\ readers' = readers
+
+WriteRelease == /\ writer_active = TRUE
+               /\ writer_active' = FALSE
+               /\ readers' = readers
+
+Next == \/ ReadAcquire
+      \/ ReadRelease
+      \/ WriteAcquire
+      \/ WriteRelease
+
+Spec == Init /\ [][Next]_<<readers, writer_active>> /\ TypeOK
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,1,0,0.444,silver,103.06,"---- MODULE ChandyLamportSnapshot ----
+EXTENDS Naturals, Sequences, TLC
+
+CONSTANT N \* Number of processes
+CONSTANT Channels \* Set of channels, each channel is a tuple from..to
+CONSTANT InitState \* Initial state of each process, a function from 1..N to a state value
+CONSTANT InitChannelState \* Initial state of each channel, a function from Channels to a sequence of messages
+
+VARIABLES procState, channelState, recorded, markerSent, channelRecorded
+
+===="
+chattla:20b,BM009,Token Ring,networking,2,0,0,1.0,bronze,15.0,"---- MODULE TokenRing ----
+EXTENDS Naturals, TLC
+
+VARIABLES tokenPos
+
+
+
+Init == tokenPos = 1
+Next == tokenPos' = IF tokenPos = N THEN 1 ELSE tokenPos + 1
+Spec == Init /\ [][Next]_tokenPos
+
+TypeOK == tokenPos \in 1..N
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,0,0,1.0,bronze,21.74,"---- MODULE KeyValueStore ----
+EXTENDS Naturals, TLC, Sequences
+
+CONSTANTS Keys, Values, NULL
+
+VARIABLES store
+
+(* TypeOK ensures store is a partial function from Keys to Values *)
+TypeOK == store \in [Keys -> Values]
+
+(* Init: store is empty *)
+Init == store \in [Keys -> Values] /\ store = [k \in Keys |-> NULL]
+
+(* Next: either a Put or a Get operation *)
+Next == 
+  \E k \in Keys : \E v \in Values :
+    \E Put(k, v) /\ store' = [store EXCEPT ![k] = v]
+  \/ 
+  \E k \in Keys :
+    \E Get(k) /\ store' = store
+
+Spec == Init /\ [][Next]_store
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,1,0,0.444,silver,53.15,"---- MODULE SingleDecreePaxos ----
+EXTENDS Naturals, Sequences, TLC
+
+CONSTANTS N, M
+
+VARIABLES acceptors, proposers, chosen, chosenVal, chosenBallot, chosenFlag
+
+===="
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,1,0,1.0,silver,84.34,"---- MODULE FileSender ----
+EXTENDS Naturals, TLC
+
+CONSTANTS MAX_RETRIES, CHUNK_SIZE, FILE_SIZE
+VARIABLES channel, chunks, file, retransmitCount, senderState
+
+TypeOK ==
+    /\ file \in 1..FILE_SIZE
+    /\ chunks \in 1..FILE_SIZE
+    /\ retransmitCount \in 0..MAX_RETRIES
+    /\ channel \in 0..CHUNK_SIZE
+    /\ senderState \in {""Idle"", ""Transmitting"", ""WaitingAck"", ""Done"", ""Failed""}
+
+Init ==
+    /\ file = 1
+    /\ chunks = CHUNK_SIZE
+    /\ retransmitCount = 0
+    /\ channel = 0
+    /\ senderState = ""Idle""
+
+SendChunk ==
+    /\ senderState = ""Idle""
+    /\ channel = 0
+    /\ senderState' = ""Transmitting""
+    /\ channel' = chunks
+    /\ file' = file
+    /\ chunks' = CHUNK_SIZE
+    /\ retransmitCount' = 0
+    /\ UNCHANGED << retransmitCount, channel, senderState >>
+
+ReceiveAck ==
+    /\ senderState = ""Transmitting""
+    /\ channel = CHUNK_SIZE
+    /\ senderState' = ""WaitingAck""
+    /\ channel' = 0
+    /\ retransmitCount' = retransmitCount
+    /\ file' = file
+    /\ chunks' = CHUNK_SIZE
+    /\ UNCHANGED << retransmitCount, channel, senderState >>
+
+AckReceived ==
+    /\ senderState = ""WaitingAck""
+    /\ channel = 0
+    /\ senderState' = ""Idle""
+    /\ file' = file + CHUNK_SIZE
+    /\ chunks' = CHUNK_SIZE
+    /\ retransmitCount' = 0
+    /\ UNCHANGED << channel, senderState >>
+
+Retransmit ==
+    /\ senderState = ""WaitingAck""
+    /\ channel = 0
+    /\ retransmitCount < MAX_RETRIES
+    /\ senderState' = ""Transmitting""
+    /\ channel' = CHUNK_SIZE
+    /\ retransmitCount' = retransmitCount + 1
+    /\ file' = file
+    /\ chunks' = CHUNK_SIZE
+    /\ UNCHANGED << channel, senderState >>
+
+GiveUp ==
+    /\ senderState = ""WaitingAck""
+    /\ channel = 0
+    /\ retransmitCount = MAX_RETRIES
+    /\ senderState' = ""Failed""
+    /\ file' = file
+    /\ chunks' = CHUNK_SIZE
+    /\ retransmitCount' = retransmitCount
+    /\ UNCHANGED << channel, senderState >>
+
+Next ==
+    \/ SendChunk
+    \/ ReceiveAck
+    \/ AckReceived
+    \/ Retransmit
+    \/ GiveUp
+
+Spec ==
+    Init /\ [][Next]_<< file, chunks, retransmitCount, channel, senderState >>
+
+===="
+chattla:20b,BM013,Transaction Isolation (Snapshot Isolation),transaction,4,0,0,1.0,bronze,239.99,"---- MODULE SnapshotIsolation ----
+EXTENDS Naturals, Sequences, TLC
+
+VARIABLES data, txns, snapshots, nextTxId, aborts, commits, transaction
+TxBegin == [id: TxId, state: ""begin"", writes: <<>>]
+TxCommit == [id: TxId, state: ""commit"", writes: <<>>]
+TxAbort == [id: TxId, state: ""abort"", writes: <<>>]
+
+\* Transaction ID type
+TxId == Nat
+
+\* Record type
+Record == [id: Nat, fields: <<>>]
+
+\* Snapshot type
+Snapshot == Seq(Record)
+
+\* Type OK invariant
+TypeOK == /\ data \in Snapshot
+        /\ txns \in Seq(TxBegin \cup TxCommit \cup TxAbort)
+        /\ snapshots \in [TxId -> Snapshot]
+        /\ nextTxId \in Nat
+        /\ aborts \in SUBSET TxId
+        /\ commits \in SUBSET TxId
+        /\ aborts \subseteq nextTxId
+        /\ commits \subseteq nextTxId
+        /\ aborts \cap commits = {}
+
+\* Begin a new transaction
+BeginTx == /\ nextTxId' = nextTxId + 1
+          /\ txns' = Append(txns, TxBegin[nextTxId'])
+          /\ snapshots' = [snapshots EXCEPT ![nextTxId'] = data]
+          /\ aborts' = aborts
+          /\ commits' = commits
+          /\ data' = data
+
+\* Read operation: returns the snapshot of the transaction
+ReadTx(txId) == snapshots[txId]
+
+\* Write operation: appends a write to the transaction's write set
+WriteTx(txId, rec) == /\ txns' = [txns EXCEPT ![txId] = [txns[txId] EXCEPT ![writes] = Append(txns[txId][writes], rec)]]
+          /\ data' = data
+          /\ snapshots' = snapshots
+          /\ aborts' = aborts
+          /\ commits' = commits
+          /\ nextTxId' = nextTxId
+
+\* Commit a transaction: check for write-write conflicts
+CommitTx(txId) == /\ txns' = [txns EXCEPT ![txId] = TxCommit[txId]]
+          /\ aborts' = aborts
+          /\ commits' = commits \cup {txId}
+          /\ nextTxId' = nextTxId
+          /\ data' = [data EXCEPT ![txns[txId][writes]] = Append(data[txns[txId][writes]], <<>>)] \* Simplified: no actual conflict detection
+          /\ snapshots' = snapshots
+
+\* Abort a transaction
+AbortTx(txId) == /\ txns' = [txns EXCEPT ![txId] = TxAbort[txId]]
+          /\ aborts' = aborts \cup {txId}
+          /\ commits' = commits
+          /\ nextTxId' = nextTxId
+          /\ data' = data
+          /\ snapshots' = snapshots
+
+\* Next state: either begin a new transaction, read, write, commit, or abort
+Next == \/ BeginTx
+      \/ /\ txId \in nextTxId
+         /\ ReadTx(txId)
+      \/ /\ txId \in nextTxId
+         /\ rec \in Snapshot
+         /\ WriteTx(txId, rec)
+      \/ /\ txId \in nextTxId
+         /\ CommitTx(txId)
+      \/ /\ txId \in nextTxId
+         /\ AbortTx(txId)
+
+\* Initial state
+Init == /\ data = <<>>
+        /\ txns = <<>>
+        /\ snapshots = [][]
+        /\ nextTxId = 0
+        /\ aborts = {}
+        /\ commits = {}
+
+\* Specification
+Spec == Init /\ [][Next]_<<data, txns, snapshots, nextTxId, aborts, commits>> /\ TypeOK
+
+===="
+chattla:20b,BM014,Clock Synchronisation,networking,3,0,0,1.0,bronze,39.19,"---- MODULE ClockSync ----
+EXTENDS Naturals, TLC, Integers
+CONSTANTS N
+
+VARIABLES clocks, epsilon, node
+
+(* TypeOK ensures clocks is a function from node identifiers to integers,
+   and epsilon is a non-negative integer. *)
+TypeOK == clocks \in [1..N -> Int] /\ epsilon \in Nat
+
+(* Drift modelled as integer offset: each node's clock may drift by at most
+   +/- drift per round. *)
+drift == 1
+
+(* Init: all clocks start at 0, epsilon is given. *)
+Init == clocks = [i \in 1..N |-> 0] /\ epsilon \in Nat
+
+(* Average-based sync: each node updates its clock to the average of all
+   clocks it receives, plus its own drift. *)
+AvgSync == /\ clocks' = [i \in 1..N |-> 
+          (SUM j \in 1..N |-> clocks[j]) \div N + drift]
+          /\ epsilon' = epsilon
+
+(* Next: either clocks stay the same (no sync), or they perform AvgSync. *)
+Next == clocks' = clocks /\ epsilon' = epsilon \/ AvgSync
+
+(* Spec: the system starts in Init and evolves according to Next. *)
+Spec == Init /\ [][Next]_<<clocks, epsilon>>
+
+===="
+chattla:20b,BM015,Peterson's Algorithm,scheduling,2,1,0,1.0,silver,6.47,"---- MODULE Peterson2 ----
+EXTENDS Naturals, Sequences, TLC
+
+VARIABLES flag, turn
+
+(* flag is a sequence of booleans of length 2 *)
+TypeOK == /\ flag \in Seq(2)
+          /\ turn \in 1..2
+
+Init == /\ flag = <<FALSE, FALSE>>
+       /\ turn \in 1..2
+
+Next == \/ /\ flag' = <<TRUE, flag[2]>>
+          /\ turn' = 2
+          /\ flag[2] = FALSE
+       \/ /\ flag' = <<flag[1], TRUE>>
+          /\ turn' = 1
+          /\ flag[1] = FALSE
+       \/ /\ flag' = flag
+          /\ turn' = turn
+
+Spec == Init /\ [][Next]_<<flag, turn>>
+
+===="
+chattla:20b,BM016,Gossip Protocol,networking,3,0,0,1.0,bronze,92.0,"---- MODULE GossipProtocol ----
+EXTENDS Naturals, Sequences, TLC
+
+VARIABLES known, infected
+
+(* known: a function mapping each node to the set of nodes it knows about *)
+(* infected: a function mapping each node to the set of nodes it has infected *)
+
+(* The set of all nodes *)
+Nodes == 1..N
+
+(* The set of all possible updates *)
+Updates == 1..U
+
+(* The set of all possible messages *)
+Messages == { [sender: Nodes, update: Updates] }
+
+(* The set of all possible states *)
+State == [ known: [Nodes -> [Nodes -> BOOLEAN]],
+           infected: [Nodes -> [Nodes -> BOOLEAN]] ]
+
+(* The initial state: each node knows only itself and is infected only itself *)
+Init == /\ known = [ n \in Nodes |-> [ m \in Nodes |-> (m = n) ]]
+       /\ infected = [ n \in Nodes |-> [ m \in Nodes |-> (m = n) ]]
+
+(* The next-state relation: each node sends updates to all nodes it knows about *)
+SendUpdates(n) == [ m \in Nodes |-> [ u \in Updates |-> (known[n][m] /\ (infected[n][u] \/ (m = n /\ u = n))) ]]
+
+(* The next-state relation: each node receives updates from all nodes it knows about *)
+ReceiveUpdates(n) == [ m \in Nodes |-> [ u \in Updates |-> (known[n][m] /\ (infected[m][u] \/ (m = n /\ u = n))) ]]
+
+(* The next-state relation: each node updates its known and infected sets *)
+NextKnown(n) == [ m \in Nodes |-> [ u \in Updates |-> (known[n][m] \/ (known[m][n] /\ (infected[n][u] \/ (m = n /\ u = n)))) ]]
+
+NextInfected(n) == [ m \in Nodes |-> [ u \in Updates |-> (infected[n][u] \/ (known[n][m] /\ (infected[m][u] \/ (m = n /\ u = n)))) ]]
+
+(* The next-state relation: each node updates its known and infected sets *)
+Next(n) == [ known' = [ k \in Nodes |-> NextKnown(k) ],
+             infected' = [ k \in Nodes |-> NextInfected(k) ] ]
+
+(* The next-state relation: each node updates its known and infected sets *)
+Next == \E n \in Nodes : Next(n)
+
+(* The specification: the system starts in Init and evolves according to Next *)
+Spec == Init /\ [][Next]_<<known, infected>>
+
+(* The type invariant: known and infected are functions mapping nodes to functions mapping nodes to booleans *)
+TypeOK == /\ known \in [Nodes -> [Nodes -> BOOLEAN]]
+          /\ infected \in [Nodes -> [Nodes -> BOOLEAN]]
+
+(* The eventual convergence liveness property: eventually all nodes know all updates and are infected by all updates *)
+Convergence == \A n \in Nodes : \A m \in Nodes : \A u \in Updates : \E <<known, infected>>' : known'[n][m][u] /\ infected'[n][u][m]
+
+(* The liveness property: eventually all nodes know all updates and are infected by all updates *)
+Liveness == \A n \in Nodes : \A m \in Nodes : \A u \in Updates : \E <<known, infected>>' : known'[n][m][u] /\ infected'[n][u][m]
+
+(* The safety property: eventually all nodes know all updates and are infected by all updates *)
+Safety == \A n \in Nodes : \A m \in Nodes : \A u \in Updates : \E <<known, infected>>' : known'[n][m][u] /\ infected'[n][u][m]
+
+(* The liveness property: eventually all nodes know all updates and are infected by all updates *)
+Liveness == \A n \in Nodes : \A m \in Nodes : \A u \in Updates : \E <<known, infected>>' : known'[n][m][u] /\ infected'[n][u][m]
+
+(* The liveness property: eventually all nodes know all updates and are infected by all updates *)
+Liveness == \A n \in Nodes : \A m \in Nodes : \A u \in Updates : \E <<known, infected>>' : known'[n][m][u] /\ infected'[n][u][m]
+
+(* The liveness property: eventually all nodes know all updates and are infected by all updates *)
+Liveness == \A n \in Nodes : \A m \in Nodes : \A u \in Updates : \E <<known, infected>>' : known'[n][m][u] /\ infected'[n][u][m]
+
+(* The liveness property: eventually all nodes know all updates and are infected by all updates *)
+Liveness == \A n \in Nodes : \A m \in Nodes : \A u \in Updates : \E <<known, infected>>' : known'[n][m][u] /\ infected'[n][u][m]
+
+(* The liveness property: eventually all nodes know all updates and are infected by all updates *)
+Liveness == \A n \in Nodes : \A m \in Nodes : \A u \in Updates : \E <<known, infected>>' : known'[n][m][u] /\ infected'[n][u][m]
+
+(* The liveness property: eventually all nodes know all updates and are infected by all updates *)
+Liveness == \A n \in Nodes : \A m \in Nodes : \A u \in Updates : \E <<known, infected>>' : known'[n][m][u] /\ infected'[n][u][m]
+
+(* The liveness property: eventually all nodes know all updates and are infected by all updates *)
+Liveness == \A n \in Nodes : \A m \in Nodes : \A u \in Updates : \E <<known, infected>>' : known'[n][m][u] /\ infected'[n][u][m]
+
+(* The liveness property: eventually all nodes know all updates and are infected by all updates *)
+Liveness == \A n \in Nodes : \A m \in Nodes : \A u \in Updates : \E <<known, infected>>' : known'[n][m][u] /\ infected'[n][u][m]
+
+(* The liveness property: eventually all nodes know all updates and are infected by all updates *)
+Liveness == \A n \in Nodes : \A m \in Nodes : \A u \in Updates : \E <<known, infected>>' : known'[n][m][u] /\ infected'[n][u][m]
+
+(* The liveness property: eventually all nodes know all updates and are infected by all updates *)
+Liveness == \A n \in Nodes : \A m \in Nodes : \A u \in Updates : \E <<known, infected>>' : known'[n][m][u] /\ infected'[n][u][m]
+
+(* The liveness property: eventually all nodes know all updates and are infected by all updates *)
+Liveness == \A n \in Nodes : \A m \in Nodes : \A u \in Updates : \E <<known, infected>>' : known'[n][m][u] /\ infected'[n][u][m]
+
+(* The liveness property: eventually all nodes know all updates and are infected by all updates *)
+Liveness == \A n \in Nodes : \A m \in Nodes : \A u \in Updates : \E <<known, infected>>' : known'[n][m][u] /\ infected'[n][u][m]
+
+(* The liveness property: eventually all nodes know all updates and are infected by all updates *)
+Liveness == \A n \in Nodes : \A m \in Nodes : \A u \in Updates : \E <<known, infected>>' : known'[n][m][u] /\ infected'[n][u][m]
+
+(* The liveness property: eventually all nodes know all updates and are infected by all updates *)
+Liveness == \A n \in Nodes : \A m \in Nodes : \A u \in Updates : \E <<known, infected>>' : known'[n][m][u] /\ infected'[n][u][m]
+
+(* The liveness property: eventually all nodes know all updates and are infected by all updates *)
+Liveness == \A n \in Nodes : \A m \in Nodes : \A u \in Updates : \E <<known, infected>>' : known'[n][m][u] /\ infected'[n][u][m]
+
+(* The liveness property: eventually all nodes know all updates and are infected by all updates *)
+Liveness == \A n \in Nodes : \A m \in Nodes : \A u \in Updates : \E <<known, infected>>' : known'[n][m][u] /\ infected'[n][u][m]
+
+(* The liveness property: eventually all nodes know all updates and are infected by all updates *)
+Liveness == \A n \in Nodes : \A m \in Nodes : \A u \in Updates : \E <<known, infected>>' : known'[n][m][u] /\ infected'[n][u][m]
+
+(* The liveness property: eventually all nodes know all updates and are infected by all updates *)
+Liveness == \A n \in Nodes : \A m \in Nodes : \A u \in Updates : \E <<known, infected>>' : known'[n][m][u] /\ infected'[n][u][m]
+
+(* The liveness property: eventually all nodes know all updates and are infected by all updates *)
+Liveness == \A n \in Nodes : \A m \in Nodes : \A u \in Updates : \E <<known, infected>>' : known'[n][m][u] /\ infected'[n][u][m]
+
+(* The liveness property: eventually all nodes know all updates and are infected by all updates *)
+Liveness == \A n \in Nodes : \A m \in Nodes : \A u \in Updates : \E <<known, infected>>' : known'[n][m][u] /\ infected'[n][u][m]
+
+(* The liveness property: eventually all nodes know all updates and are infected by all updates *)
+Liveness == \A n \in Nodes : \A m \in Nodes : \A u \in Updates : \E <<known, infected>>' : known'[n][m][u] /\ infected'[n][u][m]
+
+(* The liveness property: eventually all nodes know all updates and are infected by all updates *)
+Liveness == \A n \in Nodes : \A m \in Nodes : \A u \in Updates : \E <<known, infected>>' : known'[n][m][u] /\ infected'[n][u][m]
+
+(* The liveness property: eventually all nodes know all updat"
+chattla:20b,BM017,Simple Allocator,storage,2,1,0,0.889,silver,186.87,"---- MODULE MemoryAllocator ----
+EXTENDS Naturals, Sequences, TLC
+
+CONSTANT N
+CONSTANT Pages
+CONSTANT Clients
+
+VARIABLE free, allocated
+
+TypeOK == /\ free \subseteq Pages
+          /\ allocated \in [Clients -> SUBSET Pages]
+          /\ free \subseteq Pages
+          /\ allocated \in [Clients -> SUBSET Pages]
+
+Init == /\ free \subseteq Pages
+        /\ allocated \in [Clients -> SUBSET Pages]
+        /\ free \subseteq Pages
+        /\ allocated \in [Clients -> SUBSET Pages]
+
+Next == /\ free \subseteq Pages
+        /\ allocated \in [Clients -> SUBSET Pages]
+        /\ free \subseteq Pages
+        /\ allocated \in [Clients -> SUBSET Pages]
+
+Spec == Init /\ [][Next]_<<free, allocated>>
+
+===="
+chattla:20b,BM018,Publish-Subscribe Broker,networking,3,1,0,0.444,silver,51.24,"---- MODULE Broker ----
+EXTENDS Naturals, Sequences, TLC
+
+VARIABLES subscribers, messages, nextMsgId, nextSubId
+
+===="
+chattla:20b,BM019,Dekker's Algorithm,scheduling,3,1,0,0.667,silver,140.97,"---- MODULE Dekker ----
+EXTENDS Naturals, Sequences, TLC
+
+VARIABLES turn, wants
+
+
+Init == /\ turn \in {1, 2}
+        /\ wants \in [1..2 -> BOOLEAN]
+        /\ wants[1] = FALSE
+        /\ wants[2] = FALSE
+
+Next == \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wants
+      \/ /\ wants[1] = FALSE
+          /\ wants[2] = FALSE
+          /\ turn' = turn
+          /\ wants' = wa"
+chattla:20b,BM020,Eventually Consistent Counter,storage,3,0,0,1.0,bronze,80.26,"---- MODULE GCounter ----
+EXTENDS Naturals, TLC
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+
+VARIABLES counts, node
+
+(* Node identifiers *)
+CONSTANTS Node
+
+(* Type OK invariant *)
+TypeOK == /\ counts \in [Node -> [Node -> Nat]]
+          /\ \A n \in Node: counts[n] \in [Node -> Nat]
+
+(* Initial state: all counts zero *)
+Init == /\ counts = [n \in Node |-> [m \in Node |-> 0]]
+
+(* Increment operation: node n increments its own counter *)
+Increment(n) == /\ n \in Node
+                /\ counts' = [counts EXCEPT ![n][n] = counts[n][n] + 1]
+                /\ UNCHANGED <<counts>>
+
+(* Merge operation: node n merges its counter with node m *)
+Merge(n, m) == /\ n, m \in Node
+               /\ counts' = [counts EXCEPT ![n] = [k \in Node |-> Max(counts[n][k], counts[m][k])]]
+               /\ UNCHANGED <<counts>>
+
+(* Next-state relation: either increment or merge *)
+Next == \E n \in Node: Increment(n)
+      \/ \E n, m \in Node: Merge(n, m)
+
+(* Global count: sum over max of each node's counters *)
+GlobalCount == \A n \in Node: Max(counts[][n])
+TotalCount == \Sum n \in Node: GlobalCount[n]
+
+(* Specification *)
+Spec == Init /\ [][Next]_<<counts>>
+
+===="
