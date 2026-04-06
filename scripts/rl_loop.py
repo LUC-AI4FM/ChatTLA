@@ -523,13 +523,17 @@ def update_gold_spec_cache(results: list["SpecResult"]) -> None:
     new_golds = {}
     for r in results:
         if r.tier == "gold" and r.prompt_id not in existing:
-            new_golds[r.prompt_id] = r.spec
+            new_golds[r.prompt_id] = {
+                "prompt_id": r.prompt_id,
+                "spec": r.spec,
+                "prompt_text": getattr(r, "prompt_text", ""),
+            }
 
     if new_golds:
         _GOLD_SPEC_CACHE.parent.mkdir(parents=True, exist_ok=True)
         with open(_GOLD_SPEC_CACHE, "a", encoding="utf-8") as f:
-            for pid, spec in new_golds.items():
-                f.write(json.dumps({"prompt_id": pid, "spec": spec}, ensure_ascii=False) + "\n")
+            for pid, entry in new_golds.items():
+                f.write(json.dumps(entry, ensure_ascii=False) + "\n")
         log.info(f"[gold_cache] Added {len(new_golds)} new gold specs to cross-cycle cache")
 
 
@@ -2043,11 +2047,12 @@ def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT
 
     if n_diamond >= 20 or n_train >= MIN_TRAIN_EXAMPLES:
         retrain_mode = "sft_incremental"
-        num_epochs = SFT_EPOCHS  # capped at 2
+        # Use 1 epoch to nudge the model rather than overwrite pretrained knowledge.
+        # 2 epochs at 5e-6 still caused 0/5 canary regression — the base model
+        # already knows TLA+ from pretraining, so we need a gentler touch.
+        num_epochs = 1
         # Lower LR when diamond data is mixed in to reduce catastrophic forgetting.
-        # Diamond specs come from a different distribution than RL-loop examples;
-        # 1e-5 was causing canary regressions (0/5 gold pass after retrain).
-        lr = "5e-6" if n_diamond > 0 else "1e-5"
+        lr = "2e-6" if n_diamond > 0 else "5e-6"
         # If we have diamond data, merge it into train.jsonl first.
         # Cap diamond at 30% of total to prevent it from drowning RL knowledge.
         if n_diamond > 0 and _diamond_sft_path.exists():
@@ -2097,15 +2102,10 @@ def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT
             _gold_merged = 0
             from src.training.dataset_builder import _DEVELOPER_PROMPT
             _dev_prompt = _DEVELOPER_PROMPT
-            existing_pids_gold = set()
-            if _TRAIN_JSONL.exists():
-                with open(_TRAIN_JSONL) as f:
-                    for line in f:
-                        if line.strip():
-                            try:
-                                existing_pids_gold.add(json.loads(line).get("_prompt_id", ""))
-                            except json.JSONDecodeError:
-                                pass
+            # NOTE: We intentionally do NOT dedup gold cache specs against train.jsonl.
+            # The whole point of gold replay is oversampling — these specs likely already
+            # exist once in train.jsonl, but we add them again (4x) to counterbalance
+            # the diamond data volume and prevent catastrophic forgetting of canary golds.
             with open(_GOLD_SPEC_CACHE) as src, open(_TRAIN_JSONL, "a") as dst:
                 for line in src:
                     if not line.strip():
@@ -2115,7 +2115,7 @@ def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT
                         pid = obj.get("prompt_id", "")
                         spec = obj.get("spec", "")
                         prompt_text = obj.get("prompt_text", f"Write a TLA+ specification for problem {pid}")
-                        if pid in existing_pids_gold or not spec:
+                        if not spec:
                             continue
                         # Build harmony-format SFT example
                         sft_row = {
@@ -2443,20 +2443,34 @@ def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT
             if canary_gold_ids:
                 canary_fail = 0
                 canary_total = len(canary_gold_ids)
+                # Build prompt lookup from benchmark suite + RL prompt bank
+                # so canary tests use the actual NL description, not a truncated spec.
+                _canary_prompt_lookup: dict[str, str] = {}
+                try:
+                    _bm_data = json.load(open(_REPO_ROOT / "data" / "benchmarks" / "benchmark_suite.json"))
+                    for _bm in _bm_data:
+                        _canary_prompt_lookup[_bm["id"]] = f"Write a TLA+ specification for: {_bm['name']}: {_bm['description']}"
+                except Exception:
+                    pass
+                for _ep in _EXTRA_PROMPTS:
+                    _canary_prompt_lookup[_ep["id"]] = _ep["prompt"]
+                # Also check gold_spec_cache for prompt_text (if populated)
                 _gold_cache_file = _REPO_ROOT / "data" / "processed" / "rl" / "gold_spec_cache.jsonl"
-                # Use cached gold prompts for canary
-                canary_prompts = {}
                 if _gold_cache_file.exists():
                     with open(_gold_cache_file) as _gf:
                         for _gl in _gf:
                             if _gl.strip():
-                                _gd = json.loads(_gl)
-                                if _gd.get("prompt_id") in canary_gold_ids[:5]:
-                                    canary_prompts[_gd["prompt_id"]] = _gd.get("spec", "")[:200]
+                                try:
+                                    _gd = json.loads(_gl)
+                                    _pt = _gd.get("prompt_text", "")
+                                    if _pt and _gd.get("prompt_id"):
+                                        _canary_prompt_lookup[_gd["prompt_id"]] = _pt
+                                except json.JSONDecodeError:
+                                    pass
 
                 for _cid in canary_gold_ids[:5]:
                     try:
-                        _cprompt = canary_prompts.get(_cid, f"Write a TLA+ specification for problem {_cid}")
+                        _cprompt = _canary_prompt_lookup.get(_cid, f"Write a TLA+ specification for problem {_cid}")
                         resp = _req.post("http://localhost:11434/api/generate", json={
                             "model": "chattla:20b-candidate",
                             "prompt": _cprompt,
