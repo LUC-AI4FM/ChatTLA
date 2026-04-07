@@ -1,0 +1,21 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,tlc_tier,variables_ok,typeok_ok,init_ok,next_ok,invariant_ok,total_attempts,runtime_s
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,0,silver,1,1,1,1,1,5,21.2
+chattla:20b,BM002,Two-Phase Commit,transaction,3,1,0,silver,1,1,1,1,1,7,14.4
+chattla:20b,BM003,Dining Philosophers,scheduling,2,1,0,silver,1,1,1,1,1,6,9.3
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,1,1,gold,1,1,1,1,1,7,13.4
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,1,gold,1,1,1,1,1,7,7.7
+chattla:20b,BM006,Raft Leader Election,consensus,4,1,0,silver,1,1,1,1,1,5,6.3
+chattla:20b,BM007,Read-Write Lock,storage,2,0,0,bronze,1,1,1,0,0,6,7.9
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,0,0,bronze,1,1,1,0,0,7,42.5
+chattla:20b,BM009,Token Ring,networking,2,1,1,gold,1,1,1,1,1,6,26.7
+chattla:20b,BM010,Simple Key-Value Store,storage,3,0,0,bronze,1,0,0,0,0,4,14.6
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,1,0,silver,1,1,1,1,1,5,9.2
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,0,0,bronze,0,0,0,0,0,3,1.3
+chattla:20b,BM013,Transaction Isolation (Snapshot Isolation),transaction,4,1,0,silver,1,1,1,1,1,5,6.7
+chattla:20b,BM014,Clock Synchronisation,networking,3,0,0,bronze,1,1,1,0,0,6,38.0
+chattla:20b,BM015,Peterson's Algorithm,scheduling,2,0,0,bronze,1,1,0,0,0,5,4.3
+chattla:20b,BM016,Gossip Protocol,networking,3,1,1,gold,1,1,1,1,1,5,7.2
+chattla:20b,BM017,Simple Allocator,storage,2,0,0,bronze,1,1,1,0,0,6,8.9
+chattla:20b,BM018,Publish-Subscribe Broker,networking,3,1,1,gold,1,1,1,1,1,6,24.9
+chattla:20b,BM019,Dekker's Algorithm,scheduling,3,1,1,gold,1,1,1,1,1,6,9.2
+chattla:20b,BM020,Eventually Consistent Counter,storage,3,0,0,bronze,0,0,0,0,0,3,2.8

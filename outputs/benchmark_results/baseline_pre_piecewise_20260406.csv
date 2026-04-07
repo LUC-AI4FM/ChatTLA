@@ -1,0 +1,794 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,structural_score,tlc_tier,runtime_s,generated_spec
+chattla:20b,BM001,Mutual Exclusion,scheduling,2,1,1,1.0,gold,20.05,"---- MODULE MutualExclusion ----
+EXTENDS Integers, Sequences
+
+CONSTANT N
+
+VARIABLES state
+
+TypeOK == state \in [1..N -> {""idle"", ""trying"", ""critical""}]
+
+Init == state = [i \in 1..N |-> ""idle""]
+
+Next ==
+  \/ \E i \in 1..N :
+       /\ state[i] = ""idle""
+       /\ state' = [state EXCEPT ![i] = ""trying""]
+  \/ \E i \in 1..N :
+       /\ state[i] = ""trying""
+       /\ \A j \in 1..N : j # i => state[j] # ""critical""
+       /\ state' = [state EXCEPT ![i] = ""critical""]
+  \/ \E i \in 1..N :
+       /\ state[i] = ""critical""
+       /\ state' = [state EXCEPT ![i] = ""idle""]
+  \/ state' = state
+
+Spec == Init /\ [][Next]_state
+
+===="
+chattla:20b,BM002,Two-Phase Commit,transaction,3,0,0,1.0,bronze,9.44,"---- MODULE TwoPhaseCommit ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, PowerSet
+ASSUME N \in 1..10
+
+VARIABLES participants, coordinator, messages
+
+TypeOK ==
+    /\ participants \in [1..N -> {""idle"", ""prepared"", ""aborted""}]
+    /\ coordinator \in {""idle"", ""preparing"", ""committing"", ""aborted""}
+    /\ messages \in PowerSet({(""Prepare"", i) : i \in 1..N} \cup
+                            {(""VoteYes"", i) : i \in 1..N} \cup
+                            {(""VoteNo"", i) : i \in 1..N} \cup
+                            {(""Commit"", i) : i \in 1..N} \cup
+                            {(""Abort"", i) : i \in 1..N})
+
+Init ==
+    /\ participants = [i \in 1..N |-> ""idle""]
+    /\ coordinator = ""idle""
+    /\ messages = {}
+
+Prepare ==
+    /\ coordinator = ""idle""
+    /\ coordinator' = ""preparing""
+    /\ messages' = messages \cup {(""Prepare"", i) : i \in 1..N}
+    /\ participants' = participants
+    /\ UNCHANGED <<coordinator, participants, messages>>
+
+VoteYes(i) ==
+    /\ coordinator = ""preparing""
+    /\ (""Prepare"", i) \in messages
+    /\ participants[i] = ""idle""
+    /\ participants' = [participants EXCEPT ![i] = ""prepared""]
+    /\ messages' = messages \ {(""Prepare"", i)} \cup {(""VoteYes"", i)}
+    /\ coordinator' = coordinator
+
+VoteNo(i) ==
+    /\ coordinator = ""preparing""
+    /\ (""Prepare"", i) \in messages
+    /\ participants[i] = ""idle""
+    /\ participants' = [participants EXCEPT ![i] = ""aborted""]
+    /\ messages' = messages \ {(""Prepare"", i)} \cup {(""VoteNo"", i)}
+    /\ coordinator' = coordinator
+
+Commit ==
+    /\ coordinator = ""preparing""
+    /\ \A i \in 1..N : participants[i] = ""prepared""
+    /\ coordinator' = ""committing""
+    /\ messages' = messages \ {(""VoteYes"", i) : i \in 1..N} \cup
+                    {(""Commit"", i) : i \in 1..N}
+    /\ participants' = participants
+
+Abort ==
+    /\ coordinator = ""preparing""
+    /\ \E i \in 1..N : participants[i] = ""aborted""
+    /\ coordinator' = ""aborted""
+    /\ messages' = messages \ {(""VoteYes"", i) : i \in 1..N} \cup
+                    {(""VoteNo"", i) : i \in 1..N} \cup
+                    {(""Abort"", i) : i \in 1..N}
+    /\ participants' = participants
+
+CommitMessage(i) ==
+    /\ coordinator = ""committing""
+    /\ (""Commit"", i) \in messages
+    /\ participants[i] = ""prepared""
+    /\ participants' = [participants EXCEPT ![i] = ""idle""]
+    /\ messages' = messages \ {(""Commit"", i)}
+    /\ coordinator' = coordinator
+
+AbortMessage(i) ==
+    /\ coordinator = ""aborted""
+    /\ (""Abort"", i) \in messages
+    /\ participants[i] = ""aborted""
+    /\ participants' = [participants EXCEPT ![i] = ""idle""]
+    /\ messages' = messages \ {(""Abort"", i)}
+    /\ coordinator' = coordinator
+
+Next ==
+    \/ Prepare
+    \/ \E i \in 1..N : VoteYes(i)
+    \/ \E i \in 1..N : VoteNo(i)
+    \/ Commit
+    \/ Abort
+    \/ \E i \in 1..N : CommitMessage(i)
+    \/ \E i \in 1..N : AbortMessage(i)
+
+Spec == Init /\ [][Next]_<<participants, coordinator, messages>>
+
+===="
+chattla:20b,BM003,Dining Philosophers,scheduling,2,0,0,1.0,bronze,4.48,"---- MODULE DiningPhilosophers ----
+EXTENDS Integers, Sequences
+
+CONSTANT N
+
+VARIABLES forks, state
+
+(* forks[i] = 0 if free, 1 if held by philosopher i *)
+TypeOK == forks \in {0,1}^N /\ state \in {""thinking"",""hungry"",""eating""}^N
+
+Init == forks = <<0: i \in 0..N-1>> /\ state = <<""thinking"": i \in 0..N-1>>
+
+Left(i) == (i + N - 1) % N
+Right(i) == (i + 1) % N
+
+Hungry(i) == state[i] = ""hungry"" /\ forks[i] = 0 /\ forks[Left(i)] = 0
+Eating(i) == state[i] = ""eating"" /\ forks[i] = 1 /\ forks[Left(i)] = 1
+
+TakeForks(i) == 
+  /\ state' = [state EXCEPT ![i] = ""eating""]
+  /\ forks' = [forks EXCEPT ![i] = 1, ![Left(i)] = 1]
+
+PutForks(i) == 
+  /\ state' = [state EXCEPT ![i] = ""thinking""]
+  /\ forks' = [forks EXCEPT ![i] = 0, ![Left(i)] = 0]
+
+Next == 
+  \E i \in 0..N-1:
+    \E action \in {""take"",""put""}:
+
+        IF Hungry(i) THEN TakeForks(i)
+
+        IF Eating(i) THEN PutForks(i)
+
+
+Spec == Init /\ [][Next]_<<forks, state>>
+
+===="
+chattla:20b,BM004,Lamport's Bakery Algorithm,consensus,3,0,0,0.778,bronze,43.61,"---- MODULE Bakery ----
+EXTENDS Integers, Sequences
+Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+
+
+CONSTANT N
+
+(* Variables *)
+VARIABLES num, flag
+
+(* Type constraints *)
+TypeOK == /\ num \in [1..N -> 0..N]
+          /\ flag \in [1..N -> BOOLEAN]
+
+(* Initial state: all processes have number 0 and are not choosing *)
+Init == /\ num = [i \in 1..N |-> 0]
+        /\ flag = [i \in 1..N |-> FALSE]
+
+(* Helper: maximum number currently held by any process *)
+maxNum == Max(Seq(num))
+
+(* Helper: set of processes with a given number *)
+procWithNum(n) == {i \in 1..N : num[i] = n}
+
+(* Helper: set of processes with a number less than n *)
+procWithNumLess(n) == {i \in 1..N : num[i] < n}
+
+(* Helper: set of processes with a number greater than n *)
+procWithNumGreater(n) == {i \in 1..N : num[i] > n}
+
+(* Helper: set of processes with a number equal to n *)
+procWithNumEqual(n) == {i \in 1..N : num[i] = n}
+
+(* Helper: set of processes with a number less than or equal to n *)
+procWithNumLessEqual(n) == {i \in 1..N : num[i] <= n}
+
+(* Helper: set of processes with a number greater than or equal to n *)
+procWithNumGreaterEqual(n) == {i \in 1..N : num[i] >= n}
+
+(* Helper: set of processes with a number not equal to n *)
+procWithNumNotEqual(n) == {i \in 1..N : num[i] # n}
+
+(* Helper: set of processes with a number not equal to n and not zero *)
+procWithNumNotEqualAndNotZero(n) == {i \in 1..N : num[i] # n /\ num[i] # 0}
+
+(* Helper: set of processes with a number not equal to n and not zero and less than or equal to m *)
+procWithNumNotEqualAndNotZeroAndLessEqual(n, m) == {i \in 1..N : num[i] # n /\ num[i] # 0 /\ num[i] <= m}
+
+(* Helper: set of processes with a number not equal to n and not zero and greater than or equal to m *)
+procWithNumNotEqualAndNotZeroAndGreaterEqual(n, m) == {i \in 1..N : num[i] # n /\ num[i] # 0 /\ num[i] >= m}
+
+(* Helper: set of processes with a number not equal to n and not zero and less than m *)
+procWithNumNotEqualAndNotZeroAndLess(n) == {i \in 1..N : num[i] # n /\ num[i] # 0 /\ num[i] < m}
+
+(* Helper: set of processes with a number not equal to n and not zero and greater than m *)
+procWithNumNotEqualAndNotZeroAndGreater(n) == {i \in 1..N : num[i] # n /\ num[i] # 0 /\ num[i] > m}
+
+(* Helper: set of processes with a number not equal to n and not zero and less than or equal to m and greater than or equal to l *)
+procWithNumNotEqualAndNotZeroAndLessEqualAndGreaterEqual(n, m, l) == {i \in 1..N : num[i] # n /\ num[i] # 0 /\ num[i] <= m /\ num[i] >= l}
+
+(* Helper: set of processes with a number not equal to n and not zero and less than or equal to m and greater than or equal to l and less than or equal to k *)
+procWithNumNotEqualAndNotZeroAndLessEqualAndGreaterEqualAndLessEqual(n, m, l, k) == {i \in 1..N : num[i] # n /\ num[i] # 0 /\ num[i] <= m /\ num[i] >= l /\ num[i] <= k}
+
+(* Helper: set of processes with a number not equal to n and not zero and less than or equal to m and greater than or equal to l and less than or equal to k and greater than or equal to j *)
+procWithNumNotEqualAndNotZeroAndLessEqualAndGreaterEqualAndLessEqualAndGreaterEqual(n, m, l, k, j) == {i \in 1..N : num[i] # n /\ num[i] # 0 /\ num[i] <= m /\ num[i] >= l /\ num[i] <= k /\ num[i] >= j}
+
+(* Helper: set of processes with a number not equal to n and not zero and less than or equal to m and greater than or equal to l and less than or equal to k and greater than or equal to j and less than or equal to h *)
+procWithNumNotEqualAndNotZeroAndLessEqualAndGreaterEqualAndLessEqualAndGreaterEqualAndLessEqual(n, m, l, k, j, h) == {i \in 1..N : num[i] # n /\ num[i] # 0 /\ num[i] <= m /\ num[i] >= l /\ num[i] <= k /\ num[i] >= j /\ num[i] <= h}
+
+(* Helper: set of processes with a number not equal to n and not zero and less than or equal to m and greater than or equal to l and less than or equal to k and greater than or equal to j and less than or equal to h and greater than or equal to g *)
+procWithNumNotEqualAndNotZeroAndLessEqualAndGreaterEqualAndLessEqualAndGreaterEqualAndLessEqualAndGreaterEqual(n, m, l, k, j, h, g) == {i \in 1..N : num[i] # n /\ num[i] # 0 /\ num[i] <= m /\ num[i] >= l /\ num[i] <= k /\ num[i] >= j /\ num[i] <= h /\ num[i] >= g}
+
+(* Helper: set of processes with a number not equal to n and not zero and less than or equal to m and greater than or equal to l and less than or equal to k and greater than or equal to j and less than or equal to h and greater than or equal to g and less than or equal to f *)
+procWithNumNotEqualAndNotZeroAndLessEqualAndGreaterEqualAndLessEqualAndGreaterEqualAndLessEqualAndGreaterEqualAndLessEqual(n, m, l, k, j, h, g, f) == {i \in 1..N : num[i] # n /\ num[i] # 0 /\ num[i] <= m /\ num[i] >= l /\ num[i] <= k /\ num[i] >= j /\ num[i] <= h /\ num[i] >= g /\ num[i] <= f}
+
+(* Helper: set of processes with a number not equal to n and not zero and less than or equal to m and greater than or equal to l and less than or equal to k and greater than or equal to j and less than or equal to h and greater than or equal to g and less than or equal to f and greater than or equal to e *)
+procWithNumNotEqualAndNotZeroAndLessEqualAndGreaterEqualAndLessEqualAndGreaterEqualAndLessEqualAndGreaterEqualAndLessEqualAndGreaterEqual(n, m, l, k, j, h, g, f, e) == {i \in 1..N : num[i] # n /\ num[i] # 0 /\ num[i] <= m /\ num[i] >= l /\ num[i] <= k /\ num[i] >= j /\ num[i] <= h /\ num[i] >= g /\ num[i] <= f /\ num[i] >= e}
+
+(* Helper: set of processes with a number not equal to n and not zero and less than or equal to m and greater than or equal to l and less than or equal to k and greater than or equal to j and less than or equal to h and greater than or equal to g and less than or equal to f and greater than or equal to e and less than or equal to d *)
+procWithNumNotEqualAndNotZeroAndLessEqualAndGreaterEqualAndLessEqualAndGreaterEqualAndLessEqualAndGreaterEqualAndLessEqualAndGreaterEqualAndLessEqual(n, m, l, k, j, h, g, f, e, d) == {i \in 1..N : num[i] # n /\ num[i] # 0 /\ num[i] <= m /\ num[i] >= l /\ num[i] <= k /\ num[i] >= j /\ num[i] <= h /\ num[i] >= g /\ num[i] <= f /\ num[i] >= e /\ num[i] <= d}
+
+(* Helper: set of processes with a number not equal to n and not zero and less than or equal to m and greater than or equal to l and less than or equal to k and greater than or equal to j and less than or equal to h and greater than or equal to g and less than or equal to f and greater than or equal to e and less than or equal to d and greater than or equal to c *)
+procWithNumNotEqualAndNotZeroAndLessEqualAndGreaterEqualAndLessEqualAndGreaterEqualAndLessEqualAndGreaterEqualAndLessEqualAndGreaterEqualAndLessEqualAndGreaterEqual(n, m, l, k, j, h, g, f, e, d, c) == {i \in 1..N : num[i] # n /\ num[i] # 0 /\ num[i] <= m /\ num[i] >= l /\ num[i] <= k /\ num[i] >= j /\ num[i] <= h /\ num[i] >= g /\ num[i] <= f /\ num[i] >= e /\ num[i] <= d /\ num[i] >= c}
+
+(* Helper: set of processes with a number not equal to n and not zero and less than or equal to m and greater than or equal to l and less than or equal to k and greater than or equal to j and less than or equal to h and greater than or equal to g and less than or equal to f and greater than or equal to e and less than or equal to d and greater than or equal to c and less than or equal to b *)
+procWithNumNotEqualAndNotZeroAndLessEqualAndGreaterEqualAndLessEqualAndGreaterEqualAndLessEqualAndGreaterEqualAndLessEqualAndGreaterEqualAndLessEqualAndGreaterEqual(n, m, l, k, j, h, g, f, e, d, c, b) == {i \in 1..N : num[i] # n /\ num[i] # 0 /\ num[i] <= m /\ num[i] >= l /\ num[i] <= k /\ num[i] >= j /\ num[i] <= h /\ num[i] >= g /\ num[i] <= f /\ num[i] >= e /\ num[i] <= d /\ num[i] >= c /\ num[i] <= b}
+
+(* Helper: set of processes with a number not equal to n and not zero and less than or equal to m and greater than or equal to l and less than or equal to k and greater than or equal to j and less than or equal to h and greater than or equal to g and less than or equal to f and greater than or equal to e and less than or equal to d and gre"
+chattla:20b,BM005,Producer-Consumer Queue,storage,2,1,0,1.0,silver,63.34,"---- MODULE BoundedFIFO ----
+EXTENDS Integers, Sequences
+
+CONSTANT K
+
+VARIABLES q, head, tail, size
+
+TypeOK == /\ q \in Seq(0..K)
+          /\ head \in 0..K
+          /\ tail \in 0..K
+          /\ size \in 0..K
+
+Init == /\ q = <<>>
+        /\ head = 0
+        /\ tail = 0
+        /\ size = 0
+
+Producer == /\ size < K
+           /\ head' = (head + 1) % (K + 1)
+           /\ size' = size + 1
+           /\ UNCHANGED tail
+           /\ q' = Append(q, head)
+
+Consumer == /\ size > 0
+           /\ tail' = (tail + 1) % (K + 1)
+           /\ size' = size - 1
+           /\ UNCHANGED head
+           /\ q' = SubSeq(q, 1, Len(q))
+
+Next == Producer \/ Consumer
+
+Spec == Init /\ [][Next]_<<q, head, tail, size>>
+
+===="
+chattla:20b,BM006,Raft Leader Election,consensus,4,0,0,1.0,bronze,3.13,"---- MODULE RaftLeaderElection ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N
+ASSUME N \in 1..10
+
+VARIABLES currentTerm, votedFor, state
+
+TypeOK == /\ currentTerm \in 0..100
+          /\ votedFor \in 0..N \/ {None}
+          /\ state \in {""Follower"", ""Candidate"", ""Leader""}
+
+Init == /\ currentTerm = 0
+        /\ votedFor = None
+        /\ state = ""Follower""
+
+RequestVote == /\ state = ""Candidate""
+               /\ currentTerm' = currentTerm + 1
+               /\ votedFor' = state
+               /\ UNCHANGED currentTerm
+
+GrantVote == /\ state = ""Follower""
+             /\ currentTerm' = currentTerm
+             /\ votedFor' = state
+             /\ UNCHANGED currentTerm
+
+BecomeLeader == /\ state = ""Candidate""
+                /\ currentTerm' = currentTerm
+                /\ state' = ""Leader""
+                /\ UNCHANGED votedFor
+
+Next == \/ RequestVote
+        \/ GrantVote
+        \/ BecomeLeader
+
+Spec == Init /\ [][Next]_<<currentTerm, votedFor, state>>
+
+===="
+chattla:20b,BM007,Read-Write Lock,storage,2,1,0,1.0,silver,3.24,"---- MODULE ReadWriteLock ----
+EXTENDS Integers, Sequences
+
+CONSTANT N
+
+VARIABLES readers, writer_active
+
+TypeOK == readers \in 0..N /\ writer_active \in {TRUE, FALSE}
+
+Init == readers = 0 /\ writer_active = FALSE
+
+ReadStart == /\ readers < N
+              /\ readers' = readers + 1
+              /\ writer_active' = writer_active
+
+ReadEnd == /\ readers > 0
+            /\ readers' = readers - 1
+            /\ writer_active' = writer_active
+
+WriteStart == /\ readers = 0
+               /\ writer_active = FALSE
+               /\ writer_active' = TRUE
+
+WriteEnd == /\ writer_active = TRUE
+            /\ writer_active' = FALSE
+
+Next == \E action \in {ReadStart, ReadEnd, WriteStart, WriteEnd} : action
+
+Spec == Init /\ [][Next]_<<readers, writer_active>>
+
+===="
+chattla:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,0,0,1.0,bronze,5.79,"---- MODULE ChandyLamport ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, Proc, Chan
+
+(* Proc is the set of processes, Chan is the set of channels (p,q) *)
+(* Each channel is FIFO, represented as a sequence of messages *)
+
+(* Types *)
+TypeOK == /\ Proc \subseteq 1..N
+          /\ Chan \subseteq Proc \X Proc
+          /\ \A p \in Proc: Chan[p] \subseteq Proc
+          /\ Chan \subseteq { (p,q) \in Proc \X Proc : p # q }
+
+(* Variables *)
+vars == << state, channel, marker, finished >>
+VARIABLES state, channel, marker, finished
+
+(* state[p] is the local state of process p: ""idle"" or ""recorded"" *)
+(* channel[(p,q)] is the sequence of messages in channel from p to q *)
+(* marker[(p,q)] is a boolean indicating whether a marker has been sent on channel (p,q) *)
+(* finished[p] is a boolean indicating whether process p has finished recording *)
+
+Init == /\ state = [p \in Proc |-> ""idle""]
+        /\ channel = [ (p,q) \in Chan |-> <<>> ]
+        /\ marker = [ (p,q) \in Chan |-> FALSE ]
+        /\ finished = [p \in Proc |-> FALSE]
+
+(* Process p records its state and sends markers on all outgoing channels *)
+RecordState(p) == /\ state[p] = ""recorded""
+                  /\ \A q \in Chan[p]: marker[(p,q)] = TRUE
+                  /\ finished[p] = TRUE
+
+(* Process p receives a marker on channel (q,p) and records its state if not already recorded *)
+ReceiveMarker(p, q) == /\ state[p] = ""idle""
+                      /\ state[p] = ""recorded""
+                      /\ marker[(q,p)] = TRUE
+
+(* Sending a marker on channel (p,q) *)
+SendMarker(p, q) == /\ marker[(p,q)] = TRUE
+                   /\ channel[(p,q)] = Append(channel[(p,q)], ""marker"")
+
+(* Next-state relation *)
+Next == \E p \in Proc:
+          \/ RecordState(p)
+          \/ \E q \in Chan[p]: ReceiveMarker(p, q)
+          \/ \E q \in Chan[p]: SendMarker(p, q)
+
+Spec == Init /\ [][Next]_vars
+
+===="
+chattla:20b,BM009,Token Ring,networking,2,1,0,1.0,silver,3.79,"---- MODULE TokenRing ----
+EXTENDS Integers, Sequences
+
+CONSTANT N
+
+VARIABLES token, state
+
+(* State of each node: ""idle"" or ""sending"" *)
+TypeOK == token \in 1..N /\ state \in [1..N -> {""idle"", ""sending""}]
+
+(* Initially, node 1 holds the token and all nodes are idle *)
+Init == token = 1 /\ state = [i \in 1..N |-> ""idle""]
+
+(* Node i can send a message only if it holds the token *)
+Send(i) == token = i /\ state[i] = ""idle"" /\ state' = [state EXCEPT ![i] = ""sending""]
+
+(* After sending, the token passes to the next node *)
+Pass(i) == token = i /\ state[i] = ""sending"" /\ token' = IF i = N THEN 1 ELSE i + 1 /\ state' = [state EXCEPT ![i] = ""idle""]
+
+Next == \/ \E i \in 1..N: Send(i)
+        \/ \E i \in 1..N: Pass(i)
+
+Spec == Init /\ [][Next]_<<token, state>>
+
+===="
+chattla:20b,BM010,Simple Key-Value Store,storage,3,0,0,1.0,bronze,1.51,"---- MODULE KeyValueStore ----
+EXTENDS Integers, Sequences
+
+CONSTANTS Keys, Values
+VARIABLES store
+
+
+Variables: store
+
+TypeOK == store \in [Keys -> Values]
+
+Init == store = [k \in Keys |-> 0]
+
+Next == /\ \E k \in Keys : \E v \in Values :
+          /\ store' = [store EXCEPT ![k] = v]
+          /\ UNCHANGED <<>>
+Spec == Init /\ [][Next]_store
+
+===="
+chattla:20b,BM011,Paxos Single-Decree,consensus,4,1,0,1.0,silver,4.84,"---- MODULE Paxos ----
+EXTENDS Integers, Sequences
+
+CONSTANTS N, M
+
+VARIABLES acceptors, proposers, chosen, ballot, value
+
+TypeOK == /\ acceptors \in [1..N -> [ballot: Nat, value: Nat]]
+          /\ proposers \in [1..M -> [ballot: Nat, value: Nat]]
+          /\ chosen \in Nat
+
+Init == /\ acceptors = [i \in 1..N |-> [ballot |-> 0, value |-> 0]]
+        /\ proposers = [j \in 1..M |-> [ballot |-> 0, value |-> 0]]
+        /\ chosen = 0
+
+Prepare(p) == /\ proposers[p].ballot' = proposers[p].ballot + 1
+              /\ UNCHANGED <<acceptors, chosen>>
+
+Promise(a, p) == /\ acceptors[a].ballot' = proposers[p].ballot
+                /\ UNCHANGED <<proposers, chosen>>
+
+Accept(p, a) == /\ acceptors[a].value' = proposers[p].value
+               /\ UNCHANGED <<proposers, chosen>>
+
+Accepted(a) == /\ chosen' = acceptors[a].value
+              /\ UNCHANGED <<acceptors, proposers>>
+
+Next == \E p \in 1..M :
+          \E a \in 1..N :
+            \E b \in 1..N :
+              /\ Prepare(p)
+              /\ Promise(a, p)
+              /\ Accept(p, a)
+              /\ Accepted(a)
+
+Spec == Init /\ [][Next]_<<acceptors, proposers, chosen>>
+
+===="
+chattla:20b,BM012,Bounded Retransmission Protocol,networking,3,0,0,1.0,bronze,3.42,"---- MODULE FileTransfer ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS File, MAX_RETRIES
+
+VARIABLES chunks, sent, retransmits, finished
+
+TypeOK ==
+    chunks \in Seq(File) /\
+    sent \in 1..Length(chunks) \/ {0} /\
+    retransmits \in 0..MAX_RETRIES \/ {0} /\
+    finished \in BOOLEAN
+
+Init ==
+    /\ chunks = File
+    /\ sent = 0
+    /\ retransmits = 0
+    /\ finished = FALSE
+
+SendChunk ==
+    /\ sent < Length(chunks)
+    /\ sent' = sent + 1
+    /\ retransmits' = 0
+    /\ UNCHANGED <<chunks, finished>>
+
+Retransmit ==
+    /\ sent > 0
+    /\ retransmits < MAX_RETRIES
+    /\ retransmits' = retransmits + 1
+    /\ UNCHANGED <<chunks, sent, finished>>
+
+GiveUp ==
+    /\ sent > 0
+    /\ retransmits = MAX_RETRIES
+    /\ finished' = TRUE
+    /\ UNCHANGED <<chunks, sent, retransmits>>
+
+Next ==
+    \/ SendChunk
+    \/ Retransmit
+    \/ GiveUp
+
+Spec == Init /\ [][Next]_<<chunks, sent, retransmits, finished>>
+
+===="
+chattla:20b,BM013,Transaction Isolation (Snapshot Isolation),transaction,4,0,0,1.0,bronze,6.44,"---- MODULE SnapshotIsolation ----
+EXTENDS Integers, Sequences
+
+CONSTANTS N, M
+VARIABLES committed, snapshot, state, writes
+
+
+TypeOK == 
+    /\ txs \in 1..N
+    /\ data \in 1..M
+    /\ state \in [txs -> {""idle"", ""reading"", ""writing"", ""committed"", ""aborted""}]
+    /\ snapshot \in [txs -> [data -> Nat]]
+    /\ writes \in [txs -> [data -> Nat]]
+    /\ committed \in [data -> Nat]
+
+Init == 
+    /\ state = [t \in txs |-> ""idle""]
+    /\ snapshot = [t \in txs |-> [d \in data |-> 0]]
+    /\ writes = [t \in txs |-> [d \in data |-> 0]]
+    /\ committed = [d \in data |-> 0]
+
+    /\ state[t] = ""idle""
+    /\ state' = [state EXCEPT ![t] = ""reading""]
+    /\ UNCHANGED <<snapshot, writes, committed>>
+
+Read(t, d, v) == 
+    /\ state[t] = ""reading""
+    /\ snapshot[t][d] = v
+    /\ UNCHANGED <<state, writes, committed>>
+
+Write(t, d, v) == 
+    /\ state[t] = ""reading""
+    /\ state' = [state EXCEPT ![t] = ""writing""]
+    /\ writes' = [writes EXCEPT ![t][d] = v]
+    /\ UNCHANGED <<snapshot, committed>>
+
+Commit(t) == 
+    /\ state[t] = ""writing""
+    /\ \A d \in data: writes[t][d] = 0 \/ committed[d] = writes[t][d]
+    /\ committed' = [committed EXCEPT ![d] = writes[t][d] \A d \in data]
+    /\ state' = [state EXCEPT ![t] = ""committed""]
+    /\ UNCHANGED <<snapshot, writes>>
+
+Abort(t) == 
+    /\ state[t] = ""writing""
+    /\ state' = [state EXCEPT ![t] = ""aborted""]
+    /\ UNCHANGED <<snapshot, writes, committed>>
+
+Next == 
+    \E t \in txs:
+
+        \E d \in data : \E v \in Nat : Read(t, d, v) \/ 
+        \E d \in data : \E v \in Nat : Write(t, d, v) \/ 
+        Commit(t) \/ 
+        Abort(t)
+
+Spec == Init /\ [][Next]_<<state, snapshot, writes, committed>>
+
+===="
+chattla:20b,BM014,Clock Synchronisation,networking,3,0,0,0.889,bronze,3.65,"---- MODULE ClockSync ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, epsilon
+
+VARIABLES clocks, offsets
+
+(* Type constraints *)
+TypeOK == /\ clocks \in [1..N -> Int]
+          /\ offsets \in [1..N -> Int]
+
+(* Initial state: clocks start at 0, offsets at 0 *)
+Init == /\ clocks = [i \in 1..N |-> 0]
+        /\ offsets = [i \in 1..N |-> 0]
+
+(* Drift: each clock may drift by at most 1 per step *)
+Drift == /\ \A i \in 1..N: clocks' = [clocks EXCEPT ![i] = @ + offsets[i]]
+        /\ offsets' = [offsets EXCEPT ![i] = CHOOSE d \in {-1,0,1}: TRUE]
+
+(* Synchronisation: each node averages its clock with its neighbours *)
+Sync == /\ \A i \in 1..N:
+          clocks' = [clocks EXCEPT ![i] = (clocks[i] + \SUM j \in 1..N: clocks[j]) \div N]
+        /\ offsets' = offsets
+
+(* One round of drift followed by synchronisation *)
+OneRound == Drift /\ Sync
+
+(* After one round, all clocks are within epsilon of each other *)
+Spec == Init /\ [][OneRound]_<<clocks, offsets>>
+
+===="
+chattla:20b,BM015,Peterson's Algorithm,scheduling,2,0,0,1.0,bronze,2.34,"---- MODULE Peterson2 ----
+EXTENDS Integers, Sequences
+
+CONSTANTS N
+ASSUME N = 2
+
+VARIABLES flag, turn
+
+TypeOK == flag \in [0..1 -> BOOLEAN] /\ turn \in 0..1
+
+Init == /\ flag = [i \in 0..1 |-> FALSE]
+        /\ turn = 0
+
+Next ==
+  \/ /\ i \in 0..1
+     /\ flag' = [flag EXCEPT ![i] = TRUE]
+     /\ turn' = 1 - i
+     /\ UNCHANGED turn
+  \/ /\ i \in 0..1
+     /\ flag' = [flag EXCEPT ![i] = FALSE]
+     /\ UNCHANGED <<flag, turn>>
+
+Spec == Init /\ [][Next]_<<flag, turn>>
+
+===="
+chattla:20b,BM016,Gossip Protocol,networking,3,0,0,1.0,bronze,1.59,"---- MODULE GossipProtocol ----
+EXTENDS Integers, Sequences
+
+CONSTANTS N, Nodes
+VARIABLES infected
+
+
+TypeOK == /\ N \in 1..10
+          /\ Nodes = 1..N
+
+Variables: infected
+
+Init == /\ infected = <<>>  \* Initially no node infected
+
+Next == /\ \E node \in Nodes:
+          /\ infected' = Append(infected, node)
+          /\ UNCHANGED <<>>
+
+Spec == Init /\ [][Next]_<<infected>>
+
+===="
+chattla:20b,BM017,Simple Allocator,storage,2,0,0,1.0,bronze,3.66,"---- MODULE PageAllocator ----
+EXTENDS Integers, Sequences
+
+CONSTANT N, Clients
+VARIABLES allocated, free
+
+
+Pages == 1..N
+
+(* Type constraints *)
+TypeOK == /\ N \in Nat
+          /\ Clients \subseteq 1..1000
+          /\ free \in SUBSET Pages
+          /\ allocated \in [Clients -> SUBSET Pages]
+
+(* Initial state: all pages free, no allocations *)
+Init == /\ free = Pages
+        /\ allocated = [c \in Clients |-> {}]
+
+(* Request a page: pick any free page, allocate to client c *)
+Request(c) == /\ c \in Clients
+              /\ free /= {}
+              /\ LET p \in free IN
+                 /\ free' = free \ {p}
+                 /\ allocated' = [allocated EXCEPT ![c] = @ \cup {p}]
+                 /\ UNCHANGED <<>>
+
+(* Release a page: client c releases page p *)
+Release(c, p) == /\ c \in Clients
+                 /\ p \in allocated[c]
+                 /\ free' = free \cup {p}
+                 /\ allocated' = [allocated EXCEPT ![c] = @ \ {p}]
+                 /\ UNCHANGED <<>>
+
+(* Next-state relation: either request or release *)
+Next == \E c \in Clients :
+          (Request(c) \/ \E p \in Pages : Release(c, p))
+
+Spec == Init /\ [][Next]_<<free, allocated>>
+
+===="
+chattla:20b,BM018,Publish-Subscribe Broker,networking,3,0,0,0.778,bronze,3.82,"---- MODULE Broker ----
+EXTENDS Integers, Sequences
+
+CONSTANTS Topics, Subscribers, Messages
+VARIABLES inboxes, pending, subscriptions
+
+
+TopicSet == Topics
+SubscriberSet == Subscribers
+MessageSet == Messages
+
+Variables:
+  subscriptions \in [SubscriberSet -> SUBSET TopicSet]
+  inboxes \in [SubscriberSet -> Seq(MessageSet)]
+  pending \in [TopicSet -> Seq(MessageSet)]
+
+Init ==
+  /\ subscriptions = [s \in SubscriberSet |-> {}]
+  /\ inboxes = [s \in SubscriberSet |-> <<>>]
+  /\ pending = [t \in TopicSet |-> <<>>]
+
+Publish(topic, msg) ==
+  /\ topic \in TopicSet
+  /\ msg \in MessageSet
+  /\ pending' = [pending EXCEPT ![topic] = Append(@, msg)]
+  /\ UNCHANGED <<subscriptions, inboxes>>
+
+Deliver(topic) ==
+  /\ topic \in TopicSet
+  /\ pending[topic] # <<>>
+  /\ msg = Head(pending[topic])
+  /\ subs = subscriptions[topic]
+  /\ inboxes' = [inboxes EXCEPT ![s] = Append(@, msg) : s \in subs]
+  /\ pending' = [pending EXCEPT ![topic] = Tail(@)]
+  /\ UNCHANGED subscriptions
+
+Next ==
+  \/ \E topic \in TopicSet : \E msg \in MessageSet : Publish(topic, msg)
+  \/ \E topic \in TopicSet: Deliver(topic)
+
+Spec == Init /\ [][Next]_<<subscriptions, inboxes, pending>>
+
+===="
+chattla:20b,BM019,Dekker's Algorithm,scheduling,3,1,0,1.0,silver,3.28,"---- MODULE Dekker ----
+EXTENDS Integers, Sequences
+
+CONSTANTS N
+ASSUME N = 2
+
+VARIABLES turn, wants
+
+TypeOK == /\ turn \in 0..N-1
+          /\ wants \in [1..N -> BOOLEAN]
+
+Init == /\ turn = 0
+        /\ wants = [i \in 1..N |-> FALSE]
+
+Next ==
+  \/ /\ turn' = 1 - turn
+      /\ wants' = [wants EXCEPT ![turn] = FALSE]
+  \/ /\ turn' = turn
+      /\ wants' = [wants EXCEPT ![turn] = TRUE]
+
+Spec == Init /\ [][Next]_<<turn, wants>>
+
+Safety == \A i, j \in 1..N :
+              (wants[i] /\ wants[j]) => i = j
+
+Liveness == \A i \in 1..N :
+               []<>(wants[i] => wants[i])
+
+===="
+chattla:20b,BM020,Eventually Consistent Counter,storage,3,1,0,1.0,silver,62.49,"---- MODULE GCounter ----
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS N, Node
+VARIABLES counts
+
+
+TypeOK == /\ counts \in [Node -> [Node -> Nat]]
+          /\ \A n \in Node: \A m \in Node: counts[n][m] \in Nat
+
+Init == /\ counts = [n \in Node |-> [m \in Node |-> 0]]
+
+Next ==
+  \E n \in Node:
+    /\ counts' = [counts EXCEPT ![n] = [counts[n] EXCEPT ![n] = counts[n][n] + 1]]
+    /\ UNCHANGED <<>>
+
+Spec == Init /\ [][Next]_<<counts>>
+
+===="
