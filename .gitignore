@@ -24,10 +24,14 @@ outputs/gguf/
 outputs/gguf_backup/
 outputs/merged_model/
 outputs/merged-llama3b/
+outputs/checkpoints/
 outputs/checkpoints_8b_archive/
 outputs/checkpoints-llama3b/
 outputs/llama.cpp/
 outputs/toy-math/
+
+# Backup train.jsonl files from experiments
+data/processed/train.jsonl.backup_*
 
 # Upstream git mirrors (re-harvest anytime; commits recorded in tla_descriptions*.json)
 data/external/
@@ -65,3 +69,5 @@ Thumbs.db
 *.pyc
 train.log
 src/shared/apalache/
+src/shared/tlaps/
+outputs/logs/watchdog.log
