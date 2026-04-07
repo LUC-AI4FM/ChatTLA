@@ -64,3 +64,4 @@ Thumbs.db
 # Byte-compiled / optimized
 *.pyc
 train.log
+src/shared/apalache/
