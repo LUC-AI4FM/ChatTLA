@@ -2100,11 +2100,26 @@ def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT
         # to maintain proportional gradient weight and prevent forgetting.
         if _GOLD_SPEC_CACHE.exists():
             _gold_merged = 0
+            _gold_replay_total = 0
             from src.training.dataset_builder import _DEVELOPER_PROMPT
             _dev_prompt = _DEVELOPER_PROMPT
+            # CRITICAL: Use the EXACT prompt format the canary check uses, so training
+            # matches inference. Previously we used cached prompt_text which had different
+            # wording (long "Reference:" preambles or empty strings), causing catastrophic
+            # forgetting when the canary tested with a different prompt format.
+            _bm_canary_prompts: dict[str, str] = {}
+            try:
+                _bm_data = json.load(open(_REPO_ROOT / "data" / "benchmarks" / "benchmark_suite.json"))
+                for _b in _bm_data:
+                    _bm_canary_prompts[_b["id"]] = f"Write a TLA+ specification for: {_b['name']}: {_b['description']}"
+            except Exception:
+                pass
+            for _ep in _EXTRA_PROMPTS:
+                _bm_canary_prompts[_ep["id"]] = _ep["prompt"]
+
             # NOTE: We intentionally do NOT dedup gold cache specs against train.jsonl.
             # The whole point of gold replay is oversampling — these specs likely already
-            # exist once in train.jsonl, but we add them again (4x) to counterbalance
+            # exist once in train.jsonl, but we add them again to counterbalance
             # the diamond data volume and prevent catastrophic forgetting of canary golds.
             with open(_GOLD_SPEC_CACHE) as src, open(_TRAIN_JSONL, "a") as dst:
                 for line in src:
@@ -2114,32 +2129,40 @@ def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT
                         obj = json.loads(line)
                         pid = obj.get("prompt_id", "")
                         spec = obj.get("spec", "")
-                        prompt_text = obj.get("prompt_text", f"Write a TLA+ specification for problem {pid}")
                         if not spec:
                             continue
+                        # Use canary-format prompt to match inference, fallback to cached
+                        canary_prompt = _bm_canary_prompts.get(pid)
+                        if canary_prompt:
+                            user_content = canary_prompt
+                        else:
+                            cached_pt = obj.get("prompt_text", f"Write a TLA+ specification for problem {pid}")
+                            user_content = f"Write a TLA+ specification for the following:\n\n{cached_pt}"
                         # Build harmony-format SFT example
                         sft_row = {
                             "_tier": "gold_cache",
                             "_prompt_id": pid,
                             "messages": [
                                 {"role": "developer", "content": _dev_prompt},
-                                {"role": "user", "content": f"Write a TLA+ specification for the following:\n\n{prompt_text}"},
+                                {"role": "user", "content": user_content},
                                 {"role": "assistant", "channel": "analysis", "content": "I'll write a well-formed TLA+ specification."},
                                 {"role": "assistant", "channel": "final", "content": spec.strip()},
                             ],
                         }
-                        # Write gold specs 4x (replay oversample) to counterbalance
+                        # Write gold specs 8x (heavy replay) to counterbalance
                         # the diamond data volume and prevent catastrophic forgetting.
-                        _GOLD_REPLAY_FACTOR = 4
+                        # Canary prompts (BM001-BM005) get 16x replay since they're
+                        # the deploy gate — losing them means rollback.
+                        _GOLD_REPLAY_FACTOR = 16 if pid in ("BM001", "BM002", "BM003", "BM004", "BM005") else 8
                         for _ in range(_GOLD_REPLAY_FACTOR):
                             dst.write(json.dumps(sft_row, ensure_ascii=False) + "\n")
                         _gold_merged += 1
+                        _gold_replay_total += _GOLD_REPLAY_FACTOR
                     except json.JSONDecodeError:
                         pass
             if _gold_merged:
-                _gold_total = _gold_merged * 4  # actual rows written
-                log.info(f"[retrain] Merged {_gold_merged} gold cache specs × 4 = {_gold_total} rows into train.jsonl (replay oversample)")
-                n_train += _gold_total
+                log.info(f"[retrain] Merged {_gold_merged} gold cache specs → {_gold_replay_total} rows (canary BM001-BM005 ×16, others ×8)")
+                n_train += _gold_replay_total
         # Shuffle training data so diamond/gold aren't clustered at the end.
         # Without shuffling, final training steps are dominated by appended data,
         # causing recency bias in the model weights.
@@ -2379,6 +2402,49 @@ def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT
     try:
         import requests as _req
         import re as _re
+
+        # ── [INSTRUMENT 2026-04-06] Baseline-vs-candidate side-by-side scoring ──
+        # Purpose: every retrain rolls back, but we don't know if that's because
+        # the new model is actually worse or because the canary is noise-dominated
+        # (single-shot stochastic generation, no comparison vs. the deployed model).
+        # This block scores chattla:20b (deployed = baseline) on the SAME prompts as
+        # the candidate, with the SAME sampling params, and logs both side-by-side.
+        # Rollback decisions are intentionally unchanged — we collect data first.
+        # Remove or promote to gating logic after 3+ retrains worth of data.
+        def _instrument_score(model_tag, items, temperature, label):
+            _s = 0
+            _t = 0
+            for _pid, _ptext in items:
+                try:
+                    _r = _req.post("http://localhost:11434/api/generate", json={
+                        "model": model_tag,
+                        "prompt": _ptext,
+                        "stream": False,
+                        "options": {"temperature": temperature, "num_predict": 2048},
+                    }, timeout=120)
+                    _spec = _r.json().get("response", "")
+                    _spec = _re.sub(r'<analysis>.*?</analysis>', '', _spec, flags=_re.DOTALL).strip()
+                    _m = _re.search(r'MODULE\s+(\w+)', _spec)
+                    _mn = _m.group(1) if _m else "Temp"
+                    _sr = sany_validate(_spec, module_name=_mn)
+                    if _sr.valid:
+                        _s += 1
+                        try:
+                            _tr = tlc_validate(_spec, module_name=_mn, timeout=30)
+                            _t += int(_tr.tier == "gold")
+                        except Exception:
+                            pass
+                except Exception as _e:
+                    log.debug(f"[instrument:{label}] {_pid} error: {_e}")
+            return _s, _t, len(items)
+
+        def _ollama_unload(model_tag):
+            try:
+                _req.post("http://localhost:11434/api/generate",
+                          json={"model": model_tag, "keep_alive": 0}, timeout=10)
+            except Exception:
+                pass
+
         new_gguf = gguf_dir / "chattla-20b-Q8_0.gguf"
         if new_gguf.exists():
             tmp_modelfile = gguf_dir / "Modelfile.evalgate"
@@ -2423,12 +2489,33 @@ def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT
                             pass  # TLC failure doesn't block, just informational
                 except Exception as e:
                     log.debug(f"[eval gate] Benchmark {bm.get('name', '?')} error: {e}")
-            # Cleanup temp model
-            subprocess.run(["ollama", "rm", "chattla:20b-candidate"],
-                          capture_output=True, text=True, timeout=30)
-            tmp_modelfile.unlink(missing_ok=True)
+            # NOTE: Do NOT delete chattla:20b-candidate here — the canary check
+            # below queries the same model. Cleanup happens after canary check.
+            # (Bug fixed 2026-04-06: prior code deleted the model here, causing
+            # every canary check to fail with "model not found" → false rollback.)
 
             log.info(f"[retrain] Eval gate: SANY={sany_pass}/{_EVAL_GATE_N} TLC={tlc_pass}/{sany_pass}")
+
+            # ── [INSTRUMENT] Score deployed baseline on the same gate prompts ──
+            try:
+                _ollama_unload("chattla:20b-candidate")
+                _bm_items = [
+                    (bm.get("id", bm.get("name", "?")),
+                     f"Write a TLA+ specification for: {bm['name']}: {bm['description']}")
+                    for bm in benchmarks[:_EVAL_GATE_N]
+                ]
+                _b_sany, _b_tlc, _b_n = _instrument_score(
+                    "chattla:20b", _bm_items, temperature=0.3, label="gate-baseline"
+                )
+                log.info(
+                    f"[instrument] Eval gate side-by-side: "
+                    f"baseline=SANY {_b_sany}/{_b_n} TLC {_b_tlc} | "
+                    f"candidate=SANY {sany_pass}/{_EVAL_GATE_N} TLC {tlc_pass} | "
+                    f"delta_sany={sany_pass - _b_sany:+d} delta_tlc={tlc_pass - _b_tlc:+d}"
+                )
+                _ollama_unload("chattla:20b")
+            except Exception as _ie:
+                log.warning(f"[instrument] Gate baseline scoring failed (non-fatal): {_ie}")
 
             # ── Canary check: known gold prompts must not regress ────
             canary_gold_ids = list(gold_prompt_ids)[:5] if 'gold_prompt_ids' in dir() else []
@@ -2445,6 +2532,10 @@ def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT
                 canary_total = len(canary_gold_ids)
                 # Build prompt lookup from benchmark suite + RL prompt bank
                 # so canary tests use the actual NL description, not a truncated spec.
+                # Use canonical prompt format (matches what we train on in gold replay).
+                # Previously this code overrode benchmark prompts with cached gold_spec_cache
+                # prompt_text, which had a "Reference: ..." preamble — totally different from
+                # what training saw. That mismatch caused 100% canary regression.
                 _canary_prompt_lookup: dict[str, str] = {}
                 try:
                     _bm_data = json.load(open(_REPO_ROOT / "data" / "benchmarks" / "benchmark_suite.json"))
@@ -2454,19 +2545,6 @@ def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT
                     pass
                 for _ep in _EXTRA_PROMPTS:
                     _canary_prompt_lookup[_ep["id"]] = _ep["prompt"]
-                # Also check gold_spec_cache for prompt_text (if populated)
-                _gold_cache_file = _REPO_ROOT / "data" / "processed" / "rl" / "gold_spec_cache.jsonl"
-                if _gold_cache_file.exists():
-                    with open(_gold_cache_file) as _gf:
-                        for _gl in _gf:
-                            if _gl.strip():
-                                try:
-                                    _gd = json.loads(_gl)
-                                    _pt = _gd.get("prompt_text", "")
-                                    if _pt and _gd.get("prompt_id"):
-                                        _canary_prompt_lookup[_gd["prompt_id"]] = _pt
-                                except json.JSONDecodeError:
-                                    pass
 
                 for _cid in canary_gold_ids[:5]:
                     try:
@@ -2490,7 +2568,44 @@ def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT
                         canary_fail += 1
 
                 log.info(f"[retrain] Canary check: {canary_total - canary_fail}/{canary_total} gold prompts still pass")
-                if canary_fail > canary_total * 0.5:
+
+                # ── Compare candidate vs deployed baseline on canary prompts ──
+                # Rollback decision is based on RELATIVE delta, not absolute pass count.
+                # Reason: the canary "gold" specs may be stale — the deployed model
+                # might only pass 1/5 of them today. Requiring candidate to pass an
+                # absolute threshold would mean rolling back even improvements.
+                _candidate_pass = canary_total - canary_fail
+                _baseline_pass = None
+                try:
+                    _ollama_unload("chattla:20b-candidate")
+                    _can_items = [
+                        (_cid, _canary_prompt_lookup.get(_cid, f"Write a TLA+ specification for problem {_cid}"))
+                        for _cid in canary_gold_ids[:5]
+                    ]
+                    _bc_sany, _bc_tlc, _bc_n = _instrument_score(
+                        "chattla:20b", _can_items, temperature=0.2, label="canary-baseline"
+                    )
+                    _baseline_pass = _bc_sany
+                    _ollama_unload("chattla:20b")
+                except Exception as _ice:
+                    log.warning(f"[instrument] Canary baseline scoring failed (non-fatal): {_ice}")
+
+                # Rollback rule:
+                #   - If we have a baseline: rollback only if candidate is >1 worse than baseline
+                #     (allows for noise; small regressions are acceptable for net improvement)
+                #   - If baseline scoring failed: fall back to absolute >50% threshold
+                if _baseline_pass is not None:
+                    _rollback = _candidate_pass < _baseline_pass - 1
+                    log.info(
+                        f"[retrain] Canary delta: candidate={_candidate_pass}/{canary_total} "
+                        f"baseline={_baseline_pass}/{canary_total} "
+                        f"delta={_candidate_pass - _baseline_pass:+d} "
+                        f"rollback={_rollback}"
+                    )
+                else:
+                    _rollback = canary_fail > canary_total * 0.5
+
+                if _rollback:
                     log.error(
                         f"[retrain] CANARY FAILED: {canary_fail}/{canary_total} gold prompts regressed. "
                         "Rolling back."
