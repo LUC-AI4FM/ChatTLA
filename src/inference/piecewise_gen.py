@@ -541,11 +541,48 @@ def _gen_init(
     return PieceResult(name="init", text=last_text, valid=False, attempts=max_attempts, errors=last_errors)
 
 
+_SINGLE_ACTION_PROMPT = """\
+You are designing a TLA+ specification for the following system:
+
+{nl_description}
+
+The state variables are: {variables}
+TypeOK is:
+{typeok}
+Init is:
+{init}
+
+Already-defined actions ({action_count} so far):
+{existing_actions}
+
+Task: Define ONE more action for this system. The action should be a valid
+state transition that hasn't been covered yet.
+
+Output ONLY the action definition in this exact format:
+{action_name} ==
+  /\\ <preconditions on current state>
+  /\\ var1' = <new value>
+  /\\ var2' = <new value>
+  /\\ UNCHANGED <<remaining_vars>>
+
+Rules:
+- Specify EVERY variable: either prime them OR put them in UNCHANGED.
+- Never prime a variable AND list it in UNCHANGED in the same action.
+- Use = (not ==) for comparisons inside conjuncts.
+- Output ONLY the action definition, nothing else.
+"""
+
+
 def _gen_next(
     client, nl_description: str, variables_line: str, typeok: str, init: str,
     constants: list[str], module_name: str, max_attempts: int = 3,
 ) -> PieceResult:
-    """Generate Next transition relation."""
+    """Generate Next transition relation.
+
+    First tries the all-at-once approach (faster). If 3 attempts fail,
+    falls back to per-action generation: ask the model for one action at
+    a time, validate each, then stitch them into Next == A1 \\/ A2 \\/ ...
+    """
     prompt = _NEXT_PROMPT.format(
         nl_description=nl_description, variables=variables_line, typeok=typeok, init=init
     )
@@ -574,7 +611,54 @@ def _gen_next(
         except Exception as e:
             last_text = f"(error: {e})"
             last_errors = [str(e)]
-    return PieceResult(name="next", text=last_text, valid=False, attempts=max_attempts, errors=last_errors)
+
+    # ── Fallback: per-action generation ──
+    # All-at-once failed; ask the model for one action at a time and stitch.
+    fallback_attempts = 0
+    valid_actions: list[str] = []
+    for action_idx in range(1, 5):  # try up to 4 actions
+        action_name = f"Action{action_idx}"
+        existing = "\n\n".join(valid_actions) if valid_actions else "(none yet)"
+        single_prompt = _SINGLE_ACTION_PROMPT.format(
+            nl_description=nl_description,
+            variables=variables_line,
+            typeok=typeok,
+            init=init,
+            action_count=len(valid_actions),
+            existing_actions=existing,
+            action_name=action_name,
+        )
+        try:
+            text = _call_model(client, single_prompt, temperature=0.3, max_tokens=600)
+            fallback_attempts += 1
+            action_def = _extract_definition(text, action_name)
+            if not action_def:
+                continue
+            # Validate this single action by adding it to a stub Next
+            test_next = "\n\n".join(valid_actions + [action_def]) + "\n\n"
+            test_next += f"Next == " + " \\/ ".join(f"Action{i+1}" for i in range(len(valid_actions) + 1))
+            valid, errs = _validate_piece_in_context(
+                module_name, constants, variables_line,
+                typeok=typeok, init=init, next_def=test_next,
+            )
+            if valid:
+                valid_actions.append(action_def)
+        except Exception:
+            continue
+
+    if valid_actions:
+        # Build final Next definition
+        final_next = "\n\n".join(valid_actions) + "\n\n"
+        final_next += f"Next == " + " \\/ ".join(f"Action{i+1}" for i in range(len(valid_actions)))
+        return PieceResult(
+            name="next", text=final_next, valid=True,
+            attempts=max_attempts + fallback_attempts,
+        )
+
+    return PieceResult(
+        name="next", text=last_text, valid=False,
+        attempts=max_attempts + fallback_attempts, errors=last_errors,
+    )
 
 
 def _extract_next_block(text: str) -> Optional[str]:
