@@ -1,0 +1,371 @@
+{
+  "dataset": "fm-universe/FM-alpaca",
+  "subset": "TLA",
+  "task": "ProofGen",
+  "task_breakdown": {
+    "SegGen": 315,
+    "ProofGen": 50,
+    "ReqAna": 23,
+    "ProofComplete": 40,
+    "ProofInfill": 105
+  },
+  "results": {
+    "total": 50,
+    "self_contained": 0,
+    "sany_pass": 0,
+    "tlc_gold": 0,
+    "diamond": 0
+  },
+  "details": [
+    {
+      "uid": "7e3834d5",
+      "self_contained": false,
+      "sany_ok": false,
+      "tlc_tier": "n/a",
+      "diamond": false
+    },
+    {
+      "uid": "9d3c02f9",
+      "self_contained": false,
+      "sany_ok": false,
+      "tlc_tier": "n/a",
+      "diamond": false
+    },
+    {
+      "uid": "2bbd2904",
+      "self_contained": false,
+      "sany_ok": false,
+      "tlc_tier": "n/a",
+      "diamond": false
+    },
+    {
+      "uid": "571ba23b",
+      "self_contained": false,
+      "sany_ok": false,
+      "tlc_tier": "n/a",
+      "diamond": false
+    },
+    {
+      "uid": "b87efa56",
+      "self_contained": false,
+      "sany_ok": false,
+      "tlc_tier": "n/a",
+      "diamond": false
+    },
+    {
+      "uid": "3029da33",
+      "self_contained": false,
+      "sany_ok": false,
+      "tlc_tier": "n/a",
+      "diamond": false
+    },
+    {
+      "uid": "11e4883f",
+      "self_contained": false,
+      "sany_ok": false,
+      "tlc_tier": "n/a",
+      "diamond": false
+    },
+    {
+      "uid": "1693ef94",
+      "self_contained": false,
+      "sany_ok": false,
+      "tlc_tier": "n/a",
+      "diamond": false
+    },
+    {
+      "uid": "7b689738",
+      "self_contained": false,
+      "sany_ok": false,
+      "tlc_tier": "n/a",
+      "diamond": false
+    },
+    {
+      "uid": "d754443d",
+      "self_contained": false,
+      "sany_ok": false,
+      "tlc_tier": "n/a",
+      "diamond": false
+    },
+    {
+      "uid": "7fa4bb0b",
+      "self_contained": false,
+      "sany_ok": false,
+      "tlc_tier": "n/a",
+      "diamond": false
+    },
+    {
+      "uid": "9a974ac5",
+      "self_contained": false,
+      "sany_ok": false,
+      "tlc_tier": "n/a",
+      "diamond": false
+    },
+    {
+      "uid": "77620546",
+      "self_contained": false,
+      "sany_ok": false,
+      "tlc_tier": "n/a",
+      "diamond": false
+    },
+    {
+      "uid": "e86e1a2a",
+      "self_contained": false,
+      "sany_ok": false,
+      "tlc_tier": "n/a",
+      "diamond": false
+    },
+    {
+      "uid": "83dbf1a4",
+      "self_contained": false,
+      "sany_ok": false,
+      "tlc_tier": "n/a",
+      "diamond": false
+    },
+    {
+      "uid": "95116c8b",
+      "self_contained": false,
+      "sany_ok": false,
+      "tlc_tier": "n/a",
+      "diamond": false
+    },
+    {
+      "uid": "d5547a68",
+      "self_contained": false,
+      "sany_ok": false,
+      "tlc_tier": "n/a",
+      "diamond": false
+    },
+    {
+      "uid": "1c1b3e0e",
+      "self_contained": false,
+      "sany_ok": false,
+      "tlc_tier": "n/a",
+      "diamond": false
+    },
+    {
+      "uid": "d09b78b0",
+      "self_contained": false,
+      "sany_ok": false,
+      "tlc_tier": "n/a",
+      "diamond": false
+    },
+    {
+      "uid": "8cadffa1",
+      "self_contained": false,
+      "sany_ok": false,
+      "tlc_tier": "n/a",
+      "diamond": false
+    },
+    {
+      "uid": "999da89a",
+      "self_contained": false,
+      "sany_ok": false,
+      "tlc_tier": "n/a",
+      "diamond": false
+    },
+    {
+      "uid": "817a3b38",
+      "self_contained": false,
+      "sany_ok": false,
+      "tlc_tier": "n/a",
+      "diamond": false
+    },
+    {
+      "uid": "e4f612aa",
+      "self_contained": false,
+      "sany_ok": false,
+      "tlc_tier": "n/a",
+      "diamond": false
+    },
+    {
+      "uid": "fc01a3ef",
+      "self_contained": false,
+      "sany_ok": false,
+      "tlc_tier": "n/a",
+      "diamond": false
+    },
+    {
+      "uid": "656059a6",
+      "self_contained": false,
+      "sany_ok": false,
+      "tlc_tier": "n/a",
+      "diamond": false
+    },
+    {
+      "uid": "885e3f13",
+      "self_contained": false,
+      "sany_ok": false,
+      "tlc_tier": "n/a",
+      "diamond": false
+    },
+    {
+      "uid": "c245077d",
+      "self_contained": false,
+      "sany_ok": false,
+      "tlc_tier": "n/a",
+      "diamond": false
+    },
+    {
+      "uid": "a37cc1b2",
+      "self_contained": false,
+      "sany_ok": false,
+      "tlc_tier": "n/a",
+      "diamond": false
+    },
+    {
+      "uid": "d87d1898",
+      "self_contained": false,
+      "sany_ok": false,
+      "tlc_tier": "n/a",
+      "diamond": false
+    },
+    {
+      "uid": "99cb000b",
+      "self_contained": false,
+      "sany_ok": false,
+      "tlc_tier": "n/a",
+      "diamond": false
+    },
+    {
+      "uid": "9ef37f47",
+      "self_contained": false,
+      "sany_ok": false,
+      "tlc_tier": "n/a",
+      "diamond": false
+    },
+    {
+      "uid": "126a0e50",
+      "self_contained": false,
+      "sany_ok": false,
+      "tlc_tier": "n/a",
+      "diamond": false
+    },
+    {
+      "uid": "d0b5e06d",
+      "self_contained": false,
+      "sany_ok": false,
+      "tlc_tier": "n/a",
+      "diamond": false
+    },
+    {
+      "uid": "94f3befa",
+      "self_contained": false,
+      "sany_ok": false,
+      "tlc_tier": "n/a",
+      "diamond": false
+    },
+    {
+      "uid": "963bf4ad",
+      "self_contained": false,
+      "sany_ok": false,
+      "tlc_tier": "n/a",
+      "diamond": false
+    },
+    {
+      "uid": "6c5db8bb",
+      "self_contained": false,
+      "sany_ok": false,
+      "tlc_tier": "n/a",
+      "diamond": false
+    },
+    {
+      "uid": "f94a06b1",
+      "self_contained": false,
+      "sany_ok": false,
+      "tlc_tier": "n/a",
+      "diamond": false
+    },
+    {
+      "uid": "0ee5bf37",
+      "self_contained": false,
+      "sany_ok": false,
+      "tlc_tier": "n/a",
+      "diamond": false
+    },
+    {
+      "uid": "145c9dbc",
+      "self_contained": false,
+      "sany_ok": false,
+      "tlc_tier": "n/a",
+      "diamond": false
+    },
+    {
+      "uid": "7faa6d5c",
+      "self_contained": false,
+      "sany_ok": false,
+      "tlc_tier": "n/a",
+      "diamond": false
+    },
+    {
+      "uid": "6fcf8010",
+      "self_contained": false,
+      "sany_ok": false,
+      "tlc_tier": "n/a",
+      "diamond": false
+    },
+    {
+      "uid": "605e4ba0",
+      "self_contained": false,
+      "sany_ok": false,
+      "tlc_tier": "n/a",
+      "diamond": false
+    },
+    {
+      "uid": "f71b12dc",
+      "self_contained": false,
+      "sany_ok": false,
+      "tlc_tier": "n/a",
+      "diamond": false
+    },
+    {
+      "uid": "f277c4da",
+      "self_contained": false,
+      "sany_ok": false,
+      "tlc_tier": "n/a",
+      "diamond": false
+    },
+    {
+      "uid": "47e03eb4",
+      "self_contained": false,
+      "sany_ok": false,
+      "tlc_tier": "n/a",
+      "diamond": false
+    },
+    {
+      "uid": "be80b805",
+      "self_contained": false,
+      "sany_ok": false,
+      "tlc_tier": "n/a",
+      "diamond": false
+    },
+    {
+      "uid": "8e6739e6",
+      "self_contained": false,
+      "sany_ok": false,
+      "tlc_tier": "n/a",
+      "diamond": false
+    },
+    {
+      "uid": "2a8e11c5",
+      "self_contained": false,
+      "sany_ok": false,
+      "tlc_tier": "n/a",
+      "diamond": false
+    },
+    {
+      "uid": "6ff1ee3b",
+      "self_contained": false,
+      "sany_ok": false,
+      "tlc_tier": "n/a",
+      "diamond": false
+    },
+    {
+      "uid": "d6df0fac",
+      "self_contained": false,
+      "sany_ok": false,
+      "tlc_tier": "n/a",
+      "diamond": false
+    }
+  ]
+}
