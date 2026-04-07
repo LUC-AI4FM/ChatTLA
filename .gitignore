@@ -71,3 +71,7 @@ train.log
 src/shared/apalache/
 src/shared/tlaps/
 outputs/logs/watchdog.log
+
+# TLAPS prover training (large source corpus + scan outputs)
+data/FormaLLM/
+outputs/tlaps_*.json

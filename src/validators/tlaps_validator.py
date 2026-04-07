@@ -130,7 +130,7 @@ def validate_string(
 # Parsing helpers
 # ---------------------------------------------------------------------------
 
-_THEOREM_RE = re.compile(r"^\s*THEOREM\b", re.MULTILINE)
+_THEOREM_RE = re.compile(r"^\s*(THEOREM|LEMMA|COROLLARY)\b", re.MULTILINE)
 _PARSE_ERR_RE = re.compile(r"Could not parse|Parser\.parse_file|syntax error", re.IGNORECASE)
 # Examples we tested against tlapm 1.5.0:
 #   "[INFO]: All 1 obligation proved."

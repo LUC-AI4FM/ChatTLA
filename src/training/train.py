@@ -91,7 +91,10 @@ class ClearCacheCallback(TrainerCallback):
 _REPO_ROOT    = Path(__file__).resolve().parents[2]
 _TRAIN_JSONL  = _REPO_ROOT / "data" / "processed" / "train.jsonl"
 _EVAL_JSONL   = _REPO_ROOT / "data" / "processed" / "eval.jsonl"
+_PROVER_TRAIN_JSONL = _REPO_ROOT / "data" / "processed" / "prover_train.jsonl"
+_PROVER_EVAL_JSONL  = _REPO_ROOT / "data" / "processed" / "prover_eval.jsonl"
 _CHECKPOINT_DIR = _REPO_ROOT / "outputs" / "checkpoints"
+_PROVER_CHECKPOINT_DIR = _REPO_ROOT / "outputs" / "checkpoints_prover"
 _LORA_CFG_PATH  = Path(__file__).parent / "lora_config.yaml"
 
 MODEL_ID = "openai/gpt-oss-20b"
@@ -222,6 +225,7 @@ def build_training_args(
     gradient_accumulation_steps_override: int | None = None,
     max_steps: int | None = None,
     learning_rate: float | None = None,
+    output_dir: Path | None = None,
 ) -> SFTConfig:
     """Return an SFTConfig tuned for smoke or full runs.
 
@@ -230,7 +234,8 @@ def build_training_args(
     - `per_device_batch_size` and `gradient_accumulation_steps_override` can override
       defaults for tight-memory situations.
     """
-    _CHECKPOINT_DIR.mkdir(parents=True, exist_ok=True)
+    out_dir = output_dir or _CHECKPOINT_DIR
+    out_dir.mkdir(parents=True, exist_ok=True)
 
     # When running on CPU we must not request bf16 (invalid on CPU).
     bf16_enabled = False if use_cpu else True
@@ -240,7 +245,7 @@ def build_training_args(
     accum_steps = gradient_accumulation_steps_override if gradient_accumulation_steps_override is not None else (2 if smoke_test else 8)
 
     return SFTConfig(
-        output_dir=str(_CHECKPOINT_DIR),
+        output_dir=str(out_dir),
         # --- Batch / accumulation ------------------------------------------
         # With longer sequences (4096), use batch=1 with higher accum to stay
         # within VRAM. Effective batch = 1*8 = 8 (good for 57 training examples)
@@ -301,16 +306,24 @@ def main(
     max_steps: int | None = None,
     learning_rate: float | None = None,
     base_model: str | None = None,
+    prover: bool = False,
 ) -> None:
-    mlflow.set_experiment("ChatTLA-gpt-oss-20b")
+    if prover:
+        mlflow.set_experiment("ChatTLA-Prover-gpt-oss-20b")
+    else:
+        mlflow.set_experiment("ChatTLA-gpt-oss-20b")
 
     # --- Data ---------------------------------------------------------------
-    if not _TRAIN_JSONL.exists():
-        print(f"[train] ERROR: {_TRAIN_JSONL} not found. Run dataset_builder.py first.")
+    train_path = _PROVER_TRAIN_JSONL if prover else _TRAIN_JSONL
+    eval_path = _PROVER_EVAL_JSONL if prover else _EVAL_JSONL
+    output_dir = _PROVER_CHECKPOINT_DIR if prover else _CHECKPOINT_DIR
+    if not train_path.exists():
+        print(f"[train] ERROR: {train_path} not found.")
         sys.exit(1)
-    if not _EVAL_JSONL.exists():
-        print(f"[train] ERROR: {_EVAL_JSONL} not found. Run dataset_builder.py first.")
+    if not eval_path.exists():
+        print(f"[train] ERROR: {eval_path} not found.")
         sys.exit(1)
+    print(f"[train] mode={'PROVER' if prover else 'spec-gen'}  train={train_path.name}  eval={eval_path.name}")
 
     # Load via from_list to avoid PyArrow arrow.json extension type error
     # (ArrowNotImplementedError: MakeBuilder for type extension<arrow.json>)
@@ -324,12 +337,12 @@ def main(
         return Dataset.from_list(records)
 
     try:
-        train_dataset = _load_jsonl(_TRAIN_JSONL)
-        eval_dataset = _load_jsonl(_EVAL_JSONL)
+        train_dataset = _load_jsonl(train_path)
+        eval_dataset = _load_jsonl(eval_path)
     except Exception as e:
         print(f"[train] from_list load failed ({e}), falling back to load_dataset...")
-        train_dataset = load_dataset("json", data_files=str(_TRAIN_JSONL), split="train")
-        eval_dataset = load_dataset("json", data_files=str(_EVAL_JSONL), split="train")
+        train_dataset = load_dataset("json", data_files=str(train_path), split="train")
+        eval_dataset = load_dataset("json", data_files=str(eval_path), split="train")
 
     if smoke_test:
         train_dataset = train_dataset.select(range(min(10, len(train_dataset))))
@@ -488,12 +501,20 @@ def main(
             "LoRA to the layers that are resident on the same device."
         )
 
-    # --- TLC eval callback --------------------------------------------------
-    tlc_callback = TLCEvalCallback(
-        eval_dataset=eval_dataset,
-        tokenizer=tokenizer,
-        n_samples=5 if smoke_test else 50,
-    )
+    # --- Eval callback (TLC for spec-gen, TLAPS for prover) -----------------
+    if prover:
+        from src.training.tlaps_eval_callback import TLAPSEvalCallback
+        eval_callback = TLAPSEvalCallback(
+            eval_dataset=eval_dataset,
+            tokenizer=tokenizer,
+            n_samples=2 if smoke_test else 6,
+        )
+    else:
+        eval_callback = TLCEvalCallback(
+            eval_dataset=eval_dataset,
+            tokenizer=tokenizer,
+            n_samples=5 if smoke_test else 50,
+        )
 
     # --- Trainer ------------------------------------------------------------
     # Pass `use_cpu=True` when the user explicitly requested `device_map='cpu'`
@@ -509,6 +530,7 @@ def main(
         gradient_accumulation_steps_override=gradient_accumulation_steps,
         max_steps=max_steps,
         learning_rate=learning_rate,
+        output_dir=output_dir,
     )
 
     trainer = SFTTrainer(
@@ -517,7 +539,7 @@ def main(
         train_dataset=train_dataset,
         eval_dataset=eval_dataset,
         args=training_args,
-        callbacks=[tlc_callback, ClearCacheCallback()],
+        callbacks=[eval_callback, ClearCacheCallback()],
     )
 
     print("[train] Starting training...")
@@ -585,6 +607,9 @@ if __name__ == "__main__":
     parser.add_argument("--base-model", default=None,
                         help="Path or HF ID to load instead of openai/gpt-oss-20b "
                              "(e.g. outputs/merged_model/ for incremental DPO on a previously trained model)")
+    parser.add_argument("--prover", action="store_true",
+                        help="Train the prover model: read prover_train.jsonl/prover_eval.jsonl, "
+                             "use TLAPSEvalCallback, save to outputs/checkpoints_prover/")
     args = parser.parse_args()
 
     # parse lora_layers override
@@ -607,4 +632,5 @@ if __name__ == "__main__":
         max_steps=args.max_steps,
         learning_rate=args.lr,
         base_model=args.base_model,
+        prover=args.prover,
     )
