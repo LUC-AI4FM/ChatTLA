@@ -1,0 +1,154 @@
+{
+  "train_memorization": [
+    {
+      "tag": "train[0]",
+      "source_file": "data/FormaLLM/data/byzpaxos/tla/Consensus.tla",
+      "theorem_line": 185,
+      "gold_proof_preview": "BY ValueNonempty, ExpandENABLED DEF Next, vars",
+      "gold_obligations": 18,
+      "raw_generation_len": 4671,
+      "raw_generation_preview": "analysisWe need to write the TLAPS proof for the final theorem: \"LiveSpec => <>Success\". The theorem is:\n\nTHEOREM LiveSpec => <>Success\n\nWe have the definitions:\n\n- LiveSpec == Spec /\\ WF_vars(Next)\n- Success == <>chosen # {}\n- ValueNonempty == Value # {}\n- EnabledNext == (ENABLED <<Next>>_vars) <=> (chosen = {})\n\nWe also have the lemma InductiveInvariance: Spec => []Inv\n\nWe need to prove LiveSpec => <>Success. We can use the lemma EnabledNext to show that Next is enabled when chosen = {}. Since WF_vars(Next) ensures that if Next is enabled infinitely often, then it will be taken infinitely often. But we need to show that eventually chosen # {} holds. Since Next changes chosen from {} to {v} for some v in Value, and WF_vars(Next) ensures that if Next is enabled infinitely often, then it wi",
+      "extracted_proof_preview": "theorem: \"LiveSpec => <>Success\". The theorem is:\n\nTHEOREM LiveSpec => <>Success\n\nWe have the definitions:\n\n- LiveSpec == Spec /\\ WF_vars(Next)\n- Success == <>chosen # {}\n- ValueNonempty == Value # {}\n- EnabledNext == (ENABLED <<Next>>_vars) <=> (chosen = {})\n\nWe also have the lemma InductiveInvariance: Spec => []Inv\n\nWe need to prove LiveSpec => <>Success. We can use the lemma EnabledNext to show that Next is enabled when chosen = {}. Since WF_vars(Next) ensures that if Next is enabled infinitely often, then it will be taken infinitely often. But we need to show that eventually chosen # {} holds. Since Next changes chosen from {} to {v} for some v in Value, and WF_vars(Next) ensures that if Next is enabled infinitely often, then it will be taken infinitely often. But we need to show that ",
+      "verification": {
+        "tier": "parse_error",
+        "proved": 0,
+        "total": 0,
+        "failed": 0,
+        "errors": [
+          "Error: Could not parse \"/tmp/tmpym6lsu70/RTGen_Consensus.tla\" successfully."
+        ]
+      }
+    },
+    {
+      "tag": "train[1]",
+      "source_file": "data/FormaLLM/data/Bakery-Boulangerie/tla/Bakery.tla",
+      "theorem_line": 274,
+      "gold_proof_preview": "<1> USE N \\in Nat DEFS Procs, TypeOK, Before, \\prec, ProcSet \n<1>1. Init => Inv\n  BY DEF Init, Inv\n<1>2. Inv /\\ [Next]_vars => Inv'\n  <2> SUFFICES ASSUME Inv,\n                      [Next]_vars\n               PROVE  Inv'\n    OBVIOUS\n  <2>1. ASSUME NEW self \\in Procs,\n               ncs(self)\n        ",
+      "gold_obligations": 121,
+      "raw_generation_len": 3989,
+      "raw_generation_preview": "analysisWe need to prove that Spec implies []MutualExclusion. Spec is Init /\\ [][Next]_vars /\\ WF_vars((pc[self] # \"ncs\") /\\ p(self)). MutualExclusion is \\A i,j \\in Procs : (i # j) => ~ /\\ pc[i] = \"cs\" /\\ pc[j] = \"cs\". So we need to show that in all reachable states, no two distinct processes are in \"cs\". The invariant Inv includes TypeOK and several conditions. We need to show that Inv => MutualExclusion. That is step <1>2. Then we need to show that Inv is inductive: Inv => [][Next]_vars /\\ WF_vars((pc[self] # \"ncs\") /\\ p(self)). That is step <1>1. Then we need to show that Init => Inv. That is step <1>3. Then we need to show that Inv => []MutualExclusion. That is step <1>4. Then we need to show that Spec => []MutualExclusion. That is step <1>5. So we need to prove that Inv is an inductiv",
+      "extracted_proof_preview": "<1>2. Then we need to show that Inv is inductive: Inv => [][Next]_vars /\\ WF_vars((pc[self] # \"ncs\") /\\ p(self)). That is step <1>1. Then we need to show that Init => Inv. That is step <1>3. Then we need to show that Inv => []MutualExclusion. That is step <1>4. Then we need to show that Spec => []MutualExclusion. That is step <1>5. So we need to prove that Inv is an inductive invariant that implies MutualExclusion. The proof will be hierarchical: <1>1, <1>2, <1>3, <1>4, <1>5. We need to use the backends PTL, Zenon, SMT. We need to use the definitions of Next, p, etc. We need to show that Inv is preserved by Next. That is step <1>1. We need to show that Inv => []MutualExclusion. That is step <1>4. Then we need to show that Spec => []MutualExclusion. That is step <1>5. The proof will use the",
+      "verification": {
+        "tier": "unproved",
+        "proved": 0,
+        "total": 0,
+        "failed": 0,
+        "errors": []
+      }
+    }
+  ],
+  "eval_heldout": [
+    {
+      "tag": "eval[0]",
+      "source_file": "data/FormaLLM/data/FiniteMonotonic/tla/CRDT_proof.tla",
+      "theorem_line": 201,
+      "gold_proof_preview": "<1>. DEFINE Q == \\A n, o \\in Node : counter[n] = counter[o]\n            P(m) == Measure = m\n            L(m) == [](P(m) => <>Q)\n<1>1. ASSUME NEW m \\in Nat,\n             \\* must explicitly \"box\" the following assumption,\n             \\* otherwise PTL reasoning fails below.\n             [](\\A k \\in 0 ",
+      "gold_obligations": 196,
+      "raw_generation_len": 4303,
+      "raw_generation_preview": "analysisWe need to write the TLAPS proof for the final theorem OGLiveness. The theorem states: OGSpec => <>(\\A n, o \\in Node : counter[n] = counter[o]). That is, under OGSpec, eventually all counters agree.\n\nWe have definitions: OGSpec is a specification that includes TypeOK, Safety, and that only Gossip actions occur (no stuttering). Also WF_vars(Gossip(n,o)) for all n,o.\n\nWe need to prove that eventually all counters equal. We have lemmas: MeasureType, MeasureTypePrime, MeasureIsZero, GossipDoesntIncreaseMeasure, GossipDecreasesMeasure, EnabledGossip.\n\nWe also have the fairness assumption: []WF_vars(Gossip(n,o)) ensures that if Gossip(n,o) is enabled infinitely often, then it occurs infinitely often. But we need to show that eventually all counters equal. We can use a variant argument: m",
+      "extracted_proof_preview": "theorem OGLiveness. The theorem states: OGSpec => <>(\\A n, o \\in Node : counter[n] = counter[o]). That is, under OGSpec, eventually all counters agree.\n\nWe have definitions: OGSpec is a specification that includes TypeOK, Safety, and that only Gossip actions occur (no stuttering). Also WF_vars(Gossip(n,o)) for all n,o.\n\nWe need to prove that eventually all counters equal. We have lemmas: MeasureType, MeasureTypePrime, MeasureIsZero, GossipDoesntIncreaseMeasure, GossipDecreasesMeasure, EnabledGossip.\n\nWe also have the fairness assumption: []WF_vars(Gossip(n,o)) ensures that if Gossip(n,o) is enabled infinitely often, then it occurs infinitely often. But we need to show that eventually all counters equal. We can use a variant argument: measure is a natural number that decreases on Gossip act",
+      "verification": {
+        "tier": "parse_error",
+        "proved": 0,
+        "total": 0,
+        "failed": 0,
+        "errors": [
+          "Error: Could not parse \"/tmp/tmp_l_a697z/RTGen_CRDT_proof.tla\" successfully."
+        ]
+      }
+    },
+    {
+      "tag": "eval[1]",
+      "source_file": "data/FormaLLM/data/byzpaxos/tla/Consensus.tla",
+      "theorem_line": 156,
+      "gold_proof_preview": "<1>1.  Init => Inv\n  BY FS_EmptySet DEF Init, Inv, TypeOK\n<1>2.  QED\n BY PTL, <1>1, InductiveInvariance DEF Spec",
+      "gold_obligations": 15,
+      "raw_generation_len": 3533,
+      "raw_generation_preview": "analysisWe need to write the TLAPS proof for the final theorem Invariance == Spec => []Inv. The proof is to show that Spec implies []Inv. Spec is Init /\\ [][Next]_vars. So we need to show that Init /\\ [][Next]_vars => []Inv. Usually we prove that Inv is an inductive invariant: Inv /\\ [Next]_vars => Inv'. Then we use the standard theorem that if Inv is an inductive invariant and Init => Inv, then Spec => []Inv. But we haven't proven Init => Inv. We need to prove that too. But the final theorem is just Spec => []Inv. We can use the lemma InductiveInvariance and the fact that Init => Inv. But we haven't proven Init => Inv. We can prove it inline. The standard approach: use the theorem that if Init => Inv and Inv /\\ [Next]_vars => Inv', then Spec => []Inv. But we can also use the built-in theo",
+      "extracted_proof_preview": "<1>. SUFFICES ASSUME Init, [][Next]_vars\n              PROVE  []Inv\n  OBVIOUS\n<1>1. BY InductiveInvariance, Init, DEF Inv, TypeOK, Next, vars\n<1>2. QED\n\nBut we need to be careful: InductiveInvariance is a lemma that says Inv /\\ [Next]_vars => Inv'. We need to use that to prove []Inv. The standard proof is:\n\n<1>. SUFFICES ASSUME Init, [][Next]_vars\n              PROVE  []Inv\n  OBVIOUS\n<1>1. BY InductiveInvariance, Init, DEF Inv, TypeOK, Next, vars\n<1>2. QED\n\nBut we need to show that Init => Inv. We can prove that separately. But we can also incorporate it into the proof. The standard approach is to use the theorem that if Init => Inv and Inv /\\ [Next]_vars => Inv', then Spec => []Inv. But we can also do it manually:\n\n<1>. SUFFICES ASSUME Init, [][Next]_vars\n              PROVE  []Inv\n  OBVI",
+      "verification": {
+        "tier": "parse_error",
+        "proved": 0,
+        "total": 0,
+        "failed": 0,
+        "errors": [
+          "Error: Could not parse \"/tmp/tmp8zifjiwq/RTGen_Consensus.tla\" successfully."
+        ]
+      }
+    },
+    {
+      "tag": "eval[2]",
+      "source_file": "data/FormaLLM/data/MisraReachability/tla/ReachableProofs_clean.tla",
+      "theorem_line": 5,
+      "gold_proof_preview": "<1>1. Init => Inv1\nBY RootAssump DEF Init, Inv1, TypeOK\n<1>2. Inv1 /\\ [Next]_vars => Inv1'\n\n<2> SUFFICES ASSUME Inv1,\n[Next]_vars\nPROVE  Inv1'\nOBVIOUS\n<2>1. CASE a\nBY <2>1, SuccAssump DEF Inv1, TypeOK, a\n<2>2. CASE UNCHANGED vars\nBY <2>2 DEF Inv1, TypeOK, vars\n<2>3. QED\nBY <2>1, <2>2 DEF Next, Termi",
+      "gold_obligations": 15,
+      "raw_generation_len": 3823,
+      "raw_generation_preview": "analysisWe need to write the TLAPS proof for Thm1: Spec => []Inv1. We have definitions of Spec, Inv1, etc. We need to use the lemmas and theorems from Reachable and ReachabilityProofs modules. The proof should be hierarchical, using BY, DEF, etc. We need to output only the proof steps, not the theorem line or closing ====.\n\nWe need to use the definitions: Spec == Init /\\ [][Next]_vars\nInv1 == vars \\in Init /\\ vars \\in Reachable /\\ vars \\in Inv1\n\nWait, Inv1 is defined as vars \\in Init /\\ vars \\in Reachable /\\ vars \\in Inv1. That seems circular. Let's check the definitions:\n\nFrom Reachable module: Reachable == Init \\/ [][Next]_vars\n\nFrom ReachabilityProofs module: Inv1 == vars \\in Init /\\ vars \\in Reachable /\\ vars \\in Inv1\n\nThis is weird: Inv1 is defined in terms of itself. But maybe it's a",
+      "extracted_proof_preview": "analysisWe need to write the TLAPS proof for Thm1: Spec => []Inv1. We have definitions of Spec, Inv1, etc. We need to use the lemmas and theorems from Reachable and ReachabilityProofs modules. The proof should be hierarchical, using BY, DEF, etc. We need to output only the proof steps, not the theorem line or closing ====.\n\nWe need to use the definitions: Spec == Init /\\ [][Next]_vars\nInv1 == vars \\in Init /\\ vars \\in Reachable /\\ vars \\in Inv1\n\nWait, Inv1 is defined as vars \\in Init /\\ vars \\in Reachable /\\ vars \\in Inv1. That seems circular. Let's check the definitions:\n\nFrom Reachable module: Reachable == Init \\/ [][Next]_vars\n\nFrom ReachabilityProofs module: Inv1 == vars \\in Init /\\ vars \\in Reachable /\\ vars \\in Inv1\n\nThis is weird: Inv1 is defined in terms of itself. But maybe it's a",
+      "verification": {
+        "tier": "parse_error",
+        "proved": 0,
+        "total": 0,
+        "failed": 0,
+        "errors": [
+          "Error: Could not parse \"/tmp/tmpri4h46uq/RTGen_ReachableProofs.tla\" successfully."
+        ]
+      }
+    },
+    {
+      "tag": "eval[3]",
+      "source_file": "data/FormaLLM/data/FiniteMonotonic/tla/CRDT_proof.tla",
+      "theorem_line": 109,
+      "gold_proof_preview": "<1>. ASSUME NEW o \\in Node\n     PROVE  DistFun(o) \\in [Node -> Nat]\n  BY DEF TypeOK, Safety, DistFun\n<1>. QED  BY SumType, Zenon DEF Distance, Measure",
+      "gold_obligations": 34,
+      "raw_generation_len": 3289,
+      "raw_generation_preview": "analysisWe need to prove MeasureType: given TypeOK and Safety, prove DistFun(o) \\in [Node -> Nat] for all o, Distance(o) \\in Nat, Measure \\in Nat.\n\nWe have definitions: DistFun(o) == [n \\in Node |-> counter[n][n] - counter[o][n]].\n\nDistance(o) == Sum(DistFun(o)).\n\nMeasure == Sum([o \\in Node |-> Distance(o)]).\n\nWe need to use SumType lemma: for any f \\in [Node -> Nat], Sum(f) \\in Nat.\n\nAlso SumIsZero: Sum(f) = 0 <=> \\A x \\in Node : f[x] = 0.\n\nSumWeaklyMonotonic: if f <= g pointwise, Sum(f) <= Sum(g).\n\nSumStronglyMonotonic: if f <= g pointwise and exists x with f[x] < g[x], Sum(f) < Sum(g).\n\nWe also have TypeOK: counter \\in [Node -> [Node -> Nat]].\n\nSafety: counter \\in [Node -> [Node -> Nat]] /\\ \\A n \\in Node : \\A v \\in Node : counter[n][v] <= counter[v][v].\n\nWe need to show DistFun(o) \\in [",
+      "extracted_proof_preview": "analysisWe need to prove MeasureType: given TypeOK and Safety, prove DistFun(o) \\in [Node -> Nat] for all o, Distance(o) \\in Nat, Measure \\in Nat.\n\nWe have definitions: DistFun(o) == [n \\in Node |-> counter[n][n] - counter[o][n]].\n\nDistance(o) == Sum(DistFun(o)).\n\nMeasure == Sum([o \\in Node |-> Distance(o)]).\n\nWe need to use SumType lemma: for any f \\in [Node -> Nat], Sum(f) \\in Nat.\n\nAlso SumIsZero: Sum(f) = 0 <=> \\A x \\in Node : f[x] = 0.\n\nSumWeaklyMonotonic: if f <= g pointwise, Sum(f) <= Sum(g).\n\nSumStronglyMonotonic: if f <= g pointwise and exists x with f[x] < g[x], Sum(f) < Sum(g).\n\nWe also have TypeOK: counter \\in [Node -> [Node -> Nat]].\n\nSafety: counter \\in [Node -> [Node -> Nat]] /\\ \\A n \\in Node : \\A v \\in Node : counter[n][v] <= counter[v][v].\n\nWe need to show DistFun(o) \\in [",
+      "verification": {
+        "tier": "parse_error",
+        "proved": 0,
+        "total": 0,
+        "failed": 0,
+        "errors": [
+          "Error: Could not parse \"/tmp/tmp5q06ec6o/RTGen_CRDT_proof.tla\" successfully."
+        ]
+      }
+    },
+    {
+      "tag": "eval[4]",
+      "source_file": "data/FormaLLM/data/LearnProofs/tla/FindHighest.tla",
+      "theorem_line": 104,
+      "gold_proof_preview": "PROOF\n  <1>a. Init => InductiveInvariant\n    BY DEFS Init, InductiveInvariant\n  <1>b. InductiveInvariant /\\ UNCHANGED vars => InductiveInvariant'\n    BY DEFS InductiveInvariant, vars\n  <1>c. InductiveInvariant /\\ TypeOK /\\ TypeOK' /\\ Next => InductiveInvariant'\n    <2>a. InductiveInvariant /\\ Termin",
+      "gold_obligations": 25,
+      "raw_generation_len": 2547,
+      "raw_generation_preview": "final<1>a. Init => InductiveInvariant\n  BY DEFS Init, InductiveInvariant\n<1>b. InductiveInvariant /\\ UNCHANGED vars => InductiveInvariant'\n  BY DEFS InductiveInvariant, vars\n<1>c. InductiveInvariant /\\ Next => InductiveInvariant'\n  <2>a. InductiveInvariant /\\ lb => InductiveInvariant'\n    <3>a. InductiveInvariant /\\ i <= Len(f) /\\ pc = \"lb\" => InductiveInvariant'\n      <4>a. InductiveInvariant /\\ i <= Len(f) /\\ pc = \"lb\" /\\ h' = max(h, f[i]) /\\ i' = i + 1 /\\ pc' = \"lb\" /\\ f' = f => InductiveInvariant'\n        <5>a. InductiveInvariant /\\ i <= Len(f) /\\ pc = \"lb\" /\\ h' = max(h, f[i]) /\\ i' = i + 1 /\\ pc' = \"lb\" /\\ f' = f => \\A idx \\in 1..(i' - 1) : f'[idx] <= h'\n          <6>a. InductiveInvariant /\\ i <= Len(f) /\\ pc = \"lb\" /\\ h' = max(h, f[i]) /\\ i' = i + 1 /\\ pc' = \"lb\" /\\ f' = f => \\A idx",
+      "extracted_proof_preview": "<1>a. Init => InductiveInvariant\n  BY DEFS Init, InductiveInvariant\n<1>b. InductiveInvariant /\\ UNCHANGED vars => InductiveInvariant'\n  BY DEFS InductiveInvariant, vars\n<1>c. InductiveInvariant /\\ Next => InductiveInvariant'\n  <2>a. InductiveInvariant /\\ lb => InductiveInvariant'\n    <3>a. InductiveInvariant /\\ i <= Len(f) /\\ pc = \"lb\" => InductiveInvariant'\n      <4>a. InductiveInvariant /\\ i <= Len(f) /\\ pc = \"lb\" /\\ h' = max(h, f[i]) /\\ i' = i + 1 /\\ pc' = \"lb\" /\\ f' = f => InductiveInvariant'\n        <5>a. InductiveInvariant /\\ i <= Len(f) /\\ pc = \"lb\" /\\ h' = max(h, f[i]) /\\ i' = i + 1 /\\ pc' = \"lb\" /\\ f' = f => \\A idx \\in 1..(i' - 1) : f'[idx] <= h'\n          <6>a. InductiveInvariant /\\ i <= Len(f) /\\ pc = \"lb\" /\\ h' = max(h, f[i]) /\\ i' = i + 1 /\\ pc' = \"lb\" /\\ f' = f => \\A idx \\in ",
+      "verification": {
+        "tier": "unproved",
+        "proved": 0,
+        "total": 0,
+        "failed": 0,
+        "errors": []
+      }
+    },
+    {
+      "tag": "eval[5]",
+      "source_file": "data/FormaLLM/data/ewd998/tla/AsyncTerminationDetection_proof_clean.tla",
+      "theorem_line": 68,
+      "gold_proof_preview": "<1>1. ASSUME terminated, ~ terminationDetected\nPROVE  ENABLED <<DetectTermination>>_vars\n<2>1. <<DetectTermination>>_vars <=> DetectTermination\nBY <1>1 DEF TypeOK, terminated, DetectTermination, vars\n<2>2. (ENABLED <<DetectTermination>>_vars) <=> (ENABLED DetectTermination)\nBY <2>1, ENABLEDrules\n<2>",
+      "gold_obligations": 77,
+      "raw_generation_len": 5254,
+      "raw_generation_preview": "analysisWe need to write the TLAPS proof for the final theorem in the module. The final theorem is:\n\n```\nLEMMA EnabledDT ==\nASSUME TypeOK\nPROVE  (ENABLED <<DetectTermination>>_vars) <=> (terminated /\\ ~ terminationDetected)\n```\n\nWe need to output only the proof, with hierarchical steps, using TLAPS syntax. The proof should use the definitions and lemmas available: TypeOK, terminated, terminationDetected, DetectTermination, Terminate, RcvMsg, SendMsg, vars, Next, etc. We need to show that under TypeOK, the action DetectTermination is enabled iff terminated /\\ ~terminationDetected.\n\nWe need to use the definitions: DetectTermination is defined as terminated /\\ ~terminationDetected. So the action DetectTermination is defined as terminated /\\ ~terminationDetected. So the action is enabled iff t",
+      "extracted_proof_preview": "theorem in the module. The final theorem is:\n\n```\nLEMMA EnabledDT ==\nASSUME TypeOK\nPROVE  (ENABLED <<DetectTermination>>_vars) <=> (terminated /\\ ~ terminationDetected)\n```\n\nWe need to output only the proof, with hierarchical steps, using TLAPS syntax. The proof should use the definitions and lemmas available: TypeOK, terminated, terminationDetected, DetectTermination, Terminate, RcvMsg, SendMsg, vars, Next, etc. We need to show that under TypeOK, the action DetectTermination is enabled iff terminated /\\ ~terminationDetected.\n\nWe need to use the definitions: DetectTermination is defined as terminated /\\ ~terminationDetected. So the action DetectTermination is defined as terminated /\\ ~terminationDetected. So the action is enabled iff terminated /\\ ~terminationDetected. But we need to consi",
+      "verification": {
+        "tier": "parse_error",
+        "proved": 0,
+        "total": 0,
+        "failed": 0,
+        "errors": [
+          "Error: Could not parse \"/tmp/tmpmsk6rkn9/RTGen_AsyncTerminationDetection_proof.tla\" successfully."
+        ]
+      }
+    }
+  ]
+}
