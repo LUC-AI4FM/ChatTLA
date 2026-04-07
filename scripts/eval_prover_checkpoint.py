@@ -93,11 +93,12 @@ def main() -> None:
         new_tokens = out[0][inputs["input_ids"].shape[1]:]
         raw = tokenizer.decode(new_tokens, skip_special_tokens=True)
 
-        # Strip the harmony "analysis" channel prose if the model emitted one
-        # before reaching the final proof. The chat template renders channels
-        # as inline `analysis...final...` text, so we look for the literal
-        # "final" marker first, then fall back to any <n> bullet.
-        proof_text = raw
+        # Strip harmony tags / <think> / fences via the canonical normalizer.
+        try:
+            from src.postprocess import strip_reasoning_artifacts, NormalizationReport
+            proof_text = strip_reasoning_artifacts(raw, NormalizationReport())
+        except Exception:
+            proof_text = raw
         if "final" in proof_text:
             proof_text = proof_text[proof_text.index("final") + len("final"):]
         m = re.search(r"(<\d+>.*)", proof_text, re.DOTALL)

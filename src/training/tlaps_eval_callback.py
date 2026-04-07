@@ -221,6 +221,14 @@ class TLAPSEvalCallback(TrainerCallback):
             print(f"[TLAPSEvalCallback] generation error: {exc}")
             return ""
 
+        # Strip harmony tags, <think> blocks, and markdown fences via the
+        # canonical normalizer (Unicode op replacement also applies — useful
+        # for proof bullets that quote ∧/∨).
+        try:
+            from src.postprocess import strip_reasoning_artifacts, NormalizationReport
+            text = strip_reasoning_artifacts(text, NormalizationReport())
+        except Exception:
+            pass
         # Strip harmony "analysis" channel prose. Channels render inline as
         # `analysis...final...`, so peel off everything up to and including
         # "final" before extracting the first <n> bullet.
