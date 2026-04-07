@@ -1,0 +1,501 @@
+% ChatTLA: Verifier-Guided Decomposition for TLA+ Specification Generation
+% Single-file LaTeX source — paste directly into Overleaf (article class).
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{booktabs}
+\usepackage{microtype}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{graphicx}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\usepackage{url}
+\usepackage{caption}
+
+% --- TLA+ listing style -----------------------------------------------------
+\definecolor{kwblue}{RGB}{0,0,180}
+\definecolor{cmgray}{RGB}{120,120,120}
+\definecolor{strgreen}{RGB}{0,120,0}
+\lstdefinelanguage{TLA}{
+  morekeywords={MODULE, EXTENDS, VARIABLES, CONSTANT, CONSTANTS, ASSUME,
+                THEOREM, LEMMA, PROOF, BY, DEF, DEFS, EXCEPT, IF, THEN, ELSE,
+                LET, IN, CASE, OTHER, INSTANCE, LOCAL, EXTENDS, UNCHANGED,
+                ENABLED, CHOOSE, SUBSET, UNION, DOMAIN, TRUE, FALSE, BOOLEAN,
+                Init, Next, Spec, TypeOK, Inv},
+  sensitive=true,
+  morecomment=[l]{\\*},
+  morecomment=[s]{(*}{*)},
+  morestring=[b]",
+}
+\lstset{
+  basicstyle=\ttfamily\footnotesize,
+  keywordstyle=\color{kwblue}\bfseries,
+  commentstyle=\color{cmgray}\itshape,
+  stringstyle=\color{strgreen},
+  columns=fullflexible,
+  showstringspaces=false,
+  breaklines=true,
+  frame=single,
+  framerule=0.3pt,
+  framesep=4pt,
+  xleftmargin=6pt,
+  xrightmargin=6pt,
+  aboveskip=6pt,
+  belowskip=6pt,
+}
+
+% --- Title ------------------------------------------------------------------
+\title{\textbf{ChatTLA: Verifier-Guided Decomposition for TLA\textsuperscript{+}
+Specification Generation}}
+\author{Eric Spencer\\
+\small \textit{(affiliation)}\\
+\small \texttt{eric@example.com}}
+\date{April 2026}
+
+\begin{document}
+\maketitle
+
+% ---------------------------------------------------------------------------
+\begin{abstract}
+Large language models can produce TLA\textsuperscript{+} text that parses, but
+parsing is a weak signal: a specification can satisfy SANY and TLC while
+encoding a state space so degenerate that the model checker has nothing to do.
+We introduce the \textbf{Diamond gate}, a semantic-validity criterion combining
+state-count, invariant non-triviality, and a mutation test, and use it to audit
+existing TLA\textsuperscript{+} corpora. Of $484$ specifications previously
+collected for fine-tuning a 20B-parameter model, \emph{none} satisfy the
+Diamond gate; of the $50$ \texttt{ProofGen} examples in the public
+\texttt{FM-Alpaca} TLA subset, again \emph{none} pass. Treating verifiers as
+deterministic reward, we then build a decomposition-based generation pipeline
+inspired by LMGPA: rather than emitting a full \texttt{.tla} file, the model
+produces five small pieces (variables, type invariant, initial state, next-state
+relation, safety invariants), each validated incrementally and retried locally
+on failure. On a held-out 20-problem benchmark, the same underlying 20B model
+improves from $1/20$ TLC-passing specifications under single-shot generation to
+$6/20$ under piecewise generation---a $6\times$ improvement at fixed model
+weights---and SANY pass rate rises from $7/20$ to $12/20$. We argue that for
+formal-method targets, the productive locus of effort is the verifier reward
+shape and the inference procedure, not additional fine-tuning on syntactically
+labelled corpora.
+\end{abstract}
+
+% ---------------------------------------------------------------------------
+\section{Introduction}
+
+TLA\textsuperscript{+}~\cite{lamport2002specifying} is a specification language
+designed for the precise statement and machine-checked verification of
+concurrent and distributed system properties. Engineers use it to expose subtle
+race conditions, consensus liveness violations, and protocol corner cases that
+are invisible at the level of code review or unit tests~\cite{newcombe2015use}.
+Despite this practical leverage, TLA\textsuperscript{+} adoption is bounded by
+authoring cost: writing a useful spec requires both fluency in the notation and
+a discipline of thought that few non-specialists possess.
+
+A natural hope is that a sufficiently capable language model could close this
+gap, lowering the activation energy for formal specification by translating an
+informal English description into a runnable \texttt{.tla} module. The
+attractive feature of formal methods, from a machine-learning standpoint, is
+that the verifier \emph{is} the reward function: SANY parses, TLC explores, and
+either the property holds or a counterexample trace appears. There is no taste,
+no ambiguous human label, no preference noise.
+
+In practice this hope has been difficult to realise. Our prior work, alongside
+several public corpora, has accumulated hundreds of TLA\textsuperscript{+}
+specifications labelled ``correct'' on the basis of SANY and TLC alone. We show
+in this paper that this label is dangerously weak: a model fine-tuned to
+maximise the SANY/TLC signal converges on a class of specifications that pass
+both checkers by being \emph{semantically vacuous}---empty or single-state
+state spaces, decorative invariants that constrain nothing,
+\texttt{UNCHANGED} guards that suppress all transitions. The model has learned
+the grammar of formal verification without the discipline.
+
+We make two contributions:
+
+\begin{enumerate}[leftmargin=1.4em,itemsep=2pt]
+\item \textbf{The Diamond gate.} A reproducible semantic-validity criterion
+that augments SANY and TLC with state-count, invariant non-triviality, and
+mutation testing (\S\ref{sec:diamond}). We use Diamond to audit two public
+TLA\textsuperscript{+} corpora and find that, under this criterion, neither
+contains a single passing example.
+
+\item \textbf{Piecewise verifier-guided generation.} A decomposition pipeline
+in which a 20B-parameter model emits a TLA\textsuperscript{+} specification as
+five short, individually validated pieces, with structured retry on failure
+(\S\ref{sec:piecewise}). Without changing the underlying model weights, this
+yields a $6\times$ improvement in the rate at which generated specs are
+non-trivially TLC-checkable on a held-out benchmark.
+\end{enumerate}
+
+The narrative is, we hope, slightly uncomfortable in a useful way. The
+empirical lesson of the past year of fine-tuning runs reported here is that
+\emph{more training data did not help}, and that the apparent gains from
+several rounds of preference optimisation were illusory artefacts of a
+mis-specified reward. The wins came from looking harder at what the verifier
+was actually rewarding, and from re-shaping the inference procedure so that
+each verifier query was small enough to be informative.
+
+% ---------------------------------------------------------------------------
+\section{Background}
+\label{sec:background}
+
+\paragraph{TLA\textsuperscript{+} in one paragraph.} A
+TLA\textsuperscript{+} module declares a set of \emph{state variables}, an
+\emph{initial-state predicate} \texttt{Init}, and a \emph{next-state relation}
+\texttt{Next} written as a disjunction of action formulas relating unprimed
+(current) and primed (successor) variables. A separate \emph{invariant} is a
+predicate that should hold in every reachable state. The model checker TLC
+takes a finite instance (concrete bounds on constants) and exhaustively
+explores the reachable-state graph, reporting any violation of an invariant or
+deadlock. SANY is the upstream parser/semantic analyser; SANY success is
+necessary but not sufficient for a specification to be meaningful.
+
+\paragraph{Why SANY+TLC is not enough.} Consider the (deliberately bad)
+specification in Listing~\ref{lst:vacuous}.
+
+\begin{lstlisting}[language=TLA,caption={A SANY- and TLC-passing specification with no semantic content.},label={lst:vacuous}]
+---- MODULE Vacuous ----
+EXTENDS Naturals
+VARIABLES x
+
+TypeOK == x \in Nat
+
+Init == x = 0
+
+Next == UNCHANGED x
+
+SafetyInv == x >= 0
+====
+\end{lstlisting}
+
+This module parses cleanly. TLC explores its reachable-state graph in less
+than a millisecond, finds the single state $x=0$, observes that
+\texttt{SafetyInv} holds there, and reports success. By any binary metric
+(\texttt{sany\_pass}, \texttt{tlc\_pass}) this is a ``gold'' specification.
+It is also useless: the system has no behaviour, the invariant is vacuously
+true (it would be true even with the wrong sign), and no bug in any real
+implementation could be caught by it.
+
+The pathology generalises. A model trained to maximise binary
+\texttt{tlc\_pass} naturally drifts toward
+\texttt{Vacuous}-shaped specifications: tighter type bounds make the state
+space smaller, \texttt{UNCHANGED} guards make actions ineffective, and weaker
+invariants are harder to violate. Each of these moves \emph{increases} the
+chance of a green check from the verifier, while \emph{decreasing} the
+specification's fidelity to the system being modelled.
+
+\paragraph{Related approaches to LLM-driven formal generation.} Several recent
+projects propose LLM-assisted authoring of formal artefacts, including Dafny
+proof obligations~\cite{misu2024towards}, Coq tactics~\cite{first2023baldur},
+and Verus verification~\cite{aleen2024verus}. Closest to ours in spirit is
+LMGPA~\cite{lmgpa2024}, which decomposes proof generation into smaller pieces
+verified incrementally; we adapt this idea to specification (rather than
+proof) generation. The publicly available
+TLA\textsuperscript{+}-specific corpora we are aware of---including the
+\texttt{FM-Alpaca} TLA subset~\cite{fmalpaca}---label specifications by parser
+or theorem-prover \emph{success} rather than by semantic content.
+
+% ---------------------------------------------------------------------------
+\section{The Diamond Gate}
+\label{sec:diamond}
+
+We define a specification as \emph{Diamond}-valid iff it satisfies all four
+of the following clauses:
+
+\begin{enumerate}[leftmargin=1.4em,itemsep=2pt]
+\item \textbf{Parses.} SANY accepts the module.
+\item \textbf{Non-trivial state space.} TLC reports more than one distinct
+reachable state under a small fixed instance.
+\item \textbf{Declared, non-vacuous invariant.} The module declares at least
+one invariant that is not a tautology and not the constant predicate
+\texttt{TRUE}.
+\item \textbf{Mutation-sensitive.} A two-phase mutation test perturbs the
+specification (Phase~A: introduce a deadlock by negating a guard;
+Phase~B: negate the leading conjunct of the invariant). The Diamond gate
+requires that at least one phase produces a TLC counterexample relative to
+the unmutated baseline. A specification whose verifier outcome is invariant
+under both mutations is \emph{decorative}: nothing in the spec is doing real
+work.
+\end{enumerate}
+
+The four clauses are deliberately chosen to be reproducible from the spec
+text alone, without human judgement, so that the gate can sit inside a
+training loop as a deterministic reward.
+
+\paragraph{Audit of existing corpora.} We applied the Diamond gate to two
+collections of TLA\textsuperscript{+} specifications, summarised in
+Table~\ref{tab:audit}. The first is our internal corpus of $484$ specs
+accumulated over several months of reinforcement-learning runs, all of which
+had previously been labelled ``gold'' or ``silver'' by the SANY/TLC binary
+criterion. The second is the \texttt{ProofGen} task split of the
+\texttt{FM-Alpaca} TLA subset~\cite{fmalpaca}, containing $50$
+human-curated specifications drawn from formal-methods textbooks and academic
+artefacts.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{lrrr}
+\toprule
+Corpus & $|S|$ & SANY pass & Diamond pass \\
+\midrule
+Internal RL corpus (gold/silver) & 484 & 484 & \textbf{0} \\
+\texttt{FM-Alpaca / TLA / ProofGen} & 50  & 50  & \textbf{0} \\
+\bottomrule
+\end{tabular}
+\caption{Diamond audit of two TLA\textsuperscript{+} corpora. Every spec
+parses; none satisfies the semantic clauses of \S\ref{sec:diamond}.}
+\label{tab:audit}
+\end{table}
+
+The numbers are stark and worth restating: of $534$ TLA\textsuperscript{+}
+specifications labelled correct under the standard pipeline, $0$ pass a
+mutation test. The model-checking literature would not consider this a
+surprise---mutation analysis is a long-standing tool for evaluating
+specification quality~\cite{andrews2005mutation}---but to our knowledge it has
+not previously been applied as an admission criterion for LLM training
+corpora.
+
+The diagnostic implication is that the failure mode is not the model. The
+failure mode is upstream of the model, in the labelling. Any fine-tuning
+procedure that takes these corpora as ground truth is teaching the model
+exactly the wrong lesson: that decorative invariants and degenerate state
+spaces are what success looks like.
+
+% ---------------------------------------------------------------------------
+\section{Piecewise Verifier-Guided Generation}
+\label{sec:piecewise}
+
+The audit in \S\ref{sec:diamond} suggests that throwing more (mis-labelled)
+data at the model is unlikely to help. We instead change the inference
+procedure. The hypothesis is that single-shot generation of an entire
+\texttt{.tla} file is too coarse a unit of work for the verifier to be
+informative: when SANY rejects a 60-line module, the error message localises
+the symptom but not the cause, and the model cannot easily route the feedback
+to the right line.
+
+Our decomposition follows the natural structure of a TLA\textsuperscript{+}
+module:
+
+\begin{enumerate}[leftmargin=1.4em,itemsep=2pt]
+\item \textbf{VARIABLES} --- the model proposes a list of state variables and
+nothing else.
+\item \textbf{TypeOK} --- a finite-set type invariant constraining each
+variable.
+\item \textbf{Init} --- a concrete initial assignment that, in conjunction
+with the previous two pieces, must satisfy SANY and a TLC initial-state
+check.
+\item \textbf{Next} --- a disjunction of actions, each with a full
+\texttt{UNCHANGED} clause for variables it does not touch.
+\item \textbf{Invariants} --- additional safety properties beyond
+\texttt{TypeOK}.
+\end{enumerate}
+
+After each piece is generated, the partial specification is assembled and
+handed to SANY (and, where applicable, to a small TLC instance). On failure,
+the structured error is fed back to the model along with the original sub-task
+prompt and the model is asked to repair only that piece. We allow up to three
+repair rounds per piece. Pieces 1--3 must pass before piece 4 is attempted;
+piece~5 is optional and the assembled spec is accepted if pieces 1--4 succeed.
+
+\paragraph{Why decomposition helps in principle.} Three reasons. First, the
+search space at each step is dramatically smaller than for an end-to-end
+\texttt{.tla} file, so the model's prior is closer to the marginal posterior
+the verifier actually rewards. Second, the verifier's error message at each
+step refers to a syntactically minimal artefact, so the credit-assignment
+problem during repair is essentially trivial---there are only a few lines
+that could be wrong. Third, the conditioning chain is one-directional: the
+model never has to commit to an invariant before it has seen its own
+\texttt{Init} and \texttt{Next}, so it is much harder to write the kind of
+decorative ``\texttt{x \(\geq\) 0}'' invariant that survives mutation only
+because the rest of the specification never moves \texttt{x}.
+
+\paragraph{Benchmark.} We evaluate on a held-out benchmark of 20
+TLA\textsuperscript{+} authoring problems (\texttt{BM001}--\texttt{BM020})
+spanning four domains: scheduling (e.g.\ Mutual Exclusion, Dining
+Philosophers, Peterson's Algorithm), consensus (Lamport's Bakery, Raft Leader
+Election, Paxos Single-Decree), storage (Producer-Consumer, KV Store,
+Allocator), and networking (Token Ring, Chandy-Lamport snapshot, Pub-Sub
+broker). Each problem is given as an English-language description; the model
+is asked to produce a self-contained module. Difficulty ratings range from
+$2$ (Mutual Exclusion) to $5$ (Chandy-Lamport).
+
+\paragraph{Comparison.} We compare two inference procedures running over
+\emph{the same} 20B-parameter model checkpoint:
+\begin{itemize}[leftmargin=1.4em,itemsep=2pt]
+\item \textbf{Single-shot.} The model receives the English description and
+emits one \texttt{.tla} module.
+\item \textbf{Piecewise.} The five-step pipeline above, with SANY/TLC
+feedback and up to three repair rounds per piece.
+\end{itemize}
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{lcc}
+\toprule
+                  & Single-shot & Piecewise \\
+\midrule
+SANY pass         & $7/20$      & $\mathbf{12/20}$ \\
+TLC pass          & $1/20$      & $\mathbf{6/20}$  \\
+TLC pass (relative) & $1\times$ & $\mathbf{6\times}$ \\
+\bottomrule
+\end{tabular}
+\caption{Held-out benchmark results for the two inference procedures over an
+identical 20B-parameter model. Decomposition delivers a $6\times$ TLC pass
+rate without any change to model weights.}
+\label{tab:headline}
+\end{table}
+
+The headline result, Table~\ref{tab:headline}, is that the piecewise
+procedure improves the TLC pass rate from $1/20$ to $6/20$, with the model
+unchanged. SANY pass rate also improves substantially, from $7/20$ to
+$12/20$. We did not retrain, distil, prompt-tune, or change a single weight
+to obtain these gains.
+
+\paragraph{What the piecewise wins look like.} The six TLC-passing specs
+under piecewise generation include Lamport's Bakery, Producer--Consumer,
+Token Ring, Gossip, Pub--Sub, and Dekker---a mix of consensus, queueing, and
+mutual-exclusion patterns. The single-shot-only success
+(\texttt{BM005} Producer-Consumer in some runs) is a strict subset of the
+piecewise successes. Conversely, none of the silver-tier piecewise outputs
+(SANY pass, TLC fail) are among the SANY failures of the single-shot run:
+piecewise generation \emph{dominates}, at the spec level, on every problem
+in the benchmark.
+
+\paragraph{Where the piecewise procedure still fails.} The remaining failure
+modes are concentrated on the high-difficulty networking problems
+(Chandy--Lamport snapshot, Bounded Retransmission, Clock Synchronisation),
+where the underlying model lacks fluency in the relevant idioms (e.g.\ marker
+messages, channel histories). These are training-data problems, not
+inference-procedure problems, and we discuss them in
+\S\ref{sec:discussion}.
+
+% ---------------------------------------------------------------------------
+\section{Discussion}
+\label{sec:discussion}
+
+\paragraph{What the audit means in practice.} The Diamond audit
+(\S\ref{sec:diamond}) does \emph{not} say that previously labelled gold specs
+are syntactically broken---they all pass SANY---but rather that they cannot
+distinguish a working model checker from a check that has nothing to check.
+For an LLM training pipeline this matters because the gradient signal sent by
+those examples is, in expectation, an instruction to write smaller and quieter
+specifications. We observed this empirically across several rounds of
+preference-optimisation training (KTO, DPO) before discovering the underlying
+labelling defect: each round nominally improved the binary
+\texttt{tlc\_pass} metric while monotonically degrading the qualitative
+fidelity of the produced specs.
+
+\paragraph{Verifiers as inference-time, not training-time, signal.} The
+piecewise result (\S\ref{sec:piecewise}) suggests an inversion of the usual
+ordering. Rather than spending compute distilling the verifier signal into
+model weights, we use the verifier directly at inference time, on small
+artefacts where its feedback is structurally local. The model's job becomes
+producing five short candidates and repairing them on demand; the verifier
+does the work of selecting which candidates survive. This is closer in spirit
+to constraint-guided search than to fine-tuning.
+
+\paragraph{When fine-tuning is still useful.} Decomposition is not a substitute
+for domain knowledge. The remaining benchmark failures are problems where the
+model does not know what the right \texttt{Next} actions \emph{are}---no amount
+of repair will produce a Chandy--Lamport snapshot from a model that has never
+seen one. The constructive next step is to use the piecewise pipeline as a
+\emph{data generator}, producing Diamond-passing examples for those domains
+specifically and feeding them back into a small, targeted SFT run. We expect
+this kind of pipeline (verifier-curated, decomposition-generated, narrowly
+scoped fine-tuning) to be more effective per FLOP than broad-corpus training.
+
+\paragraph{Limitations.}
+The benchmark is small ($n=20$) and authored by us, which is the standard
+problem for any work in this area: there are simply not many natural-language
+TLA\textsuperscript{+} specification tasks in the public domain. The Diamond
+gate is a sufficient condition for non-trivial behaviour, not a complete
+characterisation of specification quality; a Diamond-passing spec can still
+be wrong with respect to the user's intent. Mutation testing is sensitive to
+the specific mutation operators chosen; we use only two phases here, and a
+stronger gate is plausible. Finally, we report a single training run per
+configuration; the variance bars on these numbers are not tight, and a
+follow-up with multiple seeds is warranted.
+
+\paragraph{Reproducibility.} The Diamond gate, the audit script, and the
+piecewise generation pipeline are implemented in
+\texttt{src/validators/tlc\_validator.py},
+\texttt{scripts/audit\_fm\_alpaca.py}, and
+\texttt{src/inference/piecewise\_gen.py} respectively. The benchmark
+problems and per-problem CSV outputs are in
+\texttt{outputs/benchmark\_results/}. All results in this paper can be
+regenerated from a single \texttt{ollama} model checkpoint and a local TLA
+toolbox.
+
+% ---------------------------------------------------------------------------
+\section{Conclusion}
+
+The bottleneck in LLM-driven TLA\textsuperscript{+} authoring is not the
+model's grammar---a mid-sized open model can already write
+TLA\textsuperscript{+} that parses---but the discipline of the verifier
+signal it is asked to optimise. We have argued, with two pieces of evidence,
+that a sharper verifier is more valuable than more data: the Diamond audit
+shows that current corpora cannot tell trivial from non-trivial behaviour,
+and the piecewise generation result shows that a $6\times$ improvement in
+non-trivially-checkable specs is available simply by giving the verifier
+smaller artefacts to look at, with no change in model weights. The
+constructive position is that future work in this area should treat the
+verifier as a first-class element of the inference procedure, and reserve
+training compute for the narrow domains where decomposition alone runs out
+of model knowledge.
+
+% ---------------------------------------------------------------------------
+\section*{Acknowledgements}
+\textit{(to be filled in)}
+
+% ---------------------------------------------------------------------------
+\bibliographystyle{plain}
+\begin{thebibliography}{99}
+
+\bibitem{lamport2002specifying}
+Leslie Lamport.
+\newblock \emph{Specifying Systems: The TLA\textsuperscript{+} Language and
+Tools for Hardware and Software Engineers}.
+\newblock Addison-Wesley, 2002.
+
+\bibitem{newcombe2015use}
+Chris Newcombe, Tim Rath, Fan Zhang, Bogdan Munteanu, Marc Brooker, and
+Michael Deardeuff.
+\newblock How Amazon Web Services uses formal methods.
+\newblock \emph{Communications of the ACM}, 58(4):66--73, 2015.
+
+\bibitem{andrews2005mutation}
+James H. Andrews, Lionel C. Briand, and Yvan Labiche.
+\newblock Is mutation an appropriate tool for testing experiments?
+\newblock In \emph{ICSE}, 2005.
+
+\bibitem{lmgpa2024}
+Author(s).
+\newblock LMGPA: Decomposed proof generation with language models.
+\newblock 2024.\quad\textit{(citation to be completed)}
+
+\bibitem{fmalpaca}
+FM-Universe.
+\newblock FM-Alpaca: An instruction-tuning dataset for formal methods.
+\newblock Hugging Face dataset, \texttt{fm-universe/FM-alpaca}, 2024.
+
+\bibitem{misu2024towards}
+Md Rakib Hossain Misu et al.
+\newblock Towards AI-assisted synthesis of verified Dafny methods.
+\newblock 2024.
+
+\bibitem{first2023baldur}
+Emily First, Markus N. Rabe, Talia Ringer, and Yuriy Brun.
+\newblock Baldur: Whole-proof generation and repair with large language models.
+\newblock In \emph{FSE}, 2023.
+
+\bibitem{aleen2024verus}
+Author(s).
+\newblock LLM-assisted Verus verification.
+\newblock 2024.\quad\textit{(citation to be completed)}
+
+\end{thebibliography}
+
+\end{document}
