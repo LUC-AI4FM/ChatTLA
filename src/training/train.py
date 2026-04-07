@@ -89,7 +89,13 @@ class ClearCacheCallback(TrainerCallback):
 
 
 _REPO_ROOT    = Path(__file__).resolve().parents[2]
-_TRAIN_JSONL  = _REPO_ROOT / "data" / "processed" / "train.jsonl"
+# diamond_sft_v3.jsonl is the post-2026-04-07 SFT corpus: existing train.jsonl
+# (713 records) + the 170 new diamond-gen-v2 specs in chat-message format,
+# with the 170 new specs oversampled 2x to bias the gradient toward the
+# newly-introduced algorithm families. Built by scripts/build_diamond_sft_v3.py.
+# Holdout (data/processed/diamond_eval_holdout.jsonl) is excluded by module
+# name with a hard assertion at build time.
+_TRAIN_JSONL  = _REPO_ROOT / "data" / "processed" / "diamond_sft_v3.jsonl"
 _EVAL_JSONL   = _REPO_ROOT / "data" / "processed" / "eval.jsonl"
 _PROVER_TRAIN_JSONL = _REPO_ROOT / "data" / "processed" / "prover_train.jsonl"
 _PROVER_EVAL_JSONL  = _REPO_ROOT / "data" / "processed" / "prover_eval.jsonl"
