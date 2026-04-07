@@ -40,14 +40,14 @@ def to_messages(chunk: dict) -> list[dict]:
         f"Write the TLAPS proof for the final theorem in the following module.\n\n"
         f"```tla\n{chunk['preamble']}\n{chunk['statement']}\n```"
     )
+    # NOTE: deliberately omit the "analysis" channel. With <60 training rows
+    # and gpt-oss's pretraining priors, including an analysis channel teaches
+    # the model to expand it into long unbounded prose at inference time,
+    # consuming the entire token budget before the proof ever starts.
+    # Train on developer + user → final-only.
     return [
         {"role": "developer", "content": DEVELOPER_PROMPT},
         {"role": "user", "content": user_content},
-        {
-            "role": "assistant",
-            "channel": "analysis",
-            "content": "I'll write a TLAPS proof using induction over Spec, breaking the inductive case into Init, stuttering, and Next.",
-        },
         {
             "role": "assistant",
             "channel": "final",

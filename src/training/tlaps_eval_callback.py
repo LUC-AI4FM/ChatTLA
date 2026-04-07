@@ -221,9 +221,11 @@ class TLAPSEvalCallback(TrainerCallback):
             print(f"[TLAPSEvalCallback] generation error: {exc}")
             return ""
 
-        # The model may emit a channel-tagged response; strip everything before
-        # the proof body and stop at the closing ==== if present.
-        # Heuristic: take from the first <n> bullet to the end.
+        # Strip harmony "analysis" channel prose. Channels render inline as
+        # `analysis...final...`, so peel off everything up to and including
+        # "final" before extracting the first <n> bullet.
+        if "final" in text:
+            text = text[text.index("final") + len("final"):]
         m = re.search(r"(<\d+>.*)", text, re.DOTALL)
         return m.group(1).strip() if m else text.strip()
 
