@@ -54,7 +54,7 @@ A Year of Failed Optimisations and What Finally Worked}
 \author{Eric Spencer\\
 \small \textit{(Loyola University Chicago)}\\
 \small \texttt{espencer2@luc.edu}}
-\date{April 7, 2026}
+\date{April 7, 2026 (revised)}
 
 \begin{document}
 \maketitle
@@ -65,9 +65,11 @@ We report on a year of fine-tuning OpenAI's open-weight \texttt{gpt-oss:20b}
 model for TLA\textsuperscript{+} specification generation. Across more than
 two hundred reinforcement-learning cycles, four supervised fine-tuning
 regimes (broad SFT, incremental SFT, KTO, DPO), an automated rebuild,
-deploy, and rollback pipeline, and $484$ verifier-labelled
+deploy, and rollback pipeline, $484$ verifier-labelled
 training examples in the augmented archive (of which $73$ pass the
-Diamond gate), the trajectory of the held-out 20-problem benchmark is
+Diamond gate), and a follow-on round of $200$ purpose-generated specs
+across ten algorithm families that pass the gate at a $200/200$
+yield, the trajectory of the held-out 20-problem benchmark is
 striking for how much it does \emph{not} reward the things we did. Our
 strongest end-to-end checkpoint reaches $9/20$ SANY and $5/20$ TLC; our
 weakest catastrophically forgets the base model and falls to $0/20$ on
@@ -115,6 +117,17 @@ headline number---we already have one---but to make the audit trail
 visible: which fine-tuning runs helped, which hurt, and what the failures
 seem to imply about the shape of the problem.
 
+This revision (April 7, 2026) adds \S\ref{sec:diamond-gen-v2}, which
+documents a second-generation Diamond corpus produced by topic-conditioned
+multi-agent generation rather than by post-hoc rejection sampling against
+a teacher. The new method shifts the binding constraint from
+\emph{teacher access} to \emph{topic curriculum coverage}, raises the
+gate-pass yield from the $\sim\!15\%$ achievable under rejection sampling
+to $200/200$ on its first run, and is the substrate for the
+\texttt{diamond-gen-v2} fine-tune now in flight against the same
+$20$-problem benchmark and a separately-carved $30$-problem held-out
+diamond eval.
+
 The summary, before any of the detail: between version~6 and version~14
 of the model, the held-out TLC pass count moved from $1/20$ to $5/20$ to
 $0/20$ and back, depending on which lever we pulled. The single
@@ -140,6 +153,10 @@ verbatim from \texttt{outputs/benchmark\_results\_*.csv}.
 (\S\ref{sec:lessons}): catastrophic forgetting on small corpora, the
 binary-reward vacuity trap, the unreliability of quick-eval signal, and
 the value of an automated rollback gate.
+\item A multi-agent topic-curriculum generator
+(\S\ref{sec:diamond-gen-v2}) that produces $200$ Diamond-passing specs
+across ten algorithm families at a $200/200$ yield, together with the
+holdout-safe SFT corpus and incremental fine-tune that follow from it.
 \end{enumerate}
 
 % ---------------------------------------------------------------------------
@@ -306,6 +323,10 @@ v13$_R$ & 2026-04-04 & v13 restored from GGUF backup        & 9/20 & 5/20 & roll
 \midrule
 diamond-SFT & 2026-04-06 & 720 ex, 73 Diamond, 3 ep, lr 5e-5 & 8/20 & 4/20 & semantic recovery \\
 piecewise   & 2026-04-06 & v13$_R$ + 5-step decomposition   & \textbf{12/20} & \textbf{6/20} & inference-time \\
+\midrule
+\multicolumn{6}{l}{\emph{Diamond-Gen v2 (\S\ref{sec:diamond-gen-v2}), 30-spec held-out diamond eval}} \\
+deployed pre & 2026-04-07 & v13$_R$, no RAG, 30 holdout      & ---  & 4/30 (3 dia) & baseline \\
+gen-v2 SFT  & 2026-04-07 & 1053 ex (713+170$\times$2), 3 ep, lr 5e-5 & --- & \emph{in flight} & ETA $\sim\!7.5$h \\
 \bottomrule
 \end{tabular}
 \caption{Held-out 20-problem benchmark across model versions. Counts
@@ -319,7 +340,14 @@ TLC), \texttt{diamond-SFT} from
 ($8$ SANY, $4$ TLC), and the piecewise row from
 \texttt{benchmark\_results/piecewise\_first\_run\_20260406.csv} ($12$
 SANY, $6$ TLC) which uses the same underlying \texttt{v13}-restored
-checkpoint as its single-shot baseline.}
+checkpoint as its single-shot baseline. The bottom block reports the
+two Diamond-Gen v2 measurements (\S\ref{sec:diamond-gen-v2}) which are
+on a separate $30$-spec held-out diamond benchmark and are not directly
+comparable to the $20$-problem TLC counts above; the
+\texttt{deployed pre} row is the pre-train baseline measured before
+launching the v2 SFT and is read directly from
+\texttt{outputs/eval/holdout\_pre.json} ($4$ gold of which $3$ pass the
+Diamond gate, $11$ silver, $15$ bronze).}
 \label{tab:run-history}
 \end{table}
 
@@ -557,6 +585,18 @@ Train incrementally on small, semantically audited corpora; generate
 through verifier-guided decomposition; treat broad fine-tuning as a
 last resort.
 
+\paragraph{Diamond-Gen v2 in one paragraph.} The current
+operating position above was written before the
+\S\ref{sec:diamond-gen-v2} round, in which a multi-agent
+topic-curriculum generator produced $200$ Diamond-passing specs at a
+$200/200$ yield and the resulting incremental SFT is at the time of
+writing in flight. The Diamond-Gen v2 result does not change the
+Diamond-Filtered SFT recipe described above; it changes the
+\emph{source} of the Diamond corpus from teacher rejection sampling at
+$\sim\!15\%$ yield to a directed generator at $100\%$, and removes
+``access to a gate-passing corpus'' from the list of binding
+constraints.
+
 \paragraph{Related work in two paragraphs.} Our negative results
 echo a long line of work on catastrophic forgetting in fine-tuning
 \cite{kirkpatrick2017ewc,lopez2017gem}: even moderate-LR SFT on a
@@ -622,6 +662,219 @@ deltas we treat as suggestive (\texttt{v8} versus \texttt{v9}) are
 not.
 
 % ---------------------------------------------------------------------------
+\section{Diamond-Gen v2: Topic-Curriculum Multi-Agent Generation}
+\label{sec:diamond-gen-v2}
+
+The Diamond-Filtered SFT recipe of \S\ref{sec:diamond-sft} is
+bottlenecked by the keep rate of its rejection sampler. Out of $484$
+specs in the augmented archive, $73$ pass the Diamond gate; the keep
+rate on freshly proposed teacher candidates is similar. Improving the
+recipe therefore turns on either (a) raising the rejection-sampler
+keep rate or (b) replacing the rejection sampler with a directed
+generator. The round documented in this section takes the second path.
+
+\paragraph{Topic curriculum.} We hand-curate a $200$-topic seed list
+($10$ algorithm families $\times$ $20$ topics each) covering
+concurrency primitives, classical mutual-exclusion algorithms,
+consensus and election protocols, point-to-point and broadcast
+communication, bounded data structures, transactional and replicated
+storage, scheduling and resource allocation, memory hierarchies and
+cache coherence, workflow and state-machine FSMs, and classical
+puzzles. Each topic specifies a target module name, a one-paragraph
+problem description, and (where applicable) the canonical algorithm
+the spec must implement faithfully (e.g.\ \emph{Peterson, two-process,
+flag and turn}; \emph{Lamport bakery, choosing\,/\,number arrays};
+\emph{single-decree Paxos, prepare\,/\,promise\,/\,accept ballots}). The
+seed list lives in \texttt{data/diamond\_gen\_topics.json}.
+
+\paragraph{Per-batch agents.} We dispatch the $10$ batches in parallel
+to $10$ instances of a strong generation model (Claude Opus 4.6, $1$M
+context, called as Claude Code subagents). Each agent receives only
+its own $20$-topic batch, the path to a thin validator CLI
+(\texttt{scripts/validate\_diamond\_cli.py}) that wraps
+\texttt{validate\_diamond} from
+\texttt{scripts/diamond\_sft\_gen.py}, and a strict prompt encoding
+(i)~the four Diamond clauses, (ii)~a required spec skeleton (file
+basename = module, single \texttt{TypeOK} that conjoins the strong
+safety property), (iii)~a hard $\le\!200$ reachable-state ceiling so
+TLC clears the $60\,\text{s}$ timeout, and (iv)~a per-topic budget of
+up to six retry-on-failure attempts. The agent runs an inner loop:
+write spec $\rightarrow$ shell out to the validator $\rightarrow$ read
+the JSON verdict $\rightarrow$ on \texttt{bronze} fix the SANY error,
+on \texttt{silver} shrink the constants or add a fairness condition,
+on \texttt{gold-not-diamond} strengthen the safety conjunct or expand
+the action set. The agent emits a $20$-record JSONL when its batch
+completes.
+
+\paragraph{Independent re-validation.} Once all ten batches return,
+\texttt{scripts/aggregate\_diamond\_gen.py} re-runs the Diamond
+validator on every spec from a clean process pool ($8$ workers) and
+writes the authoritative aggregate
+\texttt{outputs/diamond\_gen/\\diamond\_generated.jsonl}. The clean
+re-validation deliberately does not trust the per-agent self-reports.
+On the $200$-spec round documented here, the re-validation completed
+in $68\,\text{s}$ and the result was $200/200$ at gold tier with all
+four Diamond clauses satisfied. State-space sizes ranged from
+$4$ (TricolorGc) to $181{,}440$ (FifteenPuzzle, $3{\times}3$ blank);
+median $\sim\!42$. No batch had any failures.
+
+\paragraph{Held-out eval split.} The Diamond-Filtered SFT round of
+\S\ref{sec:diamond-sft} did not carve a held-out eval set, which is
+fine for benchmarking against the $20$-problem suite of
+\S\ref{sec:runs} but does not let us measure whether the new
+generator is teaching the smaller fine-tuned model anything beyond the
+specs it has seen. The v2 round therefore deterministically holds out
+the first three specs (sorted by module name) from each of the ten
+batches, giving a $30$-spec diamond eval at
+\texttt{data/processed/diamond\_eval\_holdout.jsonl}. The carve script
+(\texttt{scripts/carve\_diamond\_holdout.py}) loads the existing
+\texttt{train.jsonl} first and excludes any module that already
+appears there from the holdout pool, which caught \texttt{Barrier} as
+a leak (\texttt{Barrier} was already in the v13 training set, so its
+pre-train baseline would have been biased) and rotated it for
+\texttt{CountDownLatch}. The remaining $170$ generated specs go into
+the SFT training pool.
+
+\paragraph{Hand-written reasoning rationales.} The Diamond-Filtered
+SFT records of \S\ref{sec:diamond-sft} have a four-turn chat structure
+(developer prompt $\rightarrow$ user request $\rightarrow$ assistant
+design rationale $\rightarrow$ assistant spec). The rationale turn is
+load-bearing: it teaches the student model to plan the variable set
+and the safety argument before emitting the module. Generating
+$170$ rationales by template extraction does not work---a first attempt
+that string-formatted rationales from spec metadata produced $170$
+records with the same skeleton, which would teach the student to
+produce that skeleton. We therefore dispatch the rationale generation
+as four parallel agents with strict no-template prompts and $43$
+or $42$ modules each, with a per-batch sanity check that no two
+rationales share their first $60$ characters and that every rationale
+falls in a $600$--$1500$-character window. The four batches return
+$170$ unique-prefix rationales (mean length $1039$, range $813$--$1287$)
+that read as per-spec design memos rather than as filled-in templates.
+
+\paragraph{Mixed SFT corpus.} The final training corpus
+(\texttt{data/processed/diamond\_sft\_v3.jsonl}, built by
+\texttt{scripts/build\_diamond\_sft\_v3.py}) consists of the existing
+$713$-record \texttt{train.jsonl} that the v13 checkpoint was trained
+on, plus the $170$ new diamond-gen-v2 specs in chat-message format
+oversampled $2\!\times$, for $1053$ records total. The build script
+hard-asserts that no record contains any of the $30$ holdout module
+names anywhere in its assistant turns; running the same check
+externally on the final file confirms zero leaks. Oversampling $2\!\times$
+is a deliberate compromise: pure incremental training on only the
+$170$ new specs risks catastrophic forgetting on the categories the
+$713$-record base covers, while training on the union without
+oversampling dilutes the gradient contribution of the new
+algorithm-family diversity below $20\%$ of the corpus.
+
+\paragraph{Incremental SFT recipe.} The fine-tune is run on top of the
+deployed merged checkpoint (\texttt{outputs/merged\_model}, which
+\emph{is} v13 + checkpoint-131 LoRA already merged), with a fresh
+LoRA adapter, $3$ epochs, learning rate $5\!\times\!10^{-5}$, max
+sequence length $4096$, effective batch size $8$ (per-device $2$ over
+two GPUs $\times$ $4$ gradient accumulation), bf16, on the same
+$2{\times}$RTX 8000 hardware as the rest of the paper. The
+\texttt{--resume outputs/checkpoints/checkpoint-131} path that one
+would normally use to keep the same LoRA trajectory is broken on
+PyTorch 2.6 because the saved \texttt{rng\_state.pth} contains numpy
+globals that the new \texttt{weights\_only=True} default in
+\texttt{torch.load} refuses to unpickle; the
+\texttt{--base-model outputs/merged\_model} path is functionally
+equivalent (same starting weights) and avoids the resume-state
+machinery entirely. The total schedule is $396$ optimisation steps,
+estimated wall clock $\sim\!7.5\,\text{h}$ on the trainer's
+bf16-dequantised gpt-oss MoE.
+
+\paragraph{Pre-train baseline on the held-out diamond eval.} Before
+launching the SFT, we measure the deployed v13$_R$ checkpoint on the
+$30$-spec held-out diamond eval with RAG disabled. The script
+(\texttt{scripts/eval\_diamond\_holdout.py}) prompts the deployed
+model with each topic description, runs the generated module through
+the same Diamond validator used at corpus build time, and tallies
+tier counts. The baseline result is $4/30$ at gold tier of which
+$3/30$ pass the full Diamond gate---i.e.\ $10\%$ Diamond pass rate on
+problems the deployed model has not seen---against $11/30$ silver
+(SANY-clean but TLC could not run) and $15/30$ bronze (SANY-fail).
+This is the bar the v2 fine-tune has to beat to be deployed as a
+\texttt{chattla:20b-v2} replacement for the live tag.
+
+\paragraph{Decision rule.} If the post-train v2 model on the same
+$30$-spec eval beats $3/30$ Diamond by a clear margin (we use
+``$\ge\!8/30$, with the $11$ baseline-silver problems breaking
+predominantly toward gold rather than toward bronze'' as the
+operational definition), the new adapter is merged through the
+existing
+\texttt{deploy\_diamond\_model.sh} pipeline and re-tagged
+\texttt{chattla:20b-v2}. If it does not, the corpus is not the
+binding constraint and the next lever is the recipe (LR schedule,
+oversample weight, max sequence length, fairness conjuncts in the
+training rationale) rather than more data. The post-train comparison
+will be filled into Table~\ref{tab:run-history} when the run completes;
+the in-flight \texttt{gen-v2 SFT} row records the schedule, the corpus
+size, and the pre-train baseline so a reader of this revision can
+reproduce the experiment without waiting for the post-train number.
+
+\paragraph{What the new method changes about the binding constraint.}
+The Diamond-Filtered SFT recipe of \S\ref{sec:diamond-sft} is
+constrained by access to a teacher model strong enough to propose
+gate-passing candidates at any reasonable rate, and---once such a
+teacher exists---by the proportion of its outputs that the gate
+accepts. Both constraints translate into a fixed pool size, around
+$73$ specs in the round documented in \S\ref{sec:diamond-sft}, plus
+whatever else the teacher generates between rebuilds. The Diamond-Gen
+v2 method removes both constraints: the topic curriculum tells the
+generator \emph{what} to write rather than waiting for the gate to
+filter what comes back, and the per-topic retry budget lets the
+generator iterate on its own validator output until each spec passes
+or a fixed budget is exhausted. The pool size becomes a function of
+how many topics the curators can write down rather than how many
+candidates a teacher can generate, and the binding constraint shifts
+from \emph{teacher access} to \emph{topic coverage and per-agent retry
+budget}. Empirically, on the $200$-topic round documented here, the
+gate-pass yield was $200/200$ on the first run, the wall clock to
+generate and re-validate the entire corpus was approximately one hour
+across ten parallel agents, and no topic exhausted its six-retry
+budget.
+
+\paragraph{Why retry inside the generator instead of outside it.}
+There is a tempting middle path in which a single generator emits
+many candidates per topic and the validator filters them downstream,
+which is closer to the rejection-sampler shape of
+\S\ref{sec:diamond-sft}. We do not take that path because the
+information that the validator returns is rich---tier, distinct-state
+count, mutation outcome, specific SANY error string---and feeding it
+\emph{back into the generator} as input to its next attempt is
+strictly more informative than treating each candidate as
+independent. Empirically, the agents that get a \texttt{tier=silver}
+verdict on attempt $1$ shrink their constants on attempt $2$; the
+agents that get \texttt{trivial\_invariant=true} strengthen the
+safety conjunct on attempt $2$; the agents that get a SANY parse
+error correct the specific token on attempt $2$. Most topics resolved
+within two attempts; the longest chains we observed used four. A
+rejection sampler that discards failed candidates would have to
+re-discover the same fixes from scratch on every retry.
+
+\paragraph{Limitations of the v2 method.} Three caveats apply.
+\emph{First}, the generator is a single underlying model. Every spec
+in the v2 corpus reflects Claude Opus 4.6's idiom (history-flag
+encoding for transitive safety properties, \texttt{TypeOK} as the
+single named invariant the auto-generated cfg picks up,
+\texttt{Done}\,/\,\texttt{Reset} self-stutter actions to dodge TLC's
+default deadlock check). The student model trained on this corpus
+will inherit those idioms; whether they generalise to TLA+ written in
+other styles is not yet measured. \emph{Second}, the topic curriculum
+is hand-curated, which is a labour cost the rejection-sampler
+methodology does not have. Scaling beyond $200$ specs without
+diminishing returns will likely require either a larger curated topic
+list (cheap but bounded by curator effort) or a generator that
+proposes new topics by perturbing existing ones in
+algorithm-faithful ways (an open question). \emph{Third}, the
+per-topic budget cap of six attempts is arbitrary; we set it high
+enough that no topic in the $200$-spec round hit the cap, but a
+harder topic distribution might. We do not yet know the failure mode
+of an agent that exhausts its budget in the middle of a batch.
+
+% ---------------------------------------------------------------------------
 \section{Conclusion}
 
 A year of fine-tuning a $20$B open model for TLA\textsuperscript{+}
@@ -640,6 +893,19 @@ and reproducible, and that is the point. For low-resource formal
 languages with deterministic verifiers, the leverage is in the shape
 of the reward and the structure of the inference, not in the volume
 of supervised data.
+
+The April 7 revision adds one further refinement
+(\S\ref{sec:diamond-gen-v2}): when the Diamond pool itself is the
+binding constraint, a topic-curriculum multi-agent generator that
+calls the validator from inside its own retry loop produces
+gate-passing specs at $200/200$ yield rather than $\sim\!15\%$, shifts
+the binding constraint from teacher access to topic coverage, and
+gives the incremental fine-tune a $\sim\!4\!\times$ larger
+algorithm-family-diverse corpus to train on. Whether the resulting
+post-train checkpoint actually clears the held-out diamond eval by a
+margin worth deploying is the open question that the
+\texttt{gen-v2 SFT} run in Table~\ref{tab:run-history} will answer
+when it lands.
 
 % ---------------------------------------------------------------------------
 \bibliographystyle{plain}
