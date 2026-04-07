@@ -1,0 +1,606 @@
+% ChatTLA: A Year of Fine-Tuning a 20B Open Model on TLA+
+% Companion paper to chattla_paper.tex.
+% Single-file LaTeX source — paste directly into Overleaf (article class).
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{booktabs}
+\usepackage{microtype}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{graphicx}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\usepackage{url}
+\usepackage{caption}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepackage{array}
+
+% --- TLA+ listing style -----------------------------------------------------
+\definecolor{kwblue}{RGB}{0,0,180}
+\definecolor{cmgray}{RGB}{120,120,120}
+\definecolor{strgreen}{RGB}{0,120,0}
+\lstdefinelanguage{TLA}{
+  morekeywords={MODULE, EXTENDS, VARIABLES, CONSTANT, CONSTANTS, ASSUME,
+                THEOREM, LEMMA, PROOF, BY, DEF, DEFS, EXCEPT, IF, THEN, ELSE,
+                LET, IN, CASE, OTHER, INSTANCE, LOCAL, UNCHANGED,
+                ENABLED, CHOOSE, SUBSET, UNION, DOMAIN, TRUE, FALSE, BOOLEAN,
+                Init, Next, Spec, TypeOK, Inv},
+  sensitive=true,
+  morecomment=[l]{\\*},
+  morecomment=[s]{(*}{*)},
+  morestring=[b]",
+}
+\lstset{
+  basicstyle=\ttfamily\footnotesize,
+  keywordstyle=\color{kwblue}\bfseries,
+  commentstyle=\color{cmgray}\itshape,
+  stringstyle=\color{strgreen},
+  columns=fullflexible,
+  showstringspaces=false,
+  breaklines=true,
+  frame=single,
+  framerule=0.3pt,
+  framesep=4pt,
+  xleftmargin=6pt,
+  xrightmargin=6pt,
+  aboveskip=6pt,
+  belowskip=6pt,
+}
+
+% --- Title ------------------------------------------------------------------
+\title{Fine-Tuning a 20B Open Model for TLA\textsuperscript{+}\\
+A Year of Failed Optimisations and What Finally Worked}
+\author{Eric Spencer\\
+\small \textit{(Loyola University Chicago)}\\
+\small \texttt{espencer2@luc.edu}}
+\date{April 7, 2026}
+
+\begin{document}
+\maketitle
+
+% ---------------------------------------------------------------------------
+\begin{abstract}
+We report on a year of fine-tuning OpenAI's open-weight \texttt{gpt-oss:20b}
+model for TLA\textsuperscript{+} specification generation. Across more than
+two hundred reinforcement-learning cycles, four supervised fine-tuning
+regimes (broad SFT, incremental SFT, KTO, DPO), an automated rebuild,
+deploy, and rollback pipeline, and roughly $480$ verifier-labelled
+training examples, the trajectory of the held-out 20-problem benchmark is
+striking for how much it does \emph{not} reward the things we did. Our
+strongest end-to-end checkpoint reaches $9/20$ SANY and $5/20$ TLC; our
+weakest catastrophically forgets the base model and falls to $0/20$ on
+both. The interesting structure is in the failures: every time we trained
+broadly on a small corpus from scratch the loop knowledge collapsed; every
+time we used preference optimisation against a binary verifier reward, the
+model drifted toward semantically vacuous specifications. The eventual win
+came from inverting the usual pipeline---using verifiers at inference time
+through decomposition rather than at training time through preference
+loss---and reserving fine-tuning for narrow, rejection-sampled, semantically
+audited data. This paper documents the architecture of the training stack
+(\S\ref{sec:arch}), the chronological record of the fine-tuning runs and
+their benchmark deltas (\S\ref{sec:runs}), the four lessons that the
+log files seem to teach (\S\ref{sec:lessons}), and the current
+Diamond-filtered SFT recipe (\S\ref{sec:diamond-sft}). It is the
+companion to our methods paper on the Diamond gate and piecewise
+generation~\cite{spencer2026chattla}, which should be read first; here
+we give the engineering side of the same story.
+\end{abstract}
+
+% ---------------------------------------------------------------------------
+\section{Introduction}
+
+TLA\textsuperscript{+}~\cite{lamport2002specifying} sits in an awkward
+place for language modelling. The corpus is small (a few hundred public
+specifications), the verifier (SANY plus the TLC model checker) is
+deterministic and cheap, and the cost of getting a specification subtly
+wrong is high enough that there is no obvious gradient between ``almost
+right'' and ``right.'' These properties make it tempting to try every
+fine-tuning trick in the contemporary toolbox: broad SFT to absorb the
+public corpus, preference optimisation (DPO, KTO) against the verifier,
+reinforcement learning from verifier feedback, distillation from larger
+teachers. Over the course of a year we tried all of those. Most of them
+made the model worse.
+
+We ran the entire experiment against a single underlying checkpoint,
+OpenAI's open-weight \texttt{gpt-oss:20b}, served locally through Ollama
+and fine-tuned with LoRA adapters merged into BF16 weights for evaluation.
+Every benchmark number reported here comes from the same 20-problem
+held-out suite (\texttt{BM001}--\texttt{BM020}) that drives our methods
+paper~\cite{spencer2026chattla}; every retrain, every merge, every GGUF
+build, and every Hugging Face publish is automated and recorded under
+\texttt{outputs/}. The point of this paper is not to report a single
+headline number---we already have one---but to make the audit trail
+visible: which fine-tuning runs helped, which hurt, and what the failures
+seem to imply about the shape of the problem.
+
+The summary, before any of the detail: between version~6 and version~14
+of the model, the held-out TLC pass count moved from $1/20$ to $5/20$ to
+$0/20$ and back, depending on which lever we pulled. The single
+intervention with the largest positive effect on TLC was not a training
+change at all; it was a five-step inference-time decomposition of the
+generation task. The single intervention with the largest negative effect
+was a from-scratch SFT pass on $234$ examples that erased the model's
+TLA\textsuperscript{+} prior in a single $15$-epoch run. Both observations
+are consistent with the working hypothesis that for low-resource formal
+languages, the shape of the verifier reward matters more than the
+quantity of supervised data.
+
+We make three contributions in this paper:
+\begin{enumerate}[leftmargin=1.4em,itemsep=2pt]
+\item A reproducible description of the fine-tuning architecture
+(\S\ref{sec:arch}): static-corpus build, RL-loop online generation,
+multi-tier preference data, and the merge/quantise/publish/rollback chain.
+\item A chronological benchmark history across versions \texttt{v6}
+through \texttt{v14} and the Diamond-SFT and piecewise runs that
+followed (\S\ref{sec:runs}), with per-run TLC and SANY counts taken
+verbatim from \texttt{outputs/benchmark\_results\_*.csv}.
+\item Four engineering lessons distilled from the log
+(\S\ref{sec:lessons}): catastrophic forgetting on small corpora, the
+binary-reward vacuity trap, the unreliability of quick-eval signal, and
+the value of an automated rollback gate.
+\end{enumerate}
+
+% ---------------------------------------------------------------------------
+\section{The Fine-Tuning Architecture}
+\label{sec:arch}
+
+The training pipeline is end-to-end automated. The intent is that an
+operator can leave the RL loop running unattended for days, and any
+checkpoint that survives the eval gate is merged, quantised, packaged as a
+GGUF, loaded into the local Ollama daemon, and (optionally) published to
+Hugging Face. Anything that fails the eval gate is rolled back. The
+sub-systems are described below; readers who want the cheat-sheet view
+can skip to Figure~\ref{fig:pipeline}.
+
+\paragraph{Static corpus.} Raw TLA\textsuperscript{+} sources are scraped
+into \texttt{data/raw/}, validated with SANY through the
+\texttt{pipeline.py}/\texttt{annotate.py} chain, and written to
+\texttt{data/validated/combined.jsonl}. A separate dataset builder
+(\texttt{src.training.dataset\_builder}) produces task variants for
+specification generation, completion, and invariant generation. The
+recommended production flags are \texttt{-{}-sany-only}
+(drop non-parsing rows), \texttt{-{}-include-augmented} (append the
+RL-harvested gold), \texttt{-{}-include-description-sft} (holdout-safe
+English-to-spec rows), and \texttt{-{}-bugfix-oversample 2}
+(2$\times$ the rows that pair a TLC error with its repair). One subtle
+trap: the public corpus is full of \texttt{MC*} wrapper modules whose
+only content is \texttt{EXTENDS Real{\_}protocol, TLC}. Training on these
+pairs a long English description with a stub specification, which
+poisons the spec-generation task; the dataset builder drops them by
+default through \texttt{src/training/module\_family.py}.
+
+\paragraph{Online RL loop.} The continuous training loop
+(\texttt{scripts/rl\_loop.py}) drives generation, validation, tiering,
+augmentation, and retrain decisions. Each cycle has six phases:
+(1)~prompt sampling from the benchmark, the synthetic \texttt{RL*}
+catalogue, and (optionally) condensed natural-language descriptions for
+mapped problems; (2)~spec generation through Ollama against the current
+\texttt{chattla:20b} tag, followed by SANY parsing and TLC model
+checking; (3)~tiering into gold, silver, bronze, and \emph{bugfix}
+(silver $+$ TLC error string $\to$ gold target) classes, with
+deduplication by spec hash; (4)~retrain when accumulated new rows cross
+a threshold; (5)~quick benchmark every cycle and full benchmark on a
+configurable nightly cadence; (6)~difficulty cap from \texttt{rl\_history.jsonl}
+so the loop does not over-sample hard prompts while TLC is still weak.
+The cycle has no inter-cycle sleep by default.
+
+\paragraph{Retrain chain.} A retrain is a four-step subprocess chain:
+\texttt{dataset\_builder} $\to$ \texttt{train.py} (LoRA SFT in harmony
+chat format with VRAM-aware \texttt{max\_length}) $\to$
+\texttt{merge\_lora.py} (dual-GPU with CPU fallback) $\to$
+\texttt{convert\_to\_gguf.py} (\texttt{llama.cpp} convert at \texttt{Q8\_0},
+producing \texttt{outputs/gguf/chattla-20b-Q8\_0.gguf} and registering it
+locally as \texttt{chattla:20b}). When DPO is enabled, \texttt{train.py
+-{}-dpo-after} runs \texttt{train\_dpo.run\_after\_sft} on gold rows in
+\texttt{dpo\_pairs.jsonl}, with $\beta = 0.1$ and learning rate
+$5\!\times\!10^{-6}$.
+
+\paragraph{Augmented archive and best-per-prompt merging.} The
+augmented archive (\texttt{data/processed/augmented.jsonl}) is
+append-only across RL cycles. Nothing is deleted as the benchmark moves;
+each rebuild instead collapses augmented rows to one row per
+\texttt{\_prompt\_id}, keeping the highest-tier survivor (gold and
+bugfix dominate silver, which dominates bronze). New gold replaces old
+silver for the same prompt. This is the smallest mechanism we found for
+keeping the dataset monotonically improving across cycles without
+manually pruning it.
+
+\paragraph{Eval gate and rollback.} Every retrain is followed by a small
+benchmark (10 problems by default; previously 5). The gate requires at
+least three SANY passes and at least one TLC pass; failures trigger an
+automatic rollback to the previous GGUF and re-tag the Ollama model.
+The gate exists because of an incident in early April 2026 when a
+catastrophic SFT run silently shipped a degraded model to Hugging Face;
+the gate now sits between training and \texttt{publish\_hf}.
+
+\paragraph{Hugging Face publish gate.}
+\texttt{publish\_hf -{}-require-fresh-full-benchmark-hours N} aborts the
+publish if no \texttt{outputs/benchmark\_results\_*\_full\_*.csv} is
+younger than $N$ hours, and the RL loop reads
+\texttt{CHATTLA\_PUBLISH\_REQUIRE\_BENCHMARK\_HOURS} from the
+environment. This is the second half of the gate: even a model that
+survived the local eval cannot be published unless a recent full
+benchmark exists.
+
+\begin{figure}[t]
+\centering
+\fbox{\parbox{0.95\linewidth}{\small
+\textbf{Static:} \texttt{data/raw} $\to$ \texttt{validate} $\to$
+\texttt{combined.jsonl} $\to$ \texttt{dataset\_builder} $\to$
+\texttt{train.jsonl}, \texttt{eval.jsonl}.\\[2pt]
+\textbf{RL cycle:} sample prompts $\to$ Ollama generate $\to$
+SANY $+$ TLC $\to$ tier (gold/silver/bronze/bugfix) $\to$ append to
+\texttt{augmented.jsonl}, \texttt{dpo\_pairs.jsonl} $\to$
+threshold? $\to$ rebuild $+$ retrain.\\[2pt]
+\textbf{Retrain:} \texttt{dataset\_builder} $\to$ \texttt{train.py}
+(LoRA SFT $\pm$ DPO) $\to$ \texttt{merge\_lora} $\to$
+\texttt{convert\_to\_gguf} $\to$ Ollama tag $\to$ \emph{eval gate} $\to$
+\texttt{publish\_hf} (or rollback).\\[2pt]
+\textbf{Quality:} full-benchmark TLC \% (primary) $\succ$ full-benchmark
+SANY \% $\succ$ quick-eval trend $\succ$ structural heuristics
+(diagnostic only).
+}}
+\caption{The end-to-end fine-tuning and deployment pipeline. The
+critical property is that no manual step sits between a raw scrape and
+a published Hugging Face artefact except for the eval gate.}
+\label{fig:pipeline}
+\end{figure}
+
+% ---------------------------------------------------------------------------
+\section{A Year of Runs}
+\label{sec:runs}
+
+Table~\ref{tab:run-history} records the headline numbers for every
+fine-tuning version we ran against the 20-problem held-out benchmark
+between roughly January and April 2026. The column conventions are
+identical to Table~1 of the methods paper~\cite{spencer2026chattla}; the
+underlying CSVs are in
+\texttt{outputs/benchmark\_results\_*.csv} and
+\texttt{outputs/benchmark\_results/}, and the counts in this table are
+taken verbatim from those files.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{lllcc l}
+\toprule
+Version & Date & Recipe & SANY & TLC & Outcome \\
+\midrule
+v6   & 2026-01 & broad SFT, 1 epoch, harmony format         & 5/20 & 1/20 & baseline \\
+v7   & 2026-02 & v6 + augmented gold (RL cycles 80--100)     & 6/20 & 2/20 & small lift \\
+v8   & 2026-02 & v7 + bugfix oversample 2$\times$            & 7/20 & 2/20 & SANY rises, TLC flat \\
+v9   & 2026-03 & best-of-$5$ self-correct at inference       & 7/20 & 2/20 & no train change \\
+v10  & 2026-03 & v9 + KTO on 5.7:1 desirable:undesirable    & 4/20 & 1/20 & \textbf{regression} \\
+v11  & 2026-03 & v10 reverted, SFT only                     & 6/20 & 2/20 & recovered \\
+v13  & 2026-04-03 & v11 + DPO (17 gold pairs, $\beta=0.1$)  & \textbf{9/20} & \textbf{5/20} & best end-to-end \\
+v14  & 2026-04-04 & retrain from base, 234 ex, 15 epochs   & 0/20 & 0/20 & \textbf{catastrophic} \\
+v14$'$ & 2026-04-04 & v14 SFT-only, 1 epoch                 & 1/20 & 0/20 & still broken \\
+v13$_R$ & 2026-04-04 & v13 restored from GGUF backup        & 9/20 & 5/20 & rollback \\
+\midrule
+diamond-SFT & 2026-04-06 & 720 ex, 73 Diamond, 3 ep, lr 5e-5 & 8/20 & 4/20 & semantic recovery \\
+piecewise   & 2026-04-06 & v13$_R$ + 5-step decomposition   & \textbf{12/20} & \textbf{6/20} & inference-time \\
+\bottomrule
+\end{tabular}
+\caption{Held-out 20-problem benchmark across model versions. Counts
+read directly from the CSVs in \texttt{outputs/}: \texttt{v13} from
+\texttt{benchmark\_results\_v13\_full\_20260403.csv} ($9$ SANY, $5$
+TLC), \texttt{v14} from \texttt{benchmark\_results\_v14\_full\_20260404.csv}
+($0$ SANY, $0$ TLC), \texttt{v14}$'$ from
+\texttt{benchmark\_results\_sft\_only\_20260404.csv} ($1$ SANY, $0$
+TLC), \texttt{diamond-SFT} from
+\texttt{benchmark\_results/benchmark\_results\_diamond\_sft\_20260406\_002008.csv}
+($8$ SANY, $4$ TLC), and the piecewise row from
+\texttt{benchmark\_results/piecewise\_first\_run\_20260406.csv} ($12$
+SANY, $6$ TLC) which uses the same underlying \texttt{v13}-restored
+checkpoint as its single-shot baseline.}
+\label{tab:run-history}
+\end{table}
+
+\paragraph{The shape of the curve.} Reading down the table, three
+features stand out. (1)~The reward of incremental SFT $+$ DPO peaks at
+\texttt{v13}, with $5/20$ TLC. (2)~The single largest delta in either
+direction is the \texttt{v14} catastrophe: a from-scratch SFT pass on
+$234$ examples for $15$ epochs at learning rate $3\!\times\!10^{-4}$
+zeroed both SANY and TLC, which is a striking failure given that the
+same examples had been part of \texttt{v13}'s training set without
+incident. The difference was the schedule, not the data. (3)~The
+piecewise inference procedure on the restored \texttt{v13} checkpoint
+adds $+3$ SANY and $+1$ TLC \emph{without} touching the weights, which
+is a stronger per-FLOP gain than any of the training interventions
+above.
+
+\paragraph{The KTO regression.} The KTO run (\texttt{v10}) is worth a
+short autopsy because it taught us the most. We had accumulated
+several hundred gold/silver pairs from RL cycles and assembled a KTO
+training set with a desirable-to-undesirable ratio of $5.7\!:\!1$.
+After training, the held-out TLC count dropped from $2/20$ to $1/20$
+and the canary regression set fell to $0/5$. The verifier metrics that
+drove the preference labels were entirely binary (\texttt{tlc\_pass}),
+and the gold tier turned out to contain a large fraction of vacuously
+correct specifications: parser-clean, model-checker-clean, and
+behaviourally empty. The Diamond audit~\cite{spencer2026chattla} is the
+follow-on diagnosis: $0$ of $484$ specs in the gold/silver pool passed
+mutation testing. KTO faithfully maximised the binary signal it was
+asked to maximise; the signal was wrong.
+
+\paragraph{The \texttt{v14} catastrophe.} \texttt{v14} was a regression
+test of the dataset builder under the new DPO-first plumbing. The
+intent was a clean retrain over the same data \texttt{v13} had used.
+The actual run trained from the unmodified \texttt{gpt-oss:20b} base
+weights for $15$ epochs over $234$ examples at learning rate
+$3\!\times\!10^{-4}$. SANY pass dropped from $9/20$ to $0/20$. A
+follow-up ``SFT-only, 1 epoch'' experiment (\texttt{v14}$'$) recovered
+exactly one SANY pass and zero TLC passes; the model had forgotten how
+to write TLA\textsuperscript{+} entirely. Recovery required restoring
+the previous \texttt{v13} GGUF from backup and re-tagging Ollama, which
+the eval gate (\S\ref{sec:arch}) had been built to do.
+
+\paragraph{The Diamond-SFT recovery.} The Diamond-SFT run on
+2026-04-06 used $720$ examples assembled as $73$ Diamond-passing specs
+oversampled $3\!\times$, $205$ gold RL specs, $231$ gold benchmark
+specs, and $86$ description-SFT rows, trained for $3$ epochs at
+learning rate $5\!\times\!10^{-5}$ with the merged \texttt{v13}
+checkpoint as the base (incremental, not from scratch). Training loss
+fell from $1.72$ to $0.49$. The benchmark recovered to $8/20$ SANY and
+$4/20$ TLC---below \texttt{v13}'s peak in TLC but with much higher
+structural quality ($0.92$ versus $0.77$ average), and with the
+remaining failures cleanly attributable to small SANY syntax mistakes
+(\texttt{EXISTS} instead of \texttt{\textbackslash E}, \texttt{SUM} as
+an undeclared operator, \texttt{EXCEPT} comma syntax, \texttt{CHOOSE}
+parenthesisation). This is a more useful failure mode than the
+\texttt{v13} one: structurally-correct specs with fixable parser
+errors are exactly what an automated SANY repair pass would close.
+
+\paragraph{RL cycle volume.} For context on the scale, the RL loop ran
+through approximately cycle~\texttt{c266} during the period covered by
+this paper, with full benchmark CSVs captured at every nightly cadence
+(see \texttt{outputs/benchmark\_results/benchmark\_results\_rl\_c*\_full\_*.csv}).
+The cycle-to-cycle variance on the quick eval is several problems,
+which is why the table above only reports full benchmarks; the quick
+eval is best read as a trend signal, not as a publication-quality
+metric.
+
+% ---------------------------------------------------------------------------
+\section{Four Lessons from the Log}
+\label{sec:lessons}
+
+\paragraph{Lesson 1: Do not train broadly from scratch on small data.}
+The \texttt{v14} catastrophe is the cleanest example of catastrophic
+forgetting we have ever seen on this codebase. The $234$ examples
+involved had all appeared in \texttt{v13} without incident; the
+difference was that \texttt{v13} added them on top of an already
+TLA\textsuperscript{+}-fluent merged checkpoint, while \texttt{v14}
+re-derived the adapter from the unmodified base. Fifteen epochs at
+$3\!\times\!10^{-4}$ over a few hundred examples is enough to overwrite
+the prior. The operational rule we adopted afterwards is that the SFT
+recipe always builds on the previous merged checkpoint, learning rate
+is capped at $1\!\times\!10^{-5}$ for incremental runs, and epoch count
+is hard-capped at $2$ in the loop driver.
+
+\paragraph{Lesson 2: Binary verifier rewards are an attractor towards
+vacuous specs.} KTO and DPO are both preference-learning losses; both
+are well-understood; both behaved correctly given the labels we gave
+them. The labels were the bug. \texttt{tlc\_pass} is satisfied by
+\emph{any} specification whose state space contains no invariant
+violations, and the easiest way to satisfy that is to write a
+specification with a one-state state space and a tautological
+invariant. The training corpus we built up over months of RL was
+densely populated with exactly that class of spec
+($0/484$ Diamond-passing under the audit). Any preference-optimisation
+loop pointed at this corpus is not learning ``be correct''; it is
+learning ``be small and quiet.'' The fix is upstream: define
+correctness as a four-clause Diamond gate that includes mutation
+sensitivity, harvest the corpus by rejection sampling against that
+gate, and only \emph{then} run the preference loss. The full
+description of the gate is in our methods
+paper~\cite{spencer2026chattla}.
+
+\paragraph{Lesson 3: The quick eval is a trend, not a metric.} The
+default quick benchmark is $12$ problems. Across cycles
+\texttt{c100}--\texttt{c260}, the quick eval moved by one or two
+problems essentially every cycle, in either direction, with no
+correlation to actual model improvements. The full benchmark
+($20$ problems) is more stable but still has $\pm 1$--$2$ problem
+wobble across reruns. The operational rule we adopted is: never
+report a result based on the quick eval, never make a deploy/rollback
+decision on a single full eval, and require a fresh full eval within
+$N$ hours before allowing the publish step to proceed. Half the
+publish-related code in the loop exists to enforce this.
+
+\paragraph{Lesson 4: Build the rollback before you need it.} The
+\texttt{v14} regression caused real damage in the sense that a
+degraded model was, briefly, the published \texttt{chattla:20b} tag.
+The eval gate, the ``require fresh full benchmark'' flag on
+\texttt{publish\_hf}, and the GGUF backup-and-restore step were all
+written in response to that incident. None of them are interesting
+ML; all of them are interesting MLOps. The asymmetry between the
+cost of building rollback infrastructure (one afternoon) and the cost
+of not having it (a full day of restoration plus a published
+regression) is severe enough that we now treat rollback as a
+prerequisite, not a nice-to-have.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{lll}
+\toprule
+Symptom & Recipe that caused it & Recipe that fixed it \\
+\midrule
+TLC $\to 0$, SANY $\to 0$ & broad SFT from base, $15$ epochs, lr $3e\!-\!4$ &
+  rollback to merged \texttt{v13} GGUF \\
+gold tier full of vacuous specs & binary \texttt{tlc\_pass} reward &
+  Diamond gate $+$ rejection sampling \\
+quick-eval lurches every cycle & $12$-problem subset & full $20$ benchmark \\
+silent regression in production & no eval gate &
+  3-SANY + 1-TLC eval gate, $N$-hour fresh-bench gate \\
+\bottomrule
+\end{tabular}
+\caption{Failure modes encountered in the fine-tuning log and the
+operational fix that addressed each one. None of the right-hand
+column changes touch the model architecture.}
+\label{tab:lessons}
+\end{table}
+
+% ---------------------------------------------------------------------------
+\section{Diamond-Filtered SFT}
+\label{sec:diamond-sft}
+
+The current recipe, in the wake of all of the above, is small and
+boring. We restore the merged \texttt{v13} checkpoint, audit every
+candidate training example through the Diamond gate
+(SANY pass, more than one reachable state, declared non-vacuous
+invariant, mutation-sensitive), oversample the survivors $3\!\times$,
+mix in $86$ description-SFT rows for English-to-spec coverage, and
+train incrementally for $3$ epochs at $5\!\times\!10^{-5}$ on top of
+the existing weights. The rejection sampler lives in
+\texttt{scripts/diamond\_sft\_gen.py}, which uses a teacher model
+(\texttt{gpt-oss:120b} via Ollama) to propose candidates and then
+discards anything that fails the gate. Of the $484$ specs in the
+historical augmented archive, the gate keeps $73$. Of the new
+candidates the teacher generates, the keep rate is similar---the
+binding constraint is not access to a teacher, it is the mutation
+clause.
+
+The result of running this recipe is the \texttt{diamond-SFT} row in
+Table~\ref{tab:run-history}: $8/20$ SANY, $4/20$ TLC, structural score
+$0.92$. That is one TLC pass below \texttt{v13}, but with a much
+healthier failure profile---the residual SANY failures are local
+syntax slips, not structural collapse---and with a corpus that the
+KTO/DPO branches can be safely re-enabled against. Combined with the
+piecewise inference procedure of the methods
+paper~\cite{spencer2026chattla}, the same \texttt{v13}-derived
+checkpoint reaches $12/20$ SANY and $6/20$ TLC. Our current
+operating position is therefore: train incrementally on
+Diamond-filtered data, generate at inference time through piecewise
+decomposition, and reserve preference optimisation for the narrow
+follow-on case where the Diamond corpus is dense enough to support
+it.
+
+% ---------------------------------------------------------------------------
+\section{Discussion}
+
+\paragraph{Why broad SFT keeps failing.} The TLA\textsuperscript{+}
+public corpus is tiny by modern standards (a few hundred specs), and
+the canonical examples are short, idiomatic, and structurally similar.
+A $20$B model already has a passable prior over this distribution from
+pre-training, so the marginal value of broad SFT against more of the
+same is small. What broad SFT \emph{does} do reliably is overwrite
+adjacent parts of the prior---braces, identifiers, English idioms---in
+ways that show up as catastrophic forgetting on benchmark problems
+where the model would otherwise have stitched together knowledge from
+non-TLA\textsuperscript{+} parts of its training. The one regime in
+which we got SFT to help was Diamond-filtered, incremental, low-LR,
+short-epoch.
+
+\paragraph{Why preference optimisation against a binary verifier
+fails.} A preference loss only has access to the labels you give it. A
+TLA\textsuperscript{+} verifier emits a binary acceptance signal that
+is satisfied by an entire equivalence class of specifications, only
+some of which a human reviewer would call correct. Optimising hard
+against the binary signal moves the model towards the easy-to-reach
+corners of that class (degenerate state spaces, decorative
+invariants), which is exactly the regime the methods paper documents
+through the Diamond gate. The fix is to make the reward semantically
+sharper before training, not to make the optimiser stronger.
+
+\paragraph{Why inference-time decomposition is the cheapest win.}
+Decomposition costs roughly $5\!\times$ the per-spec inference budget
+relative to single-shot, but it requires no training data, no
+labelling, no rollback infrastructure, and no risk to the published
+checkpoint. In a regime where each round of fine-tuning has roughly
+even odds of helping or hurting, ``do not train, generate more
+carefully'' is a reasonable default. We do not believe inference-time
+methods replace fine-tuning---the Diamond-SFT recipe is what gives the
+piecewise procedure something to decompose---but the order matters.
+Train incrementally on small, semantically audited corpora; generate
+through verifier-guided decomposition; treat broad fine-tuning as a
+last resort.
+
+\paragraph{Limitations.}
+\emph{One model.} Every result above uses one underlying checkpoint,
+\texttt{gpt-oss:20b}. We do not yet know whether the catastrophic
+forgetting threshold (LR, epoch count, sample count) generalises to
+larger or coding-specialised models, or whether the binary-reward
+vacuity trap is just as bad with a stronger prior. The conjecture is
+that both effects soften with scale but do not vanish.
+\emph{One benchmark.} The 20-problem held-out suite is small and
+self-authored. The methods paper~\cite{spencer2026chattla} discusses
+this at length and we do not duplicate that discussion here.
+\emph{No multi-seed.} Every cell in Table~\ref{tab:run-history} is a
+single run. Informal repeats suggest a $\pm 1$--$2$ problem wobble.
+The deltas we treat as load-bearing (\texttt{v14} catastrophe,
+piecewise gain, KTO regression) are larger than the wobble; the
+deltas we treat as suggestive (\texttt{v8} versus \texttt{v9}) are
+not.
+
+% ---------------------------------------------------------------------------
+\section{Conclusion}
+
+A year of fine-tuning a $20$B open model for TLA\textsuperscript{+}
+specification generation taught us that the productive interventions
+were not the ones we expected. Broad SFT failed almost every time we
+tried it, in proportion to how broad it was. Preference optimisation
+against a binary verifier reward drifted the model towards
+semantically vacuous specifications. The pipeline-engineering work
+that mattered most was the eval gate and the rollback path, which
+prevented a single bad retrain from becoming a published regression.
+The single largest improvement on the held-out benchmark came from a
+five-step inference-time decomposition that does not touch the
+weights at all. The current recipe---incremental SFT on
+Diamond-filtered data, plus piecewise inference---is small, boring,
+and reproducible, and that is the point. For low-resource formal
+languages with deterministic verifiers, the leverage is in the shape
+of the reward and the structure of the inference, not in the volume
+of supervised data.
+
+% ---------------------------------------------------------------------------
+\section*{Acknowledgements}
+\textit{(to be filled in)}
+
+% ---------------------------------------------------------------------------
+\bibliographystyle{plain}
+\begin{thebibliography}{99}
+
+\bibitem{lamport2002specifying}
+Leslie Lamport.
+\newblock \emph{Specifying Systems: The TLA\textsuperscript{+} Language and
+Tools for Hardware and Software Engineers}.
+\newblock Addison-Wesley, 2002.
+
+\bibitem{spencer2026chattla}
+Eric Spencer.
+\newblock ChatTLA: Verifier-guided decomposition for
+TLA\textsuperscript{+} specification generation.
+\newblock Manuscript, 2026.
+
+\bibitem{spencer2026canllms}
+Eric Spencer.
+\newblock Can LLMs write correct TLA\textsuperscript{+} specifications?
+Evaluating natural-language-to-TLA\textsuperscript{+} generation.
+\newblock Manuscript, 2026.
+
+\bibitem{rafailov2023direct}
+Rafael Rafailov, Archit Sharma, Eric Mitchell, Stefano Ermon,
+Christopher D. Manning, and Chelsea Finn.
+\newblock Direct preference optimization: Your language model is
+secretly a reward model.
+\newblock In \emph{NeurIPS}, 2023.
+
+\bibitem{ethayarajh2024kto}
+Kawin Ethayarajh, Winnie Xu, Niklas Muennighoff, Dan Jurafsky, and
+Douwe Kiela.
+\newblock KTO: Model alignment as prospect theoretic optimization.
+\newblock arXiv:2402.01306, 2024.
+
+\bibitem{hu2022lora}
+Edward J. Hu, Yelong Shen, Phillip Wallis, Zeyuan Allen-Zhu, Yuanzhi
+Li, Shean Wang, Lu Wang, and Weizhu Chen.
+\newblock LoRA: Low-rank adaptation of large language models.
+\newblock In \emph{ICLR}, 2022.
+
+\end{thebibliography}
+
+\end{document}
