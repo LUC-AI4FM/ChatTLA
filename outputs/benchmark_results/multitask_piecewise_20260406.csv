@@ -1,0 +1,21 @@
+model,benchmark_id,name,domain,difficulty,sany_pass,tlc_pass,tlc_tier,variables_ok,typeok_ok,init_ok,next_ok,invariant_ok,total_attempts,runtime_s
+chattla-multitask:20b,BM001,Mutual Exclusion,scheduling,2,1,1,gold,1,1,1,1,1,6,13.0
+chattla-multitask:20b,BM002,Two-Phase Commit,transaction,3,0,0,bronze,1,1,1,0,0,10,44.1
+chattla-multitask:20b,BM003,Dining Philosophers,scheduling,2,0,0,bronze,1,1,1,0,0,10,42.8
+chattla-multitask:20b,BM004,Lamport's Bakery Algorithm,consensus,3,1,0,silver,1,1,1,1,1,6,11.3
+chattla-multitask:20b,BM005,Producer-Consumer Queue,storage,2,1,0,silver,1,1,1,1,1,5,7.1
+chattla-multitask:20b,BM006,Raft Leader Election,consensus,4,1,0,silver,1,1,1,1,1,5,8.1
+chattla-multitask:20b,BM007,Read-Write Lock,storage,2,1,0,silver,1,1,1,1,1,5,6.4
+chattla-multitask:20b,BM008,Distributed Snapshot (Chandy-Lamport),networking,5,0,0,bronze,1,1,1,0,0,10,35.2
+chattla-multitask:20b,BM009,Token Ring,networking,2,1,0,silver,1,1,1,1,1,5,6.8
+chattla-multitask:20b,BM010,Simple Key-Value Store,storage,3,0,0,bronze,1,0,0,0,0,4,3.7
+chattla-multitask:20b,BM011,Paxos Single-Decree,consensus,4,1,0,silver,1,1,1,1,1,7,21.4
+chattla-multitask:20b,BM012,Bounded Retransmission Protocol,networking,3,1,0,silver,1,1,1,1,1,6,17.4
+chattla-multitask:20b,BM013,Transaction Isolation (Snapshot Isolation),transaction,4,1,0,silver,1,1,1,1,1,7,33.7
+chattla-multitask:20b,BM014,Clock Synchronisation,networking,3,1,1,gold,1,1,1,1,0,12,41.9
+chattla-multitask:20b,BM015,Peterson's Algorithm,scheduling,2,0,0,bronze,1,1,0,0,0,5,4.4
+chattla-multitask:20b,BM016,Gossip Protocol,networking,3,1,0,silver,1,1,1,1,1,5,6.9
+chattla-multitask:20b,BM017,Simple Allocator,storage,2,1,0,silver,1,1,1,1,1,8,13.6
+chattla-multitask:20b,BM018,Publish-Subscribe Broker,networking,3,0,0,bronze,1,1,1,0,0,11,22.3
+chattla-multitask:20b,BM019,Dekker's Algorithm,scheduling,3,1,1,gold,1,1,1,1,0,6,19.6
+chattla-multitask:20b,BM020,Eventually Consistent Counter,storage,3,0,0,bronze,1,1,1,0,0,10,19.0

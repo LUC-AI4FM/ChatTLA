@@ -53,7 +53,7 @@ FROM {gguf_path}
 #   <|start|>assistant<|channel|>final<|message|>...<|return|>
 #
 # Key design decisions:
-#   - Template ends with `<|start|>assistant{{{{ .Response }}}}`
+#   - Template ends with `<|start|>assistant{{ .Response }}`
 #     (NOT `<|channel|>final<|message|>`). Ollama filters channel
 #     tokens from displayed output; the model generates its own
 #     channel header and Ollama hides the analysis channel.
@@ -95,8 +95,8 @@ Critical TLA+ syntax rules:
 - TypeOK must be defined if referenced as INVARIANT
 
 <|end|>
-<|start|>user<|message|>{{{{ .Prompt }}}}<|end|>
-<|start|>assistant{{{{ .Response }}}}\"\"\"
+<|start|>user<|message|>{{ .Prompt }}<|end|>
+<|start|>assistant{{ .Response }}\"\"\"
 
 PARAMETER temperature 0.3
 PARAMETER num_ctx 4096
@@ -179,13 +179,14 @@ def convert_to_gguf(quant: str = "Q8_0") -> Path:
 def register_with_ollama(gguf_path: Path, model_name: str = "chattla:20b") -> None:
     """Register the GGUF with the local Ollama daemon via 'ollama create'."""
     modelfile_path = gguf_path.parent / "Modelfile"
-    modelfile_path.write_text(
-        MODELFILE_TEMPLATE.format(
-            gguf_path=str(gguf_path),
-            current_date=_dt.date.today().isoformat(),
-        ),
-        encoding="utf-8",
+    # Use .replace() instead of .format() — the template contains TLA+ examples
+    # like {"idle", "active"} which str.format() misinterprets as placeholders.
+    rendered = (
+        MODELFILE_TEMPLATE
+        .replace("{gguf_path}", str(gguf_path))
+        .replace("{current_date}", _dt.date.today().isoformat())
     )
+    modelfile_path.write_text(rendered, encoding="utf-8")
     print(f"[convert_gguf] Modelfile written → {modelfile_path}")
 
     print(f"[convert_gguf] Registering with Ollama as '{model_name}'...")
