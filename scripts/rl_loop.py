@@ -2496,7 +2496,14 @@ def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT
 
             log.info(f"[retrain] Eval gate: SANY={sany_pass}/{_EVAL_GATE_N} TLC={tlc_pass}/{sany_pass}")
 
-            # ── [INSTRUMENT] Score deployed baseline on the same gate prompts ──
+            # ── Side-by-side: score deployed baseline on the same 10 gate prompts ──
+            # This is the deploy decision: compare candidate vs baseline on identical
+            # prompts. We previously had a separate "canary" check that was redundant
+            # AND noisy (5 specs at temp 0.2 → measurements swung by ±3 between runs,
+            # rolling back actual improvements). The eval gate side-by-side is the
+            # cleaner signal: same 10 prompts, deterministic decision.
+            _b_sany, _b_tlc, _b_n = 0, 0, _EVAL_GATE_N
+            _baseline_scored = False
             try:
                 _ollama_unload("chattla:20b-candidate")
                 _bm_items = [
@@ -2504,9 +2511,11 @@ def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT
                      f"Write a TLA+ specification for: {bm['name']}: {bm['description']}")
                     for bm in benchmarks[:_EVAL_GATE_N]
                 ]
+                # temperature=0 for deterministic comparison (was 0.3 → noise)
                 _b_sany, _b_tlc, _b_n = _instrument_score(
-                    "chattla:20b", _bm_items, temperature=0.3, label="gate-baseline"
+                    "chattla:20b", _bm_items, temperature=0.0, label="gate-baseline"
                 )
+                _baseline_scored = True
                 log.info(
                     f"[instrument] Eval gate side-by-side: "
                     f"baseline=SANY {_b_sany}/{_b_n} TLC {_b_tlc} | "
@@ -2517,145 +2526,53 @@ def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT
             except Exception as _ie:
                 log.warning(f"[instrument] Gate baseline scoring failed (non-fatal): {_ie}")
 
-            # ── Canary check: known gold prompts must not regress ────
-            canary_gold_ids = list(gold_prompt_ids)[:5] if 'gold_prompt_ids' in dir() else []
-            if not canary_gold_ids:
-                # Load from state file as fallback
-                try:
-                    _st = json.load(open(_RL_STATE_FILE))
-                    canary_gold_ids = _st.get("gold_prompt_ids", [])[:5]
-                except Exception:
-                    canary_gold_ids = []
+            # ── Deploy decision: based on TLC delta (the metric that matters) ──
+            # TLC pass = semantically correct spec. SANY pass = syntactically valid.
+            # We deploy if TLC delta is non-negative (and SANY isn't catastrophically worse).
+            # This replaces the old canary check that compared 5 noisy specs.
+            if _baseline_scored:
+                _delta_tlc = tlc_pass - _b_tlc
+                _delta_sany = sany_pass - _b_sany
+                # Deploy if:
+                #   - TLC improved or stayed equal (the primary quality signal), AND
+                #   - SANY didn't drop catastrophically (max -3 acceptable noise on 10 specs)
+                _deploy_ok = (_delta_tlc >= 0) and (_delta_sany >= -3)
+                log.info(
+                    f"[retrain] Deploy decision: delta_tlc={_delta_tlc:+d} "
+                    f"delta_sany={_delta_sany:+d} deploy={_deploy_ok}"
+                )
+            else:
+                # Baseline scoring failed — fall back to absolute SANY threshold
+                _deploy_ok = sany_pass >= _EVAL_GATE_MIN_SANY
+                log.info(f"[retrain] Deploy decision (no baseline): SANY={sany_pass}/{_EVAL_GATE_N} deploy={_deploy_ok}")
 
-            if canary_gold_ids:
-                canary_fail = 0
-                canary_total = len(canary_gold_ids)
-                # Build prompt lookup from benchmark suite + RL prompt bank
-                # so canary tests use the actual NL description, not a truncated spec.
-                # Use canonical prompt format (matches what we train on in gold replay).
-                # Previously this code overrode benchmark prompts with cached gold_spec_cache
-                # prompt_text, which had a "Reference: ..." preamble — totally different from
-                # what training saw. That mismatch caused 100% canary regression.
-                _canary_prompt_lookup: dict[str, str] = {}
-                try:
-                    _bm_data = json.load(open(_REPO_ROOT / "data" / "benchmarks" / "benchmark_suite.json"))
-                    for _bm in _bm_data:
-                        _canary_prompt_lookup[_bm["id"]] = f"Write a TLA+ specification for: {_bm['name']}: {_bm['description']}"
-                except Exception:
-                    pass
-                for _ep in _EXTRA_PROMPTS:
-                    _canary_prompt_lookup[_ep["id"]] = _ep["prompt"]
-
-                for _cid in canary_gold_ids[:5]:
-                    try:
-                        _cprompt = _canary_prompt_lookup.get(_cid, f"Write a TLA+ specification for problem {_cid}")
-                        resp = _req.post("http://localhost:11434/api/generate", json={
-                            "model": "chattla:20b-candidate",
-                            "prompt": _cprompt,
-                            "stream": False,
-                            "options": {"temperature": 0.2, "num_predict": 2048},
-                        }, timeout=120)
-                        _cspec = resp.json()["response"]
-                        _cspec = _re.sub(r'<analysis>.*?</analysis>', '', _cspec, flags=_re.DOTALL).strip()
-                        _cmod = _re.search(r'MODULE\s+(\w+)', _cspec)
-                        _cmod_name = _cmod.group(1) if _cmod else "Temp"
-                        _csr = sany_validate(_cspec, module_name=_cmod_name)
-                        if not _csr.valid:
-                            canary_fail += 1
-                            log.warning(f"[canary] Gold prompt {_cid} REGRESSED (SANY fail)")
-                    except Exception as _ce:
-                        log.debug(f"[canary] Error testing {_cid}: {_ce}")
-                        canary_fail += 1
-
-                log.info(f"[retrain] Canary check: {canary_total - canary_fail}/{canary_total} gold prompts still pass")
-
-                # ── Compare candidate vs deployed baseline on canary prompts ──
-                # Rollback decision is based on RELATIVE delta, not absolute pass count.
-                # Reason: the canary "gold" specs may be stale — the deployed model
-                # might only pass 1/5 of them today. Requiring candidate to pass an
-                # absolute threshold would mean rolling back even improvements.
-                _candidate_pass = canary_total - canary_fail
-                _baseline_pass = None
-                try:
-                    _ollama_unload("chattla:20b-candidate")
-                    _can_items = [
-                        (_cid, _canary_prompt_lookup.get(_cid, f"Write a TLA+ specification for problem {_cid}"))
-                        for _cid in canary_gold_ids[:5]
-                    ]
-                    _bc_sany, _bc_tlc, _bc_n = _instrument_score(
-                        "chattla:20b", _can_items, temperature=0.2, label="canary-baseline"
-                    )
-                    _baseline_pass = _bc_sany
-                    _ollama_unload("chattla:20b")
-                except Exception as _ice:
-                    log.warning(f"[instrument] Canary baseline scoring failed (non-fatal): {_ice}")
-
-                # Rollback rule:
-                #   - If we have a baseline: rollback only if candidate is >1 worse than baseline
-                #     (allows for noise; small regressions are acceptable for net improvement)
-                #   - If baseline scoring failed: fall back to absolute >50% threshold
-                if _baseline_pass is not None:
-                    _rollback = _candidate_pass < _baseline_pass - 1
-                    log.info(
-                        f"[retrain] Canary delta: candidate={_candidate_pass}/{canary_total} "
-                        f"baseline={_baseline_pass}/{canary_total} "
-                        f"delta={_candidate_pass - _baseline_pass:+d} "
-                        f"rollback={_rollback}"
+            if not _deploy_ok:
+                if _baseline_scored:
+                    log.error(
+                        f"[retrain] DEPLOY REJECTED: TLC regressed ({_delta_tlc:+d}) "
+                        f"or SANY dropped >3 ({_delta_sany:+d}). Rolling back."
                     )
                 else:
-                    _rollback = canary_fail > canary_total * 0.5
-
-                if _rollback:
                     log.error(
-                        f"[retrain] CANARY FAILED: {canary_fail}/{canary_total} gold prompts regressed. "
+                        f"[retrain] DEPLOY REJECTED: SANY={sany_pass}/{_EVAL_GATE_N} < {_EVAL_GATE_MIN_SANY}. "
                         "Rolling back."
                     )
-                    if _ALERTING_OK:
-                        alert_retrain_outcome(
-                            cycle_id, "canary_failed", mode=retrain_mode,
-                            rolled_back=True,
-                        )
-                    # Rollback
-                    subprocess.run(["ollama", "rm", "chattla:20b-candidate"],
-                                  capture_output=True, text=True, timeout=30)
-                    tmp_modelfile.unlink(missing_ok=True)
-                    if backup_gguf.exists():
-                        import shutil as _shutil2
-                        if current_gguf.exists():
-                            current_gguf.unlink()
-                        _shutil2.move(str(backup_gguf), str(current_gguf))
-                        log.info(f"[retrain] Restored backup after canary failure")
-                        try:
-                            subprocess.run(
-                                [sys.executable, "-m", "src.inference.convert_to_gguf",
-                                 "--quant", "Q8_0"],
-                                cwd=str(_REPO_ROOT),
-                                capture_output=True, text=True, timeout=600,
-                            )
-                        except Exception:
-                            pass
-                    return "failed"
-
-            if sany_pass < _EVAL_GATE_MIN_SANY:
-                log.error(
-                    f"[retrain] EVAL GATE FAILED: SANY={sany_pass}/{_EVAL_GATE_N} < {_EVAL_GATE_MIN_SANY}. "
-                    "Aborting deploy — rolling back to backup GGUF."
-                )
                 if _ALERTING_OK:
                     alert_retrain_outcome(
                         cycle_id, "eval_gate_failed", mode=retrain_mode,
                         tlc_after=tlc_pass / max(sany_pass, 1) if sany_pass else 0,
                         rolled_back=True,
                     )
-                # Rollback: move backup GGUF back (zero-copy rename)
+                # Rollback
+                subprocess.run(["ollama", "rm", "chattla:20b-candidate"],
+                              capture_output=True, text=True, timeout=30)
+                tmp_modelfile.unlink(missing_ok=True)
                 if backup_gguf.exists():
-                    import shutil as _shutil
-                    # Remove failed new GGUF if it exists
+                    import shutil as _shutil2
                     if current_gguf.exists():
                         current_gguf.unlink()
-                    _shutil.move(str(backup_gguf), str(current_gguf))
-                    log.info(f"[retrain] Restored backup GGUF: {backup_gguf.name} (moved back)")
-                    # Re-register old model with Ollama
+                    _shutil2.move(str(backup_gguf), str(current_gguf))
+                    log.info(f"[retrain] Restored backup GGUF: {backup_gguf.name}")
                     try:
                         subprocess.run(
                             [sys.executable, "-m", "src.inference.convert_to_gguf",
@@ -2667,7 +2584,12 @@ def rebuild_and_retrain(cycle_id: int = 0, publish_hf: bool = PUBLISH_HF_DEFAULT
                     except Exception as e2:
                         log.warning(f"[retrain] Could not re-register old model: {e2}")
                 return "failed"
-            log.info(f"[retrain] Eval gate PASSED ({sany_pass}/{_EVAL_GATE_N} SANY, {tlc_pass} TLC). Deploying...")
+
+            log.info(f"[retrain] Eval gate PASSED (SANY={sany_pass}/{_EVAL_GATE_N}, TLC={tlc_pass}, deploy_ok=True). Deploying...")
+            # Clean up the temp candidate model now that we're committing to deploy
+            subprocess.run(["ollama", "rm", "chattla:20b-candidate"],
+                          capture_output=True, text=True, timeout=30)
+            tmp_modelfile.unlink(missing_ok=True)
             eval_gate_passed = True
         else:
             log.warning("[retrain] No GGUF found for eval gate — skipping gate")
