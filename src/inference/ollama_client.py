@@ -85,11 +85,35 @@ class ChatTLAClient:
         self._client   = ollama.Client(host=host)
         self._temp_override: Optional[float] = None  # set by benchmark for multi-attempt
 
+    # Lazily-initialized BM25 retriever over verified specs. Set to None to
+    # disable RAG augmentation; otherwise the retriever is built once per
+    # process from data/processed/diamond_curated.jsonl. See
+    # src/inference/spec_retriever.py for the rationale (operator grounding
+    # against the FormaLLM "phantom operator" hallucination class).
+    _retriever = None  # type: ignore[var-annotated]
+    _retriever_init_attempted = False
+
+    @classmethod
+    def _get_retriever(cls):
+        if cls._retriever_init_attempted:
+            return cls._retriever
+        cls._retriever_init_attempted = True
+        try:
+            from src.inference.spec_retriever import SpecRetriever
+            from pathlib import Path as _P
+            corpus = _P(__file__).resolve().parents[2] / "data" / "processed" / "diamond_curated.jsonl"
+            if corpus.exists():
+                cls._retriever = SpecRetriever.from_jsonl(corpus)
+        except Exception:
+            cls._retriever = None
+        return cls._retriever
+
     def generate_spec(
         self,
         nl_description: str,
         module_name: Optional[str] = None,
         temperature: float = 0.05,
+        rag_k: int = 2,
     ) -> str:
         """
         Generate a TLA+ specification from a natural-language description.
@@ -108,6 +132,17 @@ class ChatTLAClient:
         user_content = nl_description.strip()
         if module_name:
             user_content += f"\n\nUse module name: {module_name}"
+
+        # RAG: ground the model on verified specs that share vocabulary with
+        # the request. Cheap (BM25 over ~hundreds of specs) and addresses the
+        # "phantom operator" hallucination class from FormaLLM §RQ4.
+        if rag_k > 0:
+            retriever = self._get_retriever()
+            if retriever is not None:
+                hits = retriever.retrieve(nl_description, k=rag_k)
+                rag_block = retriever.format_for_prompt(hits)
+                if rag_block:
+                    user_content = f"{rag_block}\n\n---\n\n{user_content}"
 
         developer_content = f"{_DEVELOPER_PROMPT}\nReasoning: {self.reasoning}"
         prompt = _build_harmony_prompt(developer_content, user_content)
@@ -316,7 +351,20 @@ class ChatTLAClient:
 
 
 def _extract_tla(text: str) -> str:
-    """Extract ---- MODULE ... ==== block from model output."""
+    """Extract ---- MODULE ... ==== block from model output.
+
+    Runs the canonical normalizer first (Unicode op replacement, harmony tag
+    stripping, <think> removal, fence removal, terminator/dedupe), so the
+    heavier `_sanitize_spec` only needs to handle PlusCal and CONSTANT/VARIABLE
+    rewrites. See src/postprocess/normalize.py.
+    """
+    try:
+        from src.postprocess import normalize_spec
+        cleaned, _ = normalize_spec(text)
+        if cleaned:
+            return cleaned.strip()
+    except Exception:
+        pass
     m = re.search(r"(----\s*MODULE\b.*?====)", text, re.DOTALL)
     return m.group(1).strip() if m else text.strip()
 

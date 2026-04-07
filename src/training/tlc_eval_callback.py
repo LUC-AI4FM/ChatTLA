@@ -224,12 +224,20 @@ class TLCEvalCallback(TrainerCallback):
 
 def _extract_tla_block(text: str) -> str:
     """
-    Extract the TLA+ module block from generated text.
-    Looks for ---- MODULE ... ==== delimiters.
-    Falls back to returning the full text if delimiters aren't found.
+    Extract a normalized TLA+ module block from generated text.
+
+    Runs the canonical post-processor (src.postprocess.normalize_spec) which
+    closes the five FormaLLM hallucination categories — Unicode operators,
+    semicolon/backtick injection, <think>/harmony leakage, missing/duplicate
+    MODULE headers, and missing ==== terminators — before SANY/TLC see the
+    output. Falls back to returning the full text if normalization fails.
     """
-    m = re.search(r"(----\s*MODULE\b.*?====)", text, re.DOTALL)
-    if m:
-        return m.group(1).strip()
-    # If no delimiters, take the full text (might still parse)
-    return text.strip()
+    try:
+        from src.postprocess import normalize_spec
+        cleaned, _ = normalize_spec(text)
+        return cleaned.strip() if cleaned else text.strip()
+    except Exception:
+        m = re.search(r"(----\s*MODULE\b.*?====)", text, re.DOTALL)
+        if m:
+            return m.group(1).strip()
+        return text.strip()
