@@ -220,13 +220,21 @@ def _strip_backticks(spec: str, rep: NormalizationReport) -> str:
 
 
 def _normalize_unicode_ops(spec: str, rep: NormalizationReport) -> str:
+    """Replace Unicode TLA+ operators with their ASCII equivalents.
+
+    Note: we do NOT collapse multi-whitespace afterwards even though the
+    replacement table inserts padding spaces around each operator. The reason
+    is that TLA+ junction-list parsing is **column-sensitive**: the parser
+    requires the `/\\` (or `\\/`) items in a junction list to share an
+    indentation column. Collapsing `  ` → ` ` shifts those columns and
+    silently breaks otherwise-correct specs (the failure looks like a parse
+    error inside the action body). The extra space inside operator boundaries
+    is harmless to SANY."""
     for src, dst in UNICODE_OP_TABLE:
         if src in spec:
             count = spec.count(src)
             rep.unicode_ops_replaced += count
             spec = spec.replace(src, dst)
-    # Collapse the extra whitespace we just inserted.
-    spec = re.sub(r"[ \t]{2,}", " ", spec)
     return spec
 
 
