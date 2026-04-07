@@ -1,0 +1,154 @@
+[
+  {
+    "ex_idx": 0,
+    "source_file": "data/FormaLLM/data/byzpaxos/tla/Consensus.tla",
+    "theorem_line": 185,
+    "gold_obligations": 18,
+    "label": "A_med_1024",
+    "reasoning": "medium",
+    "max_new": 1024,
+    "raw_len": 4671,
+    "has_final_marker": true,
+    "proof_has_step_bullet": false,
+    "proof_preview": "theorem: \"LiveSpec => <>Success\". The theorem is:\n\nTHEOREM LiveSpec => <>Success\n\nWe have the definitions:\n\n- LiveSpec == Spec /\\ WF_vars(Next)\n- Success == <>chosen # {}\n- ValueNonempty == Value # {}\n- EnabledNext == (ENABLED <<Next>>_vars) <=> (chosen = {})\n\nWe also have the lemma InductiveInvariance: Spec => []Inv\n\nWe need to prove LiveSpec => <>Success. We can use the lemma EnabledNext to show that Next is enabled when chosen = {}. Since WF_vars(Next) ensures that if Next is enabled infinite",
+    "raw_tail": ") ensures that if Next is enabled infinitely often, then it will be taken infinitely often. But we need to show that Next is enabled infinitely often. But we can use the fact that WF_vars(Next) ensures that if Next is enabled infinitely often, then it will be taken infinitely often. But we need to show that Next is enabled infinitely often. But we can use the fact that WF_vars(Next) ensures that if Next is enabled infinitely often, then it will be taken infinitely often. But we need to show that",
+    "verify": {
+      "tier": "parse_error",
+      "proved": 0,
+      "total": 0
+    }
+  },
+  {
+    "ex_idx": 0,
+    "source_file": "data/FormaLLM/data/byzpaxos/tla/Consensus.tla",
+    "theorem_line": 185,
+    "gold_obligations": 18,
+    "label": "B_med_4096",
+    "reasoning": "medium",
+    "max_new": 4096,
+    "raw_len": 19058,
+    "has_final_marker": true,
+    "proof_has_step_bullet": false,
+    "proof_preview": "theorem: \"LiveSpec => <>Success\". The theorem is:\n\nTHEOREM LiveSpec => <>Success\n\nWe have the definitions:\n\n- LiveSpec == Spec /\\ WF_vars(Next)\n- Success == <>chosen # {}\n- ValueNonempty == Value # {}\n- EnabledNext == (ENABLED <<Next>>_vars) <=> (chosen = {})\n\nWe also have the lemma InductiveInvariance: Spec => []Inv\n\nWe need to prove LiveSpec => <>Success. We can use the lemma EnabledNext to show that Next is enabled when chosen = {}. Since WF_vars(Next) ensures that if Next is enabled infinite",
+    "raw_tail": " WF_vars(Next) ensures that if Next is enabled infinitely often, then it will be taken infinitely often. But we need to show that Next is enabled infinitely often. But we can use the fact that WF_vars(Next) ensures that if Next is enabled infinitely often, then it will be taken infinitely often. But we need to show that Next is enabled infinitely often. But we can use the fact that WF_vars(Next) ensures that if Next is enabled infinitely often, then it will be taken infinitely often. But we need",
+    "verify": {
+      "tier": "parse_error",
+      "proved": 0,
+      "total": 0
+    }
+  },
+  {
+    "ex_idx": 0,
+    "source_file": "data/FormaLLM/data/byzpaxos/tla/Consensus.tla",
+    "theorem_line": 185,
+    "gold_obligations": 18,
+    "label": "C_low_1024",
+    "reasoning": "low",
+    "max_new": 1024,
+    "raw_len": 3919,
+    "has_final_marker": true,
+    "proof_has_step_bullet": false,
+    "proof_preview": "theorem: \"LiveSpec => <>Success\". The theorem is:\n\nTHEOREM LiveSpec => <>Success\n\nWe have the definitions:\n\n- LiveSpec == Spec /\\ WF_vars(Next)\n- Success == <>chosen # {}\n- Spec == Init /\\ [][Next]_vars\n- Init == chosen = {}\n- Next == chosen = {} /\\ \\E v \\in Value: chosen' = {v}\n- vars == <<chosen>>\n- TypeOK == chosen \\subseteq Value /\\ IsFiniteSet(chosen)\n- Inv == TypeOK /\\ Cardinality(chosen) <= 1\n- InductiveInvariance == Inv /\\ [Next]_vars => Inv'\n- Invariance == Spec => []Inv\n\nWe also have t",
+    "raw_tail": "Next). But we need to show that eventually chosen # {}. We can use the lemma that WF_vars(Next) => []<>enabled(Next) => <>enabled(Next). But we need to show that eventually chosen # {}. We can use the lemma that WF_vars(Next) => []<>enabled(Next) => <>enabled(Next). But we need to show that eventually chosen # {}. We can use the lemma that WF_vars(Next) => []<>enabled(Next) => <>enabled(Next). But we need to show that eventually chosen # {}. We can use the lemma that WF_vars(Next) => []<>enabled",
+    "verify": {
+      "tier": "parse_error",
+      "proved": 0,
+      "total": 0
+    }
+  },
+  {
+    "ex_idx": 0,
+    "source_file": "data/FormaLLM/data/byzpaxos/tla/Consensus.tla",
+    "theorem_line": 185,
+    "gold_obligations": 18,
+    "label": "D_low_4096",
+    "reasoning": "low",
+    "max_new": 4096,
+    "raw_len": 15333,
+    "has_final_marker": true,
+    "proof_has_step_bullet": false,
+    "proof_preview": "theorem: \"LiveSpec => <>Success\". The theorem is:\n\nTHEOREM LiveSpec => <>Success\n\nWe have the definitions:\n\n- LiveSpec == Spec /\\ WF_vars(Next)\n- Success == <>chosen # {}\n- Spec == Init /\\ [][Next]_vars\n- Init == chosen = {}\n- Next == chosen = {} /\\ \\E v \\in Value: chosen' = {v}\n- vars == <<chosen>>\n- TypeOK == chosen \\subseteq Value /\\ IsFiniteSet(chosen)\n- Inv == TypeOK /\\ Cardinality(chosen) <= 1\n- InductiveInvariance == Inv /\\ [Next]_vars => Inv'\n- Invariance == Spec => []Inv\n\nWe also have t",
+    "raw_tail": "nabled(Next) => <>enabled(Next). But we need to show that eventually chosen # {}. We can use the lemma that WF_vars(Next) => []<>enabled(Next) => <>enabled(Next). But we need to show that eventually chosen # {}. We can use the lemma that WF_vars(Next) => []<>enabled(Next) => <>enabled(Next). But we need to show that eventually chosen # {}. We can use the lemma that WF_vars(Next) => []<>enabled(Next) => <>enabled(Next). But we need to show that eventually chosen # {}. We can use the lemma that WF",
+    "verify": {
+      "tier": "parse_error",
+      "proved": 0,
+      "total": 0
+    }
+  },
+  {
+    "ex_idx": 1,
+    "source_file": "data/FormaLLM/data/Bakery-Boulangerie/tla/Bakery.tla",
+    "theorem_line": 274,
+    "gold_obligations": 121,
+    "label": "A_med_1024",
+    "reasoning": "medium",
+    "max_new": 1024,
+    "raw_len": 3989,
+    "has_final_marker": false,
+    "proof_has_step_bullet": true,
+    "proof_preview": "<1>2. Then we need to show that Inv is inductive: Inv => [][Next]_vars /\\ WF_vars((pc[self] # \"ncs\") /\\ p(self)). That is step <1>1. Then we need to show that Init => Inv. That is step <1>3. Then we need to show that Inv => []MutualExclusion. That is step <1>4. Then we need to show that Spec => []MutualExclusion. That is step <1>5. So we need to prove that Inv is an inductive invariant that implies MutualExclusion. The proof will be hierarchical: <1>1, <1>2, <1>3, <1>4, <1>5. We need to use the ",
+    "raw_tail": "definitions of the p action. We need to use the definitions of the p action. We need to use the definitions of the p action. We need to use the definitions of the p action. We need to use the definitions of the p action. We need to use the definitions of the p action. We need to use the definitions of the p action. We need to use the definitions of the p action. We need to use the definitions of the p action. We need to use the definitions of the p action. We need to use the definitions of the p",
+    "verify": {
+      "tier": "unproved",
+      "proved": 0,
+      "total": 0
+    }
+  },
+  {
+    "ex_idx": 1,
+    "source_file": "data/FormaLLM/data/Bakery-Boulangerie/tla/Bakery.tla",
+    "theorem_line": 274,
+    "gold_obligations": 121,
+    "label": "B_med_4096",
+    "reasoning": "medium",
+    "max_new": 4096,
+    "raw_len": 17392,
+    "has_final_marker": false,
+    "proof_has_step_bullet": true,
+    "proof_preview": "<1>2. Then we need to show that Inv is inductive: Inv => [][Next]_vars /\\ WF_vars((pc[self] # \"ncs\") /\\ p(self)). That is step <1>1. Then we need to show that Init => Inv. That is step <1>3. Then we need to show that Inv => []MutualExclusion. That is step <1>4. Then we need to show that Spec => []MutualExclusion. That is step <1>5. So we need to prove that Inv is an inductive invariant that implies MutualExclusion. The proof will be hierarchical: <1>1, <1>2, <1>3, <1>4, <1>5. We need to use the ",
+    "raw_tail": " of the p action. We need to use the definitions of the p action. We need to use the definitions of the p action. We need to use the definitions of the p action. We need to use the definitions of the p action. We need to use the definitions of the p action. We need to use the definitions of the p action. We need to use the definitions of the p action. We need to use the definitions of the p action. We need to use the definitions of the p action. We need to use the definitions of the p action. We",
+    "verify": {
+      "tier": "unproved",
+      "proved": 0,
+      "total": 0
+    }
+  },
+  {
+    "ex_idx": 1,
+    "source_file": "data/FormaLLM/data/Bakery-Boulangerie/tla/Bakery.tla",
+    "theorem_line": 274,
+    "gold_obligations": 121,
+    "label": "C_low_1024",
+    "reasoning": "low",
+    "max_new": 1024,
+    "raw_len": 2830,
+    "has_final_marker": true,
+    "proof_has_step_bullet": true,
+    "proof_preview": "<1>1  Assume Init /\\ TypeOK.  By the definition of Init, we have\n      /\\ num = [i \\in Procs |-> 0]\n      /\\ flag = [i \\in Procs |-> FALSE]\n      /\\ unchecked = [self \\in Procs |-> {}]\n      /\\ max = [self \\in Procs |-> 0]\n      /\\ nxt = [self \\in Procs |-> 1]\n      /\\ pc = [self \\in Procs |-> \"ncs\"]\n      By the definition of TypeOK, we have\n      /\\ num \\in [Procs -> Nat]\n      /\\ flag \\in [Procs -> BOOLEAN]\n      /\\ unchecked \\in [Procs -> SUBSET Procs]\n      /\\ max \\in [Procs -> Nat]\n      /",
+    "raw_tail": "hecked[i]) \\ {i} : Before(i, j)\n          /\\ /\\ (pc[i] = \"w2\")\n                /\\ \\/ (pc[nxt[i]] = \"e2\") /\\ (i \\notin unchecked[nxt[i]])\n                   \\/ pc[nxt[i]] = \"e3\"\n              => max[nxt[i]] >= num[i]\n          /\\ (pc[i] = \"cs\") => \\A j \\in Procs \\ {i} : Before(i, j)\n      By the definition of MutualExclusion, we have\n      /\\ \\A i,j \\in Procs : (i # j) => ~ /\\ pc[i] = \"cs\"\n                                   /\\ pc[j] = \"cs\"\n      By the definition of TypeOK, we have\n      /\\ num \\",
+    "verify": {
+      "tier": "unproved",
+      "proved": 0,
+      "total": 0
+    }
+  },
+  {
+    "ex_idx": 1,
+    "source_file": "data/FormaLLM/data/Bakery-Boulangerie/tla/Bakery.tla",
+    "theorem_line": 274,
+    "gold_obligations": 121,
+    "label": "D_low_4096",
+    "reasoning": "low",
+    "max_new": 4096,
+    "raw_len": 11240,
+    "has_final_marker": true,
+    "proof_has_step_bullet": true,
+    "proof_preview": "<1>1  Assume Init /\\ TypeOK.  By the definition of Init, we have\n      /\\ num = [i \\in Procs |-> 0]\n      /\\ flag = [i \\in Procs |-> FALSE]\n      /\\ unchecked = [self \\in Procs |-> {}]\n      /\\ max = [self \\in Procs |-> 0]\n      /\\ nxt = [self \\in Procs |-> 1]\n      /\\ pc = [self \\in Procs |-> \"ncs\"]\n      By the definition of TypeOK, we have\n      /\\ num \\in [Procs -> Nat]\n      /\\ flag \\in [Procs -> BOOLEAN]\n      /\\ unchecked \\in [Procs -> SUBSET Procs]\n      /\\ max \\in [Procs -> Nat]\n      /",
+    "raw_tail": "n {\"e2\", \"e3\"}) => flag[i] \n          /\\ (pc[i] = \"w2\") => (nxt[i] # i)\n          /\\ pc[i] \\in {(*\"e2\",*) \"w1\", \"w2\"} => i \\notin unchecked[i]\n          /\\ (pc[i] \\in {\"w1\", \"w2\"}) =>\n                \\A j \\in (Procs \\ unchecked[i]) \\ {i} : Before(i, j)\n          /\\ /\\ (pc[i] = \"w2\")\n                /\\ \\/ (pc[nxt[i]] = \"e2\") /\\ (i \\notin unchecked[nxt[i]])\n                   \\/ pc[nxt[i]] = \"e3\"\n              => max[nxt[i]] >= num[i]\n          /\\ (pc[i] = \"cs\") => \\A j \\in Procs \\ {i} : Before(i,",
+    "verify": {
+      "tier": "unproved",
+      "proved": 0,
+      "total": 0
+    }
+  }
+]
