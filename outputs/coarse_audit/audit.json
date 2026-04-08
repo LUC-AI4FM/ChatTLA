@@ -1,0 +1,160 @@
+[
+  {
+    "id": 10,
+    "spec": "Bakery",
+    "audit_tla": "data/FormaLLM/data/Bakery-Boulangerie/tla/MCBakery.tla",
+    "tier": "bronze",
+    "is_diamond": false,
+    "distinct_states": 0,
+    "invariants_checked": 0,
+    "trivial_invariant": false,
+    "mutation_tested": false,
+    "mutation_caught": false,
+    "runtime_s": 0.3,
+    "sany_errors": [
+      "*** Errors: 1"
+    ],
+    "violations": []
+  },
+  {
+    "id": 109,
+    "spec": "LamportMutex",
+    "audit_tla": "data/FormaLLM/data/lamport_mutex/tla/MCLamportMutex.tla",
+    "tier": "gold",
+    "is_diamond": true,
+    "distinct_states": 724274,
+    "invariants_checked": 3,
+    "trivial_invariant": false,
+    "mutation_tested": true,
+    "mutation_caught": true,
+    "runtime_s": 18.2,
+    "sany_errors": [],
+    "violations": []
+  },
+  {
+    "id": 194,
+    "spec": "TwoPhase",
+    "audit_tla": "data/FormaLLM/data/TwoPhase/tla/MCTwoPhase.tla",
+    "tier": "gold",
+    "is_diamond": true,
+    "distinct_states": 4,
+    "invariants_checked": 1,
+    "trivial_invariant": false,
+    "mutation_tested": true,
+    "mutation_caught": true,
+    "runtime_s": 1.2,
+    "sany_errors": [],
+    "violations": []
+  },
+  {
+    "id": 199,
+    "spec": "TwoPhase",
+    "audit_tla": "data/FormaLLM/data/TwoPhase/tla/MCTwoPhase.tla",
+    "tier": "gold",
+    "is_diamond": true,
+    "distinct_states": 4,
+    "invariants_checked": 1,
+    "trivial_invariant": false,
+    "mutation_tested": true,
+    "mutation_caught": true,
+    "runtime_s": 1.2,
+    "sany_errors": [],
+    "violations": []
+  },
+  {
+    "id": 100,
+    "spec": "KVsnap",
+    "audit_tla": "data/FormaLLM/data/KeyValueStore/tla/MCKVsnap.tla",
+    "tier": "bronze",
+    "is_diamond": false,
+    "distinct_states": 0,
+    "invariants_checked": 0,
+    "trivial_invariant": false,
+    "mutation_tested": false,
+    "mutation_caught": false,
+    "runtime_s": 0.3,
+    "sany_errors": [
+      "*** Errors: 1"
+    ],
+    "violations": []
+  },
+  {
+    "id": 134,
+    "spec": "ParReach",
+    "audit_tla": "data/FormaLLM/data/MisraReachability/tla/MCParReach.tla",
+    "tier": "gold",
+    "is_diamond": true,
+    "distinct_states": 393,
+    "invariants_checked": 1,
+    "trivial_invariant": false,
+    "mutation_tested": true,
+    "mutation_caught": true,
+    "runtime_s": 15.7,
+    "sany_errors": [],
+    "violations": []
+  },
+  {
+    "id": 139,
+    "spec": "Reachable",
+    "audit_tla": "data/FormaLLM/data/MisraReachability/tla/MCReachable.tla",
+    "tier": "silver",
+    "is_diamond": false,
+    "distinct_states": 0,
+    "invariants_checked": 0,
+    "trivial_invariant": false,
+    "mutation_tested": false,
+    "mutation_caught": false,
+    "runtime_s": 25.4,
+    "sany_errors": [],
+    "violations": []
+  },
+  {
+    "id": 126,
+    "spec": "Quicksort",
+    "audit_tla": "data/FormaLLM/data/LoopInvariance/tla/MCQuicksort.tla",
+    "tier": "bronze",
+    "is_diamond": false,
+    "distinct_states": 0,
+    "invariants_checked": 0,
+    "trivial_invariant": false,
+    "mutation_tested": false,
+    "mutation_caught": false,
+    "runtime_s": 0.3,
+    "sany_errors": [
+      "*** Errors: 1"
+    ],
+    "violations": []
+  },
+  {
+    "id": 123,
+    "spec": "BinarySearch",
+    "audit_tla": "data/FormaLLM/data/LoopInvariance/tla/MCBinarySearch.tla",
+    "tier": "bronze",
+    "is_diamond": false,
+    "distinct_states": 0,
+    "invariants_checked": 0,
+    "trivial_invariant": false,
+    "mutation_tested": false,
+    "mutation_caught": false,
+    "runtime_s": 0.3,
+    "sany_errors": [
+      "*** Errors: 1"
+    ],
+    "violations": []
+  },
+  {
+    "id": 32,
+    "spec": "ChangRoberts",
+    "audit_tla": "data/FormaLLM/data/chang_roberts/tla/MCChangRoberts.tla",
+    "tier": "gold",
+    "is_diamond": true,
+    "distinct_states": 137,
+    "invariants_checked": 2,
+    "trivial_invariant": false,
+    "mutation_tested": true,
+    "mutation_caught": true,
+    "runtime_s": 1.3,
+    "sany_errors": [],
+    "violations": []
+  }
+]

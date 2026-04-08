@@ -1,0 +1,37 @@
+problem_id,dev_id,user_id,sany_pass,tlc_pass,tlc_tier,distinct_states,tlaps_status,judge_correctness,judge_invariant,judge_completeness,judge_idiom,judge_training,judge_mean,judge_verdict,gen_time_s,composite,tla_path
+BM001,D1,U1,False,False,bronze,0,parse_error,4,4,3,4,4,3.8,Acceptable with mino,64.48,1.9,/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/MutualExclusion.tla
+BM001,D1,U2,False,False,bronze,0,parse_error,0,0,0,0,0,0.0,parse_error,24.98,0.0,/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/MutualExclusion_D1U2.tla
+BM001,D1,U3,False,False,bronze,0,parse_error,1,2,1,2,1,1.4,reject,58.11,0.7,/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/MutualExclusion_D1U3.tla
+BM001,D2,U1,False,False,bronze,0,no_theorems,0,0,0,0,0,0.0,parse_error,8.64,0.0,/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/MutualExclusion_D2U1.tla
+BM001,D2,U2,False,False,bronze,0,no_theorems,2,2,2,2,3,2.2,Needs Improvement,8.48,1.1,/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/MutualExclusion_D2U2.tla
+BM001,D2,U3,False,False,bronze,0,no_theorems,1,1,1,1,1,1.0,Reject,6.12,0.5,/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/MutualExclusion_D2U3.tla
+BM001,D3,U1,False,False,bronze,0,parse_error,3,3,3,3,3,3.0,Acceptable but requi,12.08,1.5,/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/MutualExclusion_D3U1.tla
+BM001,D3,U2,False,False,bronze,0,parse_error,1,1,1,1,1,1.0,reject,11.47,0.5,/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/MutualExclusion_D3U2.tla
+BM001,D3,U3,False,False,bronze,0,parse_error,1,1,1,1,1,1.0,reject,8.48,0.5,/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/MutualExclusion_D3U3.tla
+BM002,D1,U1,False,False,bronze,0,no_theorems,2,2,2,3,2,2.2,reject,31.89,1.1,/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/2PC.tla
+BM002,D1,U2,False,False,bronze,0,no_theorems,0,0,0,0,0,0.0,parse_error,21.46,0.0,/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/2PC_D1U2.tla
+BM002,D1,U3,False,False,bronze,0,parse_error,0,0,0,0,0,0.0,parse_error,23.71,0.0,/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/2PC_D1U3.tla
+BM002,D2,U1,False,False,bronze,0,no_theorems,0,0,0,0,0,0.0,parse_error,10.21,0.0,/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/2PC_D2U1.tla
+BM002,D2,U2,False,False,bronze,0,no_theorems,4,4,3,3,4,3.6,Acceptable,13.61,1.8,/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/2PC_D2U2.tla
+BM002,D2,U3,False,False,bronze,0,no_theorems,0,0,0,0,0,0.0,parse_error,15.55,0.0,/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/2PC_D2U3.tla
+BM002,D3,U1,False,False,bronze,0,parse_error,2,2,2,2,3,2.2,needs improvement,19.93,1.1,/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/2PC_D3U1.tla
+BM002,D3,U2,False,False,bronze,0,parse_error,2,2,2,2,3,2.2,Needs major revision,10.69,1.1,/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/2PC_D3U2.tla
+BM002,D3,U3,False,False,bronze,0,parse_error,0,0,0,0,0,0.0,parse_error,12.41,0.0,/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/2PC_D3U3.tla
+BM004,D1,U1,False,False,bronze,0,no_theorems,1,1,1,1,1,1.0,reject,57.23,0.5,/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/Bakery.tla
+BM004,D1,U2,False,False,bronze,0,no_theorems,1,1,1,1,1,1.0,reject,61.31,0.5,/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/Bakery_D1U2.tla
+BM004,D1,U3,True,False,error,0,no_theorems,4,4,4,4,4,4.0,Acceptable,11.53,3.0,/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/Bakery_D1U3.tla
+BM004,D2,U1,False,False,bronze,0,no_theorems,2,2,2,2,3,2.2,Needs major revision,12.07,1.1,/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/Bakery_D2U1.tla
+BM004,D2,U2,False,False,bronze,0,no_theorems,4,4,3,3,4,3.6,Acceptable,10.28,1.8,/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/Bakery_D2U2.tla
+BM004,D2,U3,False,False,bronze,0,no_theorems,0,0,0,0,0,0.0,parse_error,18.69,0.0,/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/Bakery_D2U3.tla
+BM004,D3,U1,False,False,bronze,0,parse_error,0,0,0,0,0,0.0,parse_error,13.21,0.0,/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/Bakery_D3U1.tla
+BM004,D3,U2,False,False,bronze,0,parse_error,3,2,2,2,3,2.4,Needs Improvement,13.9,1.2,/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/Bakery_D3U2.tla
+BM004,D3,U3,False,False,bronze,0,parse_error,3,2,2,2,3,2.4,Needs Improvement,12.34,1.2,/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/Bakery_D3U3.tla
+BM006,D1,U1,False,False,bronze,0,no_theorems,2,2,2,2,3,2.2,Needs major revision,33.53,1.1,/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/RaftElection.tla
+BM006,D1,U2,False,False,bronze,0,no_theorems,2,2,2,2,3,2.2,needs improvement,16.03,1.1,/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/RaftElection_D1U2.tla
+BM006,D1,U3,False,False,bronze,0,no_theorems,2,2,2,2,3,2.2,needs improvement,39.23,1.1,/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/RaftLeaderElection.tla
+BM006,D2,U1,False,False,bronze,0,parse_error,0,0,0,0,0,0.0,parse_error,12.25,0.0,/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/RaftLeaderElection_D2U1.tla
+BM006,D2,U2,False,False,bronze,0,no_theorems,0,0,0,0,0,0.0,parse_error,18.25,0.0,/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/RaftLeaderElection_D2U2.tla
+BM006,D2,U3,False,False,bronze,0,no_theorems,0,0,0,0,0,0.0,parse_error,15.5,0.0,/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/RaftLeaderElection_D2U3.tla
+BM006,D3,U1,False,False,bronze,0,parse_error,2,2,2,2,3,2.2,Needs major revision,13.72,1.1,/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/RaftLeaderElection_D3U1.tla
+BM006,D3,U2,False,False,bronze,0,parse_error,0,0,0,0,0,0.0,parse_error,11.08,0.0,/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/RaftLeaderElection_D3U2.tla
+BM006,D3,U3,False,False,bronze,0,parse_error,2,2,2,2,3,2.2,needs improvement,14.23,1.1,/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/RaftLeaderElection_D3U3.tla
