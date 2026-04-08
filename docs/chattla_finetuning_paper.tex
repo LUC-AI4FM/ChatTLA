@@ -1095,11 +1095,12 @@ structure of the inference, not in the volume of supervised data.
 \section{In-Flight SFT Run: Failure and Three Hypotheses}
 \label{sec:sftv3}
 
-\noindent\textit{This appendix documents an unresolved training
-failure encountered during the SFT round on the topic-curriculum
-corpus of \S\ref{sec:gen}. It is included for reproducibility and
-triage transparency; the body of the paper does not depend on its
-outcome.}\medskip
+\noindent\textit{This appendix documents a training failure
+encountered during the SFT round on the topic-curriculum corpus of
+\S\ref{sec:gen}, the three-hypothesis triage that followed, and the
+resolved run that ultimately cleared the schedule. It is retained in
+full because the failure mode is non-obvious and the fix is not the
+one we expected.}\medskip
 
 The mixed $1053$-record corpus is the input to an incremental SFT run
 on top of the deployed merged checkpoint
@@ -1220,6 +1221,100 @@ the existing deploy pipeline and re-tagged as a successor to
 \texttt{chattla:20b}. If none of them does, the corpus is the binding
 constraint, not the schedule, and the next lever is to widen the
 topic curriculum rather than to fight the trainer.
+
+\subsection{Resolution: H2-partial clears the schedule}
+\label{sec:sftv3-resolution}
+
+The triage plan was executed on 2026-04-07. We did not need to fall
+through to H1 or H3: a \emph{partial} application of fix~1 was
+sufficient.
+
+\paragraph{What we tried first (and why it OOM'd).} The cookbook
+remedy for a \texttt{CheckpointError} of this shape is to disable
+reentrant gradient checkpointing
+(\texttt{gradient\_checkpointing\_kwargs=\{"use\_reentrant":\ False\}}),
+because the non-reentrant variant explicitly captures and restores
+the RNG state on the recompute pass. We applied that change together
+with \texttt{lora\_dropout=0.0} and relaunched. The recompute
+mismatch did not recur --- but the run aborted at step~$6/792$ with a
+CUDA out-of-memory on \texttt{cuda:0}, trying to allocate
+$3.82$\,GiB on top of $47.19$\,GiB already in use. The non-reentrant
+variant retains slightly more activation state per checkpointed
+block, and on the $48$\,GB RTX~8000 GPUs that extra footprint pushed
+the long-tail sequences over the limit.
+
+\paragraph{The fix that actually held.} We reverted to reentrant
+checkpointing and kept \texttt{lora\_dropout=0.0} alone. With no
+dropout there is no RNG-dependent mask whose recompute could differ
+from the forward pass, so the H2 cascade (dropout-difference $\to$
+MoE-routing-shape-difference) cannot fire even under reentrant
+recomputation. This is the strict subset of fix~1 that does not
+depend on the non-reentrant RNG mechanism, and it is memory-neutral
+relative to the original failed configuration. As a third lever, we
+also dropped \texttt{max\_length} from $4096$ to $2048$, which
+truncates roughly the upper half of the corpus length distribution
+(corpus mean $1924$ tokens; $p_{90}=3236$) but eliminates the
+long-tail OOM that the $4096$ and $3072$ settings both hit at
+step~$6$.
+
+\paragraph{Run.} The relaunched job (\texttt{outputs/logs/sft\_v3\_h2fix\_run.log})
+trained from the same merged \texttt{v13} checkpoint with effective
+batch~$4$ ($1$ per device $\times$ $2$ GPUs $\times$ $4$
+gradient-accumulation steps), $3$ epochs, learning rate
+$5\!\times\!10^{-5}$, $\texttt{max\_length}=2048$, on the same
+$2{\times}$~RTX~8000 hardware. The schedule expanded from $396$ to
+$792$ optimisation steps because the per-device batch dropped from
+$2$ to $1$. The training executable for these knobs is
+\texttt{src/training/train.py} with the \texttt{lora\_dropout: 0.0}
+edit applied to \texttt{src/training/lora\_config.yaml}; no changes
+were made to the modeling code, the dispatch logic, or the MoE
+router. The deployed pre-fix checkpoints were preserved at
+\texttt{outputs/checkpoints\_v13\_premerge/} so that the new run's
+\texttt{save\_total\_limit=5} rotation could not overwrite the
+\texttt{v13} LoRA history.
+
+\paragraph{Result.} The job ran to completion. All $792$ steps
+finished cleanly, with no recompute mismatch and no OOM. Wall clock
+was $27{,}044$\,s ($7.51$\,h), within $2\%$ of the original $7.4$\,h
+projection and well inside the $12$\,h budget the operator had
+allocated. Steady-state per-step time was $\approx\!34$\,s; train
+throughput was $0.117$\,samples/s. The training loss collapsed from
+$2.76$ at step~$1$ to $1.64$ by step~$5$, fell to $\approx\!0.51$ by
+the end of epoch~$1$, $\approx\!0.49$ by the end of epoch~$2$, and
+plateaued at a noisy band around $0.50$--$0.66$ for epoch~$3$ as the
+cosine schedule drove the learning rate to zero. The final reported
+\texttt{train\_loss} (mean over the run) was $0.663$, mean token
+accuracy was $0.890$, and entropy was $0.500$. Five rolling
+checkpoints were retained, with the final adapter at
+\texttt{outputs/checkpoints/checkpoint-792/}.
+
+\paragraph{What this tells us about the original failure.} The fix
+that actually held is the strictly weaker half of fix~1: dropout zero
+without the non-reentrant RNG mechanism. Two things follow from
+that. First, hypothesis~H2 was correct in its mechanism but not in
+its framing --- dropout was not just the trigger and routing the
+amplifier, dropout alone (under reentrant recompute) is sufficient
+to drive the MoE router into a different decision on the recompute
+pass, which is what produces the off-by-one shape mismatch on
+\texttt{cuda:1}. Second, hypotheses~H1 and~H3 are not falsified, but
+they are not load-bearing for this stack: the router is determinis\-tic
+\emph{enough} given identical inputs, and the cross-GPU dispatch
+boundary is stable \emph{enough} given a deterministic forward pass.
+The single source of non-determinism that mattered was the LoRA
+dropout mask. We did not need the deterministic-router pin~(H1) or
+the single-GPU CPU-offload reload~(H3), and we deliberately did not
+run them: the cheapest fix cleared the schedule, so spending more
+GPU time on the more expensive ones would have been load-bearing
+only for a paper that does not exist.
+
+\paragraph{Status of the decision rule.} The training half of the
+decision rule from \S\ref{sec:sftv3} is satisfied: a fix from the
+triage plan ran to its full schedule. The held-out Diamond eval and
+the merge-and-redeploy step are pending and will be folded into the
+next revision of \S\ref{sec:results}; whether the new adapter is
+promoted to a successor of \texttt{chattla:20b} therefore still
+turns on whether \texttt{checkpoint-792} clears
+$\ge\!8/30$~Diamond pass against the $3/30$ pre-train baseline.
 
 % ===========================================================================
 \bibliographystyle{plain}

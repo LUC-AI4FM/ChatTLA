@@ -71,6 +71,27 @@ train.log
 src/shared/apalache/
 src/shared/tlaps/
 outputs/logs/watchdog.log
+outputs/logs/sft_v3_run.log
+outputs/logs/sft_v3_h2fix_run*.log
+outputs/logs/eval_*.log
+outputs/logs/merge_*.log
+outputs/logs/convert_*.log
+outputs/logs/publish_hf_*.log
+outputs/checkpoints_v13_premerge/
+outputs/merged_model_v14/
+outputs/merged_model_v13_baseline/
+
+# LaTeX build artifacts
+docs/*.aux
+docs/*.log
+docs/*.out
+docs/*.pdf
+docs/*.toc
+docs/*.bbl
+docs/*.blg
+docs/*.fls
+docs/*.fdb_latexmk
+docs/*.synctex.gz
 
 # TLAPS prover training (large source corpus + scan outputs)
 data/FormaLLM/
