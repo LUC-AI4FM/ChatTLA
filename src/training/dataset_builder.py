@@ -85,19 +85,115 @@ Reasoning: medium\
 """
 
 
-def build_messages_spec_generation(record: DatasetRecord) -> list[dict] | None:
-    """User: NL description → Assistant: complete spec."""
+def build_messages_spec_generation(
+    record: DatasetRecord,
+    include_plan: bool = False,
+) -> list[dict] | None:
+    """User: NL description → Assistant: complete spec.
+
+    When ``include_plan`` is True, we attempt to reverse-engineer a SpecPlan
+    from the record's TLA+ via the SANY AST and put a markdown rendering of
+    that plan into the analysis channel. Trains the model to think in terms
+    of structure (variables, actions, invariants) before writing the body —
+    the ChatTLA analogue of DeepSeek-Prover-V2's "plan before proof" prompt.
+
+    Plan extraction is best-effort: any failure falls back to the static
+    analysis stub, so enabling the flag is safe on a mixed corpus.
+    """
     if not record.annotation or not record.annotation.natural_language_description:
         return None
     nl = record.annotation.natural_language_description.strip()
     if not nl:
         return None
+
+    analysis_content = (
+        "I'll write a well-formed TLA+ specification with proper Init, Next, and invariants."
+    )
+    if include_plan:
+        plan_md = _try_extract_plan_md(record.tla_content)
+        if plan_md:
+            analysis_content = plan_md
+
     return [
         {"role": "developer", "content": _DEVELOPER_PROMPT},
         {"role": "user",      "content": f"Write a TLA+ specification for the following:\n\n{nl}"},
-        {"role": "assistant", "channel": "analysis",  "content": "I'll write a well-formed TLA+ specification with proper Init, Next, and invariants."},
+        {"role": "assistant", "channel": "analysis",  "content": analysis_content},
         {"role": "assistant", "channel": "final",     "content": record.tla_content.strip()},
     ]
+
+
+def build_messages_plan_generation(record: DatasetRecord) -> list[dict] | None:
+    """User: NL description → Assistant: structured SpecPlan as JSON.
+
+    Stage-1 training task for plan-then-spec generation. The model learns to
+    emit a parseable SpecPlan JSON object. Skipped if plan extraction fails
+    (e.g. spec doesn't parse with SANY).
+    """
+    if not record.annotation or not record.annotation.natural_language_description:
+        return None
+    nl = record.annotation.natural_language_description.strip()
+    if not nl:
+        return None
+    try:
+        from src.validators.component_validator import plan_from_ast
+        plan = plan_from_ast(record.tla_content)
+    except Exception:
+        return None
+    if plan is None:
+        return None
+    return [
+        {"role": "developer", "content": _PLANNING_DEVELOPER_PROMPT_FOR_TRAINING},
+        {"role": "user",      "content": f"Plan a TLA+ specification for the following:\n\n{nl}"},
+        {"role": "assistant", "channel": "analysis", "content": "I'll list the module structure: variables, actions, and invariants."},
+        {"role": "assistant", "channel": "final",    "content": plan.to_json()},
+    ]
+
+
+# Lightweight in-memory cache so the same TLA+ source isn't re-parsed twice
+# during a build (the same record can drive multiple task variants).
+_PLAN_MD_CACHE: dict[str, str] = {}
+
+
+def _try_extract_plan_md(tla_content: str) -> str | None:
+    """Extract a markdown plan from a TLA+ source via the SANY AST.
+
+    Returns None on any failure. Cached by content hash for the duration of
+    one build pass to avoid the SANY round-trip cost on duplicate tasks.
+    """
+    if not tla_content:
+        return None
+    key = hashlib.sha1(tla_content.encode("utf-8", "replace")).hexdigest()
+    cached = _PLAN_MD_CACHE.get(key)
+    if cached is not None:
+        return cached or None
+    try:
+        from src.validators.component_validator import plan_from_ast
+        plan = plan_from_ast(tla_content)
+    except Exception:
+        _PLAN_MD_CACHE[key] = ""
+        return None
+    if plan is None:
+        _PLAN_MD_CACHE[key] = ""
+        return None
+    md = plan.render_markdown()
+    _PLAN_MD_CACHE[key] = md
+    return md
+
+
+# Standalone planning developer prompt used by the plan_generation task. We
+# don't import the inference-side _PLANNING_DEVELOPER_PROMPT to avoid pulling
+# the ollama_client module into the training path.
+_PLANNING_DEVELOPER_PROMPT_FOR_TRAINING = """\
+You are designing a TLA+ specification. Output a structured PLAN as a single
+JSON object — and nothing else. The JSON object must have these fields:
+
+  module_name, extends[], constants[], variables[], init_sketch,
+  next_actions: [{name, guard, effect}], invariants: [{name, kind, statement}],
+  fairness, notes
+
+Output ONLY the JSON object. No prose, no markdown fences, no TLA+ code.
+Reasoning: medium\
+"""
 
 
 def build_messages_spec_completion(record: DatasetRecord) -> list[dict] | None:
@@ -323,6 +419,8 @@ def build(
     include_silver_augmented: bool = True,
     augmented_best_per_prompt: bool = True,
     skip_model_check_shims: bool = True,
+    include_plan: bool = False,
+    partial_credit_floor: float = 0.0,
 ) -> tuple[int, int]:
     """
     Load combined.jsonl → build all task variants → write train/eval JSONL.
@@ -391,10 +489,12 @@ def build(
         with path.open("w", encoding="utf-8") as f:
             for r in recs:
                 tasks = [
-                    build_messages_spec_generation(r),
+                    build_messages_spec_generation(r, include_plan=include_plan),
                     build_messages_spec_completion(r),
                     build_messages_invariant_gen(r),
                 ]
+                if include_plan:
+                    tasks.append(build_messages_plan_generation(r))
                 for msgs in tasks:
                     if msgs is not None:
                         f.write(json.dumps({"messages": msgs}, ensure_ascii=False) + "\n")
@@ -419,7 +519,7 @@ def build(
                 skipped += 1
                 continue
             tier = (ex.get("_tier") or "gold").lower()
-            allowed = {"gold", "bugfix"}
+            allowed = {"gold", "bugfix", "diamond"}
             if include_silver_augmented:
                 allowed.add("silver")
             if not gold_only_augmented:
@@ -427,6 +527,16 @@ def build(
             if tier not in allowed:
                 skipped += 1
                 continue
+            # Partial-credit floor: when set > 0, drop any row whose
+            # component verdicts (if recorded) fall below the threshold.
+            # Rows that predate the partial_credit schema have no _components
+            # block and are kept as-is — backwards compatible with older RL output.
+            if partial_credit_floor > 0:
+                comps = ex.get("_components") or {}
+                pc = comps.get("partial_credit")
+                if pc is not None and pc < partial_credit_floor:
+                    skipped += 1
+                    continue
             raw_rows.append(ex)
 
         if augmented_best_per_prompt and raw_rows:
@@ -528,6 +638,14 @@ if __name__ == "__main__":
                         help="Keep every augmented line (no collapse by prompt; may duplicate prompts)")
     parser.add_argument("--no-skip-mc-shims", action="store_true",
                         help="Keep TLC MC* wrapper modules (default: skip; they poison NL→spec SFT)")
+    parser.add_argument("--include-plan", action="store_true",
+                        help="Inject SANY-extracted SpecPlan markdown into spec_generation analysis "
+                             "channel AND add a plan_generation task per record. Slow (~2s/record SANY "
+                             "round-trip on first build); enables DeepSeek-Prover-V2 style plan-then-spec.")
+    parser.add_argument("--partial-credit-floor", type=float, default=0.0,
+                        help="Drop augmented rows whose _components.partial_credit is below this floor "
+                             "(e.g. 0.5 keeps only rows where ≥half the per-component verdicts pass). "
+                             "Rows without _components are unaffected. Default 0.0 = no filtering.")
     args = parser.parse_args()
 
     build(
@@ -545,4 +663,6 @@ if __name__ == "__main__":
         include_silver_augmented=not args.no_silver_augmented,
         augmented_best_per_prompt=not args.no_augmented_best_per_prompt,
         skip_model_check_shims=not args.no_skip_mc_shims,
+        include_plan=args.include_plan,
+        partial_credit_floor=args.partial_credit_floor,
     )

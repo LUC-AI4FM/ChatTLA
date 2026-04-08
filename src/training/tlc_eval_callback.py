@@ -8,12 +8,21 @@ on generated outputs at every evaluation step, providing two hard metrics:
 
 Metrics logged to MLflow
 ------------------------
-tlc/sany_parse_rate   — fraction of generated specs that SANY accepts
-tlc/tlc_clean_rate    — fraction that TLC model-checks with no violations
-tlc/eval_count        — number of specs evaluated in this step
+tlc/sany_parse_rate         — fraction of generated specs that SANY accepts
+tlc/tlc_clean_rate          — fraction that TLC model-checks with no violations
+tlc/eval_count              — number of specs evaluated in this step
+tlc/init_present_rate       — fraction whose AST contains an Init operator
+tlc/next_present_rate       — fraction whose AST contains a Next operator
+tlc/init_level_ok_rate      — Init exists AND is state-level (no primes)
+tlc/next_level_ok_rate      — Next exists AND is action-level (has primes)
+tlc/invariants_decl_rate    — at least one invariant-shaped operator declared
+tlc/depth1_rate             — TLC depth-1 reachability check passes
+tlc/partial_credit_mean     — weighted mean ∈ [0,1] across all components
 
-The `tlc_clean_rate` is the primary research metric for this project.
-Target: > 0.70 at end of training.
+`tlc_clean_rate` remains the headline metric. `partial_credit_mean` is the
+denser proxy that moves earlier in training (DeepSeek-Prover-V2-style binary
+verifier feedback is too sparse for ChatTLA's scale; partial credit gives the
+gradient something to climb on near-misses).
 
 Implementation notes
 --------------------
@@ -93,6 +102,14 @@ class TLCEvalCallback(TrainerCallback):
         n_sany_pass = 0
         n_tlc_pass  = 0
         n_total     = 0
+        # Component sums for the denser per-step reward signal
+        n_init_present     = 0
+        n_next_present     = 0
+        n_init_level_ok    = 0
+        n_next_level_ok    = 0
+        n_invariants_decl  = 0
+        n_depth1_pass      = 0
+        partial_credit_sum = 0.0
 
         model.eval()
         with torch.no_grad():
@@ -108,33 +125,49 @@ class TLCEvalCallback(TrainerCallback):
 
                 n_total += 1
                 try:
-                    result = self._run_tlc(generated)
+                    tier, semantic = self._run_tlc(generated)
                 except Exception as exc:
                     print(f"[TLCEvalCallback] TLC error: {exc}")
-                    result = "bronze"
+                    tier, semantic = "bronze", None
 
-                if result in ("silver", "gold"):
+                if tier in ("silver", "gold"):
                     n_sany_pass += 1
-                if result == "gold":
+                if tier == "gold":
                     n_tlc_pass += 1
+                if semantic is not None:
+                    n_init_present    += int(semantic.init_present)
+                    n_next_present    += int(semantic.next_present)
+                    n_init_level_ok   += int(semantic.init_level_ok)
+                    n_next_level_ok   += int(semantic.next_level_ok)
+                    n_invariants_decl += int(semantic.invariants_declared)
+                    n_depth1_pass     += int(semantic.tlc_depth1_ok)
+                    partial_credit_sum += semantic.partial_credit
 
-        sany_rate = n_sany_pass / n_total if n_total else 0.0
-        tlc_rate  = n_tlc_pass  / n_total if n_total else 0.0
+        denom = n_total if n_total else 1
+        sany_rate = n_sany_pass / denom
+        tlc_rate  = n_tlc_pass  / denom
 
         mlflow.log_metrics(
             {
-                "tlc/sany_parse_rate": sany_rate,
-                "tlc/tlc_clean_rate":  tlc_rate,
-                "tlc/eval_count":      n_total,
+                "tlc/sany_parse_rate":      sany_rate,
+                "tlc/tlc_clean_rate":       tlc_rate,
+                "tlc/eval_count":           n_total,
+                "tlc/init_present_rate":    n_init_present     / denom,
+                "tlc/next_present_rate":    n_next_present     / denom,
+                "tlc/init_level_ok_rate":   n_init_level_ok    / denom,
+                "tlc/next_level_ok_rate":   n_next_level_ok    / denom,
+                "tlc/invariants_decl_rate": n_invariants_decl  / denom,
+                "tlc/depth1_rate":          n_depth1_pass      / denom,
+                "tlc/partial_credit_mean":  partial_credit_sum / denom,
             },
             step=state.global_step,
         )
 
         print(
             f"[TLCEvalCallback] step={state.global_step} | "
-            f"sany_parse_rate={sany_rate:.3f} | "
-            f"tlc_clean_rate={tlc_rate:.3f} | "
-            f"n={n_total}"
+            f"sany={sany_rate:.3f} | tlc={tlc_rate:.3f} | "
+            f"depth1={n_depth1_pass / denom:.3f} | "
+            f"partial={partial_credit_sum / denom:.3f} | n={n_total}"
         )
 
     # -----------------------------------------------------------------------
@@ -201,14 +234,15 @@ class TLCEvalCallback(TrainerCallback):
             print(f"[TLCEvalCallback] Generation error: {exc}")
             return ""
 
-    def _run_tlc(self, generated_text: str) -> str:
+    def _run_tlc(self, generated_text: str):
         """
         Extract TLA+ spec from generated text and run TLC validation.
-        Returns "gold", "silver", or "bronze".
+        Returns (tier, SemanticInfo|None). The semantic carries per-component
+        verdicts that the eval loop aggregates into the partial_credit metric.
         """
         tla_content = _extract_tla_block(generated_text)
         if not tla_content:
-            return "bronze"
+            return "bronze", None
 
         from src.validators.tlc_validator import validate_string
         m = re.search(r"----\s*MODULE\s+(\w+)", tla_content)
@@ -219,7 +253,7 @@ class TLCEvalCallback(TrainerCallback):
             module_name=module_name,
             timeout=self.tlc_timeout,
         )
-        return result.tier
+        return result.tier, result.semantic
 
 
 def _extract_tla_block(text: str) -> str:
