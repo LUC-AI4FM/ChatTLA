@@ -25,7 +25,7 @@ outputs/gguf_backup/
 outputs/merged_model/
 outputs/merged-llama3b/
 outputs/checkpoints/
-outputs/checkpoints_8b_archive/
+outputs/checkpoints_*/
 outputs/checkpoints-llama3b/
 outputs/llama.cpp/
 outputs/toy-math/
@@ -71,8 +71,7 @@ train.log
 src/shared/apalache/
 src/shared/tlaps/
 outputs/logs/watchdog.log
-outputs/logs/sft_v3_run.log
-outputs/logs/sft_v3_h2fix_run*.log
+outputs/logs/sft_*.log
 outputs/logs/eval_*.log
 outputs/logs/merge_*.log
 outputs/logs/convert_*.log
