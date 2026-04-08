@@ -200,6 +200,16 @@ class SpecResult:
     trivial_invariant: bool = False   # invariant is vacuously true
     distinct_states: int = 0          # number of distinct states TLC explored
     invariants_checked: int = 0       # number of invariants checked by TLC
+    # Per-component verdicts (DeepSeek-Prover-V2 inspired denser reward).
+    # Populated for EVERY result regardless of tier — these are the bucketing
+    # keys for partial-credit pool composition in build_training_data.
+    partial_credit: float = 0.0
+    init_present: bool = False
+    next_present: bool = False
+    init_level_ok: bool = False
+    next_level_ok: bool = False
+    invariants_declared: bool = False
+    tlc_depth1_ok: bool = False
 
     @property
     def is_diamond(self) -> bool:
@@ -1375,6 +1385,19 @@ def _generate_for_prompt(
             tlc_timeout=tlc_timeout,
             critique_applied=critique_changed,
         )
+        # Attach per-component verdicts for EVERY tier (denser reward signal).
+        # The validator computes these even for bronze (all-False) and silver
+        # (partial), so the rejection-sampling pool can bucket near-misses.
+        if sany_ok and 'tlc_result' in locals() and hasattr(tlc_result, 'semantic') and tlc_result.semantic:
+            csem = tlc_result.semantic
+            result.partial_credit = csem.partial_credit
+            result.init_present = csem.init_present
+            result.next_present = csem.next_present
+            result.init_level_ok = csem.init_level_ok
+            result.next_level_ok = csem.next_level_ok
+            result.invariants_declared = csem.invariants_declared
+            result.tlc_depth1_ok = csem.tlc_depth1_ok
+
         # Classify error for taxonomy tracking
         if tier != "gold":
             result.error_class = classify_error(result)
@@ -1551,6 +1574,24 @@ def build_training_data(results: list[SpecResult]) -> tuple[list[dict], list[dic
     sft_examples = []
     dpo_pairs = []
 
+    def _components_meta(r: SpecResult) -> dict:
+        """Pack a SpecResult's per-component verdicts for downstream bucketing.
+
+        Used by dataset_builder's partial-credit aware filtering and by the
+        rejection-sampling pool composition. Default fields are 0/False so
+        legacy rows that lack the new schema still parse.
+        """
+        return {
+            "partial_credit": round(r.partial_credit, 4),
+            "init_present": r.init_present,
+            "next_present": r.next_present,
+            "init_level_ok": r.init_level_ok,
+            "next_level_ok": r.next_level_ok,
+            "invariants_declared": r.invariants_declared,
+            "tlc_depth1_ok": r.tlc_depth1_ok,
+            "tlc_full_ok": r.tier == "gold",
+        }
+
     # Group results by prompt
     by_prompt: dict[str, list[SpecResult]] = {}
     for r in results:
@@ -1580,6 +1621,7 @@ def build_training_data(results: list[SpecResult]) -> tuple[list[dict], list[dic
                     "mutation_caught": best.mutation_caught,
                     "invariants_checked": best.invariants_checked,
                 },
+                "_components": _components_meta(best),
                 "messages": [
                     {"role": "developer", "content": _DEVELOPER_PROMPT},
                     {"role": "user", "content": f"Write a TLA+ specification for the following:\n\n{best.prompt_text}"},
@@ -1593,6 +1635,7 @@ def build_training_data(results: list[SpecResult]) -> tuple[list[dict], list[dic
             sft_examples.append({
                 "_tier": "gold",
                 "_prompt_id": pid,
+                "_components": _components_meta(best),
                 "messages": [
                     {"role": "developer", "content": _DEVELOPER_PROMPT},
                     {"role": "user", "content": f"Write a TLA+ specification for the following:\n\n{best.prompt_text}"},

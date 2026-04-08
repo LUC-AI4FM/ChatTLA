@@ -44,6 +44,61 @@ _DEFAULT_MODEL = os.getenv("CHATTLA_MODEL", "chattla:20b")
 # inference sees the same prompt as training (no distribution shift).
 from src.training.dataset_builder import _DEVELOPER_PROMPT
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Plan-then-spec (DeepSeek-Prover-V2 inspired two-stage generation)
+#
+# Stage 1: model emits a structured SpecPlan as JSON.
+# Stage 2: a second pass writes the spec body conditioned on that plan.
+#
+# Stage 2 reuses the standard developer prompt verbatim, but injects the plan
+# into the user message so the writer pass commits to the same module name,
+# variables, actions, and invariants the planner just decided on. This is the
+# ChatTLA analogue of DeepSeek's "detailed proof plan before formal proof"
+# prompt and exists for the same reason: forcing structural commitment first
+# reduces the spec body's per-token entropy and gives us a checkable artifact
+# (the plan) independent of whether the body parses.
+# ─────────────────────────────────────────────────────────────────────────────
+
+_PLANNING_DEVELOPER_PROMPT = """\
+You are designing a TLA+ specification. Before writing any TLA+ code, output a
+structured PLAN as a single JSON object — and nothing else.
+
+The plan must be a JSON object with these fields (omit any field that does not
+apply, but always include module_name and variables):
+
+{
+  "module_name":   "<CamelCase module name>",
+  "extends":       ["Naturals", "Sequences", ...],
+  "constants":     ["N", "Procs", ...],
+  "variables":     ["pc", "queue", ...],
+  "init_sketch":   "<one-sentence description of the initial state>",
+  "next_actions":  [
+    {"name": "Acquire", "guard": "<NL precondition>", "effect": "<NL effect>"},
+    ...
+  ],
+  "invariants":    [
+    {"name": "TypeOK",          "kind": "type",     "statement": "<NL>"},
+    {"name": "MutualExclusion", "kind": "safety",   "statement": "<NL>"},
+    {"name": "EventualGrant",   "kind": "liveness", "statement": "<NL>"}
+  ],
+  "fairness":      "weak fairness on Acquire and Release",
+  "notes":         "<optional design notes>"
+}
+
+Output ONLY the JSON object. No prose, no markdown fences, no TLA+ code.
+"""
+
+
+def _render_plan_for_writer(plan_json: str) -> str:
+    """Embed a JSON plan into a writer-stage user message."""
+    return (
+        "You will write a TLA+ module that conforms exactly to the plan below.\n"
+        "Use the module_name, variables, actions, and invariants from the plan.\n"
+        "Do not invent new variables or rename declared ones.\n\n"
+        f"```json\n{plan_json}\n```\n\n"
+        "Now write the complete TLA+ module."
+    )
+
 
 def _build_harmony_prompt(developer_content: str, user_content: str) -> str:
     """Build a raw harmony-format prompt that forces TLA+ code output.
@@ -58,6 +113,17 @@ def _build_harmony_prompt(developer_content: str, user_content: str) -> str:
         f"<|start|>developer<|message|>{developer_content}<|end|>\n"
         f"<|start|>user<|message|>{user_content}<|end|>\n"
         f"<|start|>assistant<|channel|>final<|message|>---- MODULE"
+    )
+
+
+def _build_planning_prompt(user_content: str) -> str:
+    """Harmony prompt for the plan stage. Seeds the output with `{` so the
+    model commits to JSON rather than free-form prose."""
+    return (
+        f"<|start|>system<|message|>You are ChatTLA, an expert TLA+ designer.<|end|>\n"
+        f"<|start|>developer<|message|>{_PLANNING_DEVELOPER_PROMPT}<|end|>\n"
+        f"<|start|>user<|message|>{user_content}<|end|>\n"
+        f"<|start|>assistant<|channel|>final<|message|>{{"
     )
 
 
@@ -168,6 +234,104 @@ class ChatTLAClient:
             raw += "\n===="
         spec = _extract_tla(raw)
         return _sanitize_spec(spec)
+
+    # ──────────────────────── plan-then-spec ─────────────────────────────
+
+    def generate_plan(
+        self,
+        nl_description: str,
+        module_name: Optional[str] = None,
+        temperature: float = 0.1,
+    ) -> "Optional[object]":
+        """Stage 1 of two-stage generation: emit a structured SpecPlan.
+
+        Returns a parsed SpecPlan, or None if the model output could not be
+        decoded as JSON. Callers should fall back to single-shot generation
+        in the None case.
+        """
+        from src.shared.schemas.spec_plan import parse_plan
+
+        user_content = nl_description.strip()
+        if module_name:
+            user_content += f"\n\nUse module name: {module_name}"
+
+        prompt = _build_planning_prompt(user_content)
+        temp = self._temp_override if self._temp_override is not None else temperature
+        response = self._client.generate(
+            model=self.model,
+            prompt=prompt,
+            raw=True,
+            options={
+                "temperature": temp,
+                "repeat_penalty": 1.1,
+                "num_predict": 1024,
+                "top_k": 40,
+                "top_p": 0.9,
+                "stop": ["<|return|>", "<|end|>", "<|start|>"],
+            },
+        )
+        # We seeded with "{" so the model continues from there
+        raw = "{" + response["response"]
+        return parse_plan(raw)
+
+    def generate_with_plan(
+        self,
+        nl_description: str,
+        module_name: Optional[str] = None,
+        temperature: float = 0.05,
+        rag_k: int = 2,
+    ) -> tuple["Optional[object]", str]:
+        """Two-stage plan-then-spec generation.
+
+        Returns (plan_or_None, spec). On plan failure, falls back to a single
+        shot through generate_spec so the caller always gets a spec string,
+        and the missing plan is signalled via the None.
+
+        This is the DeepSeek-Prover-V2 style: commit to module structure
+        first, then write the body conditioned on it.
+        """
+        plan = self.generate_plan(nl_description, module_name=module_name)
+        if plan is None:
+            # Soft failure — fall back to single-shot so the pipeline never
+            # blocks on a malformed planning response.
+            return None, self.generate_spec(
+                nl_description, module_name=module_name,
+                temperature=temperature, rag_k=rag_k,
+            )
+
+        # Stage 2: writer pass conditioned on the plan.
+        plan_json = plan.to_json()
+        user_content = _render_plan_for_writer(plan_json)
+        # RAG examples are still useful in stage 2 — they ground operator usage
+        if rag_k > 0:
+            retriever = self._get_retriever()
+            if retriever is not None:
+                hits = retriever.retrieve(nl_description, k=rag_k)
+                rag_block = retriever.format_for_prompt(hits)
+                if rag_block:
+                    user_content = f"{rag_block}\n\n---\n\n{user_content}"
+
+        developer_content = f"{_DEVELOPER_PROMPT}\nReasoning: {self.reasoning}"
+        prompt = _build_harmony_prompt(developer_content, user_content)
+        temp = self._temp_override if self._temp_override is not None else temperature
+        response = self._client.generate(
+            model=self.model,
+            prompt=prompt,
+            raw=True,
+            options={
+                "temperature": temp,
+                "repeat_penalty": 1.3,
+                "num_predict": 4096,
+                "top_k": 40,
+                "top_p": 0.9,
+                "stop": ["<|return|>", "<|end|>", "<|start|>"],
+            },
+        )
+        raw = "---- MODULE" + response["response"]
+        if "====" not in raw:
+            raw += "\n===="
+        spec = _extract_tla(raw)
+        return plan, _sanitize_spec(spec)
 
     def validate_and_generate(
         self,

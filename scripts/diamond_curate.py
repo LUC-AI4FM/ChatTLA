@@ -429,12 +429,40 @@ def filter_by_threshold(
 from src.training.dataset_builder import _DEVELOPER_PROMPT  # single source of truth
 
 
+def _plan_for_curated(spec: str) -> tuple[Optional[dict], Optional[str]]:
+    """Extract a SpecPlan + markdown rendering from a curated spec.
+
+    Returns (plan_dict, plan_markdown) or (None, None) if extraction fails.
+    Used to enrich curated rows with structured plans without an extra LLM
+    pass — the SANY AST already contains everything we need.
+    """
+    try:
+        from src.validators.component_validator import plan_from_ast
+        plan = plan_from_ast(spec)
+    except Exception:
+        return None, None
+    if plan is None:
+        return None, None
+    return plan.to_dict(), plan.render_markdown()
+
+
 def assemble_curated_dataset(
     records: list[SpecRecord],
     reasoning_map: dict[str, str],
 ) -> int:
-    """Write the final curated SFT dataset."""
+    """Write the final curated SFT dataset.
+
+    Each curated row carries TWO new fields when AST extraction succeeds:
+      _plan      — the SpecPlan as a dict (so dataset_builder can rebuild it)
+      analysis  — prepended with the markdown plan rendering, before the CoT
+
+    This is the DeepSeek-Prover-V2 "plan before proof" pattern: training data
+    pairs the formal artifact (the spec) with both a structured plan and a
+    free-form chain of thought. The model learns the plan→spec mapping
+    implicitly during SFT.
+    """
     count = 0
+    n_with_plan = 0
     with open(_CURATED_OUT, "w") as f:
         for rec in records:
             cot = reasoning_map.get(rec.prompt_id, "")
@@ -444,6 +472,13 @@ def assemble_curated_dataset(
                     "and safety invariants, then write a verified TLA+ specification."
                 )
 
+            plan_dict, plan_md = _plan_for_curated(rec.spec)
+            if plan_md:
+                analysis_content = f"{plan_md}\n\n{cot}"
+                n_with_plan += 1
+            else:
+                analysis_content = cot
+
             row = {
                 "_tier": "diamond_curated",
                 "_prompt_id": rec.prompt_id,
@@ -451,17 +486,18 @@ def assemble_curated_dataset(
                 "_timestamp": datetime.now().isoformat(),
                 "_semantic": rec.semantic,
                 "_judgment": rec.judgment,
+                "_plan": plan_dict,
                 "messages": [
                     {"role": "developer", "content": _DEVELOPER_PROMPT},
                     {"role": "user", "content": rec.prompt_text},
-                    {"role": "assistant", "channel": "analysis", "content": cot},
+                    {"role": "assistant", "channel": "analysis", "content": analysis_content},
                     {"role": "assistant", "channel": "final", "content": rec.spec.strip()},
                 ],
             }
             f.write(json.dumps(row) + "\n")
             count += 1
 
-    log.info(f"Assembled {count} curated specs -> {_CURATED_OUT}")
+    log.info(f"Assembled {count} curated specs -> {_CURATED_OUT} ({n_with_plan} with extracted plans)")
     return count
 
 
