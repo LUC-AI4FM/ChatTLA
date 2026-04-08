@@ -18,7 +18,7 @@ datasets:
 pipeline_tag: text-generation
 ---
 
-# ChatTLA-20b (v13)
+# ChatTLA-20b (v14)
 
 ChatTLA is a fine-tuned version of [openai/gpt-oss-20b](https://huggingface.co/openai/gpt-oss-20b) specialised in generating **TLA+ formal specifications** — the language used by AWS, Microsoft, and Intel to mathematically verify distributed systems.
 
@@ -26,57 +26,71 @@ Given a plain-English description of a concurrent or distributed system, ChatTLA
 
 ---
 
-## Benchmark Results (v13, single-shot)
+## Benchmark Results (v14, single-shot)
 
-Evaluated on a handcrafted 20-problem suite covering distributed algorithms, concurrency primitives, and protocol specs. Three tiers:
+Evaluated on a 30-spec held-out suite spanning communication protocols, concurrency primitives, consensus, data structures, memory/caches, mutual exclusion, classical puzzles, scheduling, transactions, and workflow state machines. Tiers are defined by what the spec actually does under SANY and TLC, not just whether it parses:
 
 | Tier | Meaning |
 |------|---------|
+| 💎 Diamond | Gold **and** TLC explores ≥1 distinct state, has a non-trivial invariant, and the invariant catches a mutation |
 | 🥇 Gold | SANY parses **and** TLC model-checks clean |
 | 🥈 Silver | SANY parses, TLC finds violation or timeout |
 | Bronze | SANY parse failure |
 
-### Per-problem results
+Diamond is the headline metric: it's the only tier that proves the spec is *semantically* useful rather than just syntactically valid. v13 and earlier tracked SANY/TLC only, which made trivial `TRUE` invariants count as Gold.
 
-| ID | Problem | Tier | SANY | TLC | Struct | Time |
-|----|---------|------|------|-----|--------|------|
-| BM001 | Mutual Exclusion | Bronze | — | — | 1.00 | 26.2s |
-| BM002 | Two-Phase Commit | Bronze | — | — | 1.00 | 6.6s |
-| BM003 | Dining Philosophers | 🥇 **Gold** | ✓ | ✓ | 0.78 | 4.8s |
-| BM004 | Lamport's Bakery Algorithm | Bronze | — | — | 0.78 | 2.0s |
-| BM005 | Producer-Consumer Queue | 🥈 Silver | ✓ | — | 1.00 | 3.9s |
-| BM006 | Raft Leader Election | 🥇 **Gold** | ✓ | ✓ | 0.78 | 3.6s |
-| BM007 | Read-Write Lock | 🥈 Silver | ✓ | — | 0.78 | 62.7s |
-| BM008 | Distributed Snapshot (Chandy-Lamport) | 🥈 Silver | ✓ | — | 0.33 | 43.7s |
-| BM009 | Token Ring | 🥇 **Gold** | ✓ | ✓ | 0.67 | 1.8s |
-| BM010 | Simple Key-Value Store | Bronze | — | — | 1.00 | 1.6s |
-| BM011 | Paxos Single-Decree | Bronze | — | — | 1.00 | 5.0s |
-| BM012 | Bounded Retransmission Protocol | Bronze | — | — | 0.89 | 9.1s |
-| BM013 | Transaction Isolation (Snapshot) | Bronze | — | — | 1.00 | 11.7s |
-| BM014 | Clock Synchronisation | Bronze | — | — | 1.00 | 4.2s |
-| BM015 | Peterson's Algorithm | 🥇 **Gold** | ✓ | ✓ | 0.78 | 3.3s |
-| BM016 | Gossip Protocol | 🥇 **Gold** | ✓ | ✓ | 0.78 | 3.0s |
-| BM017 | Simple Allocator | Bronze | — | — | 0.89 | 2.9s |
-| BM018 | Publish-Subscribe Broker | Bronze | — | — | 0.44 | 44.2s |
-| BM019 | Dekker's Algorithm | Bronze | — | — | 1.00 | 2.8s |
-| BM020 | Eventually Consistent Counter | 🥈 Silver | ✓ | — | 1.00 | 62.5s |
+### Per-spec results (30-spec holdout)
 
-**SANY pass: 9/20 (45%) · TLC pass: 5/20 (25%) · Avg structural: 0.84**
+| # | Batch | Module | Tier | Diamond | States | Invs | Mut |
+|---|-------|--------|------|:------:|:-----:|:----:|:---:|
+|  1 | communication_protocols | AlternatingBit            | 🥇 Gold     | 💎 | 4  | 1 | ✓ |
+|  2 | communication_protocols | Arp                       | Bronze      |    | 0  | 0 |   |
+|  3 | communication_protocols | AtomicRegister            | Bronze      |    | 0  | 0 |   |
+|  4 | concurrency_primitives  | BinarySemaphore           | 🥈 Silver   |    | 0  | 0 |   |
+|  5 | concurrency_primitives  | Channel                   | 🥇 Gold     | 💎 | 4  | 2 | ✓ |
+|  6 | concurrency_primitives  | CountDownLatch            | Bronze      |    | 0  | 0 |   |
+|  7 | consensus_election      | AtomicCommit              | 🥇 Gold     |    | 0  | 1 | ✓ |
+|  8 | consensus_election      | BullyElection             | 🥈 Silver   |    | 0  | 0 |   |
+|  9 | consensus_election      | ByzantineQuorum           | Bronze      |    | 0  | 0 |   |
+| 10 | data_structures         | BinaryHeap                | 🥈 Silver   |    | 0  | 0 |   |
+| 11 | data_structures         | BloomCounter              | 🥈 Silver   |    | 0  | 0 |   |
+| 12 | data_structures         | BloomFilter               | Bronze      |    | 0  | 0 |   |
+| 13 | memory_caches           | ArenaAllocator            | 🥇 Gold     | 💎 | 4  | 1 | ✓ |
+| 14 | memory_caches           | BuddyAllocator            | Bronze      |    | 0  | 0 |   |
+| 15 | memory_caches           | CopyingGc                 | 🥈 Silver   |    | 0  | 0 |   |
+| 16 | mutual_exclusion        | AdaptiveMutex             | Bronze      |    | 0  | 0 |   |
+| 17 | mutual_exclusion        | AndersonMutex             | 🥇 Gold     | 💎 | 36 | 1 | ✓ |
+| 18 | mutual_exclusion        | AravindMutex              | Bronze      |    | 0  | 0 |   |
+| 19 | puzzles_classical       | BlocksWorld               | 🥈 Silver   |    | 0  | 0 |   |
+| 20 | puzzles_classical       | ChessKingMoves            | Bronze      |    | 0  | 0 |   |
+| 21 | puzzles_classical       | ColoredHats               | Bronze      |    | 0  | 0 |   |
+| 22 | scheduling_resources    | AdmissionControl          | Bronze      |    | 0  | 0 |   |
+| 23 | scheduling_resources    | BackpressureChannel       | 🥈 Silver   |    | 0  | 0 |   |
+| 24 | scheduling_resources    | Bankers                   | 🥈 Silver   |    | 0  | 0 |   |
+| 25 | transactions_databases  | ChainReplication          | Bronze      |    | 0  | 0 |   |
+| 26 | transactions_databases  | DistributedLock           | 🥈 Silver   |    | 0  | 0 |   |
+| 27 | transactions_databases  | FencingToken              | 🥈 Silver   |    | 0  | 0 |   |
+| 28 | workflows_state_machines| ContentModeration         | Bronze      |    | 0  | 0 |   |
+| 29 | workflows_state_machines| DocumentApproval          | Bronze      |    | 0  | 0 |   |
+| 30 | workflows_state_machines| EmailVerification         | 🥈 Silver   |    | 0  | 0 |   |
 
-### Version history (single-shot, 20 problems)
+**SANY pass: 16/30 (53%) · TLC pass: 5/30 (17%) · Diamond: 4/30 (13%)**
 
-| Version | SANY | TLC | Avg Structural |
-|---------|------|-----|----------------|
-| v6 | 4/20 (20%) | 1/20 (5%) | 0.75 |
-| v7 | 6/20 (30%) | 1/20 (5%) | 0.71 |
-| v8 | 8/20 (40%) | 1/20 (5%) | 0.72 |
-| v9 | 6/20 (30%) | 3/20 (15%) | 0.86 |
-| v9 best-of-5 + self-correct | 16/20 (80%) | 5/20 (25%) | 0.88 |
-| v10 | 6/20 (30%) | 2/20 (10%) | 0.87 |
-| v11 | 6/20 (30%) | 2/20 (10%) | 0.87 |
-| **v13 (SFT+DPO)** | **9/20 (45%)** | **5/20 (25%)** | **0.84** |
+### Version history
 
-> Single-shot scores are conservative. With `--attempts 5 --self-correct` v9 reaches 80% SANY / 25% TLC.
+| Version | Suite | SANY | TLC | Diamond / Notes |
+|---------|-------|------|-----|-----------------|
+| v6  | 20-problem handcraft     | 4/20 (20%)  | 1/20 (5%)  | — |
+| v7  | 20-problem handcraft     | 6/20 (30%)  | 1/20 (5%)  | — |
+| v8  | 20-problem handcraft     | 8/20 (40%)  | 1/20 (5%)  | — |
+| v9  | 20-problem handcraft     | 6/20 (30%)  | 3/20 (15%) | — |
+| v9 best-of-5 + self-correct | 20-problem handcraft | 16/20 (80%) | 5/20 (25%) | — |
+| v10 | 20-problem handcraft     | 6/20 (30%)  | 2/20 (10%) | — |
+| v11 | 20-problem handcraft     | 6/20 (30%)  | 2/20 (10%) | — |
+| v13 (SFT + DPO) | 20-problem handcraft | 9/20 (45%) | 5/20 (25%) | not measured (trivial invariants counted as Gold) |
+| **v14 (Diamond SFT)** | **30-spec holdout** | **16/30 (53%)** | **5/30 (17%)** | **4/30 (13%)** |
+
+> v14 is the first checkpoint trained against the Diamond pipeline (rejection-sampled + curated specs with chain-of-thought, real semantic checks). The benchmark suite also changed from a 20-problem handcrafted set to a broader 30-spec holdout, so absolute SANY/TLC rates aren't directly comparable to v13. Diamond is the metric to track going forward.
 
 ---
 
@@ -118,11 +132,11 @@ print(result[0]["generated_text"])
 ```bash
 # Download GGUF
 huggingface-cli download EricSpencer00/chattla-20b \
-    gguf/chattla-20b-v13-Q8_0.gguf \
+    gguf/chattla-20b-v14-Q8_0.gguf \
     --local-dir ./chattla
 
 # Run with llama.cpp
-./llama-cli -m chattla/gguf/chattla-20b-v13-Q8_0.gguf \
+./llama-cli -m chattla/gguf/chattla-20b-v14-Q8_0.gguf \
     -n 1024 --temp 0.4 \
     -p "Write a TLA+ spec for mutual exclusion with N processes."
 ```
@@ -136,8 +150,8 @@ huggingface-cli download EricSpencer00/chattla-20b \
 | Base model | openai/gpt-oss-20b |
 | Parameters | 20.9B |
 | Architecture | GptOss (sliding + full attention) |
-| Fine-tuning method | SFT + DPO (LoRA → merged) |
-| Context length | 4096 (trained) / 131072 (base) |
+| Fine-tuning method | Diamond rejection-sampling SFT (LoRA → merged) |
+| Context length | 2048 (trained) / 131072 (base) |
 | GGUF quantisation | Q8_0 (~21 GB) |
 | Training date | April 2026 |
 
@@ -161,13 +175,16 @@ When asked to write a TLA+ spec, follow these rules exactly:
 
 ## Training
 
-Fine-tuned with SFT + DPO on a curated dataset of TLA+ specifications scraped from GitHub, augmented with handcrafted examples covering distributed algorithms, concurrency primitives, and protocol verification. DPO refinement uses 17 gold preference pairs (chosen vs rejected specs) to align the model toward TLC-checkable outputs.
+v14 was produced by the **Diamond curation pipeline**: candidate TLA+ specs are generated by an earlier checkpoint, then graded by a tlc_validator that checks SANY parsing, TLC state-space exploration, non-trivial invariants, and mutation-test sensitivity. Specs that survive grading are LLM-judged for chain-of-thought quality, leaving a curated training pool (209 raw → 73 curated for the v14 SFT round). The model is then fine-tuned with LoRA on this pool and merged.
+
+DPO/KTO refinement was used in v11–v13 but was deprecated in the Diamond overhaul: 0/484 specs from those preference-trained checkpoints actually passed Diamond, indicating the model had learned TLA+ syntax without learning semantics. The Diamond pipeline trains directly on examples that *do* pass semantic checks.
 
 ### Training configuration
 
 | Setting | Value |
 |---------|-------|
-| Method | SFT with LoRA |
+| Method | SFT with LoRA (lora_dropout=0) |
+| Max sequence length | 2048 |
 | TRL | 0.28.0 |
 | Transformers | 5.2.0 |
 | PyTorch | 2.10.0 |
@@ -188,7 +205,7 @@ EricSpencer00/chattla-20b
 ├── pytorch_model.bin        # Full BF16 weights (39 GB)
 ├── generation_config.json
 └── gguf/
-    ├── chattla-20b-v13-Q8_0.gguf   # Quantised GGUF for Ollama / llama.cpp
+    ├── chattla-20b-v14-Q8_0.gguf   # Quantised GGUF for Ollama / llama.cpp
     └── Modelfile                    # Ollama Modelfile
 ```
 
