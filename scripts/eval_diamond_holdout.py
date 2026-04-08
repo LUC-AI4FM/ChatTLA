@@ -50,11 +50,31 @@ def _load_holdout() -> list[dict]:
     return out
 
 
-def _eval_one(client, validate_diamond, rec: dict, rag_k: int) -> dict:
+def _eval_one(
+    client,
+    validate_diamond,
+    rec: dict,
+    rag_k: int,
+    self_correct: bool = False,
+    max_retries: int = 3,
+) -> dict:
     from time import monotonic
     t0 = monotonic()
     try:
-        gen = client.generate_spec(rec["topic_desc"], module_name=rec["module"], rag_k=rag_k)
+        if self_correct:
+            # validate_and_generate ignores rag_k (RAG is applied at the
+            # underlying generate_spec call inside the loop). It runs SANY
+            # then TLC, feeding parse errors and counterexamples back into
+            # the model for up to max_retries rounds, plus a deterministic
+            # Python fixer pass and PlusCal stripping. This is the v9 path
+            # that hit 80% SANY / 25% TLC on the old 20-problem suite.
+            gen, _tier_hint = client.validate_and_generate(
+                rec["topic_desc"], max_retries=max_retries,
+            )
+        else:
+            gen = client.generate_spec(
+                rec["topic_desc"], module_name=rec["module"], rag_k=rag_k,
+            )
     except Exception as e:
         return {
             "module": rec["module"],
@@ -99,12 +119,18 @@ def cmd_run(args: argparse.Namespace) -> int:
     from scripts.diamond_sft_gen import validate_diamond
 
     holdout = _load_holdout()
-    print(f"[eval] {len(holdout)} holdout specs; model={args.model}; rag_k={args.rag_k}")
+    sc_note = f" self_correct={args.max_retries}" if args.self_correct else ""
+    print(f"[eval] {len(holdout)} holdout specs; model={args.model}; rag_k={args.rag_k}{sc_note}")
     client = ChatTLAClient(model=args.model)
 
     results: list[dict] = []
     for i, rec in enumerate(holdout, 1):
-        r = _eval_one(client, validate_diamond, rec, rag_k=args.rag_k)
+        r = _eval_one(
+            client, validate_diamond, rec,
+            rag_k=args.rag_k,
+            self_correct=args.self_correct,
+            max_retries=args.max_retries,
+        )
         results.append(r)
         mark = "D" if r["is_diamond"] else (
             "G" if r["tier"] == "gold" else
@@ -124,6 +150,8 @@ def cmd_run(args: argparse.Namespace) -> int:
     summary = {
         "model": args.model,
         "rag_k": args.rag_k,
+        "self_correct": bool(args.self_correct),
+        "max_retries": args.max_retries if args.self_correct else 0,
         "n": n,
         "diamond": n_diamond,
         "diamond_rate": round(n_diamond / n, 3) if n else 0.0,
@@ -181,6 +209,14 @@ def main() -> int:
     pr.add_argument("--rag-k", type=int, default=2, help="0 to disable RAG")
     pr.add_argument("--no-rag", action="store_const", const=0, dest="rag_k")
     pr.add_argument("--out", default=None, help="write per-model JSON summary here")
+    pr.add_argument(
+        "--self-correct", action="store_true",
+        help="route generation through validate_and_generate (SANY+TLC error-feedback loop)",
+    )
+    pr.add_argument(
+        "--max-retries", type=int, default=3,
+        help="self-correction retry budget per spec (only with --self-correct)",
+    )
     pr.set_defaults(func=cmd_run)
 
     pc = sub.add_parser("compare", help="diff two run summaries")
@@ -193,6 +229,8 @@ def main() -> int:
     p.add_argument("--rag-k", type=int, default=2, help=argparse.SUPPRESS)
     p.add_argument("--no-rag", action="store_const", const=0, dest="rag_k", help=argparse.SUPPRESS)
     p.add_argument("--out", help=argparse.SUPPRESS)
+    p.add_argument("--self-correct", action="store_true", help=argparse.SUPPRESS)
+    p.add_argument("--max-retries", type=int, default=3, help=argparse.SUPPRESS)
 
     args = p.parse_args()
     if args.cmd is None:
