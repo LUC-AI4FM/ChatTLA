@@ -95,7 +95,7 @@ _REPO_ROOT    = Path(__file__).resolve().parents[2]
 # newly-introduced algorithm families. Built by scripts/build_diamond_sft_v3.py.
 # Holdout (data/processed/diamond_eval_holdout.jsonl) is excluded by module
 # name with a hard assertion at build time.
-_TRAIN_JSONL  = _REPO_ROOT / "data" / "processed" / "diamond_sft_v3.jsonl"
+_TRAIN_JSONL  = _REPO_ROOT / "data" / "processed" / "diamond_sft_v4.jsonl"
 _EVAL_JSONL   = _REPO_ROOT / "data" / "processed" / "eval.jsonl"
 _PROVER_TRAIN_JSONL = _REPO_ROOT / "data" / "processed" / "prover_train.jsonl"
 _PROVER_EVAL_JSONL  = _REPO_ROOT / "data" / "processed" / "prover_eval.jsonl"
@@ -135,6 +135,20 @@ def load_model_and_tokenizer(device_map: str = "auto", max_gpu_memory_mb: int | 
     gradient_checkpointing requires use_cache=False.
     """
     model_id = base_model or MODEL_ID
+
+    # FSDP / distributed launch: WORLD_SIZE>1 means accelerate launched us with
+    # one process per GPU. With `fsdp_cpu_ram_efficient_loading: true`, rank 0
+    # loads the full model on CPU; other ranks materialize on meta. FSDP then
+    # broadcasts and shards across GPUs. This avoids each rank loading the
+    # full ~42 GB BF16 base on its single GPU (which OOMs on RTX 8000).
+    world_size = int(os.environ.get("WORLD_SIZE", "1"))
+    local_rank = int(os.environ.get("LOCAL_RANK", "0"))
+    fsdp_mode = world_size > 1 and isinstance(device_map, str) and device_map == "auto"
+    if fsdp_mode:
+        device_map = "cpu"  # all ranks load on CPU; FSDP gathers to GPUs after wrap
+        print(f"[train] FSDP detected (WORLD_SIZE={world_size}); rank {local_rank} "
+              f"loading on CPU (FSDP will shard to GPUs)")
+
     print(f"[train] Loading model: {model_id} (device_map={device_map})")
     print(f"[train] CUDA_VISIBLE_DEVICES: {os.environ.get('CUDA_VISIBLE_DEVICES', 'auto')}")
     try:
@@ -151,7 +165,7 @@ def load_model_and_tokenizer(device_map: str = "auto", max_gpu_memory_mb: int | 
     # Build max_memory mapping for accelerate / transformers dispatch when the
     # user requests automatic device placement.
     max_memory = None
-    if device_map == "auto":
+    if isinstance(device_map, str) and device_map == "auto":
         try:
             n_gpus = torch.cuda.device_count()
             print(f"[train] Detected {n_gpus} GPU(s)")
@@ -197,8 +211,7 @@ def load_model_and_tokenizer(device_map: str = "auto", max_gpu_memory_mb: int | 
             max_memory = None
 
     try:
-        model = AutoModelForCausalLM.from_pretrained(
-            model_id,
+        from_pretrained_kwargs = dict(
             attn_implementation="eager",
             use_cache=False,           # required for gradient checkpointing
             device_map=device_map,
@@ -206,6 +219,10 @@ def load_model_and_tokenizer(device_map: str = "auto", max_gpu_memory_mb: int | 
             low_cpu_mem_usage=True,    # stream weights to devices to reduce peak memory
             trust_remote_code=True,    # gpt-oss requires special modeling code
         )
+        if fsdp_mode:
+            # Force BF16 on CPU load so we don't expand to FP32 (~80 GB).
+            from_pretrained_kwargs["torch_dtype"] = torch.bfloat16
+        model = AutoModelForCausalLM.from_pretrained(model_id, **from_pretrained_kwargs)
     except Exception as exc:
         print("[train] ERROR loading model:", exc)
         raise
