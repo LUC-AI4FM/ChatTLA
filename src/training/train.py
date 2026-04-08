@@ -265,6 +265,12 @@ def build_training_args(
         # --- Precision & memory --------------------------------------------
         bf16=bf16_enabled,
         gradient_checkpointing=True,
+        # H2 fix (paper appendix A 2026-04-07): we keep reentrant gradient
+        # checkpointing (lower activation memory) and instead set
+        # lora_dropout=0.0 in lora_config.yaml. With no dropout, there is no
+        # RNG-dependent mask whose recompute could differ from the forward
+        # pass and cascade into MoE-routing shape mismatches on cuda:1.
+        # Tried use_reentrant=False first; it OOMed at step 6 on 2x RTX 8000.
         # --- Sequence length (new in TRL 0.28) ----------------------------
         # TLA+ specs are long (avg 1924 tokens, p90=3236). Lower max_length saves VRAM.
         max_length=512 if smoke_test else max_length,
