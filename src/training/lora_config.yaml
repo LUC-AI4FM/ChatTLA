@@ -26,7 +26,10 @@ peft_type: LORA
 # --- Core LoRA hyperparameters ---------------------------------------------
 r: 8                           # LoRA rank — 2x base for more capacity, fits in VRAM
 lora_alpha: 16                 # scaling factor; effective scale = alpha/r = 2.0
-lora_dropout: 0.05             # reduced dropout: more data (121 examples) reduces overfitting risk
+lora_dropout: 0.0              # H2 fix (paper appendix A 2026-04-07): dropout under reentrant gradient
+                               # checkpointing produced different masks on forward vs recompute, which then
+                               # cascaded into MoE routing shape mismatches on cuda:1. Belt-and-braces with
+                               # use_reentrant=False in train.py.
 bias: none
 
 # Target all nn.Linear layers (attention q/k/v/o projections).
