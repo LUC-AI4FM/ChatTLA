@@ -26,9 +26,17 @@ Output JSON shape (per-model file):
 from __future__ import annotations
 import argparse
 import json
+import re
 import sys
 import time
 from pathlib import Path
+
+_MODULE_RE = re.compile(r"----\s*MODULE\s+(\w+)")
+
+
+def _extract_module(spec: str) -> str:
+    m = _MODULE_RE.search(spec or "")
+    return m.group(1) if m else ""
 
 _REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(_REPO_ROOT) not in sys.path:
@@ -99,6 +107,8 @@ def _eval_one(
             "elapsed": monotonic() - t0,
         }
 
+    produced_module = _extract_module(gen)
+    module_mismatch = bool(produced_module) and produced_module != rec["module"]
     return {
         "module": rec["module"],
         "batch": rec.get("batch", ""),
@@ -109,6 +119,8 @@ def _eval_one(
         "mutation_caught": r.mutation_caught,
         "trivial_invariant": r.trivial_invariant,
         "error": r.error,
+        "produced_module": produced_module,
+        "module_mismatch": module_mismatch,
         "generated_chars": len(gen),
         "elapsed": round(monotonic() - t0, 2),
     }
@@ -137,8 +149,11 @@ def cmd_run(args: argparse.Namespace) -> int:
             "S" if r["tier"] == "silver" else
             "B" if r["tier"] == "bronze" else "?"
         )
+        mismatch_note = ""
+        if r.get("module_mismatch"):
+            mismatch_note = f"  !! produced={r.get('produced_module', '?')}"
         sys.stdout.write(f"  [{i:2d}/{len(holdout)}] {mark}  {r['batch']:30s} {r['module']:30s} "
-                         f"({r.get('elapsed', 0)}s)\n")
+                         f"({r.get('elapsed', 0)}s){mismatch_note}\n")
         sys.stdout.flush()
 
     n = len(results)
@@ -147,6 +162,7 @@ def cmd_run(args: argparse.Namespace) -> int:
     for r in results:
         by_tier[r["tier"]] = by_tier.get(r["tier"], 0) + 1
 
+    n_mismatch = sum(1 for r in results if r.get("module_mismatch"))
     summary = {
         "model": args.model,
         "rag_k": args.rag_k,
@@ -156,6 +172,8 @@ def cmd_run(args: argparse.Namespace) -> int:
         "diamond": n_diamond,
         "diamond_rate": round(n_diamond / n, 3) if n else 0.0,
         "by_tier": by_tier,
+        "module_mismatch": n_mismatch,
+        "module_mismatch_rate": round(n_mismatch / n, 3) if n else 0.0,
         "per_spec": results,
     }
 
@@ -167,6 +185,7 @@ def cmd_run(args: argparse.Namespace) -> int:
 
     print()
     print(f"[eval] {args.model}: DIAMOND {n_diamond}/{n}  ({summary['diamond_rate']*100:.1f}%)  by_tier={by_tier}")
+    print(f"[eval] module_mismatch: {n_mismatch}/{n}  ({summary['module_mismatch_rate']*100:.1f}%) — produced wrong MODULE name")
     return 0
 
 
