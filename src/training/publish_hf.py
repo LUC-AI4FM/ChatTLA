@@ -186,9 +186,12 @@ def publish(
     import datetime as _dt
 
     rel_gguf = f"./chattla-20b-v{new_ver}-{quant}.gguf"
-    modelfile_body = MODELFILE_TEMPLATE.format(
-        gguf_path=rel_gguf,
-        current_date=_dt.date.today().isoformat(),
+    # Use .replace() not .format(): the template contains TLA+ examples like
+    # {"idle", "active"} which str.format() misinterprets as placeholders.
+    modelfile_body = (
+        MODELFILE_TEMPLATE
+        .replace("{gguf_path}", rel_gguf)
+        .replace("{current_date}", _dt.date.today().isoformat())
     )
 
     print(f"[publish_hf] Repo={repo_id} version=v{new_ver} file={path_in_repo}")
