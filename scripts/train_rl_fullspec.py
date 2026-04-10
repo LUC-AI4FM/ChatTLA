@@ -125,11 +125,7 @@ def main() -> None:
     if not examples:
         sys.exit("No usable prompts found.")
     print(f"[rl-fullspec] loaded {len(examples)} prompts")
-
-    train_ds = Dataset.from_list([
-        {"prompt": ex.prompt}
-        for ex in examples
-    ])
+    # Dataset built after tokenizer loads (needs apply_chat_template)
 
     # ── LoRA config ─────────────────────────────────────────────────────
     lora_cfg_path = _REPO_ROOT / "src" / "training" / "lora_config.yaml"
@@ -153,11 +149,25 @@ def main() -> None:
         tokenizer.pad_token = tokenizer.eos_token
     tokenizer.padding_side = "left"
 
-    # Sanity check: verify prompts format correctly
-    test_fmt = tokenizer.apply_chat_template(
-        examples[0].prompt, tokenize=False, add_generation_prompt=True)
-    print(f"[rl-fullspec] prompt check: {len(test_fmt)} chars, "
-          f"has_tla={'TLA' in test_fmt or 'MODULE' in test_fmt}")
+    # Pre-format prompts as strings ending with the final channel header.
+    # GRPOTrainer with message-list prompts calls apply_chat_template with
+    # add_generation_prompt=True, which ends at "<|start|>assistant" — the
+    # model then writes "<|channel|>analysis" (CoT) first, burning all
+    # tokens on reasoning without ever producing a spec.
+    # By pre-formatting and appending the channel header, we force the
+    # model to write directly into the final channel (the spec).
+    _CHANNEL_SUFFIX = "<|channel|>final<|message|>"
+    formatted_prompts: list[str] = []
+    for ex in examples:
+        text = tokenizer.apply_chat_template(
+            ex.prompt, tokenize=False, add_generation_prompt=True)
+        formatted_prompts.append(text + _CHANNEL_SUFFIX)
+
+    train_ds = Dataset.from_list([
+        {"prompt": p} for p in formatted_prompts
+    ])
+    print(f"[rl-fullspec] prompts pre-formatted: {len(formatted_prompts[0])} chars, "
+          f"suffix='{_CHANNEL_SUFFIX}'")
 
     model = AutoModelForCausalLM.from_pretrained(
         args.model,
