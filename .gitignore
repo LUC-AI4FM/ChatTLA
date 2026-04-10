@@ -76,6 +76,14 @@ outputs/logs/eval_*.log
 outputs/logs/merge_*.log
 outputs/logs/convert_*.log
 outputs/logs/publish_hf_*.log
+outputs/logs/rl_canary_*.log
+outputs/logs/v17_pipeline.log
+
+# Ad-hoc 3-shot TLC+TLAPS eval debug artifacts (per-run dumps; not tracked
+# across versions like the holdout_*.json results are)
+outputs/eval/3shot_dumps/
+outputs/eval/3shot_*.json
+
 outputs/checkpoints_v13_premerge/
 outputs/merged_model_v14/
 outputs/merged_model_v13/

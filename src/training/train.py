@@ -99,7 +99,7 @@ _REPO_ROOT    = Path(__file__).resolve().parents[2]
 # holdout-filter), shuffled. Multitask adds segment_init/req_analysis/completion/
 # infill_next variations to break the topic-memorization failure mode that
 # tanked v15 (project_v15_topic_overfit_20260408.md).
-_TRAIN_JSONL  = _REPO_ROOT / "data" / "processed" / "diamond_sft_v4_plus_multitask.jsonl"
+_TRAIN_JSONL  = _REPO_ROOT / "data" / "processed" / "diamond_sft_v4_upweight2x_plus_multitask.jsonl"
 _EVAL_JSONL   = _REPO_ROOT / "data" / "processed" / "eval.jsonl"
 _PROVER_TRAIN_JSONL = _REPO_ROOT / "data" / "processed" / "prover_train.jsonl"
 _PROVER_EVAL_JSONL  = _REPO_ROOT / "data" / "processed" / "prover_eval.jsonl"
