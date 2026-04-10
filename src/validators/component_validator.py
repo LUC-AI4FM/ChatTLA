@@ -339,3 +339,72 @@ def plan_from_ast(
         invariants=invariants,
         fairness=fairness,
     )
+
+
+# ──────────────────────────── reward convenience ────────────────────────────
+
+def reward_from_spec(
+    tla_content: str,
+    module_name: Optional[str] = None,
+    jar: Path = _DEFAULT_JAR,
+    run_depth1: bool = True,
+    run_full_tlc: bool = True,
+    depth1_timeout: int = 15,
+    full_tlc_timeout: int = 30,
+) -> float:
+    """One-call reward: normalize → auto-cfg → validate_components → partial_credit.
+
+    Designed for use in GRPO reward functions where the caller has a raw TLA+
+    string and needs a float in [0, 1].
+
+    Parameters
+    ----------
+    tla_content       : Raw TLA+ spec text (may include fences, <think>, Unicode).
+    module_name       : Inferred from MODULE header if None.
+    run_depth1        : Whether to run TLC depth-1 probe (adds ~15s worst case).
+    run_full_tlc      : Whether to run full TLC model check (adds ~30s worst case).
+    full_tlc_timeout  : Seconds for full TLC.
+
+    Returns partial_credit ∈ [0, 1].
+    """
+    from src.postprocess.normalize import normalize_spec
+    from src.validators.tlc_validator import _autogenerate_cfg, validate_string
+
+    if not tla_content or not tla_content.strip():
+        return 0.0
+
+    # Normalize: strip fences, <think>, Unicode→ASCII
+    try:
+        tla_content, _report = normalize_spec(tla_content)
+    except Exception:
+        return 0.0
+
+    if module_name is None:
+        m = re.search(r"MODULE\s+(\w+)", tla_content)
+        module_name = m.group(1) if m else "Temp"
+
+    # Auto-generate .cfg from spec heuristics
+    cfg_content = _autogenerate_cfg(tla_content)
+
+    # Optional full TLC pass (to populate tlc_full_ok)
+    full_tlc_passed = None
+    if run_full_tlc and cfg_content:
+        try:
+            tlc_result = validate_string(
+                tla_content, cfg_content=cfg_content,
+                module_name=module_name, jar=jar, timeout=full_tlc_timeout,
+            )
+            full_tlc_passed = tlc_result.tier == "gold"
+        except Exception:
+            full_tlc_passed = False
+
+    verdicts = validate_components(
+        tla_content,
+        cfg_content=cfg_content,
+        module_name=module_name,
+        jar=jar,
+        full_tlc_passed=full_tlc_passed,
+        run_depth1=run_depth1,
+        depth1_timeout=depth1_timeout,
+    )
+    return verdicts.partial_credit

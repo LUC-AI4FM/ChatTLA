@@ -103,9 +103,19 @@ def _grade_one(harness: ActionHarness, completion_text: str) -> float:
     if result.tier == "gold":
         return 1.0
     if result.tier == "silver":
-        return max(0.5, base)
-    # bronze: SANY rejected the spliced module
-    return max(0.2, base)
+        return 0.5
+    # bronze: SANY rejected the spliced module. Sub-tier by violation count
+    # to give GRPO continuous signal within the dominant reward band.
+    # Fewer SANY errors = closer to silver = higher reward.
+    n_violations = len(result.violations) if result.violations else 5
+    if n_violations == 0:
+        return 0.35  # SANY passed but TLC found issues — almost silver
+    elif n_violations <= 2:
+        return 0.25  # minor parse errors
+    elif n_violations <= 5:
+        return 0.15  # moderate errors
+    else:
+        return 0.10  # many errors — barely above base
 
 
 def per_action_tlc_reward(
