@@ -87,9 +87,11 @@ def main() -> None:
                         "without wasting memory. Falls back to 1024 if OOM.")
     parser.add_argument("--beta", type=float, default=0.04,
                         help="KL penalty against reference model")
-    parser.add_argument("--temperature", type=float, default=1.2,
-                        help="Higher than 1.0 to ensure reward variance across "
-                        "4 completions. Dense reward distinguishes them.")
+    parser.add_argument("--temperature", type=float, default=0.7,
+                        help="0.7 balances diversity with coherence. At 1.2 the "
+                        "model writes incoherent pseudo-TLA+. At 0.3 outputs "
+                        "are too uniform. Dense reward provides variance even "
+                        "at moderate temperatures.")
     parser.add_argument("--logging-steps", type=int, default=1)
     parser.add_argument("--save-steps", type=int, default=50)
     parser.add_argument("--smoke", action="store_true",
