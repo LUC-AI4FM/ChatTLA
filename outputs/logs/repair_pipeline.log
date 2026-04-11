@@ -1,0 +1,17 @@
+[2026-04-11 02:43:04] ===== Ralph Repair Pipeline =====
+[2026-04-11 02:43:07] Phase 1: Collecting Ralph trajectories...
+[trajectories] 398 problems to process
+  [topic_BinarySemaphore] iter 1/6: score=0.000 SANY=fail (21.7s)
+  [topic_Barrier] iter 1/6: score=0.000 SANY=fail (26.1s)
+  [topic_CountingSemaphore] iter 1/6: score=0.000 SANY=fail (27.7s)
+  [topic_ReadWriteLock] iter 1/6: score=0.650 SANY=ok TLC=silver(states=3,inv=0) Apalache=skip TLAPS=no_theorems (28.3s)
+  [topic_CountingSemaphore] iter 2/6: score=0.000 SANY=fail (5.5s)
+  [topic_BinarySemaphore] iter 2/6: score=0.400 SANY=ok TLC=silver(states=1,inv=0) Apalache=skip TLAPS=no_theorems (11.8s)
+  [topic_Barrier] iter 2/6: score=0.650 SANY=ok TLC=silver(states=2,inv=0) Apalache=skip TLAPS=no_theorems (9.1s)
+  [topic_CountingSemaphore] iter 3/6: score=0.000 SANY=fail (4.8s)
+  [topic_ReadWriteLock] iter 2/6: score=0.650 SANY=ok TLC=silver(states=3,inv=0) Apalache=skip TLAPS=no_theorems (11.7s)
+  [topic_CountingSemaphore] iter 4/6: score=0.000 SANY=fail (5.3s)
+  [topic_BinarySemaphore] iter 3/6: score=0.400 SANY=ok TLC=silver(states=1,inv=0) Apalache=skip TLAPS=no_theorems (10.1s)
+  [topic_Barrier] iter 3/6: score=0.650 SANY=ok TLC=silver(states=2,inv=0) Apalache=skip TLAPS=no_theorems (10.3s)
+(10.1s)
+  [topic_Barrier] iter 3/6: score=0.650 SANY=ok TLC=silver(states=2,inv=0) Apalache=skip TLAPS=no_theorems (10.3s)
