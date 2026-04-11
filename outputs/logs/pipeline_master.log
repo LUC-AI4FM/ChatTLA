@@ -2408,3 +2408,801 @@ The tokenizer has new PAD/BOS/EOS tokens that differ from the model config and g
  85%|████████▌ | 170/200 [6:28:44<53:31, 107.04s/it] 86%|████████▌ | 171/200 [6:31:24<59:23, 122.87s/it]                                                    {'loss': '0.0005375', 'grad_norm': '0.2932', 'learning_rate': '7.5e-07', 'num_tokens': '7.484e+05', 'completions/mean_length': '873', 'completions/min_length': '873', 'completions/max_length': '873', 'completions/clipped_ratio': '0', 'completions/mean_terminated_length': '873', 'completions/min_terminated_length': '873', 'completions/max_terminated_length': '873', 'rewards/fullspec_component_reward/mean': '0', 'rewards/fullspec_component_reward/std': '0', 'reward': '0', 'reward_std': '0', 'frac_reward_zero_std': '1', 'kl': '0.01344', 'entropy': '1.092', 'clip_ratio/low_mean': '0', 'clip_ratio/low_min': '0', 'clip_ratio/high_mean': '0', 'clip_ratio/high_max': '0', 'clip_ratio/region_mean': '0', 'step_time': '159.6', 'epoch': '0.4296'}
  86%|████████▌ | 171/200 [6:31:24<59:23, 122.87s/it] 86%|████████▌ | 172/200 [6:34:04<1:02:39, 134.28s/it]                                                      {'loss': '0.0001614', 'grad_norm': '0.03585', 'learning_rate': '7.25e-07', 'num_tokens': '7.535e+05', 'completions/mean_length': '867', 'completions/min_length': '867', 'completions/max_length': '867', 'completions/clipped_ratio': '0.25', 'completions/mean_terminated_length': '867', 'completions/min_terminated_length': '867', 'completions/max_terminated_length': '867', 'rewards/fullspec_component_reward/mean': '0', 'rewards/fullspec_component_reward/std': '0', 'reward': '0', 'reward_std': '0', 'frac_reward_zero_std': '1', 'kl': '0.004034', 'entropy': '0.3212', 'clip_ratio/low_mean': '0', 'clip_ratio/low_min': '0', 'clip_ratio/high_mean': '0', 'clip_ratio/high_max': '0', 'clip_ratio/region_mean': '0', 'step_time': '160.7', 'epoch': '0.4322'}
  86%|████████▌ | 172/200 [6:34:04<1:02:39, 134.28s/it][2026-04-11 02:08:50] 4 gens OOM, trying 2 gens
+[rl-fullspec] loading full-spec prompts ...
+[rl-fullspec] loaded 398 prompts
+[rl-fullspec] LoRA: r=8, alpha=16
+[rl-fullspec] loading base model outputs/merged_model_dpo_piecewise ...
+[rl-fullspec] prompts pre-formatted: 1732 chars, suffix='<|channel|>final<|message|>'
+Loading weights:   0%|          | 0/411 [00:00<?, ?it/s]Loading weights:   0%|          | 1/411 [00:00<01:57,  3.50it/s]Loading weights:   1%|          | 4/411 [00:00<00:40,  9.94it/s]Loading weights:   1%|▏         | 6/411 [00:00<00:51,  7.82it/s]Loading weights:   5%|▍         | 20/411 [00:00<00:13, 28.59it/s]Loading weights:   6%|▌         | 24/411 [00:01<00:17, 21.72it/s]Loading weights:   9%|▉         | 38/411 [00:01<00:10, 36.41it/s]Loading weights:  10%|█         | 43/411 [00:01<00:12, 28.39it/s]Loading weights:  13%|█▎        | 55/411 [00:01<00:09, 37.77it/s]Loading weights:  15%|█▍        | 60/411 [00:02<00:11, 29.61it/s]Loading weights:  17%|█▋        | 71/411 [00:02<00:09, 37.28it/s]Loading weights:  18%|█▊        | 76/411 [00:02<00:11, 30.24it/s]Loading weights:  22%|██▏       | 89/411 [00:03<00:11, 28.79it/s]Loading weights:  26%|██▌       | 106/411 [00:03<00:07, 41.86it/s]Loading weights:  27%|██▋       | 112/411 [00:03<00:08, 35.16it/s]Loading weights:  30%|██▉       | 123/411 [00:04<00:09, 30.24it/s]Loading weights:  34%|███▍      | 140/411 [00:04<00:06, 42.45it/s]Loading weights:  36%|███▌      | 146/411 [00:04<00:07, 35.66it/s]Loading weights:  38%|███▊      | 157/411 [00:04<00:06, 41.57it/s]Loading weights:  40%|███▉      | 163/411 [00:05<00:07, 34.05it/s]Loading weights:  42%|████▏     | 173/411 [00:05<00:08, 27.55it/s]Loading weights:  46%|████▋     | 191/411 [00:05<00:05, 41.06it/s]Loading weights:  48%|████▊     | 197/411 [00:06<00:06, 33.86it/s]Loading weights:  51%|█████     | 208/411 [00:06<00:05, 39.65it/s]Loading weights:  52%|█████▏    | 213/411 [00:06<00:06, 31.27it/s]Loading weights:  55%|█████▍    | 224/411 [00:06<00:05, 31.31it/s]Loading weights:  55%|█████▌    | 228/411 [00:07<00:06, 29.80it/s]Loading weights:  59%|█████▉    | 242/411 [00:07<00:04, 39.77it/s]Loading weights:  60%|██████    | 247/411 [00:07<00:05, 30.69it/s]Loading weights:  63%|██████▎   | 258/411 [00:08<00:05, 26.79it/s]Loading weights:  67%|██████▋   | 276/411 [00:08<00:03, 40.30it/s]Loading weights:  69%|██████▊   | 282/411 [00:08<00:03, 33.32it/s]Loading weights:  71%|███████▏  | 293/411 [00:08<00:03, 39.21it/s]Loading weights:  73%|███████▎  | 298/411 [00:09<00:03, 31.93it/s]Loading weights:  75%|███████▌  | 310/411 [00:09<00:02, 39.34it/s]Loading weights:  77%|███████▋  | 315/411 [00:09<00:03, 30.48it/s]Loading weights:  80%|███████▉  | 327/411 [00:09<00:02, 38.00it/s]Loading weights:  81%|████████  | 332/411 [00:10<00:02, 30.56it/s]Loading weights:  84%|████████▎ | 344/411 [00:10<00:01, 38.68it/s]Loading weights:  85%|████████▍ | 349/411 [00:10<00:02, 30.58it/s]Loading weights:  88%|████████▊ | 361/411 [00:10<00:01, 39.16it/s]Loading weights:  89%|████████▉ | 366/411 [00:11<00:01, 31.12it/s]Loading weights:  92%|█████████▏| 378/411 [00:11<00:00, 39.66it/s]Loading weights:  93%|█████████▎| 383/411 [00:11<00:00, 31.21it/s]Loading weights:  96%|█████████▌| 395/411 [00:11<00:00, 39.77it/s]Loading weights:  97%|█████████▋| 400/411 [00:12<00:00, 31.05it/s]Loading weights: 100%|██████████| 411/411 [00:12<00:00, 33.95it/s]
+[rl-fullspec] params: 20.9B total, 4.0M trainable (0.02%)
+[rl-fullspec] starting GRPO: 200 steps, 2 gens/prompt, lr=5e-06, beta=0.04, max_completion=1024
+The tokenizer has new PAD/BOS/EOS tokens that differ from the model config and generation config. The model config and generation config were aligned accordingly, being updated with the tokenizer's values. Updated tokens: {'bos_token_id': 199998}.
+  0%|          | 0/200 [00:00<?, ?it/s]Passing `generation_config` together with generation-related arguments=({'disable_compile'}) is deprecated and will be removed in future versions. Please pass either a `generation_config` object OR all generation parameters explicitly, but not both.
+  0%|          | 1/200 [01:09<3:49:40, 69.25s/it]                                                 {'loss': '0', 'grad_norm': '2.137', 'learning_rate': '5e-06', 'num_tokens': '1862', 'completions/mean_length': '498', 'completions/min_length': '498', 'completions/max_length': '498', 'completions/clipped_ratio': '0.5', 'completions/mean_terminated_length': '498', 'completions/min_terminated_length': '498', 'completions/max_terminated_length': '498', 'rewards/fullspec_component_reward/mean': '0.2', 'rewards/fullspec_component_reward/std': '0.2828', 'reward': '0.2', 'reward_std': '0.2828', 'frac_reward_zero_std': '0', 'kl': '0', 'entropy': '0.2127', 'clip_ratio/low_mean': '0', 'clip_ratio/low_min': '0', 'clip_ratio/high_mean': '0', 'clip_ratio/high_max': '0', 'clip_ratio/region_mean': '0', 'step_time': '69.12', 'epoch': '0.002513'}
+  0%|          | 1/200 [01:09<3:49:40, 69.25s/it]  1%|          | 2/200 [01:54<3:01:40, 55.05s/it]                                                 {'loss': '9.29e-05', 'grad_norm': '0.01827', 'learning_rate': '4.975e-06', 'num_tokens': '3266', 'completions/mean_length': '292', 'completions/min_length': '292', 'completions/max_length': '292', 'completions/clipped_ratio': '0.5', 'completions/mean_terminated_length': '292', 'completions/min_terminated_length': '292', 'completions/max_terminated_length': '292', 'rewards/fullspec_component_reward/mean': '1', 'rewards/fullspec_component_reward/std': '0', 'reward': '1', 'reward_std': '0', 'frac_reward_zero_std': '1', 'kl': '0.002323', 'entropy': '0.3656', 'clip_ratio/low_mean': '0', 'clip_ratio/low_min': '0', 'clip_ratio/high_mean': '0', 'clip_ratio/high_max': '0', 'clip_ratio/region_mean': '0', 'step_time': '45.06', 'epoch': '0.005025'}
+  1%|          | 2/200 [01:54<3:01:40, 55.05s/it]  2%|▏         | 3/200 [03:37<4:13:14, 77.13s/it]                                                 {'loss': '0.0001317', 'grad_norm': '0.02451', 'learning_rate': '4.95e-06', 'num_tokens': '5361', 'completions/mean_length': '624.5', 'completions/min_length': '457', 'completions/max_length': '792', 'completions/clipped_ratio': '0.5', 'completions/mean_terminated_length': '457', 'completions/min_terminated_length': '457', 'completions/max_terminated_length': '457', 'rewards/fullspec_component_reward/mean': '0', 'rewards/fullspec_component_reward/std': '0', 'reward': '0', 'reward_std': '0', 'frac_reward_zero_std': '1', 'kl': '0.003294', 'entropy': '0.211', 'clip_ratio/low_mean': '0', 'clip_ratio/low_min': '0', 'clip_ratio/high_mean': '0', 'clip_ratio/high_max': '0', 'clip_ratio/region_mean': '0', 'step_time': '103.3', 'epoch': '0.007538'}
+  2%|▏         | 3/200 [03:37<4:13:14, 77.13s/it]  2%|▏         | 4/200 [05:13<4:36:10, 84.54s/it]                                                 {'loss': '7.906e-05', 'grad_norm': '0.01389', 'learning_rate': '4.925e-06', 'num_tokens': '7363', 'completions/mean_length': '568', 'completions/min_length': '568', 'completions/max_length': '568', 'completions/clipped_ratio': '0.5', 'completions/mean_terminated_length': '568', 'completions/min_terminated_length': '568', 'completions/max_terminated_length': '568', 'rewards/fullspec_component_reward/mean': '0', 'rewards/fullspec_component_reward/std': '0', 'reward': '0', 'reward_std': '0', 'frac_reward_zero_std': '1', 'kl': '0.001976', 'entropy': '0.2008', 'clip_ratio/low_mean': '0', 'clip_ratio/low_min': '0', 'clip_ratio/high_mean': '0', 'clip_ratio/high_max': '0', 'clip_ratio/region_mean': '0', 'step_time': '95.82', 'epoch': '0.01005'}
+  2%|▏         | 4/200 [05:13<4:36:10, 84.54s/it]  2%|▎         | 5/200 [07:31<5:37:29, 103.84s/it]                                                  {'loss': '0.0003016', 'grad_norm': '0.03467', 'learning_rate': '4.9e-06', 'num_tokens': '9857', 'completions/mean_length': '826', 'completions/min_length': '826', 'completions/max_length': '826', 'completions/clipped_ratio': '0.5', 'completions/mean_terminated_length': '826', 'completions/min_terminated_length': '826', 'completions/max_terminated_length': '826', 'rewards/fullspec_component_reward/mean': '0', 'rewards/fullspec_component_reward/std': '0', 'reward': '0', 'reward_std': '0', 'frac_reward_zero_std': '1', 'kl': '0.007539', 'entropy': '0.5789', 'clip_ratio/low_mean': '0', 'clip_ratio/low_min': '0', 'clip_ratio/high_mean': '0', 'clip_ratio/high_max': '0', 'clip_ratio/region_mean': '0', 'step_time': '138', 'epoch': '0.01256'}
+  2%|▎         | 5/200 [07:31<5:37:29, 103.84s/it]  3%|▎         | 6/200 [08:20<4:35:20, 85.16s/it]                                                  {'loss': '0.0002952', 'grad_norm': '0.04724', 'learning_rate': '4.875e-06', 'num_tokens': '1.117e+04', 'completions/mean_length': '244', 'completions/min_length': '244', 'completions/max_length': '244', 'completions/clipped_ratio': '0.5', 'completions/mean_terminated_length': '244', 'completions/min_terminated_length': '244', 'completions/max_terminated_length': '244', 'rewards/fullspec_component_reward/mean': '0', 'rewards/fullspec_component_reward/std': '0', 'reward': '0', 'reward_std': '0', 'frac_reward_zero_std': '1', 'kl': '0.00738', 'entropy': '0.3541', 'clip_ratio/low_mean': '0', 'clip_ratio/low_min': '0', 'clip_ratio/high_mean': '0', 'clip_ratio/high_max': '0', 'clip_ratio/region_mean': '0', 'step_time': '48.82', 'epoch': '0.01508'}
+  3%|▎         | 6/200 [08:20<4:35:20, 85.16s/it]  4%|▎         | 7/200 [09:39<4:26:47, 82.94s/it]                                                 {'loss': '0.0001349', 'grad_norm': '0.01504', 'learning_rate': '4.85e-06', 'num_tokens': '1.318e+04', 'completions/mean_length': '578', 'completions/min_length': '578', 'completions/max_length': '578', 'completions/clipped_ratio': '0.5', 'completions/mean_terminated_length': '578', 'completions/min_terminated_length': '578', 'completions/max_terminated_length': '578', 'rewards/fullspec_component_reward/mean': '0', 'rewards/fullspec_component_reward/std': '0', 'reward': '0', 'reward_std': '0', 'frac_reward_zero_std': '1', 'kl': '0.003373', 'entropy': '0.2767', 'clip_ratio/low_mean': '0', 'clip_ratio/low_min': '0', 'clip_ratio/high_mean': '0', 'clip_ratio/high_max': '0', 'clip_ratio/region_mean': '0', 'step_time': '78.3', 'epoch': '0.01759'}
+  4%|▎         | 7/200 [09:39<4:26:47, 82.94s/it][2026-04-11 02:19:17] GRPO FAILED
+[2026-04-11 02:19:17] GRPO complete. Running eval...
+[eval] model=chattla:20b  n=30  holdout=diamond_eval_holdout.jsonl  per-call-timeout=30s  max_retries=3
+
+### [1/30]
+
+========================================================================
+SPEC: AlternatingBit   batch=communication_protocols
+DESC: Alternating bit protocol over a lossy channel. Sender alternates a bit; receiver acks with the bit it last accepted. Safety: receiver delive…
+------------------------------------------------------------------------
+[shot 0] generate_spec (single-shot)…
+  generated 989 chars in 4.5s
+  SANY : PASS
+  TLC  : tier=silver  states=0  mut_caught=False
+    violation: Error: Successor state is not completely specified by action Send of the next-state relation. The following variables ar
+  TLAPS: tier=no_theorems  obligations=0/0
+[shot 1] self-correct with feedback (1522 chars, temp=0.50)…
+  generated 989 chars in 4.6s  ⚠ IDENTICAL to previous shot
+  SANY : PASS
+  TLC  : tier=silver  states=0  mut_caught=False
+    violation: Error: Successor state is not completely specified by action Send of the next-state relation. The following variables ar
+  TLAPS: tier=no_theorems  obligations=0/0
+[shot 2] self-correct with feedback (1522 chars, temp=0.70)…
+  generated 989 chars in 4.6s  ⚠ IDENTICAL to previous shot
+  SANY : PASS
+  TLC  : tier=silver  states=0  mut_caught=False
+    violation: Error: Successor state is not completely specified by action Send of the next-state relation. The following variables ar
+  TLAPS: tier=no_theorems  obligations=0/0
+[shot 3] self-correct with feedback (1522 chars, temp=0.90) [FRESH]…
+  generated 1610 chars in 6.3s
+  SANY : FAIL (1 errors)
+    e.g. *** Errors: 5
+  ✗ EXHAUSTED retries (4 shots)
+
+### [2/30]
+
+========================================================================
+SPEC: Arp   batch=communication_protocols
+DESC: ARP request/reply with a bounded cache. On miss, broadcast request, await reply, cache it. Safety: cache entries are consistent with replied…
+------------------------------------------------------------------------
+[shot 0] generate_spec (single-shot)…
+  generated 594 chars in 2.2s
+  SANY : FAIL (1 errors)
+    e.g. *** Errors: 6
+[shot 1] self-correct with feedback (1504 chars, temp=0.50)…
+  generated 594 chars in 2.4s  ⚠ IDENTICAL to previous shot
+  SANY : FAIL (1 errors)
+    e.g. *** Errors: 6
+[shot 2] self-correct with feedback (1504 chars, temp=0.70)…
+  generated 684 chars in 2.7s
+  SANY : PASS
+  TLC  : tier=silver  states=0  mut_caught=False
+    violation: Error: Deadlock reached.
+  TLAPS: tier=no_theorems  obligations=0/0
+[shot 3] self-correct with feedback (1522 chars, temp=0.90) [FRESH]…
+  generated 2282 chars in 12.5s
+  SANY : FAIL (2 errors)
+    e.g. ***Parse Error***
+  ✗ EXHAUSTED retries (4 shots)
+
+### [3/30]
+
+========================================================================
+SPEC: AtomicRegister   batch=communication_protocols
+DESC: ABD-style read/write register replicated on N nodes with majority quorums. Reads do read-impose. Safety: linearizability of register operati…
+------------------------------------------------------------------------
+[shot 0] generate_spec (single-shot)…
+  generated 715 chars in 4.3s
+  SANY : FAIL (2 errors)
+    e.g. ***Parse Error***
+[shot 1] self-correct with feedback (792 chars, temp=0.50)…
+  generated 715 chars in 4.6s  ⚠ IDENTICAL to previous shot
+  SANY : FAIL (2 errors)
+    e.g. ***Parse Error***
+[shot 2] self-correct with feedback (792 chars, temp=0.70)…
+  generated 737 chars in 4.6s
+  SANY : FAIL (2 errors)
+    e.g. ***Parse Error***
+[shot 3] self-correct with feedback (792 chars, temp=0.90) [FRESH]…
+  generated 1084 chars in 7.6s
+  SANY : FAIL (2 errors)
+    e.g. ***Parse Error***
+  ✗ EXHAUSTED retries (4 shots)
+
+### [4/30]
+
+========================================================================
+SPEC: BinarySemaphore   batch=concurrency_primitives
+DESC: A binary semaphore protecting a critical section: P() blocks while held, V() releases. Track holder count (0 or 1) and a bounded number of w…
+------------------------------------------------------------------------
+[shot 0] generate_spec (single-shot)…
+  generated 631 chars in 3.8s
+  SANY : PASS
+  TLC  : tier=silver  states=0  mut_caught=False
+    violation: Error: Deadlock reached.
+  TLAPS: tier=no_theorems  obligations=0/0
+[shot 1] self-correct with feedback (1522 chars, temp=0.50)…
+  generated 588 chars in 3.6s
+  SANY : PASS
+  TLC  : tier=silver  states=0  mut_caught=False
+    violation: Error: Deadlock reached.
+  TLAPS: tier=no_theorems  obligations=0/0
+[shot 2] self-correct with feedback (1522 chars, temp=0.70)…
+  generated 588 chars in 3.6s  ⚠ IDENTICAL to previous shot
+  SANY : PASS
+  TLC  : tier=silver  states=0  mut_caught=False
+    violation: Error: Deadlock reached.
+  TLAPS: tier=no_theorems  obligations=0/0
+[shot 3] self-correct with feedback (1522 chars, temp=0.90) [FRESH]…
+  generated 557 chars in 3.7s
+  SANY : FAIL (2 errors)
+    e.g. ***Parse Error***
+  ✗ EXHAUSTED retries (4 shots)
+
+### [5/30]
+
+========================================================================
+SPEC: Channel   batch=concurrency_primitives
+DESC: Bounded synchronous channel of capacity K. send blocks when full, recv blocks when empty. Track buffer length. Safety: 0 <= len <= K; never …
+------------------------------------------------------------------------
+[shot 0] generate_spec (single-shot)…
+  generated 485 chars in 3.3s
+  SANY : PASS
+  TLC  : tier=silver  states=0  mut_caught=False
+    violation: Error: Invariant TypeOK is violated.
+  TLAPS: tier=no_theorems  obligations=0/0
+[shot 1] self-correct with feedback (1522 chars, temp=0.50)…
+  generated 481 chars in 3.6s
+  SANY : PASS
+  TLC  : tier=silver  states=0  mut_caught=False
+    violation: Error: Invariant TypeOK is violated.
+  TLAPS: tier=no_theorems  obligations=0/0
+[shot 2] self-correct with feedback (1522 chars, temp=0.70)…
+  generated 481 chars in 3.6s  ⚠ IDENTICAL to previous shot
+  SANY : PASS
+  TLC  : tier=silver  states=0  mut_caught=False
+    violation: Error: Invariant TypeOK is violated.
+  TLAPS: tier=no_theorems  obligations=0/0
+[shot 3] self-correct with feedback (1522 chars, temp=0.90) [FRESH]…
+  generated 468 chars in 3.6s
+  SANY : PASS
+  TLC  : tier=silver  states=0  mut_caught=False
+    violation: Error: Invariant TypeOK is violated.
+  TLAPS: tier=no_theorems  obligations=0/0
+  ✗ EXHAUSTED retries (4 shots)
+
+### [6/30]
+
+========================================================================
+SPEC: CountDownLatch   batch=concurrency_primitives
+DESC: Java-style countdown latch initialized to N. countDown decrements; await blocks until counter = 0. Safety: once latched-open it stays open (…
+------------------------------------------------------------------------
+[shot 0] generate_spec (single-shot)…
+  generated 463 chars in 2.9s
+  SANY : FAIL (1 errors)
+    e.g. *** Errors: 1
+[shot 1] self-correct with feedback (915 chars, temp=0.50)…
+  generated 462 chars in 3.0s
+  SANY : FAIL (1 errors)
+    e.g. *** Errors: 1
+[shot 2] self-correct with feedback (912 chars, temp=0.70)…
+  generated 474 chars in 3.0s
+  SANY : PASS
+  TLC  : tier=gold  states=0  mut_caught=False
+  TLAPS: tier=no_theorems  obligations=0/0
+  ✓ FIXED at shot 2
+
+### [7/30]
+
+========================================================================
+SPEC: AtomicCommit   batch=consensus_election
+DESC: Generic atomic commit gate: all participants must agree to commit, or all abort. Track per-participant vote and decision. Safety: uniform ag…
+------------------------------------------------------------------------
+[shot 0] generate_spec (single-shot)…
+  generated 1628 chars in 9.0s
+  SANY : FAIL (1 errors)
+    e.g. *** Errors: 8
+[shot 1] self-correct with feedback (1520 chars, temp=0.50)…
+  generated 1620 chars in 9.5s
+  SANY : FAIL (1 errors)
+    e.g. *** Errors: 8
+[shot 2] self-correct with feedback (1520 chars, temp=0.70)…
+  generated 1419 chars in 8.3s
+  SANY : PASS
+  TLC  : tier=silver  states=0  mut_caught=False
+    violation: Error: Successor state is not completely specified by action CoordRequest of the next-state relation. The following vari
+  TLAPS: tier=no_theorems  obligations=0/0
+[shot 3] self-correct with feedback (1522 chars, temp=0.90) [FRESH]…
+  generated 1134 chars in 5.5s
+  SANY : FAIL (2 errors)
+    e.g. ***Parse Error***
+  ✗ EXHAUSTED retries (4 shots)
+
+### [8/30]
+
+========================================================================
+SPEC: BullyElection   batch=consensus_election
+DESC: Bully leader-election algorithm over N processes with totally ordered ids. Higher ids preempt lower ones. Track per-process state in {follow…
+------------------------------------------------------------------------
+[shot 0] generate_spec (single-shot)…
+  generated 901 chars in 5.4s
+  SANY : PASS
+  TLC  : tier=silver  states=0  mut_caught=False
+    violation: Error: Deadlock reached.
+  TLAPS: tier=no_theorems  obligations=0/0
+[shot 1] self-correct with feedback (1522 chars, temp=0.50)…
+  generated 973 chars in 5.0s
+  SANY : PASS
+  TLC  : tier=gold  states=0  mut_caught=False
+  TLAPS: tier=no_theorems  obligations=0/0
+  ✓ FIXED at shot 1
+
+### [9/30]
+
+========================================================================
+SPEC: ByzantineQuorum   batch=consensus_election
+DESC: Byzantine quorum write: w >= 2f+1 acks out of 3f+1 replicas. Track honest acks and Byzantine equivocations. Safety: honest learners agree.
+------------------------------------------------------------------------
+[shot 0] generate_spec (single-shot)…
+  generated 848 chars in 6.9s
+  SANY : FAIL (2 errors)
+    e.g. ***Parse Error***
+[shot 1] self-correct with feedback (644 chars, temp=0.50)…
+  generated 793 chars in 3.1s
+  SANY : PASS
+  TLC  : tier=silver  states=0  mut_caught=False
+    violation: Error: Assumption line 8, col 8 to line 8, col 26 of module ByzantineQuorum is false.
+  TLAPS: tier=no_theorems  obligations=0/0
+[shot 2] self-correct with feedback (1522 chars, temp=0.70)…
+  generated 793 chars in 3.2s  ⚠ IDENTICAL to previous shot
+  SANY : PASS
+  TLC  : tier=silver  states=0  mut_caught=False
+    violation: Error: Assumption line 8, col 8 to line 8, col 26 of module ByzantineQuorum is false.
+  TLAPS: tier=no_theorems  obligations=0/0
+[shot 3] self-correct with feedback (1522 chars, temp=0.90) [FRESH]…
+  generated 1545 chars in 6.5s
+  SANY : FAIL (2 errors)
+    e.g. ***Parse Error***
+  ✗ EXHAUSTED retries (4 shots)
+
+### [10/30]
+
+========================================================================
+SPEC: BinaryHeap   batch=data_structures
+DESC: Bounded binary min-heap over a small element set. insert and extract-min preserve heap order modeled as: extract-min returns the current min…
+------------------------------------------------------------------------
+[shot 0] generate_spec (single-shot)…
+  generated 2006 chars in 4.7s
+  SANY : FAIL (1 errors)
+    e.g. *** Errors: 7
+[shot 1] self-correct with feedback (1520 chars, temp=0.50)…
+  generated 2002 chars in 4.9s
+  SANY : FAIL (1 errors)
+    e.g. *** Errors: 6
+[shot 2] self-correct with feedback (1520 chars, temp=0.70)…
+  generated 2002 chars in 4.9s  ⚠ IDENTICAL to previous shot
+  SANY : FAIL (1 errors)
+    e.g. *** Errors: 6
+[shot 3] self-correct with feedback (1520 chars, temp=0.90) [FRESH]…
+  generated 1792 chars in 7.3s
+  SANY : FAIL (2 errors)
+    e.g. ***Parse Error***
+  ✗ EXHAUSTED retries (4 shots)
+
+### [11/30]
+
+========================================================================
+SPEC: BloomCounter   batch=data_structures
+DESC: Counting Bloom filter where bits are small counters. insert increments, delete decrements. Safety: counts >= 0; counts <= maxInserts.
+------------------------------------------------------------------------
+[shot 0] generate_spec (single-shot)…
+  generated 475 chars in 2.1s
+  SANY : PASS
+  TLC  : tier=silver  states=0  mut_caught=False
+  TLAPS: tier=no_theorems  obligations=0/0
+[shot 1] self-correct with feedback (83 chars, temp=0.50)…
+  generated 475 chars in 2.1s  ⚠ IDENTICAL to previous shot
+  SANY : PASS
+  TLC  : tier=silver  states=0  mut_caught=False
+  TLAPS: tier=no_theorems  obligations=0/0
+[shot 2] self-correct with feedback (83 chars, temp=0.70)…
+  generated 475 chars in 2.0s  ⚠ IDENTICAL to previous shot
+  SANY : PASS
+  TLC  : tier=silver  states=0  mut_caught=False
+  TLAPS: tier=no_theorems  obligations=0/0
+[shot 3] self-correct with feedback (83 chars, temp=0.90) [FRESH]…
+  generated 662 chars in 3.6s
+  SANY : PASS
+  TLC  : tier=gold  states=0  mut_caught=False
+  TLAPS: tier=no_theorems  obligations=0/0
+  ✓ FIXED at shot 3
+
+### [12/30]
+
+========================================================================
+SPEC: BloomFilter   batch=data_structures
+DESC: Abstract Bloom filter with a small bit set and 2 hash functions over a small universe. Insert sets bits; query is positive iff all bits set.…
+------------------------------------------------------------------------
+[shot 0] generate_spec (single-shot)…
+  generated 711 chars in 3.8s
+  SANY : FAIL (1 errors)
+    e.g. *** Errors: 1
+[shot 1] self-correct with feedback (437 chars, temp=0.50)…
+  generated 543 chars in 2.8s
+  SANY : FAIL (2 errors)
+    e.g. ***Parse Error***
+[shot 2] self-correct with feedback (745 chars, temp=0.70)…
+  generated 556 chars in 2.9s
+  SANY : FAIL (2 errors)
+    e.g. ***Parse Error***
+[shot 3] self-correct with feedback (745 chars, temp=0.90) [FRESH]…
+  generated 496 chars in 2.1s
+  SANY : FAIL (2 errors)
+    e.g. ***Parse Error***
+  ✗ EXHAUSTED retries (4 shots)
+
+### [13/30]
+
+========================================================================
+SPEC: ArenaAllocator   batch=memory_caches
+DESC: Bump-pointer arena with reset. Allocations move a pointer; reset sets it to 0. Safety: pointer in 0..ArenaSize.
+------------------------------------------------------------------------
+[shot 0] generate_spec (single-shot)…
+  generated 480 chars in 2.2s
+  SANY : PASS
+  TLC  : tier=gold  states=0  mut_caught=False
+  TLAPS: tier=no_theorems  obligations=0/0
+  ✓ FIXED at shot 0
+
+### [14/30]
+
+========================================================================
+SPEC: BuddyAllocator   batch=memory_caches
+DESC: Simplified buddy allocator with two size classes. Splits and coalesces buddies. Safety: never two free buddies of the same size in adjacent …
+------------------------------------------------------------------------
+[shot 0] generate_spec (single-shot)…
+  generated 373 chars in 1.6s
+  SANY : FAIL (2 errors)
+    e.g. ***Parse Error***
+[shot 1] self-correct with feedback (636 chars, temp=0.50)…
+  generated 373 chars in 1.7s  ⚠ IDENTICAL to previous shot
+  SANY : FAIL (2 errors)
+    e.g. ***Parse Error***
+[shot 2] self-correct with feedback (636 chars, temp=0.70)…
+  generated 323 chars in 1.4s
+  SANY : FAIL (2 errors)
+    e.g. ***Parse Error***
+[shot 3] self-correct with feedback (643 chars, temp=0.90) [FRESH]…
+  generated 1234 chars in 4.6s
+  SANY : FAIL (1 errors)
+    e.g. *** Errors: 4
+  ✗ EXHAUSTED retries (4 shots)
+
+### [15/30]
+
+========================================================================
+SPEC: CopyingGc   batch=memory_caches
+DESC: Stop-the-world copying GC with from-space and to-space. Safety: after copy every reachable object lives in to-space and from-space is empty.
+------------------------------------------------------------------------
+[shot 0] generate_spec (single-shot)…
+  generated 329 chars in 1.4s
+  SANY : PASS
+  TLC  : tier=silver  states=0  mut_caught=False
+  TLAPS: tier=no_theorems  obligations=0/0
+[shot 1] self-correct with feedback (83 chars, temp=0.50)…
+  generated 328 chars in 1.4s
+  SANY : PASS
+  TLC  : tier=silver  states=0  mut_caught=False
+  TLAPS: tier=no_theorems  obligations=0/0
+[shot 2] self-correct with feedback (83 chars, temp=0.70)…
+  generated 328 chars in 1.4s  ⚠ IDENTICAL to previous shot
+  SANY : PASS
+  TLC  : tier=silver  states=0  mut_caught=False
+  TLAPS: tier=no_theorems  obligations=0/0
+[shot 3] self-correct with feedback (83 chars, temp=0.90) [FRESH]…
+  generated 768 chars in 2.5s
+  SANY : FAIL (2 errors)
+    e.g. ***Parse Error***
+  ✗ EXHAUSTED retries (4 shots)
+
+### [16/30]
+
+========================================================================
+SPEC: AdaptiveMutex   batch=mutual_exclusion
+DESC: Adaptive mutex: short spin, then sleep. Track per-thread mode in {spinning, sleeping, holding}. Safety: at most one holder.
+------------------------------------------------------------------------
+[shot 0] generate_spec (single-shot)…
+  generated 1179 chars in 4.4s
+  SANY : FAIL (1 errors)
+    e.g. *** Errors: 2
+[shot 1] self-correct with feedback (1196 chars, temp=0.50)…
+  generated 1178 chars in 4.6s
+  SANY : FAIL (1 errors)
+    e.g. *** Errors: 2
+[shot 2] self-correct with feedback (1192 chars, temp=0.70)…
+  generated 1178 chars in 4.6s  ⚠ IDENTICAL to previous shot
+  SANY : FAIL (1 errors)
+    e.g. *** Errors: 2
+[shot 3] self-correct with feedback (1192 chars, temp=0.90) [FRESH]…
+  generated 1263 chars in 4.7s
+  SANY : FAIL (2 errors)
+    e.g. ***Parse Error***
+  ✗ EXHAUSTED retries (4 shots)
+
+### [17/30]
+
+========================================================================
+SPEC: AndersonMutex   batch=mutual_exclusion
+DESC: Anderson's array-based queueing mutex: each process spins on its own slot in a circular array. Safety: mutual exclusion; FIFO.
+------------------------------------------------------------------------
+[shot 0] generate_spec (single-shot)…
+  ✗ KILLED after 30.0s (ReadTimeout)
+
+### [18/30]
+
+========================================================================
+SPEC: AravindMutex   batch=mutual_exclusion
+DESC: Aravind's local-spin mutex variant. Each process has a private wait flag set by the previous holder. Safety: mutual exclusion; bounded waiti…
+------------------------------------------------------------------------
+[shot 0] generate_spec (single-shot)…
+  generated 1197 chars in 4.7s
+  SANY : FAIL (1 errors)
+    e.g. *** Errors: 1
+[shot 1] self-correct with feedback (1105 chars, temp=0.50)…
+  generated 1197 chars in 5.0s  ⚠ IDENTICAL to previous shot
+  SANY : FAIL (1 errors)
+    e.g. *** Errors: 1
+[shot 2] self-correct with feedback (1105 chars, temp=0.70)…
+  generated 1245 chars in 5.1s
+  SANY : FAIL (1 errors)
+    e.g. *** Errors: 1
+[shot 3] self-correct with feedback (1109 chars, temp=0.90) [FRESH]…
+  generated 1900 chars in 7.1s
+  SANY : PASS
+  TLC  : tier=silver  states=0  mut_caught=False
+    violation: Error: Deadlock reached.
+  TLAPS: tier=no_theorems  obligations=0/0
+  ✗ EXHAUSTED retries (4 shots)
+
+### [19/30]
+
+========================================================================
+SPEC: BlocksWorld   batch=puzzles_classical
+DESC: Blocks-world planning with 3 blocks: stack, unstack, pickup, putdown. Safety: a block is held by at most one hand; at most one block on each…
+------------------------------------------------------------------------
+[shot 0] generate_spec (single-shot)…
+  generated 438 chars in 2.3s
+  SANY : FAIL (1 errors)
+    e.g. *** Errors: 1
+[shot 1] self-correct with feedback (451 chars, temp=0.50)…
+  generated 1305 chars in 4.8s
+  SANY : FAIL (2 errors)
+    e.g. ***Parse Error***
+[shot 2] self-correct with feedback (617 chars, temp=0.70)…
+  generated 1246 chars in 5.0s
+  SANY : FAIL (1 errors)
+    e.g. *** Errors: 22
+[shot 3] self-correct with feedback (1520 chars, temp=0.90) [FRESH]…
+  generated 975 chars in 3.7s
+  SANY : FAIL (2 errors)
+    e.g. ***Parse Error***
+  ✗ EXHAUSTED retries (4 shots)
+
+### [20/30]
+
+========================================================================
+SPEC: ChessKingMoves   batch=puzzles_classical
+DESC: Single chess king move legality on an 8x8 board. Safety: king moves only to adjacent cells and never onto an attacked square.
+------------------------------------------------------------------------
+[shot 0] generate_spec (single-shot)…
+  generated 1066 chars in 4.8s
+  SANY : FAIL (2 errors)
+    e.g. ***Parse Error***
+[shot 1] self-correct with feedback (832 chars, temp=0.50)…
+  generated 1066 chars in 4.9s
+  SANY : FAIL (2 errors)
+    e.g. ***Parse Error***
+[shot 2] self-correct with feedback (832 chars, temp=0.70)…
+  generated 1066 chars in 4.9s  ⚠ IDENTICAL to previous shot
+  SANY : FAIL (2 errors)
+    e.g. ***Parse Error***
+[shot 3] self-correct with feedback (832 chars, temp=0.90) [FRESH]…
+  ✗ KILLED after 30.0s (ReadTimeout)
+
+### [21/30]
+
+========================================================================
+SPEC: ColoredHats   batch=puzzles_classical
+DESC: Three prisoners with hats of two colors guess their own. Bounded knowledge state per prisoner. Safety: a guess is announced only when justif…
+------------------------------------------------------------------------
+[shot 0] generate_spec (single-shot)…
+  generated 1005 chars in 4.2s
+  SANY : FAIL (1 errors)
+    e.g. *** Errors: 1
+[shot 1] self-correct with feedback (437 chars, temp=0.50)…
+  generated 333 chars in 1.6s
+  SANY : PASS
+  TLC  : tier=silver  states=0  mut_caught=False
+    violation: Error: In computing initial states, the right side of \IN is not enumerable.
+  TLAPS: tier=no_theorems  obligations=0/0
+[shot 2] self-correct with feedback (1522 chars, temp=0.70)…
+  generated 345 chars in 1.6s
+  SANY : PASS
+  TLC  : tier=silver  states=0  mut_caught=False
+    violation: Error: In computing initial states, the right side of \IN is not enumerable.
+  TLAPS: tier=no_theorems  obligations=0/0
+[shot 3] self-correct with feedback (1522 chars, temp=0.90) [FRESH]…
+  generated 341 chars in 1.8s
+  SANY : FAIL (2 errors)
+    e.g. ***Parse Error***
+  ✗ EXHAUSTED retries (4 shots)
+
+### [22/30]
+
+========================================================================
+SPEC: AdmissionControl   batch=scheduling_resources
+DESC: Admission control: admit a request only if active count < capacity. Safety: active <= capacity at all times.
+------------------------------------------------------------------------
+[shot 0] generate_spec (single-shot)…
+  generated 409 chars in 1.6s
+  SANY : PASS
+  TLC  : tier=silver  states=0  mut_caught=False
+  TLAPS: tier=no_theorems  obligations=0/0
+[shot 1] self-correct with feedback (83 chars, temp=0.50)…
+  generated 414 chars in 1.6s
+  SANY : PASS
+  TLC  : tier=silver  states=0  mut_caught=False
+  TLAPS: tier=no_theorems  obligations=0/0
+[shot 2] self-correct with feedback (83 chars, temp=0.70)…
+  generated 414 chars in 1.6s  ⚠ IDENTICAL to previous shot
+  SANY : PASS
+  TLC  : tier=silver  states=0  mut_caught=False
+  TLAPS: tier=no_theorems  obligations=0/0
+[shot 3] self-correct with feedback (83 chars, temp=0.90) [FRESH]…
+  generated 310 chars in 1.2s
+  SANY : FAIL (2 errors)
+    e.g. ***Parse Error***
+  ✗ EXHAUSTED retries (4 shots)
+
+### [23/30]
+
+========================================================================
+SPEC: BackpressureChannel   batch=scheduling_resources
+DESC: Bounded channel with explicit credit-based backpressure. Sender may transmit only if credits > 0. Safety: in-flight <= initial credits.
+------------------------------------------------------------------------
+[shot 0] generate_spec (single-shot)…
+  generated 791 chars in 3.1s
+  SANY : PASS
+  TLC  : tier=silver  states=0  mut_caught=False
+    violation: Error: Deadlock reached.
+  TLAPS: tier=no_theorems  obligations=0/0
+[shot 1] self-correct with feedback (1522 chars, temp=0.50)…
+  generated 791 chars in 3.3s  ⚠ IDENTICAL to previous shot
+  SANY : PASS
+  TLC  : tier=silver  states=0  mut_caught=False
+    violation: Error: Deadlock reached.
+  TLAPS: tier=no_theorems  obligations=0/0
+[shot 2] self-correct with feedback (1522 chars, temp=0.70)…
+  generated 791 chars in 3.3s  ⚠ IDENTICAL to previous shot
+  SANY : PASS
+  TLC  : tier=silver  states=0  mut_caught=False
+    violation: Error: Deadlock reached.
+  TLAPS: tier=no_theorems  obligations=0/0
+[shot 3] self-correct with feedback (1522 chars, temp=0.90) [FRESH]…
+  generated 934 chars in 3.5s
+  SANY : FAIL (2 errors)
+    e.g. ***Parse Error***
+  ✗ EXHAUSTED retries (4 shots)
+
+### [24/30]
+
+========================================================================
+SPEC: Bankers   batch=scheduling_resources
+DESC: Banker's algorithm with two resource types and N processes. A request is granted only if the resulting state has a safe sequence. Safety: on…
+------------------------------------------------------------------------
+[shot 0] generate_spec (single-shot)…
+  generated 468 chars in 2.0s
+  SANY : FAIL (1 errors)
+    e.g. *** Errors: 1
+[shot 1] self-correct with feedback (433 chars, temp=0.50)…
+  generated 1861 chars in 5.8s
+  SANY : FAIL (1 errors)
+    e.g. *** Errors: 4
+[shot 2] self-correct with feedback (1520 chars, temp=0.70)…
+  generated 1858 chars in 6.1s
+  SANY : FAIL (1 errors)
+    e.g. *** Errors: 4
+[shot 3] self-correct with feedback (1520 chars, temp=0.90) [FRESH]…
+  generated 1343 chars in 8.1s
+  SANY : FAIL (2 errors)
+    e.g. ***Parse Error***
+  ✗ EXHAUSTED retries (4 shots)
+
+### [25/30]
+
+========================================================================
+SPEC: ChainReplication   batch=transactions_databases
+DESC: Chain replication with head, middle, tail. Writes flow head->tail; reads at tail. Safety: tail's state is a prefix of head's.
+------------------------------------------------------------------------
+[shot 0] generate_spec (single-shot)…
+  generated 466 chars in 2.0s
+  SANY : PASS
+  TLC  : tier=silver  states=0  mut_caught=False
+    violation: Error: Deadlock reached.
+  TLAPS: tier=no_theorems  obligations=0/0
+[shot 1] self-correct with feedback (1522 chars, temp=0.50)…
+  generated 539 chars in 2.4s
+  SANY : PASS
+  TLC  : tier=silver  states=0  mut_caught=False
+    violation: Error: Invariant TypeOK is violated.
+  TLAPS: tier=no_theorems  obligations=0/0
+[shot 2] self-correct with feedback (1522 chars, temp=0.70)…
+  generated 539 chars in 2.4s
+  SANY : PASS
+  TLC  : tier=silver  states=0  mut_caught=False
+    violation: Error: Invariant TypeOK is violated.
+  TLAPS: tier=no_theorems  obligations=0/0
+[shot 3] self-correct with feedback (1522 chars, temp=0.90) [FRESH]…
+  generated 433 chars in 2.9s
+  SANY : PASS
+  TLC  : tier=silver  states=0  mut_caught=False
+    violation: Error: Invariant TypeOK is violated.
+  TLAPS: tier=no_theorems  obligations=0/0
+  ✗ EXHAUSTED retries (4 shots)
+
+### [26/30]
+
+========================================================================
+SPEC: DistributedLock   batch=transactions_databases
+DESC: Lease-based distributed lock with expiry. Holder must renew before timeout. Safety: at most one holder at any logical time.
+------------------------------------------------------------------------
+[shot 0] generate_spec (single-shot)…
+  generated 773 chars in 3.0s
+  SANY : PASS
+  TLC  : tier=silver  states=0  mut_caught=False
+    violation: Error: Successor state is not completely specified by action Renew of the next-state relation. The following variable is
+  TLAPS: tier=no_theorems  obligations=0/0
+[shot 1] self-correct with feedback (1522 chars, temp=0.50)…
+  generated 773 chars in 3.2s  ⚠ IDENTICAL to previous shot
+  SANY : PASS
+  TLC  : tier=silver  states=0  mut_caught=False
+    violation: Error: Successor state is not completely specified by action Renew of the next-state relation. The following variable is
+  TLAPS: tier=no_theorems  obligations=0/0
+[shot 2] self-correct with feedback (1522 chars, temp=0.70)…
+  generated 773 chars in 3.2s  ⚠ IDENTICAL to previous shot
+  SANY : PASS
+  TLC  : tier=silver  states=0  mut_caught=False
+    violation: Error: Successor state is not completely specified by action Renew of the next-state relation. The following variable is
+  TLAPS: tier=no_theorems  obligations=0/0
+[shot 3] self-correct with feedback (1522 chars, temp=0.90) [FRESH]…
+  generated 494 chars in 2.0s
+  SANY : FAIL (2 errors)
+    e.g. ***Parse Error***
+  ✗ EXHAUSTED retries (4 shots)
+
+### [27/30]
+
+========================================================================
+SPEC: FencingToken   batch=transactions_databases
+DESC: Fencing token: lock service issues monotone tokens; storage rejects writes with stale tokens. Safety: an accepted write has token >= all pre…
+------------------------------------------------------------------------
+[shot 0] generate_spec (single-shot)…
+  generated 570 chars in 1.9s
+  SANY : PASS
+  TLC  : tier=silver  states=0  mut_caught=False
+  TLAPS: tier=no_theorems  obligations=0/0
+[shot 1] self-correct with feedback (83 chars, temp=0.50)…
+  generated 570 chars in 1.8s  ⚠ IDENTICAL to previous shot
+  SANY : PASS
+  TLC  : tier=silver  states=0  mut_caught=False
+  TLAPS: tier=no_theorems  obligations=0/0
+[shot 2] self-correct with feedback (83 chars, temp=0.70)…
+  generated 604 chars in 1.9s
+  SANY : FAIL (2 errors)
+    e.g. ***Parse Error***
+[shot 3] self-correct with feedback (624 chars, temp=0.90) [FRESH]…
+  generated 434 chars in 1.9s
+  SANY : PASS
+  TLC  : tier=silver  states=0  mut_caught=False
+    violation: Error: Invariant TypeOK is violated by the initial state:
+  TLAPS: tier=no_theorems  obligations=0/0
+  ✗ EXHAUSTED retries (4 shots)
+
+### [28/30]
+
+========================================================================
+SPEC: ContentModeration   batch=workflows_state_machines
+DESC: Content moderation: submitted -> auto_review -> human_review -> approved | rejected. Safety: published iff approved.
+------------------------------------------------------------------------
+[shot 0] generate_spec (single-shot)…
+  generated 784 chars in 2.5s
+  SANY : FAIL (2 errors)
+    e.g. ***Parse Error***
+[shot 1] self-correct with feedback (864 chars, temp=0.50)…
+  generated 784 chars in 2.6s  ⚠ IDENTICAL to previous shot
+  SANY : FAIL (2 errors)
+    e.g. ***Parse Error***
+[shot 2] self-correct with feedback (864 chars, temp=0.70)…
+  generated 784 chars in 2.6s  ⚠ IDENTICAL to previous shot
+  SANY : FAIL (2 errors)
+    e.g. ***Parse Error***
+[shot 3] self-correct with feedback (864 chars, temp=0.90) [FRESH]…
+  generated 936 chars in 3.1s
+  SANY : FAIL (2 errors)
+    e.g. ***Parse Error***
+  ✗ EXHAUSTED retries (4 shots)
+
+### [29/30]
+
+========================================================================
+SPEC: DocumentApproval   batch=workflows_state_machines
+DESC: Document approval requiring sequential signatures from N approvers in order. Safety: published implies signatures from all N in order.
+------------------------------------------------------------------------
+[shot 0] generate_spec (single-shot)…
+  generated 593 chars in 2.6s
+  SANY : FAIL (2 errors)
+    e.g. ***Parse Error***
+[shot 1] self-correct with feedback (646 chars, temp=0.50)…
+  generated 675 chars in 2.8s
+  SANY : FAIL (2 errors)
+    e.g. ***Parse Error***
+[shot 2] self-correct with feedback (646 chars, temp=0.70)…
+  generated 674 chars in 2.8s
+  SANY : FAIL (2 errors)
+    e.g. ***Parse Error***
+[shot 3] self-correct with feedback (646 chars, temp=0.90) [FRESH]…
+  generated 784 chars in 2.9s
+  SANY : PASS
+  TLC  : tier=silver  states=0  mut_caught=False
+    violation: Error: Invariant Safety is violated by the initial state:
+  TLAPS: tier=no_theorems  obligations=0/0
+  ✗ EXHAUSTED retries (4 shots)
+
+### [30/30]
+
+========================================================================
+SPEC: EmailVerification   batch=workflows_state_machines
+DESC: Email verification: unverified -> code_sent -> verified. Codes single-use and time-limited. Safety: verified implies a matching unexpired co…
+------------------------------------------------------------------------
+[shot 0] generate_spec (single-shot)…
+  generated 504 chars in 1.8s
+  SANY : FAIL (1 errors)
+    e.g. *** Errors: 5
+[shot 1] self-correct with feedback (1520 chars, temp=0.50)…
+  generated 504 chars in 2.0s  ⚠ IDENTICAL to previous shot
+  SANY : FAIL (1 errors)
+    e.g. *** Errors: 5
+[shot 2] self-correct with feedback (1520 chars, temp=0.70)…
+  generated 502 chars in 2.0s
+  SANY : PASS
+  TLC  : tier=silver  states=0  mut_caught=False
+  TLAPS: tier=no_theorems  obligations=0/0
+[shot 3] self-correct with feedback (83 chars, temp=0.90) [FRESH]…
+  generated 1462 chars in 5.6s
+  SANY : FAIL (1 errors)
+    e.g. *** Errors: 5
+  ✗ EXHAUSTED retries (4 shots)
+
+========================================================================
+SUMMARY
+========================================================================
+  unfixed              24
+  fixed                4
+  timeout              2
+
+  FIXED 4/30  (13%)  total_wall=556s
+
+Per-domain breakdown:
+  communication_protocols        0/3
+  concurrency_primitives         1/3
+  consensus_election             1/3
+  data_structures                1/3
+  memory_caches                  1/3
+  mutual_exclusion               0/3
+  puzzles_classical              0/3
+  scheduling_resources           0/3
+  transactions_databases         0/3
+  workflows_state_machines       0/3
+
+wrote outputs/eval/holdout_grpo_fullspec.json
+[2026-04-11 02:28:39] === GRPO RUN COMPLETE ===
