@@ -1,0 +1,66 @@
+{
+  "model": "chattla:20b",
+  "n": 5,
+  "timeout_s": 30,
+  "max_retries": 3,
+  "holdout": "/home/espencer2/ChatTLA/data/processed/diamond_eval_holdout.jsonl",
+  "results": [
+    {
+      "module": "AlternatingBit",
+      "batch": "communication_protocols",
+      "result": "unfixed",
+      "attempts_used": 4,
+      "tlc_tier": "silver",
+      "tlaps_tier": "no_theorems",
+      "sany_valid": true
+    },
+    {
+      "module": "Arp",
+      "batch": "communication_protocols",
+      "result": "unfixed",
+      "attempts_used": 4,
+      "tlc_tier": null,
+      "tlaps_tier": null,
+      "sany_valid": false
+    },
+    {
+      "module": "AtomicRegister",
+      "batch": "communication_protocols",
+      "result": "timeout",
+      "killed_at_attempt": 0,
+      "elapsed_at_kill": 30.0
+    },
+    {
+      "module": "BinarySemaphore",
+      "batch": "concurrency_primitives",
+      "result": "fixed",
+      "attempts_used": 4,
+      "tlc_tier": "gold",
+      "tlaps_tier": "no_theorems"
+    },
+    {
+      "module": "Channel",
+      "batch": "concurrency_primitives",
+      "result": "unfixed",
+      "attempts_used": 4,
+      "tlc_tier": null,
+      "tlaps_tier": null,
+      "sany_valid": false
+    }
+  ],
+  "counts": {
+    "unfixed": 3,
+    "timeout": 1,
+    "fixed": 1
+  },
+  "by_domain": {
+    "communication_protocols": {
+      "total": 3,
+      "fixed": 0
+    },
+    "concurrency_primitives": {
+      "total": 2,
+      "fixed": 1
+    }
+  }
+}
