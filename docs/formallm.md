@@ -21,6 +21,8 @@ negative transfer from mainstream language training. We identify five recurring 
 egories, all traceable to specific training data biases. These results suggest that current LLMs
 do not generate reliable TLA+ specifications without expert oversight. We release the evaluation
 framework, code, and dataset to support reproducibility and future research.
+
+> *Note (2026-04-14): the 8.6% semantic-correctness ceiling in this paper measures **off-the-shelf** LLMs under prompting alone. A companion fine-tuning study (`docs/chattla_finetuning_paper.tex`) reports 30% pass on a harder 30-problem Diamond holdout (9/30) using repair-based GRPO on `gpt-oss:20b`. The evaluation protocols differ — Diamond adds a mutation-sensitivity clause that the 8.6% figure does not — so the numbers are not directly comparable, but they are on the same language against the same verifier and suggest the off-the-shelf ceiling is not the ceiling of the approach.*
 1 Introduction
 Formal specification is important to build reli-
 able distributed and concurrent systems (Lam-
