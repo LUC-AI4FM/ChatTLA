@@ -1,0 +1,309 @@
+{
+  "model": "chattla:20b-repair",
+  "n": 30,
+  "timeout_s": 30,
+  "max_retries": 3,
+  "holdout": "/home/espencer2/ChatTLA/data/processed/diamond_eval_holdout.jsonl",
+  "results": [
+    {
+      "module": "AlternatingBit",
+      "batch": "communication_protocols",
+      "result": "unfixed",
+      "attempts_used": 4,
+      "tlc_tier": null,
+      "tlaps_tier": null,
+      "sany_valid": false
+    },
+    {
+      "module": "Arp",
+      "batch": "communication_protocols",
+      "result": "unfixed",
+      "attempts_used": 4,
+      "tlc_tier": null,
+      "tlaps_tier": null,
+      "sany_valid": false
+    },
+    {
+      "module": "AtomicRegister",
+      "batch": "communication_protocols",
+      "result": "unfixed",
+      "attempts_used": 4,
+      "tlc_tier": null,
+      "tlaps_tier": null,
+      "sany_valid": false
+    },
+    {
+      "module": "BinarySemaphore",
+      "batch": "concurrency_primitives",
+      "result": "unfixed",
+      "attempts_used": 4,
+      "tlc_tier": null,
+      "tlaps_tier": null,
+      "sany_valid": false
+    },
+    {
+      "module": "Channel",
+      "batch": "concurrency_primitives",
+      "result": "unfixed",
+      "attempts_used": 4,
+      "tlc_tier": null,
+      "tlaps_tier": null,
+      "sany_valid": false
+    },
+    {
+      "module": "CountDownLatch",
+      "batch": "concurrency_primitives",
+      "result": "unfixed",
+      "attempts_used": 4,
+      "tlc_tier": null,
+      "tlaps_tier": null,
+      "sany_valid": false
+    },
+    {
+      "module": "AtomicCommit",
+      "batch": "consensus_election",
+      "result": "unfixed",
+      "attempts_used": 4,
+      "tlc_tier": null,
+      "tlaps_tier": null,
+      "sany_valid": false
+    },
+    {
+      "module": "BullyElection",
+      "batch": "consensus_election",
+      "result": "fixed",
+      "attempts_used": 1,
+      "tlc_tier": "gold",
+      "tlaps_tier": "no_theorems"
+    },
+    {
+      "module": "ByzantineQuorum",
+      "batch": "consensus_election",
+      "result": "unfixed",
+      "attempts_used": 4,
+      "tlc_tier": null,
+      "tlaps_tier": null,
+      "sany_valid": false
+    },
+    {
+      "module": "BinaryHeap",
+      "batch": "data_structures",
+      "result": "unfixed",
+      "attempts_used": 4,
+      "tlc_tier": null,
+      "tlaps_tier": null,
+      "sany_valid": false
+    },
+    {
+      "module": "BloomCounter",
+      "batch": "data_structures",
+      "result": "fixed",
+      "attempts_used": 3,
+      "tlc_tier": "gold",
+      "tlaps_tier": "no_theorems"
+    },
+    {
+      "module": "BloomFilter",
+      "batch": "data_structures",
+      "result": "timeout",
+      "killed_at_attempt": 0,
+      "elapsed_at_kill": 30.0
+    },
+    {
+      "module": "ArenaAllocator",
+      "batch": "memory_caches",
+      "result": "fixed",
+      "attempts_used": 1,
+      "tlc_tier": "gold",
+      "tlaps_tier": "no_theorems"
+    },
+    {
+      "module": "BuddyAllocator",
+      "batch": "memory_caches",
+      "result": "unfixed",
+      "attempts_used": 4,
+      "tlc_tier": null,
+      "tlaps_tier": null,
+      "sany_valid": false
+    },
+    {
+      "module": "CopyingGc",
+      "batch": "memory_caches",
+      "result": "unfixed",
+      "attempts_used": 4,
+      "tlc_tier": null,
+      "tlaps_tier": null,
+      "sany_valid": false
+    },
+    {
+      "module": "AdaptiveMutex",
+      "batch": "mutual_exclusion",
+      "result": "fixed",
+      "attempts_used": 1,
+      "tlc_tier": "gold",
+      "tlaps_tier": "no_theorems"
+    },
+    {
+      "module": "AndersonMutex",
+      "batch": "mutual_exclusion",
+      "result": "fixed",
+      "attempts_used": 3,
+      "tlc_tier": "gold",
+      "tlaps_tier": "no_theorems"
+    },
+    {
+      "module": "AravindMutex",
+      "batch": "mutual_exclusion",
+      "result": "timeout",
+      "killed_at_attempt": 3,
+      "elapsed_at_kill": 30.0
+    },
+    {
+      "module": "BlocksWorld",
+      "batch": "puzzles_classical",
+      "result": "unfixed",
+      "attempts_used": 4,
+      "tlc_tier": null,
+      "tlaps_tier": null,
+      "sany_valid": false
+    },
+    {
+      "module": "ChessKingMoves",
+      "batch": "puzzles_classical",
+      "result": "unfixed",
+      "attempts_used": 4,
+      "tlc_tier": null,
+      "tlaps_tier": null,
+      "sany_valid": false
+    },
+    {
+      "module": "ColoredHats",
+      "batch": "puzzles_classical",
+      "result": "unfixed",
+      "attempts_used": 4,
+      "tlc_tier": null,
+      "tlaps_tier": null,
+      "sany_valid": false
+    },
+    {
+      "module": "AdmissionControl",
+      "batch": "scheduling_resources",
+      "result": "fixed",
+      "attempts_used": 2,
+      "tlc_tier": "gold",
+      "tlaps_tier": "no_theorems"
+    },
+    {
+      "module": "BackpressureChannel",
+      "batch": "scheduling_resources",
+      "result": "fixed",
+      "attempts_used": 3,
+      "tlc_tier": "gold",
+      "tlaps_tier": "no_theorems"
+    },
+    {
+      "module": "Bankers",
+      "batch": "scheduling_resources",
+      "result": "timeout",
+      "killed_at_attempt": 1,
+      "elapsed_at_kill": 30.0
+    },
+    {
+      "module": "ChainReplication",
+      "batch": "transactions_databases",
+      "result": "timeout",
+      "killed_at_attempt": 0,
+      "elapsed_at_kill": 30.0
+    },
+    {
+      "module": "DistributedLock",
+      "batch": "transactions_databases",
+      "result": "unfixed",
+      "attempts_used": 4,
+      "tlc_tier": null,
+      "tlaps_tier": null,
+      "sany_valid": false
+    },
+    {
+      "module": "FencingToken",
+      "batch": "transactions_databases",
+      "result": "unfixed",
+      "attempts_used": 4,
+      "tlc_tier": null,
+      "tlaps_tier": null,
+      "sany_valid": false
+    },
+    {
+      "module": "ContentModeration",
+      "batch": "workflows_state_machines",
+      "result": "fixed",
+      "attempts_used": 4,
+      "tlc_tier": "gold",
+      "tlaps_tier": "no_theorems"
+    },
+    {
+      "module": "DocumentApproval",
+      "batch": "workflows_state_machines",
+      "result": "fixed",
+      "attempts_used": 4,
+      "tlc_tier": "gold",
+      "tlaps_tier": "no_theorems"
+    },
+    {
+      "module": "EmailVerification",
+      "batch": "workflows_state_machines",
+      "result": "unfixed",
+      "attempts_used": 4,
+      "tlc_tier": null,
+      "tlaps_tier": null,
+      "sany_valid": false
+    }
+  ],
+  "counts": {
+    "unfixed": 17,
+    "fixed": 9,
+    "timeout": 4
+  },
+  "by_domain": {
+    "communication_protocols": {
+      "total": 3,
+      "fixed": 0
+    },
+    "concurrency_primitives": {
+      "total": 3,
+      "fixed": 0
+    },
+    "consensus_election": {
+      "total": 3,
+      "fixed": 1
+    },
+    "data_structures": {
+      "total": 3,
+      "fixed": 1
+    },
+    "memory_caches": {
+      "total": 3,
+      "fixed": 1
+    },
+    "mutual_exclusion": {
+      "total": 3,
+      "fixed": 2
+    },
+    "puzzles_classical": {
+      "total": 3,
+      "fixed": 0
+    },
+    "scheduling_resources": {
+      "total": 3,
+      "fixed": 2
+    },
+    "transactions_databases": {
+      "total": 3,
+      "fixed": 0
+    },
+    "workflows_state_machines": {
+      "total": 3,
+      "fixed": 2
+    }
+  }
+}
