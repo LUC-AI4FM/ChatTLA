@@ -88,6 +88,7 @@ outputs/checkpoints_v13_premerge/
 outputs/merged_model_v14/
 outputs/merged_model_v13/
 outputs/merged_model_v13_baseline/
+outputs/merged_model_dpo_piecewise/
 
 # Prompt sweep raw artifacts (summary CSV/JSON tracked; per-run bulk is not)
 outputs/prompt_sweep/raw/
