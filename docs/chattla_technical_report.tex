@@ -74,7 +74,8 @@
 }
 
 % --- Title ------------------------------------------------------------------
-\title{Fine-Tuning a 20B Open Model for TLA\textsuperscript{+}\\
+\title{Fine-Tuning a 20B Open Model for TLA\textsuperscript{+}:
+Technical Report\\
 \large Failure Modes and Verifier-Centric Recipes for Low-Resource Formal Languages}
 \author{Eric Spencer\\
 \small \textit{Loyola University Chicago}\\
@@ -84,26 +85,41 @@
 \begin{document}
 \maketitle
 
+\begin{center}
+\small
+\textit{Companion technical report to} \texttt{chattla\_paper.tex}. The
+short paper states the headline results; this report contains the full
+pipeline, the year-long run history, the negative results, and the
+appendix-level debugging of the multi-GPU MoE training failure.
+\end{center}
+
 % ===========================================================================
 \begin{abstract}
 Fine-tuning a language model for a deterministic-verifier formal language
 exposes failure modes that the standard fine-tuning toolbox does not
-anticipate. We report an end-to-end study of fine-tuning the open-weight
-\texttt{gpt-oss:20b} model for TLA\textsuperscript{+} specification
-generation, against a $20$-problem held-out benchmark and a fully
-automated retrain--deploy--rollback pipeline. The dominant negative
-result is a \emph{binary-reward vacuity trap}: preference optimisation
-against a pass/fail SANY+TLC signal drifts the model toward
-behaviourally empty specifications, because the verifier's acceptance
-set is much wider than the target set. We respond with a four-clause
-\emph{Diamond gate} that includes a mutation-sensitivity test
-($8/20$ SANY, $4/20$ TLC after incremental Diamond-filtered SFT) and an
-inference-time piecewise decomposition that reaches $12/20$ SANY and
-$6/20$ TLC on the same weights without retraining. Broad from-scratch
-SFT on the same data collapses the model to $0/20$ and is recovered by
-the pipeline's rollback step. For low-resource formal languages with
-deterministic verifiers, the leverage is in the shape of the reward and
-the structure of inference, not the volume of supervised data.
+anticipate. We present five methods for verifier-centric fine-tuning and
+generation, developed over a year of work on TLA\textsuperscript{+}
+specification generation with the open-weight \texttt{gpt-oss:20b}
+model. (1)~A four-clause \emph{Diamond gate} that adds mutation
+sensitivity to the standard SANY+TLC acceptance check, ruling out
+the \emph{binary-reward vacuity trap} in which preference optimisation
+drifts models toward behaviourally empty specifications. (2)~A
+\emph{Diamond-filtered incremental SFT} recipe that trains only on
+gate-passing data atop a previously merged checkpoint.
+(3)~A \emph{piecewise inference-time decomposition} that enforces
+the Diamond clauses as per-step validators during generation.
+(4)~A \emph{topic-curriculum multi-agent generator} that produces
+Diamond-passing specifications at full yield by feeding validator
+output back into a retry loop. (5)~\emph{Repair-based GRPO}, a
+reinforcement-learning method that conditions generation on a
+known-broken specification and rewards the \emph{improvement} in
+Diamond tier---the reward shape that restores variance in a regime
+where full-spec on-policy RL produces none. This report documents
+each method, the design rationale behind it, the failure modes that
+motivated it, and the full pipeline architecture and audit trail.
+A companion study~\cite{ortiz2026formallm} establishes the
+off-the-shelf LLM baseline (up to 8.6\% semantic correctness under
+prompting alone).
 \end{abstract}
 
 % ===========================================================================
@@ -122,12 +138,14 @@ acceptance signal that is satisfied by an entire equivalence class of
 specifications, only a sub-class of which a human reviewer would accept.
 And the prior that a $20$B base model has over the language is both small
 enough to be improved by fine-tuning and fragile enough to be erased by
-it. The combination is unforgiving: the standard fine-tuning recipe ports
-poorly, and most of the things one would try ``next'' make the model
-worse.
+it. Ortiz~et~al.~\cite{ortiz2026formallm} systematically evaluate $30$
+LLMs on TLA+ specification generation from natural language, establishing
+baselines of $26.6\%$ SANY and $8.6\%$ TLC under prompting alone---a
+ceiling that the methods in this report target and exceed.
 
-This paper is a study of \emph{which} interventions made the model worse,
-\emph{why}, and what survived. We work against a single underlying
+This paper describes the \emph{methods} we developed to address these
+challenges, the failure modes that motivated each one, and the full
+pipeline architecture that ties them together. We work against a single underlying
 checkpoint, OpenAI's open-weight \texttt{gpt-oss:20b}, served locally
 through Ollama and fine-tuned with LoRA adapters merged into BF16 weights
 for evaluation. Every benchmark number reported here comes from the same
@@ -151,38 +169,51 @@ single intervention with the largest negative effect was a from-scratch
 SFT pass on a few hundred examples. Both observations are consistent with
 a working hypothesis that, for low-resource formal languages, the
 \emph{shape of the verifier reward} matters more than the volume of
-supervised data. Third, the operational machinery that mattered most in
-the year of training---an eval gate, a rollback path, and a freshness
+supervised data. Third, the operational machinery that mattered most---an
+eval gate, a rollback path, and a freshness
 constraint on the deploy step---is not interesting machine learning, but
 its absence is what turned a single bad retrain into a published
-regression. We document it explicitly because the cost asymmetry is
-severe and because nothing in the published literature on formal-language
-LLMs has prepared us for it.
+regression.
 
-\paragraph{Contributions.} We make four contributions:
+\paragraph{Contributions.} We make five methodological contributions:
 \begin{enumerate}[leftmargin=1.4em,itemsep=2pt]
 \item A reproducible end-to-end fine-tuning architecture for a verifier-checked
   formal language (\S\ref{sec:arch}), including the static-corpus build,
   the online RL loop, the multi-tier preference data collector, and the
   merge--quantise--publish--rollback chain.
-\item A failure-mode taxonomy distilled from a year of training runs
-  (\S\ref{sec:runs}--\S\ref{sec:lessons}) covering catastrophic
-  forgetting, the binary-reward vacuity trap, eval-signal volatility, and
-  the absence of rollback infrastructure.
+  Figure~\ref{fig:pipeline} gives the end-to-end view.
+\item A failure-mode taxonomy (\S\ref{sec:runs}--\S\ref{sec:lessons})
+  covering catastrophic forgetting, the binary-reward vacuity trap,
+  eval-signal volatility, and the absence of rollback infrastructure,
+  with the methodological fix for each.
 \item A self-contained \emph{Diamond gate} (\S\ref{sec:diamond}) defining
   semantic validity for TLA+ specifications by a four-clause check that
   includes mutation sensitivity, together with a topic-curriculum
   multi-agent generator (\S\ref{sec:gen}) that produces gate-passing
   specifications at full yield by feeding validator output back into the
-  generator's retry loop.
-\item A verifier-centric incremental fine-tuning recipe
+  generator's retry loop. Figure~\ref{fig:diamond-method-flow}
+  shows the clause-by-clause validation flow.
+\item A verifier-centric incremental fine-tuning method
   (\S\ref{sec:diamond-sft}) layered on a previously merged checkpoint,
   together with an inference-time piecewise decomposition
   (\S\ref{sec:piecewise}) that produces the strongest per-FLOP gain on
-  the held-out benchmark. An unresolved multi-GPU MoE training failure
-  encountered during the topic-curriculum SFT round, and the
-  hypotheses we are testing in response, are documented in
-  Appendix~\ref{sec:sftv3}.
+  the $20$-problem benchmark. A multi-GPU MoE training failure
+  encountered during the topic-curriculum SFT round, the three
+  hypotheses we tested, and the fix that cleared the schedule are
+  documented in Appendix~\ref{sec:sftv3}; a post-fix collapse on a
+  harder $30$-problem Diamond holdout (\texttt{v15}: $1/30$,
+  \texttt{v16}: $0/30$, \texttt{v17}: $1/30$) is documented with them.
+\item A \emph{repair-based GRPO} recipe (\S\ref{sec:repair-grpo}) that
+  is the strongest training-time intervention in the project. After an
+  RLVR canary validated on-policy GRPO on a $1.5$B surrogate
+  (\S\ref{sec:canary}), we applied it to \texttt{gpt-oss:20b} with the
+  repair framing---conditioning generation on a broken Diamond spec
+  and rewarding the \emph{improvement} in tier. The resulting
+  checkpoint reaches $9/30$ Diamond on the $30$-problem holdout
+  against $4/30$ for the best SFT baseline. We also report a negative
+  result: iterating the loop for a second round (\texttt{r2}) regressed
+  to $6/30$, and a third round aborted when the trajectory harvest
+  produced zero new Diamond-tier training pairs.
 \end{enumerate}
 
 \noindent The remainder of the paper is organised as follows.
@@ -192,10 +223,15 @@ fine-tuning architecture. \S\ref{sec:diamond} defines the Diamond gate.
 extracts the four lessons. \S\ref{sec:diamond-sft} documents the
 Diamond-filtered SFT recipe, \S\ref{sec:piecewise} the inference-time
 piecewise decomposition, and \S\ref{sec:gen} the topic-curriculum
-generator. \S\ref{sec:discussion} discusses generalisation and
+generator. \S\ref{sec:canary} reports an RLVR canary that validated the
+on-policy GRPO stack on a $1.5$B surrogate before we staked $20$B
+compute on it, and \S\ref{sec:repair-grpo} reports the repair-based
+GRPO recipe that this paper treats as its strongest training-time
+result. \S\ref{sec:discussion} discusses generalisation and
 limitations and \S\ref{sec:conclusion} concludes.
-Appendix~\ref{sec:sftv3} reports an unresolved in-flight SFT failure
-and the triage plan for it.
+Appendix~\ref{sec:sftv3} reports the multi-GPU SFT failure, the
+three-hypothesis triage, the fix that cleared the schedule, and the
+downstream Diamond-holdout collapse of the runs it enabled.
 
 % ===========================================================================
 \section{Background and Setting}
@@ -398,6 +434,47 @@ minimum syntactic depth in invariants) because it is the only check we
 found that resists adversarial gaming by a model that has learned what
 the validator measures.
 
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[
+  font=\small,
+  >={Stealth[length=2mm]},
+  node distance=5mm and 10mm,
+  box/.style={draw, rounded corners=2pt, align=center, minimum height=8mm,
+              minimum width=18mm, fill=cbox},
+  gate/.style={box, fill=c1!15, draw=c1},
+  fail/.style={box, fill=c4!15, draw=c4, font=\small\bfseries},
+  pass/.style={box, fill=c3!15, draw=c3, font=\small\bfseries},
+  arr/.style={->, thick, draw=cline},
+  ]
+\node[gate] (d1) {D1: SANY\\parse};
+\node[gate, right=of d1] (d2) {D2: TLC\\reachability\\($>1$ state)};
+\node[gate, right=of d2] (d3) {D3: Non-vacuous\\invariant};
+\node[gate, right=of d3] (d4) {D4: Mutation\\sensitivity};
+\node[pass, right=8mm of d4] (ok) {Diamond\\(tier 4)};
+
+\node[fail, below=6mm of d1] (t0) {Tier 0};
+\node[fail, below=6mm of d2] (t1) {Tier 1};
+\node[fail, below=6mm of d3] (t2) {Tier 2};
+\node[fail, below=6mm of d4] (t3) {Tier 3};
+
+\draw[arr] (d1) -- node[above, font=\scriptsize] {pass} (d2);
+\draw[arr] (d2) -- node[above, font=\scriptsize] {pass} (d3);
+\draw[arr] (d3) -- node[above, font=\scriptsize] {pass} (d4);
+\draw[arr] (d4) -- node[above, font=\scriptsize] {pass} (ok);
+
+\draw[arr, draw=c4] (d1) -- node[right, font=\scriptsize] {fail} (t0);
+\draw[arr, draw=c4] (d2) -- node[right, font=\scriptsize] {fail} (t1);
+\draw[arr, draw=c4] (d3) -- node[right, font=\scriptsize] {fail} (t2);
+\draw[arr, draw=c4] (d4) -- node[right, font=\scriptsize] {fail} (t3);
+\end{tikzpicture}
+\caption{Diamond gate clause flow and induced tier system. A
+specification enters at D1 and exits at the first failed clause.
+The tier assigned at exit is the reward signal for repair-based GRPO
+(\S\ref{sec:repair-grpo}).}
+\label{fig:diamond-method-flow}
+\end{figure}
+
 \paragraph{Empirical baseline.} Of the $484$ specifications in our
 augmented archive previously labelled gold or silver under SANY+TLC,
 \emph{zero} pass the Diamond gate.\footnote{This audit was run with the
@@ -479,20 +556,17 @@ topic-curriculum generator avoids that tail by construction.}
 \end{figure}
 
 % ===========================================================================
-\section{A Year of Runs and Four Lessons}
+\section{Failure Taxonomy and Method Motivations}
 \label{sec:runs}
 \label{sec:lessons}
 
-Table~\ref{tab:run-history} records the headline numbers for every
-fine-tuning checkpoint we evaluated against the $20$-problem held-out
-benchmark, and Figure~\ref{fig:traj} plots the same data. The version
-labels are internal artefact tags; the recipe column captures what
-changed between adjacent rows. Tags \texttt{v1}--\texttt{v5} are early
-exploratory runs from late 2025 (initial LoRA configs, prompt-format
-probes, dataset-builder shakedown) that were superseded by \texttt{v6};
-they are omitted because none of them produced a checkpoint that the
-deploy step accepted, and the $20$-problem benchmark suite was not yet
-frozen.
+The methods in this report were not designed in advance; each was
+developed in response to a specific failure mode encountered during
+training. This section presents the failure taxonomy and the four
+lessons that motivated the five methods. Table~\ref{tab:run-history}
+records the checkpoint trajectory, and Figure~\ref{fig:traj} plots the
+same data; the emphasis here is on the \\emph{pattern} of failures
+rather than individual run numbers.
 
 \begin{table}[t]
 \centering
@@ -515,7 +589,7 @@ Tag & Date & Recipe & SANY & TLC & Outcome \\
 \midrule
 diamond-SFT    & 2026-04-06 & $720$ ex, $73$ Diamond, $3$ ep, lr $5e\!-\!5$      & 8/20 & 4/20 & semantic recovery \\
 piecewise      & 2026-04-06 & \texttt{v13}$_R$ $+$ $5$-step decomposition        & \textbf{12/20} & \textbf{6/20} & inference-time \\
-diamond-gen    & 2026-04-07 & $1053$ ex, $200$ topic-curriculum, in flight       & ---  & ---  & see App.~\ref{sec:sftv3} \\
+diamond-gen (v15) & 2026-04-07 & $1053$ ex, $200$ topic-curriculum, $3$ ep FSDP   & ---  & ---  & App.~\ref{sec:sftv3}; $1/30$ Diamond \\
 \bottomrule
 \end{tabular}
 \caption{Held-out $20$-problem benchmark across model checkpoints.
@@ -523,8 +597,42 @@ Counts are read directly from the underlying CSVs in
 \texttt{outputs/benchmark\_results/}; \texttt{v12} produced no
 publishable checkpoint and is included only for completeness. The
 ``piecewise'' row shares its underlying weights with \texttt{v13}$_R$
-and differs only in the inference procedure.}
+and differs only in the inference procedure. After the
+\texttt{diamond-gen} run we switched the primary eval to a harder
+$30$-problem Diamond holdout; subsequent runs are reported in
+Table~\ref{tab:diamond-history} on that denominator.}
 \label{tab:run-history}
+\end{table}
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{l l l c l}
+\toprule
+Tag & Date & Recipe & Diamond & Outcome \\
+\midrule
+\texttt{v14} (baseline) & 2026-04-12 & pre-repair Diamond-SFT checkpoint               & 4/30 & baseline for repair GRPO \\
+\texttt{v15}   & 2026-04-08 & $1053$ ex, $3$ ep FSDP on top of \texttt{v14}            & 1/30 & topic overfit, hallucinated module names \\
+\texttt{v16}   & 2026-04-08 & $1$ ep, lr $2{\times}10^{-5}$, multitask corpus          & 0/30 & regularised but undertrained \\
+\texttt{v17}   & 2026-04-09 & $1$ ep, diamond $2{\times}$ upweight on \texttt{v14}     & 1/30 & marginal, below \texttt{v14} \\
+\midrule
+RLVR canary    & 2026-04-09 & Qwen-$1.5$B GRPO, $100$ steps, per-action TLC reward    & ---  & reward $0.296{\to}0.533$ (peak $0.853$) \\
+repair-GRPO r1 & 2026-04-12 & \texttt{v14} $+$ GRPO, improvement reward, $160$ steps  & \textbf{9/30} & \textbf{+$5$ vs baseline} \\
+repair-GRPO r2 & 2026-04-13 & iterate on r1 outputs                                   & 6/30 & regression \\
+repair-GRPO r3 & 2026-04-14 & iterate on r2 outputs                                   & ---  & aborted at data gate ($0/396$ traj. diamonds, $152<300$ in-band pairs) \\
+\bottomrule
+\end{tabular}
+\caption{$30$-problem Diamond holdout. ``Diamond'' counts the modules
+that pass all four clauses of the Diamond gate
+(\S\ref{sec:diamond}): SANY, TLC enumerates a non-trivial reachable
+set, at least one invariant is checked non-vacuously, and a seeded
+mutation is caught. The RLVR canary row uses a smaller surrogate model
+and a per-action TLC reward rather than a full-spec Diamond score;
+it is listed as the stack-validation step that preceded repair-GRPO
+(\S\ref{sec:canary}). Counts are read from
+\texttt{outputs/eval/holdout\_repair.json} (r1),
+\texttt{holdout\_repair\_r2.json} (r2), and the r3 pipeline log.}
+\label{tab:diamond-history}
 \end{table}
 
 \begin{figure}[t]
@@ -811,7 +919,7 @@ scorer, so the procedure is comparable to single-shot generation under
 the same evaluator. The implementation lives in
 \texttt{src/inference/piecewise\_gen.py}; the per-step prompt
 templates and the failure-message formats are the only project-specific
-pieces.
+pieces. Figure~\ref{fig:piecewise-method-flow} summarises the flow.
 
 \paragraph{Why this is the cheapest win.} The decomposition is a
 within-inference enforcement of exactly the constraints the Diamond
@@ -824,6 +932,53 @@ mistakes that single-shot generation would otherwise commit
 silently. The fact that this works on the same weights as single-shot
 is, by itself, the strongest evidence we have that the bottleneck on
 this task is not capacity but the shape of the inference procedure.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[
+  font=\small,
+  >={Stealth[length=2mm]},
+  node distance=4mm and 6mm,
+  step/.style={draw, rounded corners=2pt, align=center, minimum height=8mm,
+               minimum width=22mm, fill=c1!15, draw=c1},
+  val/.style={draw, rounded corners=2pt, align=center, minimum height=7mm,
+              minimum width=14mm, fill=c3!12, draw=c3, font=\scriptsize},
+  arr/.style={->, thick, draw=cline},
+  retry/.style={->, dashed, thick, draw=c4, bend left=30},
+  ]
+\node[step] (s1) {Step 1\\VARIABLES};
+\node[val, below=of s1] (v1) {SANY};
+\node[step, right=of s1] (s2) {Step 2\\TypeOK};
+\node[val, below=of s2] (v2) {SANY};
+\node[step, right=of s2] (s3) {Step 3\\Init};
+\node[val, below=of s3] (v3) {SANY+TLC};
+\node[step, right=of s3] (s4) {Step 4\\Next};
+\node[val, below=of s4] (v4) {SANY+TLC};
+\node[step, right=of s4] (s5) {Step 5\\Invariant};
+\node[val, below=of s5] (v5) {SANY+TLC\\+mutation};
+
+\draw[arr] (s1) -- (v1);
+\draw[arr] (v1.east) -- ++(2mm,0) |- (s2.west);
+\draw[arr] (s2) -- (v2);
+\draw[arr] (v2.east) -- ++(2mm,0) |- (s3.west);
+\draw[arr] (s3) -- (v3);
+\draw[arr] (v3.east) -- ++(2mm,0) |- (s4.west);
+\draw[arr] (s4) -- (v4);
+\draw[arr] (v4.east) -- ++(2mm,0) |- (s5.west);
+\draw[arr] (s5) -- (v5);
+
+\draw[retry] (v1.west) to node[left, font=\tiny] {$\leq3$} (s1.west);
+\draw[retry] (v2.west) to node[left, font=\tiny] {$\leq3$} (s2.west);
+\draw[retry] (v3.west) to node[left, font=\tiny] {$\leq3$} (s3.west);
+\draw[retry] (v4.west) to node[left, font=\tiny] {$\leq3$} (s4.west);
+\draw[retry] (v5.west) to node[left, font=\tiny] {$\leq3$} (s5.west);
+\end{tikzpicture}
+\caption{Piecewise inference-time decomposition. Each step generates one
+TLA+ component, validates it immediately, and retries up to three times
+on failure before passing the partial module to the next step. Step~5
+includes a mutation check equivalent to Diamond clause D4.}
+\label{fig:piecewise-method-flow}
+\end{figure}
 
 % ===========================================================================
 \section{Topic-Curriculum Multi-Agent Generation}
@@ -1000,6 +1155,146 @@ topic-curriculum corpus has to beat
 (see Appendix~\ref{sec:sftv3} for the in-flight run that targets it).
 
 % ===========================================================================
+\section{RLVR Canary: Validating the RL Stack Before Staking $20$B Compute}
+\label{sec:canary}
+
+Before applying on-policy GRPO to \texttt{gpt-oss:20b}, we ran a
+small-scale canary on \texttt{Qwen2.5-1.5B} to check that the RL stack
+itself---rollout collection, advantage estimation, reward shaping,
+and gradient application---could produce monotone reward improvement
+on TLA+ at all. The surrogate model is small enough that the whole
+loop runs on a single RTX~8000 and a bad reward function is diagnosed
+in hours rather than days, but structurally similar enough (decoder-only
+transformer, token-level generation against the same SANY/TLC verifier)
+that the result carries signal.
+
+\paragraph{Setup.} The canary reward is a per-action TLC score on a
+single-action repair task (patch one line of a broken spec so the
+action preserves a stated invariant), not the full Diamond gate. The
+loop is $100$ GRPO steps with group size $4$, learning rate
+$5\!\times\!10^{-6}$, and a KL penalty against the reference policy of
+$\beta=0.04$. Nothing about the recipe is claimed to transfer
+quantitatively; what transfers is the existence of a non-zero
+reward gradient.
+
+\paragraph{Result.} Mean batch reward rose from $0.296$ at step~$0$ to
+$0.533$ at step~$100$, with peak $0.853$ on the best rollout group,
+against a reward-hack baseline of $0.0$ (random edits never pass TLC).
+This falsifies the null hypothesis that the TLC-derived reward is
+too sparse or too discrete for policy gradient to exploit: the stack
+can learn. It also sets a prior for the next step---the
+\emph{full-spec} version of the same loop, applied to \texttt{gpt-oss:20b},
+failed to produce any reward variance at all over $155$ steps (all
+rollouts received reward $0$), which is exactly the negative result
+that pushed us to the repair framing of the next section.
+
+% ===========================================================================
+\section{Repair-Based GRPO: Rewarding the Delta, Not the Terminal Check}
+\label{sec:repair-grpo}
+
+\paragraph{Why full-spec GRPO did not work.} The obvious way to extend
+the RLVR canary to the $20$B model is to ask the policy to emit a
+full TLA+ module from the natural-language description, score it
+against the Diamond gate, and gradient-update on the binary pass/fail.
+We tried it. The result was $0$ rewards on $155/200$ steps with
+$\operatorname{std}(r)=0$---a degenerate optimisation problem in which
+every rollout in every group receives the same score, so the GRPO
+advantage is identically zero and the policy does not move. The
+Diamond gate is too tight: the base model cannot produce a gate-passing
+spec \emph{de novo} with non-trivial probability, and without at least
+one positive sample per group there is no signal.
+
+\paragraph{The repair reframe.} We replaced the task of ``emit a spec''
+with the task of ``emit a patch against a known-broken spec,'' and we
+replaced the terminal pass/fail reward with the \emph{improvement}
+in Diamond tier across the patch:
+\[
+  r(s, s') \;=\; \operatorname{tier}(s') - \operatorname{tier}(s),
+  \qquad \operatorname{tier}\in\{0,1,2,3,4\}
+\]
+where the tiers are (\,$0$: SANY-fail, $1$: SANY-pass, $2$: TLC
+enumerates, $3$: invariant checked non-vacuously, $4$: mutation caught).
+Because the input $s$ is drawn from a population of \emph{already broken}
+Diamond candidates harvested from the previous generation run, the
+expected $r$ is strictly positive for a non-degenerate policy, and the
+variance across a group of $8$ rollouts from the same $s$ is almost
+always non-zero---some patches improve the tier more than others, even
+when none of them reaches Diamond. Figure~\ref{fig:repair-method-flow}
+shows the method end to end.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[
+  font=\small,
+  >={Stealth[length=2mm]},
+  node distance=5mm and 8mm,
+  box/.style={draw, rounded corners=2pt, align=center, minimum height=9mm,
+              minimum width=22mm, fill=cbox, drop shadow={shadow xshift=0.3mm, shadow yshift=-0.3mm}},
+  rl/.style={box, fill=c3!15, draw=c3},
+  gate/.style={box, fill=c4!15, draw=c4},
+  data/.style={box, fill=c1!15, draw=c1},
+  arr/.style={->, thick, draw=cline},
+  ]
+\node[data] (broken) {Broken spec $s$\\(tier $< 4$)};
+\node[rl, right=of broken] (policy) {Policy generates\\$k=8$ repair patches};
+\node[gate, right=of policy] (diamond) {Diamond gate\\scores each $s'$};
+\node[rl, below=8mm of policy] (grpo) {GRPO update:\\$r = \operatorname{tier}(s') - \operatorname{tier}(s)$};
+
+\draw[arr] (broken) -- (policy);
+\draw[arr] (policy) -- (diamond);
+\draw[arr] (diamond.south) -- ++(0,-2mm) -| (grpo.east);
+\draw[arr, dashed] (grpo.west) -| (policy.south) node[midway, left, font=\scriptsize] {update};
+
+\node[below=3mm of broken, font=\scriptsize, text=c1] {\emph{harvest from prior run}};
+\node[below=3mm of diamond, font=\scriptsize, text=c4] {\emph{tier-delta reward}};
+\end{tikzpicture}
+\caption{Repair-based GRPO method. The policy generates $k$ repair
+patches for a broken input; the Diamond gate assigns a tier to each
+patched output; the reward is the tier improvement. Group-relative
+advantages drive GRPO updates.}
+\label{fig:repair-method-flow}
+\end{figure} A smoke test measured
+$\operatorname{std}(r)=0.25$ against $0.0$ for the full-spec variant,
+which was the go/no-go criterion.
+
+\paragraph{Run r1.} We trained \texttt{v14} (the best pre-repair
+Diamond-SFT checkpoint, $4/30$ Diamond on holdout) for $160$ GRPO
+steps with group size $8$, learning rate $3\!\times\!10^{-6}$, and
+KL penalty $\beta=0.02$. The held-out Diamond count rose to $9/30$
+($30\%$), against $4/30$ for \texttt{v14} on the same holdout---a
+$+5$-problem lift, the largest single training-time improvement on
+the project. Gains concentrated in the concurrency-primitives,
+scheduling-resources, and transactions-databases domains (each
+$\ge 1/3$ fixed); consensus-election, puzzles, and
+workflows-state-machines remained at $0/3$.
+
+\paragraph{Run r2: regression.} We iterated the loop by harvesting a
+fresh repair corpus from \texttt{r1}'s own outputs and training
+another $160$ GRPO steps on top of \texttt{r1}. The held-out Diamond
+count fell to $6/30$ ($20\%$). The diagnosis is that the \texttt{r1}
+policy is already above the easy-repair threshold for most of the
+holdout: the second-round corpus is dominated by harder failures,
+the reward variance concentrates on a smaller fraction of rollouts,
+and the KL anchor against \texttt{v14}---which is still the right
+anchor---does not prevent the policy from overfitting to the residual
+cases at the cost of the easier ones.
+
+\paragraph{Run r3: data-gate abort.} For the third round we widened
+the trajectory harvest from $30$ to $396$ seed problems to restore
+reward variance. The harvest produced $3168$ repair pairs with
+$0/396$ diamonds in the trajectory outputs, and after deduplication
+only $152$ pairs landed in the target difficulty band
+$[0.02, 0.80]$---below the $300$-pair minimum the pipeline requires
+to justify a training step. The r3 job aborted cleanly at the gate
+rather than training on under-powered data, and the published
+repair-GRPO checkpoint remains \texttt{r1}. We read this as a
+bootstrapping limit of the repair recipe as configured: the
+data-harvest step that seeded \texttt{r1} does not, unmodified,
+produce a corpus capable of seeding a second training round.
+Addressing this is future work and is where we think the
+next productive intervention sits.
+
+% ===========================================================================
 \section{Discussion}
 \label{sec:discussion}
 
@@ -1067,27 +1362,44 @@ work we are aware of is on Dafny~\cite{misu2024towards} and on
 Isabelle/Coq~\cite{first2023baldur}; both report that broad SFT on
 small formal corpora is fragile in ways that mirror our experience,
 and both end up using verifier feedback as a selection mechanism
-rather than as a gradient.
+rather than as a gradient. Ortiz~et~al.~\cite{ortiz2026formallm}
+provide the most systematic TLA+-specific baseline to date, evaluating
+$30$ LLMs under five prompting strategies and finding a ceiling of
+$26.6\%$ SANY / $8.6\%$ TLC semantic correctness; their progressive
+prompting strategy is structurally similar to our piecewise
+decomposition, though applied at inference time on untuned models.
 
 % ===========================================================================
 \section{Conclusion}
 \label{sec:conclusion}
 
-A year of fine-tuning a $20$B open model for TLA\textsuperscript{+}
-specification generation taught us that the productive interventions
-were not the ones we expected. Broad SFT failed in proportion to how
-broad it was. Preference optimisation against a binary verifier reward
-drifted the model toward semantically vacuous specifications. The
-pipeline-engineering work that mattered most was the eval gate and the
-rollback path, which prevented a single bad retrain from becoming a
-published regression. The single largest improvement on the held-out
-benchmark came from a five-step inference-time decomposition that does
-not touch the weights at all. The recipe that survived---incremental
-SFT on Diamond-filtered, topic-curriculum-generated data, plus
-piecewise inference---is small, boring, and reproducible, and that is
-the point. For low-resource formal languages with deterministic
-verifiers, the leverage is in the shape of the reward and the
-structure of the inference, not in the volume of supervised data.
+Fine-tuning a language model for a verifier-checked formal language
+requires methods that account for the gap between the verifier's
+acceptance set and the target set of semantically meaningful
+specifications. The five methods presented in this report---the Diamond
+gate, Diamond-filtered incremental SFT, piecewise inference-time
+decomposition, topic-curriculum multi-agent generation, and repair-based
+GRPO---each address a specific failure mode in this pipeline.
+
+The Diamond gate closes the vacuity trap by adding mutation sensitivity
+to the standard SANY+TLC check. Incremental SFT avoids catastrophic
+forgetting by layering a small, gate-passing corpus atop a previously
+merged checkpoint. Piecewise decomposition enforces the gate's clauses
+as per-step validators at inference time, yielding the largest per-FLOP
+improvement without touching the weights. The topic-curriculum generator
+replaces rejection sampling with a directed retry loop that produces
+gate-passing specifications at full yield. Repair-based GRPO restores
+reward variance in the RL loop by conditioning generation on a broken
+specification and rewarding the tier-delta rather than a terminal
+pass/fail.
+
+The recurring lesson is that for low-resource formal languages with
+deterministic verifiers, the leverage is in the \\emph{shape} of the
+reward and the \\emph{structure} of inference, not in the volume of
+supervised data. The useful reward shape is a delta against a
+non-trivial baseline, not a terminal check; the useful inference
+structure is a verifier-guided decomposition, not a single-shot
+generation.
 
 % ===========================================================================
 \appendix
@@ -1308,13 +1620,63 @@ GPU time on the more expensive ones would have been load-bearing
 only for a paper that does not exist.
 
 \paragraph{Status of the decision rule.} The training half of the
-decision rule from \S\ref{sec:sftv3} is satisfied: a fix from the
+decision rule from \S\ref{sec:sftv3} was satisfied: a fix from the
 triage plan ran to its full schedule. The held-out Diamond eval and
-the merge-and-redeploy step are pending and will be folded into the
-next revision of \S\ref{sec:results}; whether the new adapter is
-promoted to a successor of \texttt{chattla:20b} therefore still
-turns on whether \texttt{checkpoint-792} clears
-$\ge\!8/30$~Diamond pass against the $3/30$ pre-train baseline.
+merge-and-redeploy then ran, and the outcome was negative. This
+subsection records the evaluation result and the two follow-up
+retrains that tried and failed to recover from it.
+
+\paragraph{v15: topic overfit, below baseline.} The merged
+\texttt{checkpoint-792} adapter (the run documented above) was
+evaluated against the $30$-problem Diamond holdout on 2026-04-08 and
+cleared $1/30$, well below the $\ge 8/30$ bar the decision rule
+required for promotion and below the $4/30$ pre-train
+(\texttt{v14}) baseline. Qualitative inspection of the failures
+revealed a specific overfit mode: the model hallucinated TLA+ module
+names drawn from the training corpus (e.g., producing
+\texttt{MODULE DistributedLock} in response to a Byzantine-quorum
+prompt) rather than the prompted module name. The topic-curriculum
+corpus is dense enough in module-name tokens that a $3$-epoch FSDP
+pass on top of \texttt{v14} relocates probability mass onto those
+tokens at the expense of the natural-language-to-module-name mapping
+the pre-train checkpoint had already learned. The promotion was
+rejected and the deployed tag remained \texttt{v14}.
+
+\paragraph{v16: regularised retrain, further collapse.} To test
+whether the overfit was a function of epoch count rather than of the
+corpus itself, we retrained \texttt{v14} on a regularised variant of
+the same corpus at $1$~epoch, learning rate $2\!\times\!10^{-5}$,
+with the multitask objective re-enabled. The fix eliminated the
+module-name hallucination---failures at eval time were honest
+attempts rather than copied module names---but the resulting model
+cleared $0/30$ Diamond. The verdict is that $1$~epoch at the reduced
+learning rate was undertrained for this corpus. \texttt{v14} remained
+best.
+
+\paragraph{v17: upweighted retrain, marginal lift below baseline.} The
+third attempt upweighted the Diamond-positive subset by $2\!\times$
+to raise its effective presence in the gradient without increasing
+total epochs. The result was $1/30$ Diamond: strictly better than
+\texttt{v16}, strictly worse than \texttt{v14}. We stopped the SFT
+line here.
+
+\paragraph{What broke and what we moved to.} The common thread across
+\texttt{v15}--\texttt{v17} is that incremental SFT on a $\sim\!1000$-example
+topic-curriculum corpus, on top of a $20$B MoE base, does not have
+enough signal-to-noise to lift the $30$-problem Diamond holdout above
+the \texttt{v14} baseline regardless of the regularisation lever we
+choose. The binding constraint is not the trainer, it is the reward
+shape: an epoch-scale cross-entropy loss against Diamond-positive
+gold reweights distributions over token sequences without
+differentiating, inside the ``spec-like output'' manifold, between
+sequences that improve Diamond tier and sequences that merely look
+like the training corpus. The move that unblocked the project
+(\S\ref{sec:repair-grpo}) was not another SFT retrain but a reward
+reshape: GRPO against the \emph{delta} in Diamond tier across a
+repair edit. That recipe cleared $9/30$ on the same holdout, above
+the $\ge 8/30$ promotion bar that the original decision rule
+imposed on \texttt{v15}, and became the published successor to
+\texttt{v14}.
 
 % ===========================================================================
 \bibliographystyle{plain}
@@ -1377,6 +1739,123 @@ Emily First, Markus N. Rabe, Talia Ringer, and Yuriy Brun.
 language models.
 \newblock In \emph{ESEC/FSE}, 2023.
 
+\bibitem{ortiz2026formallm}
+Bryan Ortiz, Ahmad Bishrat, Eric Spencer, Keshav Bhadauria,
+Mohammed Abuhamad, Konstantin La\"ufer, Tian Wang, and
+George K. Thiruvathukal.
+\newblock Large language models ({LLM}) and temporal logic of actions
+({TLA}): How effective are {LLM}s for verification systems.
+\newblock 2026.
+
 \end{thebibliography}
+
+% ===========================================================================
+\section{Detailed Pipeline Walkthrough with Examples}
+\label{sec:pipeline-walkthrough}
+
+This appendix traces concrete inputs through each of the five methods
+described in the paper, illustrating how a specification progresses from
+a natural-language prompt to a Diamond-passing TLA+ module.
+
+% ---- Diamond Gate Example ----
+\subsection{Diamond Gate: Worked Example}
+
+\paragraph{Input.} A specification for a simple counter that increments
+from 0 to $N$:
+
+\begin{tcolorbox}[enhanced, colback=cbox, colframe=cline, boxrule=0.4pt,
+  arc=2pt, fontupper=\ttfamily\scriptsize]
+---- MODULE Counter ----\\
+EXTENDS Integers\\
+VARIABLE count\\
+Init == count = 0\\
+Next == count' = count + 1\\
+Spec == Init /\textbackslash{} [][Next]\_count\\
+Inv == count >= 0\\
+====
+\end{tcolorbox}
+
+\noindent\textbf{D1 (SANY):} SANY parses the module with no errors. \emph{Pass.}\\
+\textbf{D2 (TLC reachability):} TLC explores the state graph---with
+unbounded integers TLC must be configured with a state constraint (e.g.\
+\texttt{count < 10}). With the constraint TLC reaches $10$ states.
+\emph{Pass.}\\
+\textbf{D3 (Non-vacuous invariant):} \texttt{Inv == count >= 0} is a
+non-trivial predicate over the state variables. \emph{Pass.}\\
+\textbf{D4 (Mutation sensitivity):} Negate the guard in \texttt{Next}:
+replace \texttt{count' = count + 1} with \texttt{count' = count - 1}.
+Run TLC: now \texttt{Inv} is violated at the second state. \emph{Pass.}
+The specification is a Diamond (tier~4).
+
+\paragraph{Vacuous counterexample.} Consider a spec that replaces
+\texttt{Next} with \texttt{Next == UNCHANGED count}. D1 and D3 still
+pass. D2 passes (TLC reaches the single initial state plus one
+self-loop). But D4 fails: negating the action changes nothing because
+there is no causal content---the mutation produces no new
+counterexample. The spec is rejected at tier~3.
+
+% ---- Repair-GRPO Example ----
+\subsection{Repair-Based GRPO: Worked Example}
+
+\paragraph{Input.} A broken mutex specification stuck at tier~2 (passes
+D1 and D2, fails D3 because the invariant is vacuously true):
+
+\begin{tcolorbox}[enhanced, colback=cbox, colframe=cline, boxrule=0.4pt,
+  arc=2pt, fontupper=\ttfamily\scriptsize]
+---- MODULE BrokenMutex ----\\
+EXTENDS Integers\\
+VARIABLES pc, turn\\
+Init == pc = [p \textbackslash{}in \{0,1\} |-> "idle"] /\textbackslash{} turn = 0\\
+Next == ... \textit{(omitted for brevity)}\\
+Inv == TRUE \textbackslash{}* vacuous!\\
+====
+\end{tcolorbox}
+
+\noindent The policy generates $k=8$ repair patches. One patch replaces
+\texttt{Inv == TRUE} with
+\texttt{Inv == \textasciitilde{}(pc[0] = "cs" /\textbackslash{} pc[1] = "cs")}, which
+is a correct mutual-exclusion invariant. The Diamond gate scores the
+patched spec:
+\begin{itemize}[leftmargin=1.4em, itemsep=1pt]
+\item D1: \emph{Pass.} D2: \emph{Pass.} D3: \emph{Pass} (invariant is
+  now a non-trivial predicate). D4: negating a guard in \texttt{Next}
+  violates the invariant. \emph{Pass.} Tier~4.
+\end{itemize}
+Reward: $r = \operatorname{tier}(s') - \operatorname{tier}(s) = 4 - 2 = +2$.
+Other patches in the group that only reach tier~3 get $r = +1$; the
+group-relative advantage drives the GRPO update.
+
+% ---- Piecewise Example ----
+\subsection{Piecewise Decomposition: Step-by-Step Example}
+
+\paragraph{Prompt.} ``Write a TLA+ specification for a two-process
+mutual exclusion protocol using a turn variable.''
+
+\begin{enumerate}[leftmargin=1.4em, itemsep=2pt]
+\item \textbf{Step 1 (VARIABLES):} Model outputs
+  \texttt{VARIABLES pc, turn}. SANY validates the partial module.
+  \emph{Pass on first try.}
+\item \textbf{Step 2 (TypeOK):} Model outputs
+  \texttt{TypeOK == pc \textbackslash{}in [\{0,1\} -> \{"idle","wait","cs"\}]
+  /\textbackslash{} turn \textbackslash{}in \{0,1\}}. SANY validates.
+  \emph{Pass.}
+\item \textbf{Step 3 (Init):} Model outputs
+  \texttt{Init == pc = [p \textbackslash{}in \{0,1\} |-> "idle"]
+  /\textbackslash{} turn = 0}. SANY + single-state TLC run confirms
+  reachability. \emph{Pass.}
+\item \textbf{Step 4 (Next):} First attempt produces an action that
+  omits \texttt{UNCHANGED turn} in one disjunct. TLC reports a
+  stuttering violation. Error message fed back. Second attempt adds
+  the missing clause. TLC confirms $>1$ reachable state. \emph{Pass
+  on retry 1.}
+\item \textbf{Step 5 (Invariant):} Model outputs
+  \texttt{MutualExclusion == \textasciitilde{}(pc[0]="cs"
+  /\textbackslash{} pc[1]="cs")}. SANY + TLC + mutation check all pass.
+  \emph{Pass.}
+\end{enumerate}
+
+\noindent The assembled module is a complete Diamond-passing specification,
+produced without retraining. The decomposition required $6$ LLM calls
+(one retry at step~4) versus the single call of whole-spec generation.
 
 \end{document}
