@@ -52,6 +52,10 @@ def load_repair_prompts(
     trajectory_file: str | Path = "data/processed/ralph_repair_pairs.jsonl",
     difficulty: str = "all",
     max_examples: int | None = None,
+    min_before_score: float = 0.02,
+    max_before_score: float = 0.80,
+    max_prompt_tokens: int | None = None,
+    tokenizer=None,
 ) -> tuple[list[RepairExample], dict[str, float]]:
     """Load repair examples and their before_scores.
 
@@ -60,6 +64,12 @@ def load_repair_prompts(
     trajectory_file : path to ralph_repair_pairs.jsonl
     difficulty : "easy" | "medium" | "hard" | "all"
     max_examples : cap for smoke tests
+    min_before_score : drop unparseable / hopeless pairs (default 0.02 keeps
+        anything that at least produced a non-zero component score)
+    max_before_score : drop already-good pairs that leave no headroom
+    max_prompt_tokens : if set with `tokenizer`, drop pairs whose formatted
+        prompt exceeds this many tokens (avoids OOM on huge attention matrices)
+    tokenizer : required when max_prompt_tokens is set
 
     Returns
     -------
@@ -74,6 +84,9 @@ def load_repair_prompts(
 
     examples: list[RepairExample] = []
     before_scores: dict[str, float] = {}
+    n_score_drop = 0
+    n_len_drop = 0
+    n_diff_drop = 0
 
     with path.open(encoding="utf-8") as f:
         for line in f:
@@ -85,10 +98,18 @@ def load_repair_prompts(
 
             # Filter by difficulty
             if difficulty == "easy" and score >= 0.10:
+                n_diff_drop += 1
                 continue
             if difficulty == "medium" and (score < 0.10 or score >= 0.40):
+                n_diff_drop += 1
                 continue
             if difficulty == "hard" and score < 0.40:
+                n_diff_drop += 1
+                continue
+
+            # Filter by gradable range — both sides need headroom
+            if score < min_before_score or score > max_before_score:
+                n_score_drop += 1
                 continue
 
             ex = RepairExample(
@@ -99,11 +120,22 @@ def load_repair_prompts(
                 verify_summary=row["verify_summary"],
                 before_score=score,
             )
+
+            # Length filter (requires tokenizer)
+            if max_prompt_tokens is not None and tokenizer is not None:
+                prompt = format_repair_prompt(ex, tokenizer)
+                if len(tokenizer.encode(prompt)) > max_prompt_tokens:
+                    n_len_drop += 1
+                    continue
+
             examples.append(ex)
             before_scores[ex.repair_id] = score
 
             if max_examples and len(examples) >= max_examples:
                 break
+
+    print(f"[repair_dataset] kept {len(examples)} | dropped: "
+          f"score={n_score_drop} len={n_len_drop} difficulty={n_diff_drop}")
 
     # Sort by before_score ascending (easy first) for curriculum
     examples.sort(key=lambda x: x.before_score)

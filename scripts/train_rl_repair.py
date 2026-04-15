@@ -87,6 +87,16 @@ def main() -> None:
     parser.add_argument("--difficulty", default="all",
                         choices=["easy", "medium", "hard", "all"],
                         help="Filter repair pairs by difficulty")
+    parser.add_argument("--min-before-score", type=float, default=0.02,
+                        help="Drop pairs with before_score below this — "
+                        "unparseable specs leave the model with no improvement signal")
+    parser.add_argument("--max-before-score", type=float, default=0.80,
+                        help="Drop already-good pairs that leave no headroom")
+    parser.add_argument("--max-prompt-tokens", type=int, default=1600,
+                        help="Hard prompt-length filter — drops the long-tail "
+                        "that blows up eager-attention memory (this version of "
+                        "TRL has no GRPOConfig.max_prompt_length, so the only "
+                        "defense is dataset-level filtering)")
     parser.add_argument("--trajectory-file",
                         default="data/processed/ralph_repair_pairs.jsonl",
                         help="Path to repair pairs JSONL")
@@ -115,17 +125,29 @@ def main() -> None:
         args.save_steps = 1000
         args.logging_steps = 1
 
+    # -- Tokenizer (needed for length-filter before dataset load) -----
+    tokenizer = AutoTokenizer.from_pretrained(args.model)
+    if tokenizer.pad_token is None:
+        tokenizer.pad_token = tokenizer.eos_token
+    tokenizer.padding_side = "left"
+
     # -- Dataset --------------------------------------------------------
     print(f"[rl-repair] loading repair prompts from {args.trajectory_file} ...")
     examples, before_scores = load_repair_prompts(
         trajectory_file=args.trajectory_file,
         difficulty=args.difficulty,
         max_examples=10 if args.smoke else None,
+        min_before_score=args.min_before_score,
+        max_before_score=args.max_before_score,
+        max_prompt_tokens=args.max_prompt_tokens,
+        tokenizer=tokenizer,
     )
     if not examples:
-        sys.exit("No repair pairs found. Run collect_ralph_trajectories.py first.")
+        sys.exit("No repair pairs found. Check filters or run collect_ralph_trajectories.py.")
     print(f"[rl-repair] loaded {len(examples)} repair pairs "
-          f"(difficulty={args.difficulty})")
+          f"(difficulty={args.difficulty}, "
+          f"score=[{args.min_before_score},{args.max_before_score}], "
+          f"max_toks={args.max_prompt_tokens})")
 
     # Register before_scores with the reward function
     register_before_scores(before_scores)
@@ -147,10 +169,6 @@ def main() -> None:
 
     # -- Model ----------------------------------------------------------
     print(f"[rl-repair] loading base model {args.model} ...")
-    tokenizer = AutoTokenizer.from_pretrained(args.model)
-    if tokenizer.pad_token is None:
-        tokenizer.pad_token = tokenizer.eos_token
-    tokenizer.padding_side = "left"
 
     # Pre-format repair prompts (same pattern as train_rl_fullspec.py)
     formatted_prompts: list[str] = []
