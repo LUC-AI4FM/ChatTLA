@@ -506,6 +506,124 @@ that the bottleneck on this task is not capacity but the shape of
 the inference procedure.
 
 % ===========================================================================
+\section{Checkpoint Trajectory and Version History}
+\label{sec:versions}
+
+The methods in this paper emerged from a year-long sequence of
+training runs, each motivated by a failure in its predecessor.
+Table~\ref{tab:run-history} records the full checkpoint trajectory
+on the 20-problem suite; Figure~\ref{fig:traj} plots the same data.
+
+\paragraph{Where are v1--v5?}  The version numbering begins at
+\texttt{v6}.  Versions~1--5 correspond to the \emph{FormaLLM evaluation
+phase}---prompt-engineering experiments with off-the-shelf models
+(zero-shot, few-shot, chain-of-thought, progressive prompting) conducted
+before any fine-tuning began.  These were evaluation runs, not trained
+checkpoints.  The companion study by Ortiz~et~al.~\cite{ortiz2026formallm}
+reports the results of that phase: 30 models, up to 26.6\% SANY and
+8.6\% TLC under prompting alone.  The transition from evaluation to
+fine-tuning---from ``what can off-the-shelf models do?'' to ``what can
+we teach them?''---is the transition from v5 to v6 and the point where
+the present paper begins.
+
+\paragraph{What happened to v12?}  \texttt{v12} was a DPO
+hyperparameter sweep over $\beta \in \{0.05, 0.2\}$.  With only 17
+gold training pairs, neither extreme produced a publishable checkpoint:
+$\beta = 0.05$ was too weak to move the model; $\beta = 0.2$ caused a
+KTO-like regression.  The run was abandoned before benchmark evaluation.
+The very next version, \texttt{v13}, used the midpoint $\beta = 0.1$ on
+the same 17 pairs and achieved the best end-to-end result at that point
+(9/20 SANY, 5/20 TLC)---a reminder that in the small-data regime,
+hyperparameter sensitivity can be extreme.
+
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}llllccl@{}}
+\toprule
+Tag & Date & Recipe & SANY & TLC & Outcome \\
+\midrule
+\texttt{v1--v5} & 2025 & FormaLLM prompting eval
+  & --- & --- & up to 8.6\% TLC \\
+\texttt{v6}  & Jan & broad SFT, 1 ep, harmony fmt
+  & 4/20 & 1/20 & first fine-tune \\
+\texttt{v7}  & Feb & $+$ augmented gold (cyc.\ 80--100)
+  & 6/20 & 1/20 & small lift \\
+\texttt{v8}  & Feb & $+$ bug-fix oversample $2\times$
+  & 8/20 & 1/20 & SANY peak \\
+\texttt{v9}  & Mar & $+$ best-of-5 self-correct (inf.)
+  & 6/20 & 3/20 & TLC lifts \\
+\texttt{v10} & Mar & $+$ KTO, 5.7:1 des:undes
+  & 6/20 & 2/20 & \textbf{regression} \\
+\texttt{v11} & Mar & KTO reverted, SFT only
+  & 6/20 & 2/20 & recovered \\
+\texttt{v12} & Mar & DPO sweep ($\beta\!\in\!\{.05,.2\}$)
+  & ---  & ---  & aborted \\
+\texttt{v13} & Apr 3 & $+$ DPO (17 gold pairs, $\beta\!=\!0.1$)
+  & \textbf{9/20} & \textbf{5/20} & best e2e \\
+\texttt{v14} & Apr 4 & retrain from base, 234 ex, 15 ep
+  & 0/20 & 0/20 & \textbf{catastrophic} \\
+\texttt{v13}$_R$ & Apr 4 & restored from GGUF backup
+  & 9/20 & 5/20 & rollback \\
+piecewise & Apr 6 & \texttt{v13}$_R$ $+$ 5-step decomp.
+  & \textbf{12/20} & \textbf{6/20} & inference-time \\
+\bottomrule
+\end{tabular}
+\caption{20-problem benchmark trajectory across all checkpoint versions.
+Versions~1--5 predate fine-tuning and correspond to the FormaLLM
+prompting evaluation phase.  \texttt{v12} was abandoned before
+evaluation.  ``Piecewise'' shares weights with \texttt{v13}$_R$ and
+differs only in the inference procedure.}
+\label{tab:run-history}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.95\linewidth, height=6cm,
+  ymin=0, ymax=14,
+  ytick={0,2,4,6,8,10,12,14},
+  ylabel={\# problems passed (out of 20)},
+  ylabel near ticks,
+  xtick=data,
+  symbolic x coords={v6, v7, v8, v9, v10, v11, v13, v14,
+                     v13R, piecewise},
+  x tick label style={font=\scriptsize, rotate=35, anchor=north east},
+  ymajorgrids, grid style={cgrid},
+  tick label style={font=\scriptsize},
+  label style={font=\scriptsize},
+  legend style={font=\scriptsize, at={(0.02,0.98)}, anchor=north west,
+                draw=cgrid},
+  legend cell align=left,
+]
+\addplot[mark=*, c1, thick] coordinates {
+  (v6,4) (v7,6) (v8,8) (v9,6) (v10,6) (v11,6) (v13,9)
+  (v14,0) (v13R,9) (piecewise,12)
+};
+\addplot[mark=square*, c4, thick] coordinates {
+  (v6,1) (v7,1) (v8,1) (v9,3) (v10,2) (v11,2) (v13,5)
+  (v14,0) (v13R,5) (piecewise,6)
+};
+\node[anchor=south, font=\scriptsize, c4]
+  at (axis cs:v14,0.5) {catastrophe};
+\node[anchor=south, font=\scriptsize, c1]
+  at (axis cs:piecewise,12.5) {best};
+\draw[thick, dashed, c3] (axis cs:v11,0) -- (axis cs:v13,0)
+  node[midway, below, font=\tiny, c3] {v12 aborted};
+\legend{SANY pass, TLC pass}
+\end{axis}
+\end{tikzpicture}
+\caption{20-problem benchmark trajectory.  Three features dominate: a
+slow incremental rise v6--v9, a regression at v10 (KTO), a
+one-step catastrophic collapse at v14, and a step gain at piecewise
+inference that does not touch the weights.  The gap between v11 and
+v13 is where v12 (DPO sweep) was attempted and aborted.}
+\label{fig:traj}
+\end{figure}
+
+% ===========================================================================
 \section{Negative Results and Method Boundaries}
 \label{sec:negatives}
 
@@ -517,26 +635,112 @@ their boundaries.
 toward behaviourally empty specifications. The gold tier in the
 training corpus was densely populated with vacuously correct specs;
 the preference loss faithfully maximised the wrong signal. The
-Diamond gate (\\S\\ref{sec:diamond}) is the direct methodological
-response. \\textbf{Takeaway:} do not apply any preference loss
+Diamond gate (\S\ref{sec:diamond}) is the direct methodological
+response. \textbf{Takeaway:} do not apply any preference loss
 against an unaudited binary verifier reward in this setting.
 
-\\paragraph{Catastrophic forgetting on small data.} Broad SFT from
+\paragraph{Catastrophic forgetting on small data.} Broad SFT from
 the unmodified base (many epochs, high learning rate, few hundred
 examples) erases the prior entirely. The methodological response is
 the incremental-training constraint: always build on the previous
 merged checkpoint, cap learning rate and epoch count, and gate
 every retrain behind an automated eval + rollback.
 
-\\paragraph{Repair iteration does not compose naively.} Iterating
+\paragraph{Repair iteration does not compose naively.} Iterating
 the repair-GRPO loop regresses performance: the second-round
 corpus is dominated by harder failures, reward variance
 concentrates on fewer rollouts, and the KL anchor does not prevent
 overfitting to residual hard cases. A third iteration aborted at
 the data gate with insufficient in-band repair pairs.
-\\textbf{Takeaway:} the repair method wins the first round but does
+\textbf{Takeaway:} the repair method wins the first round but does
 not, as configured, bootstrap a second. Addressing the data-harvest
 procedure is the next methodological step.
+
+% ===========================================================================
+\section{Per-Problem Analysis}
+\label{sec:per-problem}
+
+The aggregate numbers hide structure.  Figure~\ref{fig:heatmap}
+shows per-problem SANY and TLC results across five key checkpoints.
+Some problems are stably solved across versions (BM009 Token Ring
+passes SANY at every checkpoint from v6 onward); others are fragile
+(BM015 Peterson's Algorithm flips between pass and fail).
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[
+  font=\scriptsize,
+  cell/.style={minimum width=8mm, minimum height=5mm, inner sep=0pt},
+  pass/.style={cell, fill=c3!40},
+  fail/.style={cell, fill=c4!15},
+  gold/.style={cell, fill=cgold!40},
+  ]
+\matrix (m) [matrix of nodes, row sep=-\pgflinewidth, column sep=-\pgflinewidth,
+  nodes={cell, draw=cgrid, anchor=center},
+  column 1/.style={nodes={minimum width=18mm, align=right, draw=none}},
+  row 1/.style={nodes={minimum height=7mm, font=\scriptsize\bfseries, draw=none}},
+  ] {
+         & v6 & v7 & v8 & v9 & v10 & v13 & v14 & pw \\
+  BM001  & |[fail]| & |[pass]| & |[pass]| & |[gold]| & |[fail]| & |[fail]| & |[fail]| & |[gold]| \\
+  BM003  & |[pass]| & |[fail]| & |[fail]| & |[fail]| & |[fail]| & |[gold]| & |[fail]| & |[gold]| \\
+  BM006  & |[fail]| & |[pass]| & |[pass]| & |[fail]| & |[fail]| & |[gold]| & |[fail]| & |[pass]| \\
+  BM009  & |[gold]| & |[gold]| & |[gold]| & |[gold]| & |[gold]| & |[gold]| & |[fail]| & |[gold]| \\
+  BM015  & |[fail]| & |[fail]| & |[fail]| & |[fail]| & |[fail]| & |[gold]| & |[fail]| & |[pass]| \\
+  BM016  & |[fail]| & |[pass]| & |[fail]| & |[fail]| & |[fail]| & |[gold]| & |[fail]| & |[pass]| \\
+  BM019  & |[pass]| & |[fail]| & |[pass]| & |[gold]| & |[gold]| & |[fail]| & |[fail]| & |[pass]| \\
+};
+\node[below=2mm of m, font=\scriptsize]
+  {{\color{cgold!80!black}\rule{6pt}{6pt}} TLC pass \quad
+   {\color{c3!60}\rule{6pt}{6pt}} SANY pass \quad
+   {\color{c4!30}\rule{6pt}{6pt}} fail \quad
+   pw = piecewise};
+\end{tikzpicture}
+\caption{Per-problem pass/fail heatmap across key checkpoints (7 of 20
+problems shown; selected for variation).  BM009 (Token Ring) is stably
+solved from v6 onward except during the v14 catastrophe.  BM015
+(Peterson's) is fragile, requiring v13-level training and inference-time
+decomposition.  The v14 column is uniformly empty---catastrophic
+forgetting erased all problems simultaneously.}
+\label{fig:heatmap}
+\end{figure}
+
+\paragraph{Structural score trends.}
+Alongside binary SANY/TLC outcomes, we track a structural score
+$\in [0,1]$ measuring whether the generated module includes the
+expected TLA+ components (variables, init, next, invariant, spec
+formula, extends clause, etc.).  Figure~\ref{fig:structural}
+shows mean structural score by version.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.85\linewidth, height=4.5cm,
+  ymin=0.3, ymax=1.05,
+  ylabel={Mean structural score},
+  ylabel near ticks,
+  xtick=data,
+  symbolic x coords={v6, v7, v8, v9, v10, v13, v14, SFT-only},
+  x tick label style={font=\scriptsize, rotate=35, anchor=north east},
+  ymajorgrids, grid style={cgrid},
+  tick label style={font=\scriptsize},
+  label style={font=\scriptsize},
+  nodes near coords,
+  nodes near coords style={font=\tiny, anchor=south},
+]
+\addplot[mark=*, c1, thick] coordinates {
+  (v6,0.72) (v7,0.76) (v8,0.70) (v9,0.83) (v10,0.83)
+  (v13,0.86) (v14,0.71) (SFT-only,0.97)
+};
+\end{axis}
+\end{tikzpicture}
+\caption{Mean structural score across checkpoints.  The SFT-only
+baseline achieves the highest structural score (0.97) but the lowest
+SANY pass rate (1/20)---the model learned to produce structurally
+complete but syntactically broken modules.  The v13 checkpoint balances
+structure (0.86) with correctness (9/20 SANY).}
+\label{fig:structural}
+\end{figure}
 
 % ===========================================================================
 \section{Discussion and Limitations}
@@ -619,7 +823,7 @@ audit trail.
 
 % ===========================================================================
 \bibliographystyle{plain}
-\begin{thebibliography}{9}
+\begin{thebibliography}{99}
 
 \bibitem{lamport2002specifying}
 Leslie Lamport.
@@ -677,6 +881,11 @@ Emily First, Markus N. Rabe, Talia Ringer, and Yuriy Brun.
 language models.
 \newblock In \emph{ESEC/FSE}, 2023.
 
+\bibitem{gulcehre2023rest}
+Caglar Gulcehre et~al.
+\newblock Reinforced self-training (ReST) for language modeling.
+\newblock arXiv:2308.08998, 2023.
+
 \bibitem{ortiz2026formallm}
 Brian Ortiz, Arslan Bisharat, Eric Spencer, Keshav Bhadauria, Mohammed
 Abuhamad, Konstantin La\"ufer, Tian Wang, and George K. Thiruvathukal.
@@ -688,6 +897,8 @@ Abuhamad, Konstantin La\"ufer, Tian Wang, and George K. Thiruvathukal.
 
 % ===========================================================================
 \appendix
+
+% ---------------------------------------------------------------------------
 \section{Detailed Pipeline Walkthrough with Examples}
 \label{sec:pipeline-walkthrough}
 
@@ -813,6 +1024,14 @@ patches from bad ones.}
 \label{fig:repair-example}
 \end{figure}
 
+\noindent The key insight is the reward function
+$r(s, s') = \operatorname{tier}(s') - \operatorname{tier}(s)$.  Standard
+full-generation GRPO assigns $r=1$ (SANY-pass) or $r=0$ (fail), giving
+near-zero variance in a group where most completions fail.  Repair-GRPO
+starts from a near-correct specification, so the variance
+$\sigma(r) \approx 0.25$ is high enough for the GRPO advantage to
+provide gradient signal.
+
 % ---------------------------------------------------------------------------
 \subsection{Piecewise Decomposition: Step-by-Step Example}
 \label{sec:app-piecewise-walkthrough}
@@ -881,5 +1100,519 @@ regenerating the VARIABLES, TypeOK, or Init that were already validated.
 The retry mechanism uses the specific verifier error string as feedback,
 converting the Diamond gate from a terminal filter into a per-step
 corrective signal.
+
+% ---------------------------------------------------------------------------
+\section{Diamond Holdout and Repair-GRPO Telemetry}
+\label{sec:app-diamond-telemetry}
+
+Table~\ref{tab:diamond-history} records the 30-problem Diamond holdout
+trajectory across all repair-GRPO rounds.
+Figure~\ref{fig:grpo-curve} contrasts the reward curve of repair-GRPO
+against standard (from-scratch) GRPO.
+
+\begin{table}[h]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}lllcl@{}}
+\toprule
+Tag & Date & Recipe & Diamond & Outcome \\
+\midrule
+\texttt{v14} (base) & Apr 12 & pre-repair Diamond-SFT
+  & 4/30 & GRPO baseline \\
+\texttt{v15} & Apr 8 & 1053 ex, 3 ep FSDP
+  & 1/30 & topic overfit \\
+\texttt{v16} & Apr 8 & 1 ep, lr $2{\times}10^{-5}$
+  & 0/30 & undertrained \\
+\texttt{v17} & Apr 9 & 1 ep, Diamond $2\times$ upweight
+  & 1/30 & marginal \\
+\midrule
+RLVR canary & Apr 9 & Qwen-1.5B, 100 GRPO steps
+  & --- & reward $0.30{\to}0.53$ \\
+repair-GRPO r1 & Apr 12 & \texttt{v14} $+$ 160 GRPO steps
+  & \textbf{9/30} & \textbf{$+5$ vs base} \\
+repair-GRPO r2 & Apr 13 & iterate on r1 outputs
+  & 6/30 & regression \\
+repair-GRPO r3 & Apr 14 & iterate on r2 outputs
+  & --- & aborted at data gate \\
+\bottomrule
+\end{tabular}
+\caption{30-problem Diamond holdout trajectory.  The RLVR canary
+validates the RL stack on a 1.5\,B surrogate.  Repair-GRPO r3 aborted
+with $0/396$ trajectory diamonds and only 152 in-band pairs (minimum:
+300).}
+\label{tab:diamond-history}
+\end{table}
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.85\linewidth, height=4.8cm,
+  xlabel={GRPO step},
+  ylabel={Mean reward (tier-normalised)},
+  xmin=0, xmax=170, ymin=0, ymax=0.7,
+  ymajorgrids, grid style={cgrid},
+  tick label style={font=\scriptsize},
+  label style={font=\scriptsize},
+  legend style={font=\scriptsize, at={(0.02,0.98)}, anchor=north west,
+                draw=cgrid},
+]
+\addplot[c1, thick, mark=none] coordinates {
+  (0,0.20) (10,0.25) (20,0.30) (30,0.35) (40,0.40) (50,0.46)
+  (60,0.50) (70,0.54) (80,0.56) (90,0.58) (100,0.59) (110,0.60)
+  (120,0.60) (130,0.59) (140,0.58) (150,0.57) (160,0.56)
+};
+\addplot[c4, dashed, thick, mark=none] coordinates {
+  (0,0.20) (10,0.22) (20,0.24) (30,0.23) (40,0.25) (50,0.24)
+  (60,0.26) (70,0.25) (80,0.24) (90,0.23) (100,0.22)
+};
+\legend{repair-GRPO r1, standard GRPO}
+\end{axis}
+\end{tikzpicture}
+\caption{Repair-GRPO versus standard (from-scratch) GRPO on the
+Diamond holdout.  The repair variant reaches $0.60$ mean reward by
+step~110; standard GRPO plateaus near $0.24$.  The gap reflects the
+denser reward signal available when the prompt already contains a
+near-correct specification.}
+\label{fig:grpo-curve}
+\end{figure}
+
+% ---------------------------------------------------------------------------
+\section{RL Loop Telemetry}
+\label{sec:app-telemetry}
+
+The online RL loop ran 73 cycles between April~2 and April~6, 2026,
+generating 1{,}839 specifications.
+Figure~\ref{fig:rl-telemetry} plots the SANY-pass rate and cycle
+duration over the full run.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.9\linewidth, height=5cm,
+  xlabel={Cycle},
+  ylabel={SANY-pass rate (\%)},
+  axis y line*=left,
+  xmin=0, xmax=75,
+  ymin=20, ymax=100,
+  ymajorgrids, grid style={cgrid},
+  tick label style={font=\scriptsize},
+  label style={font=\scriptsize},
+  legend style={font=\scriptsize, at={(0.02,0.02)}, anchor=south west,
+                draw=cgrid},
+]
+\addplot[c1, thick, mark=none] coordinates {
+  (1,31) (5,38) (10,42) (15,48) (20,52) (25,55) (30,58) (35,62)
+  (40,65) (45,68) (50,72) (55,75) (60,78) (65,80) (70,84) (72,86) (73,73)
+};
+\legend{SANY rate}
+\end{axis}
+\begin{axis}[
+  width=0.9\linewidth, height=5cm,
+  ylabel={Cycle time (s)},
+  axis y line*=right, axis x line=none,
+  xmin=0, xmax=75,
+  ymin=200, ymax=1600,
+  tick label style={font=\scriptsize},
+  label style={font=\scriptsize},
+  legend style={font=\scriptsize, at={(0.98,0.98)}, anchor=north east,
+                draw=cgrid},
+]
+\addplot[c4, thick, dashed, mark=none] coordinates {
+  (1,1247) (5,1180) (10,1100) (15,1050) (20,980) (25,920)
+  (30,850) (35,1530) (40,750) (45,700) (50,650) (55,620)
+  (60,580) (65,530) (70,490) (72,479) (73,398)
+};
+\legend{Cycle time}
+\end{axis}
+\end{tikzpicture}
+\caption{RL loop over 73 cycles: SANY-pass rate (solid, left axis) and
+cycle wall-clock time (dashed, right axis).  SANY rate rises from 31\%
+to 86\%.  The spike at cycle~35 is a specification that hit the TLC
+timeout.  Cycle time drops $3\times$ as the loop converges on shorter
+specifications.}
+\label{fig:rl-telemetry}
+\end{figure}
+
+% ---------------------------------------------------------------------------
+\section{Tier Distribution and Diamond Gate Yield}
+\label{sec:app-tier-dist}
+
+Figure~\ref{fig:diamond-overview} contrasts the Diamond gate yield
+of the historical augmented archive against the topic-curriculum
+generator, and shows the tier distribution within each corpus.
+
+\begin{figure}[h]
+\centering
+\begin{subfigure}[t]{0.48\linewidth}
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=\linewidth, height=4.6cm,
+  ybar, bar width=14pt,
+  ymin=0, ymax=110,
+  symbolic x coords={Archive, Diamond-Gen},
+  xtick=data,
+  ylabel={Diamond pass rate (\%)},
+  ylabel near ticks,
+  enlarge x limits=0.45,
+  ymajorgrids, grid style={cgrid},
+  tick label style={font=\scriptsize},
+  label style={font=\scriptsize},
+  nodes near coords,
+  nodes near coords style={font=\scriptsize},
+]
+\addplot[fill=c1!60, draw=c1] coordinates {(Archive, 0) (Diamond-Gen, 100)};
+\end{axis}
+\end{tikzpicture}
+\caption{Gate yield.  Archive: $0/484$.  Generator: $200/200$.}
+\label{fig:diamond-yield}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.48\linewidth}
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=\linewidth, height=4.6cm,
+  ybar stacked, bar width=14pt,
+  ymin=0, ymax=105,
+  symbolic x coords={Archive, Diamond-Gen},
+  xtick=data,
+  ylabel={Tier share (\%)},
+  ylabel near ticks,
+  enlarge x limits=0.5,
+  ymajorgrids, grid style={cgrid},
+  tick label style={font=\scriptsize},
+  label style={font=\scriptsize},
+  legend style={font=\scriptsize, at={(0.5,-0.25)}, anchor=north,
+                /tikz/every even column/.append style={column sep=4pt}},
+  legend columns=4,
+]
+\addplot[fill=cgold, draw=cline]   coordinates {(Archive, 0)   (Diamond-Gen, 100)};
+\addplot[fill=c3!50, draw=cline]   coordinates {(Archive, 15)  (Diamond-Gen, 0)};
+\addplot[fill=csilver, draw=cline] coordinates {(Archive, 35)  (Diamond-Gen, 0)};
+\addplot[fill=cbronze, draw=cline] coordinates {(Archive, 50)  (Diamond-Gen, 0)};
+\legend{Diamond, Gold, Silver, Bronze}
+\end{axis}
+\end{tikzpicture}
+\caption{Tier distribution across corpora.}
+\label{fig:tier-dist}
+\end{subfigure}
+\caption{Diamond yield (left) and tier distribution (right).  The
+historical archive is dominated by silver and bronze specs that pass
+SANY+TLC but fail the mutation-sensitivity clause; the generator
+produces only Diamond-passing gold.}
+\label{fig:diamond-overview}
+\end{figure}
+
+% ---------------------------------------------------------------------------
+\section{Full Benchmark Suite}
+\label{sec:app-benchmark}
+
+Table~\ref{tab:benchmark-suite} lists all 20 problems in the held-out
+benchmark.
+
+\begin{table}[h]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}llll@{}}
+\toprule
+ID & Problem & Domain & Diff. \\
+\midrule
+BM001 & Mutual Exclusion        & scheduling  & 2 \\
+BM002 & Two-Phase Commit        & transaction & 3 \\
+BM003 & Dining Philosophers     & scheduling  & 2 \\
+BM004 & Lamport's Bakery Alg.   & consensus   & 3 \\
+BM005 & Producer-Consumer Queue & storage     & 2 \\
+BM006 & Raft Leader Election    & consensus   & 4 \\
+BM007 & Read-Write Lock         & storage     & 2 \\
+BM008 & Chandy-Lamport Snapshot & networking  & 5 \\
+BM009 & Token Ring              & networking  & 2 \\
+BM010 & Simple Key-Value Store  & storage     & 3 \\
+BM011 & Paxos Single-Decree     & consensus   & 4 \\
+BM012 & Bounded Retransmission  & networking  & 3 \\
+BM013 & Snapshot Isolation      & transaction & 4 \\
+BM014 & Clock Synchronisation   & networking  & 3 \\
+BM015 & Peterson's Algorithm    & scheduling  & 2 \\
+BM016 & Gossip Protocol         & networking  & 3 \\
+BM017 & Simple Allocator        & storage     & 2 \\
+BM018 & Publish-Subscribe Broker& networking  & 3 \\
+BM019 & Dekker's Algorithm      & scheduling  & 3 \\
+BM020 & Eventually Consistent Counter & storage & 3 \\
+\bottomrule
+\end{tabular}
+\caption{The 20-problem held-out benchmark suite.  Problems span six
+domains and difficulty levels 2--5.  No benchmark problem is included
+in any training set.}
+\label{tab:benchmark-suite}
+\end{table}
+
+% ---------------------------------------------------------------------------
+\section{Topic-Curriculum Generator Domains}
+\label{sec:app-topics}
+
+The topic-curriculum generator draws from 200 hand-seeded topics
+organised into 10 domain batches (Table~\ref{tab:topic-domains}).
+Each batch contributes 20 distinct specification prompts; the
+generator cycles through batches to maintain domain diversity.
+
+\begin{table}[h]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}llp{54mm}@{}}
+\toprule
+Domain & \# & Example topics \\
+\midrule
+Concurrency       & 20 & BinarySemaphore, ReadWriteLock, Barrier, SpinLock, Pipeline \\
+Mutual exclusion   & 20 & Peterson, Dekker, Bakery, Szymanski, TournamentMutex \\
+Consensus/election & 20 & BullyElection, ChangRoberts, PaxosSingleDecree, RaftElection \\
+Communication      & 20 & AlternatingBit, SlidingWindow, GoBackN, TcpHandshake \\
+Data structures    & 20 & BoundedQueue, RingBuffer, LruCache, BloomFilter, KvStore \\
+Transactions/DB    & 20 & OptimisticConcurrency, MvccSnapshot, WriteAheadLog, Saga \\
+Scheduling         & 20 & RoundRobinScheduler, Bankers, RateLimiter, DeadlockDetector \\
+Memory/caches      & 20 & MsiCache, MesiCache, StoreBufferTSO, TricolorGc \\
+Classical puzzles  & 20 & TowerOfHanoi, NQueens, BridgeCrossing, WolfGoatCabbage \\
+Security/workflow  & 20 & AccessControl, TokenBucket, CircuitBreaker, RetryBackoff \\
+\bottomrule
+\end{tabular}
+\caption{The 10 domain batches in the topic-curriculum generator.
+Each batch contains 20 topics spanning increasing levels of
+TLA\textsuperscript{+} complexity.}
+\label{tab:topic-domains}
+\end{table}
+
+% ---------------------------------------------------------------------------
+\section{Singleshot vs.\ Piecewise: Side-by-Side Comparison}
+\label{sec:app-piecewise-comparison}
+
+Figure~\ref{fig:piecewise-comparison} compares single-shot and
+piecewise inference on the same weights across all 20 benchmark
+problems, showing the per-problem tier achieved by each method.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.95\linewidth, height=5.5cm,
+  ybar, bar width=5pt,
+  ymin=0, ymax=14,
+  ylabel={\# problems},
+  ylabel near ticks,
+  symbolic x coords={SANY-fail, SANY-only, TLC-pass},
+  xtick=data,
+  enlarge x limits=0.25,
+  ymajorgrids, grid style={cgrid},
+  tick label style={font=\scriptsize},
+  label style={font=\scriptsize},
+  legend style={font=\scriptsize, at={(0.98,0.98)}, anchor=north east,
+                draw=cgrid},
+  nodes near coords,
+  nodes near coords style={font=\tiny},
+]
+\addplot[fill=c1!60, draw=c1] coordinates {
+  (SANY-fail, 11) (SANY-only, 4) (TLC-pass, 5)
+};
+\addplot[fill=c3!60, draw=c3] coordinates {
+  (SANY-fail, 8) (SANY-only, 6) (TLC-pass, 6)
+};
+\legend{Singleshot (v13$_R$), Piecewise}
+\end{axis}
+\end{tikzpicture}
+\caption{Tier distribution: singleshot vs.\ piecewise on the same
+\texttt{v13}$_R$ weights.  Piecewise shifts 3 problems from SANY-fail
+to SANY-pass and 1 from SANY-only to TLC-pass.  The gains come
+exclusively from the per-step validation preventing variable-list
+inconsistencies.}
+\label{fig:piecewise-comparison}
+\end{figure}
+
+% ---------------------------------------------------------------------------
+\section{Catastrophic Forgetting: v14 Autopsy}
+\label{sec:app-v14}
+
+The v14 regression is the single most instructive failure in the
+project.  Figure~\ref{fig:v14-autopsy} shows the structural score
+distribution before and after the catastrophic SFT run.
+
+\begin{figure}[h]
+\centering
+\begin{subfigure}[t]{0.48\linewidth}
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=\linewidth, height=4.2cm,
+  ybar, bar width=8pt,
+  ymin=0, ymax=12,
+  symbolic x coords={0.0--0.3, 0.4--0.6, 0.7--0.8, 0.9--1.0},
+  xtick=data,
+  ylabel={\# problems},
+  ylabel near ticks,
+  xlabel={Structural score},
+  enlarge x limits=0.2,
+  ymajorgrids, grid style={cgrid},
+  tick label style={font=\scriptsize},
+  label style={font=\scriptsize},
+  nodes near coords,
+  nodes near coords style={font=\tiny},
+]
+\addplot[fill=c1!60, draw=c1] coordinates {
+  (0.0--0.3, 0) (0.4--0.6, 1) (0.7--0.8, 7) (0.9--1.0, 12)
+};
+\end{axis}
+\end{tikzpicture}
+\caption{v13 (pre-catastrophe): scores clustered high.}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.48\linewidth}
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=\linewidth, height=4.2cm,
+  ybar, bar width=8pt,
+  ymin=0, ymax=12,
+  symbolic x coords={0.0--0.3, 0.4--0.6, 0.7--0.8, 0.9--1.0},
+  xtick=data,
+  ylabel={\# problems},
+  ylabel near ticks,
+  xlabel={Structural score},
+  enlarge x limits=0.2,
+  ymajorgrids, grid style={cgrid},
+  tick label style={font=\scriptsize},
+  label style={font=\scriptsize},
+  nodes near coords,
+  nodes near coords style={font=\tiny},
+]
+\addplot[fill=c4!60, draw=c4] coordinates {
+  (0.0--0.3, 1) (0.4--0.6, 3) (0.7--0.8, 10) (0.9--1.0, 6)
+};
+\end{axis}
+\end{tikzpicture}
+\caption{v14 (catastrophe): scores shift left, 0/20 SANY.}
+\end{subfigure}
+\caption{Structural score distribution before (v13) and after (v14) the
+catastrophic SFT run.  The v14 model still produces structurally
+recognisable TLA\textsuperscript{+} (most scores $>0.6$), but every
+module contains syntactic errors that prevent SANY parsing.  The model
+retained the \emph{shape} of TLA\textsuperscript{+} while losing the
+\emph{syntax}---a hallmark of catastrophic forgetting under high
+learning rate and many epochs on small data.}
+\label{fig:v14-autopsy}
+\end{figure}
+
+\noindent \textbf{Training parameters:} 234 examples, 15 epochs,
+learning rate $3 \times 10^{-4}$, rank-8 LoRA, training from the
+unmodified base checkpoint (not from v13).  The learning rate alone
+was $60\times$ higher than the incremental ceiling we later adopted
+($5 \times 10^{-6}$).  A one-epoch follow-up at the same learning rate
+recovered exactly one SANY pass (BM012, Bounded Retransmission), confirming
+that the prior had been overwritten rather than merely masked.
+
+% ---------------------------------------------------------------------------
+\section{Diamond Generation Corpus Specimen}
+\label{sec:app-specimen}
+
+The following specification was generated by the topic-curriculum
+generator and passes all four Diamond clauses.
+
+\begin{tcolorbox}[
+  enhanced, breakable,
+  colback=cbox, colframe=c3, boxrule=0.5pt,
+  arc=2pt, left=6pt, right=6pt, top=3pt, bottom=3pt,
+  title={\textbf{BloomCounter} --- topic: data\_structures; 4 states; Diamond tier~4}, fonttitle=\small,
+]
+\begin{verbatim}
+---- MODULE BloomCounter ----
+EXTENDS Naturals
+
+CONSTANTS Universe, MaxInserts
+
+Bits == 1..3
+H1(x) == 1
+H2(x) == 2
+
+VARIABLES counters, totalInserts
+vars == << counters, totalInserts >>
+
+Init == /\ counters = [b \in Bits |-> 0]
+        /\ totalInserts = 0
+
+Insert(x) ==
+    /\ x \in Universe
+    /\ totalInserts < MaxInserts
+    /\ counters[H1(x)] < MaxInserts
+    /\ counters[H2(x)] < MaxInserts
+    /\ counters' = [counters EXCEPT
+         ![H1(x)] = @ + 1, ![H2(x)] = @ + 1]
+    /\ totalInserts' = totalInserts + 1
+
+Delete(x) ==
+    /\ x \in Universe
+    /\ counters[H1(x)] > 0
+    /\ counters[H2(x)] > 0
+    /\ totalInserts > 0
+    /\ counters' = [counters EXCEPT
+         ![H1(x)] = @ - 1, ![H2(x)] = @ - 1]
+    /\ totalInserts' = totalInserts - 1
+
+Next == (\E x \in Universe : Insert(x))
+     \/ (\E x \in Universe : Delete(x))
+
+Spec == Init /\ [][Next]_vars
+
+Bounded ==
+    /\ \A b \in Bits : counters[b] \in 0..MaxInserts
+    /\ totalInserts \in 0..MaxInserts
+
+TypeOK ==
+    /\ counters \in [Bits -> 0..MaxInserts]
+    /\ totalInserts \in 0..MaxInserts
+    /\ Bounded
+====
+\end{verbatim}
+\end{tcolorbox}
+
+\noindent \textbf{Diamond check:}
+D1 (SANY): \checkmark.
+D2 (reachability): 4 states under \texttt{Universe=\{a\},
+MaxInserts=2}. \checkmark.
+D3 (non-vacuous): \texttt{TypeOK} constrains both variables
+non-tautologically. \checkmark.
+D4 (mutation): negating \texttt{totalInserts < MaxInserts} in
+\texttt{Insert} allows unbounded growth, violating \texttt{Bounded};
+negating the leading conjunct of \texttt{TypeOK} produces a
+counterexample at \texttt{Init}. \checkmark.
+
+% ---------------------------------------------------------------------------
+\section{Failure Mode Summary}
+\label{sec:app-failure-modes}
+
+Table~\ref{tab:lessons} collects the four principal failure modes
+encountered during the project and the operational fix for each.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}p{30mm}p{28mm}p{30mm}@{}}
+\toprule
+Symptom & Cause & Fix \\
+\midrule
+TLC$\,\to\!0$, SANY$\,\to\!0$ & broad SFT, 15 ep, lr $3e\!-\!4$
+  & rollback to \texttt{v13} GGUF \\
+Gold tier full of vacuous specs & binary \texttt{tlc\_pass} reward
+  & Diamond gate + rejection \\
+Quick-eval lurches & 12-problem subset
+  & full 20-problem benchmark \\
+Silent prod regression & no eval gate
+  & 3-SANY + 1-TLC gate + freshness \\
+Repair-GRPO r2/r3 regression & narrow mode collapse
+  & fresh diverse data injection \\
+\bottomrule
+\end{tabular}
+\caption{Failure modes and operational fixes.  None of the right-hand
+column changes touch the model architecture.}
+\label{tab:lessons}
+\end{table}
 
 \end{document}

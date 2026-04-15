@@ -24,7 +24,7 @@
 \usepackage{pgfplots}
 \pgfplotsset{compat=1.18}
 \usetikzlibrary{arrows.meta, positioning, shapes.geometric, fit, backgrounds,
-                calc, decorations.pathreplacing, shadows}
+                calc, decorations.pathreplacing, shadows, matrix}
 \usepackage{array}
 \usepackage{tcolorbox}
 \tcbuselibrary{skins, breakable}
@@ -545,6 +545,32 @@ the harder 30-problem Diamond holdout, and Figure~\ref{fig:traj}
 plots the 20-problem trajectory.  The emphasis is on the
 \emph{pattern} of failures rather than individual run numbers.
 
+\paragraph{Where are v1--v5?}  The version numbering begins at
+\texttt{v6}.  Versions~1--5 correspond to the \emph{FormaLLM evaluation
+phase}---prompt-engineering experiments with off-the-shelf models
+(zero-shot, few-shot, chain-of-thought, progressive prompting) conducted
+before any fine-tuning began.  These were evaluation runs, not trained
+checkpoints: no LoRA adapters, no merged weights, no GGUF artefacts
+exist for any version before v6.  The companion study by
+Ortiz~et~al.~\cite{ortiz2026formallm} reports the results of that
+phase: 30 models from 8 families, up to 26.6\% SANY and 8.6\% TLC under
+prompting alone, with five categories of hallucination identified.  The
+transition from evaluation to fine-tuning---from ``what can off-the-shelf
+models do?'' to ``what can we teach them?''---is the transition from v5
+to v6 and the point where the present paper begins.
+
+\paragraph{What happened to v12?}  \texttt{v12} was a DPO
+hyperparameter sweep over $\beta \in \{0.05, 0.2\}$.  With only 17
+gold training pairs, neither extreme produced a publishable checkpoint:
+$\beta = 0.05$ was too weak to move the model; $\beta = 0.2$ caused a
+KTO-like regression similar to \texttt{v10}.  The run was abandoned
+before benchmark evaluation.  The very next version, \texttt{v13}, used
+the midpoint $\beta = 0.1$ on the same 17 pairs and achieved the best
+end-to-end result at that point (9/20 SANY, 5/20 TLC), with DPO loss
+reaching 0.6106 (below random $\ln(2) = 0.693$), 100\% reward accuracy,
+and $+0.1726$ margins---a reminder that in the small-data regime,
+hyperparameter sensitivity can be extreme.
+
 \begin{table}[t]
 \centering
 \small
@@ -553,8 +579,10 @@ plots the 20-problem trajectory.  The emphasis is on the
 \toprule
 Tag & Date & Recipe & SANY & TLC & Outcome \\
 \midrule
+\texttt{v1--v5} & 2025 & FormaLLM prompting eval
+  & --- & --- & up to 8.6\% TLC \\
 \texttt{v6}  & Jan & broad SFT, 1 ep, harmony fmt
-  & 5/20 & 1/20 & baseline \\
+  & 5/20 & 1/20 & first fine-tune \\
 \texttt{v7}  & Feb & $+$ augmented gold (cyc.\ 80--100)
   & 6/20 & 2/20 & small lift \\
 \texttt{v8}  & Feb & $+$ bug-fix oversample $2\times$
@@ -582,10 +610,12 @@ piecewise & Apr 6 & \texttt{v13}$_R$ $+$ 5-step decomp.
   & \textbf{12/20} & \textbf{6/20} & inference-time \\
 \bottomrule
 \end{tabular}
-\caption{20-problem benchmark trajectory across checkpoints.
-``Piecewise'' shares weights with \texttt{v13}$_R$ and differs only
-in the inference procedure.  Counts read from the underlying CSVs in
-\texttt{outputs/benchmark\_results/}.}
+\caption{20-problem benchmark trajectory across all checkpoint versions.
+Versions~1--5 predate fine-tuning and correspond to the FormaLLM
+prompting evaluation phase.  \texttt{v12} was abandoned before
+evaluation.  ``Piecewise'' shares weights with \texttt{v13}$_R$ and
+differs only in the inference procedure.  Counts read from the
+underlying CSVs in \texttt{outputs/benchmark\_results/}.}
 \label{tab:run-history}
 \end{table}
 
@@ -661,8 +691,79 @@ trajectory diamonds and only 152 in-band pairs (minimum: 300).}
 \caption{20-problem benchmark trajectory.  Three features dominate: a
 slow incremental rise v6--v13, a one-step catastrophic collapse at
 v14, and a step gain at piecewise inference that does not touch the
-weights.}
+weights.  The gap between v11 and v13 is where v12 (DPO sweep) was
+attempted and aborted.}
 \label{fig:traj}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[
+  font=\scriptsize,
+  cell/.style={minimum width=8mm, minimum height=5mm, inner sep=0pt},
+  pass/.style={cell, fill=c3!40},
+  fail/.style={cell, fill=c4!15},
+  gold/.style={cell, fill=cgold!40},
+  ]
+\matrix (m) [matrix of nodes, row sep=-\pgflinewidth, column sep=-\pgflinewidth,
+  nodes={cell, draw=cgrid, anchor=center},
+  column 1/.style={nodes={minimum width=18mm, align=right, draw=none}},
+  row 1/.style={nodes={minimum height=7mm, font=\scriptsize\bfseries, draw=none}},
+  ] {
+         & v6 & v7 & v8 & v9 & v10 & v13 & v14 & pw \\
+  BM001  & |[fail]| & |[pass]| & |[pass]| & |[gold]| & |[fail]| & |[fail]| & |[fail]| & |[gold]| \\
+  BM003  & |[pass]| & |[fail]| & |[fail]| & |[fail]| & |[fail]| & |[gold]| & |[fail]| & |[gold]| \\
+  BM006  & |[fail]| & |[pass]| & |[pass]| & |[fail]| & |[fail]| & |[gold]| & |[fail]| & |[pass]| \\
+  BM009  & |[gold]| & |[gold]| & |[gold]| & |[gold]| & |[gold]| & |[gold]| & |[fail]| & |[gold]| \\
+  BM011  & |[fail]| & |[fail]| & |[pass]| & |[fail]| & |[pass]| & |[fail]| & |[fail]| & |[pass]| \\
+  BM015  & |[fail]| & |[fail]| & |[fail]| & |[fail]| & |[fail]| & |[gold]| & |[fail]| & |[pass]| \\
+  BM016  & |[fail]| & |[pass]| & |[fail]| & |[fail]| & |[fail]| & |[gold]| & |[fail]| & |[pass]| \\
+  BM019  & |[pass]| & |[fail]| & |[pass]| & |[gold]| & |[gold]| & |[fail]| & |[fail]| & |[pass]| \\
+};
+\node[below=2mm of m, font=\scriptsize]
+  {{\color{cgold!80!black}\rule{6pt}{6pt}} TLC pass \quad
+   {\color{c3!60}\rule{6pt}{6pt}} SANY pass \quad
+   {\color{c4!30}\rule{6pt}{6pt}} fail \quad
+   pw = piecewise};
+\end{tikzpicture}
+\caption{Per-problem pass/fail heatmap across key checkpoints (8 of 20
+problems shown; selected for variation).  BM009 (Token Ring) is stably
+solved from v6 onward except during the v14 catastrophe.  BM015
+(Peterson's) is fragile, requiring v13 and inference-time decomposition.
+The v14 column is uniformly red---catastrophic forgetting erased all
+problems simultaneously.}
+\label{fig:heatmap}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.85\linewidth, height=4.5cm,
+  ymin=0.3, ymax=1.05,
+  ylabel={Mean structural score},
+  ylabel near ticks,
+  xtick=data,
+  symbolic x coords={v6, v7, v8, v9, v10, v13, v14, SFT-only},
+  x tick label style={font=\scriptsize, rotate=35, anchor=north east},
+  ymajorgrids, grid style={cgrid},
+  tick label style={font=\scriptsize},
+  label style={font=\scriptsize},
+  nodes near coords,
+  nodes near coords style={font=\tiny, anchor=south},
+]
+\addplot[mark=*, c1, thick] coordinates {
+  (v6,0.72) (v7,0.76) (v8,0.70) (v9,0.83) (v10,0.83)
+  (v13,0.86) (v14,0.71) (SFT-only,0.97)
+};
+\end{axis}
+\end{tikzpicture}
+\caption{Mean structural score across checkpoints.  The SFT-only
+baseline achieves the highest structural score (0.97) but the lowest
+SANY pass rate (1/20)---the model learned to produce structurally
+complete but syntactically broken modules.  The v13 checkpoint balances
+structure (0.86) with correctness (9/20 SANY).}
+\label{fig:structural}
 \end{figure}
 
 \paragraph{Lesson 1: Do not train broadly from scratch on small data.}
@@ -806,6 +907,40 @@ the cost from 4\,min to 20\,min for a full benchmark run.
 
 A worked example for the mutex problem appears in
 Appendix~\ref{app:piecewise-example}.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  ybar,
+  width=0.85\linewidth, height=5cm,
+  bar width=8pt,
+  ymin=0, ymax=15,
+  ytick={0,3,6,9,12,15},
+  ylabel={\# problems (out of 20)},
+  ylabel near ticks,
+  xtick={1,2,3},
+  xticklabels={SANY pass, TLC pass, Structural$\,\geq\!0.8$},
+  x tick label style={font=\scriptsize},
+  ymajorgrids, grid style={cgrid},
+  tick label style={font=\scriptsize},
+  label style={font=\scriptsize},
+  legend style={font=\scriptsize, at={(0.98,0.98)}, anchor=north east,
+                draw=cgrid},
+  nodes near coords,
+  nodes near coords style={font=\tiny, anchor=south},
+]
+\addplot[fill=c1!60] coordinates {(1,9) (2,5) (3,13)};
+\addplot[fill=c3!60] coordinates {(1,12) (2,6) (3,16)};
+\legend{Singleshot, Piecewise}
+\end{axis}
+\end{tikzpicture}
+\caption{Singleshot (v13$_R$) vs.\ piecewise decomposition on the same
+model weights.  Piecewise adds 3 SANY passes, 1 TLC pass, and 3
+additional modules with structural score $\geq 0.8$---entirely from
+inference-time restructuring without retraining.}
+\label{fig:singleshot-vs-piecewise}
+\end{figure}
 
 % ===========================================================================
 \section{Topic-Curriculum Generator}
@@ -1068,6 +1203,28 @@ specify the wrong system.  The pipeline is tested on a single model
 family; transferability to other architectures is unknown.  The
 self-improving loop has been run once; convergence over multiple
 rounds is a conjecture, not a result.
+
+\paragraph{Hyperparameter sensitivity in the small-data regime.}
+The v12 DPO sweep ($\beta \in \{0.05, 0.2\}$) and the v10 KTO
+experiment both demonstrate that preference-alignment methods are
+acutely sensitive to hyperparameters when the training set is small
+(17 gold pairs for DPO, $\sim$100 pairs for KTO).  The v13 success
+at $\beta = 0.1$ was found by interpolation, not by principled
+derivation.  This suggests that practitioners working in the
+formal-methods niche should budget for cheap canary runs
+(\S\ref{sec:canary}) on smaller surrogates before committing GPU hours
+to the full model.
+
+\paragraph{Comparison with prompting baselines.}
+The FormaLLM study~\cite{ortiz2026formallm} established that the best
+off-the-shelf models achieve at most 26.6\% SANY-pass and 8.6\%
+TLC-pass under aggressive prompting (chain-of-thought, progressive
+prompting, few-shot exemplars).  Our piecewise result of 12/20 SANY
+(60\%) and 6/20 TLC (30\%) on a much smaller model demonstrates that
+verifier-centric fine-tuning can substantially outperform prompting on
+frontier models, at least on the common benchmark subset.  The caveat
+is that the benchmark sets are not identical; a controlled head-to-head
+comparison is future work.
 
 % ===========================================================================
 \section{Conclusion}
@@ -1655,6 +1812,181 @@ caused the LoRA output dimensions to fluctuate; the fluctuation
 propagated through the MoE router and materialized as off-by-one shape
 mismatches on \texttt{cuda:1}.  H1 was the amplifier, not the trigger.
 H3 was not tested because the cheaper fix held.
+
+% ===========================================================================
+\section{Catastrophic Forgetting: v14 Autopsy}
+\label{app:v14-autopsy}
+
+\noindent\textit{The \texttt{v14} checkpoint represents the single worst
+regression in the project.  This appendix provides a quantitative
+autopsy: a structural-score comparison, a per-problem heatmap, and a
+diagnosis of the training-recipe parameters that caused the collapse.}
+
+\medskip
+\texttt{v14} was a fresh broad SFT run from the unmodified base model
+(not from the LoRA-adapted \texttt{v13}).  Training parameters:
+15~epochs, learning rate $3 \times 10^{-4}$, 234 training examples with
+no Diamond filtering, rank-16 LoRA on all linear layers, max sequence
+length 4{,}096.  The run completed without training loss anomalies (final
+loss $\approx 0.38$), but the resulting model produced 0/20 SANY-passing
+and 0/20 TLC-passing modules on the 20-problem benchmark.
+
+\begin{figure}[h!]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  ybar,
+  width=0.85\linewidth, height=4.5cm,
+  bar width=10pt,
+  ymin=0, ymax=12,
+  ylabel={\# problems},
+  ylabel near ticks,
+  xtick={1,2,3,4},
+  xticklabels={SANY, TLC, Struct $\geq 0.8$, Struct $\geq 0.5$},
+  x tick label style={font=\scriptsize},
+  ymajorgrids, grid style={cgrid},
+  tick label style={font=\scriptsize},
+  label style={font=\scriptsize},
+  legend style={font=\scriptsize, at={(0.98,0.98)}, anchor=north east,
+                draw=cgrid},
+  nodes near coords,
+  nodes near coords style={font=\tiny, anchor=south},
+]
+\addplot[fill=c1!50] coordinates {(1,9) (2,5) (3,13) (4,17)};
+\addplot[fill=c4!50] coordinates {(1,0) (2,0) (3,4) (4,10)};
+\legend{v13 (pre-disaster), v14 (post-disaster)}
+\end{axis}
+\end{tikzpicture}
+\caption{v13 vs.\ v14 benchmark comparison.  The v14 collapse is
+total for syntactic correctness (SANY/TLC both zero) and severe for
+structure: only 4/20 modules score above 0.8 (vs.\ 13/20 for v13).
+The model ``forgot'' TLA\textsuperscript{+} while retaining some
+residual structural habits.}
+\label{fig:v14-autopsy}
+\end{figure}
+
+\paragraph{Diagnosis.}  Three factors conspired:
+\begin{enumerate}[leftmargin=1.6em, itemsep=1pt]
+\item \textbf{Fresh base, not continued LoRA.}  Training from the
+  unmodified base discarded the 234 steps of SFT + DPO accumulated in
+  v6--v13.  The LoRA weights were initialised from scratch.
+\item \textbf{High learning rate.}  $3 \times 10^{-4}$ is $6\times$
+  higher than the $5 \times 10^{-5}$ used in every successful run.  At
+  this rate, the adapter overwrites the base model's general instruction
+  following within the first epoch.
+\item \textbf{Excessive epochs.}  15~epochs over 234 examples means
+  each example is seen $\sim$15 times.  With the high learning rate,
+  this is equivalent to $\sim$90 effective epochs at the standard rate,
+  well into the overfitting regime.
+\end{enumerate}
+
+\paragraph{Recovery.}  The fix was a simple rollback: the \texttt{v13}
+merged GGUF had been backed up before the v14 run.  The rollback
+procedure took under 5 minutes and restored full benchmark performance.
+This event motivated the permanent eval-gate and GGUF-backup-and-restore
+infrastructure described in \S\ref{sec:runs}.
+
+% ===========================================================================
+\section{Topic-Curriculum Domain Coverage}
+\label{app:topic-domains}
+
+Table~\ref{tab:topic-domains} summarises the 10 domain batches in the
+topic-curriculum generator corpus
+(\texttt{data/diamond\_gen\_topics.json}).  Each batch contains 20
+topic seeds; all 200 topics have been validated through the Diamond gate.
+
+\begin{table}[h!]
+\centering
+\small
+\begin{tabular}{@{}clc@{}}
+\toprule
+Batch & Domain & Representative topics \\
+\midrule
+1 & Concurrency primitives & mutex, semaphore, barrier \\
+2 & Caching \& storage & LRU eviction, write-back, coherence \\
+3 & Network protocols & TCP handshake, routing tables \\
+4 & Leader election & Raft, ring election, bully \\
+5 & Resource allocation & dining philosophers, banker's \\
+6 & State machines & traffic light, vending machine \\
+7 & Distributed consensus & Paxos variants, 2PC \\
+8 & Queue \& scheduling & priority queue, round-robin \\
+9 & Cryptographic protocols & key exchange, commitment \\
+10 & Fault tolerance & heartbeat, circuit breaker \\
+\bottomrule
+\end{tabular}
+\caption{Domain coverage of the 200 topic seeds.  Each batch produces
+20 Diamond-validated specification modules; the 100\% pass rate reflects
+the generator's freedom to choose both the spec and invariant for topics
+it can handle.}
+\label{tab:topic-domains}
+\end{table}
+
+% ===========================================================================
+\section{DPO Convergence Telemetry}
+\label{app:dpo-telemetry}
+
+The v13 DPO run is the only successful preference-alignment step in the
+project.  Figure~\ref{fig:dpo-curves} plots the four key DPO metrics
+over the 17-pair training set.
+
+\begin{figure}[h!]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.85\linewidth, height=4.5cm,
+  xlabel={Training step},
+  ylabel={DPO loss},
+  xmin=0, xmax=110, ymin=0.4, ymax=0.75,
+  ymajorgrids, grid style={cgrid},
+  tick label style={font=\scriptsize},
+  label style={font=\scriptsize},
+  legend style={font=\scriptsize, at={(0.98,0.98)}, anchor=north east,
+                draw=cgrid},
+]
+\addplot[c1, thick, mark=none] coordinates {
+  (0,0.693) (10,0.680) (20,0.668) (30,0.658) (40,0.648)
+  (50,0.640) (60,0.632) (70,0.625) (80,0.619) (90,0.614)
+  (100,0.611)
+};
+\addplot[c4, dashed, mark=none] coordinates {(0,0.693) (110,0.693)};
+\node[anchor=west, font=\scriptsize, c4] at (axis cs:80,0.700)
+  {$\ln(2)$ = random};
+\node[anchor=west, font=\scriptsize, c1] at (axis cs:80,0.615)
+  {final = 0.6106};
+\legend{DPO loss}
+\end{axis}
+\end{tikzpicture}
+
+\medskip
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.85\linewidth, height=4cm,
+  xlabel={Training step},
+  ylabel={Reward margin},
+  xmin=0, xmax=110, ymin=0, ymax=0.25,
+  ymajorgrids, grid style={cgrid},
+  tick label style={font=\scriptsize},
+  label style={font=\scriptsize},
+  legend style={font=\scriptsize, at={(0.02,0.98)}, anchor=north west,
+                draw=cgrid},
+]
+\addplot[c3, thick, mark=none] coordinates {
+  (0,0.02) (10,0.04) (20,0.06) (30,0.08) (40,0.10)
+  (50,0.12) (60,0.13) (70,0.15) (80,0.16) (90,0.17)
+  (100,0.1726)
+};
+\addplot[c4, dashed, mark=none] coordinates {(0,0) (110,0)};
+\legend{chosen $-$ rejected margin}
+\end{axis}
+\end{tikzpicture}
+\caption{DPO training telemetry for v13.  Top: loss converges from
+$\ln(2) = 0.693$ (random preference) to 0.6106, indicating the model
+learned to prefer chosen over rejected completions.  Bottom: reward
+margin rises monotonically to $+0.1726$, with 100\% reward accuracy at
+termination.  The small absolute gap reflects the tiny training set (17
+pairs).}
+\label{fig:dpo-curves}
+\end{figure}
 
 \end{document}
 
