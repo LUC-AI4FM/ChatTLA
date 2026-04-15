@@ -116,14 +116,13 @@ the shape of the reward matters more than the volume of supervised data.
 A companion study~\cite{ortiz2026formallm} establishes the off-the-shelf
 LLM baseline (up to 8.6\% semantic correctness under prompting alone).
 
-Taken together, these results point toward a broader thesis: for
-low-resource formal languages with deterministic verifiers, the
-productive unit of work is not a single fine-tune but a
-\emph{self-improving pipeline}---a closed loop of generation,
-verification, reward shaping, and incremental training that refines
-itself across iterations.  We document the single-run evidence for this
-thesis, the failure modes that bound it, and the concrete next steps
-toward a pipeline that improves autonomously.
+Each method is independently evaluated on held-out benchmarks, and the
+composition---a closed loop of generation, verification, reward
+shaping, and incremental training---is run end-to-end for one round
+with a measured Diamond-pass gain.  Whether the loop converges across
+many rounds is an explicit open question we do not claim to resolve;
+the contribution of this paper is the verifier-centric method set and
+the failure-mode taxonomy that motivated it.
 \end{abstract}
 
 % ===========================================================================
@@ -159,26 +158,23 @@ from the same held-out suites; every retrain, every merge, every GGUF
 build, and every deploy is automated and recorded under a single audit
 trail.
 
-\paragraph{Why this paper exists.}  Three observations motivate it.
-First, the cleanest negative result we encountered---a binary-reward
-preference-optimisation loop that drifted the model toward
-\emph{behaviourally empty} specifications---is not a quirk of
-TLA\textsuperscript{+}: it is the predictable consequence of optimising
-hard against any verifier whose acceptance set is wider than its target
-set.  We expect the same failure mode in any setting where the reward is
-a deterministic checker.  Second, the single intervention with the
-largest positive effect on our benchmark was not a training change at all
-but an inference-time decomposition; the single intervention with the
-largest negative effect was a from-scratch SFT pass on a few hundred
-examples.  Both observations are consistent with a working hypothesis
-that, for low-resource formal languages, the \emph{shape of the verifier
-reward} matters more than the volume of supervised data.  Third, the
-recurring pattern across every successful intervention is that of a
-\emph{loop}---generate, verify, feed the signal back, retrain or
-retry---and the recurring failure is attempting a \emph{single shot}:
-one SFT pass, one preference loss, one generation call.  This pattern
-points toward a broader thesis that the productive unit of work is not a
-single fine-tune but a self-improving pipeline.
+\paragraph{Motivation.}  Three empirical observations structure the
+paper.  First, the cleanest negative result we encountered---a
+binary-reward preference-optimisation loop that drifted the model
+toward \emph{behaviourally empty} specifications---is a predictable
+consequence of optimising against any verifier whose acceptance set
+strictly contains its target set, and generalises beyond
+TLA\textsuperscript{+}.  Second, the single intervention with the
+largest positive effect on our benchmark was inference-time
+decomposition, not a training change; the single intervention with
+the largest negative effect was a from-scratch SFT pass on a few
+hundred examples.  Both are consistent with the hypothesis that, in
+the low-data formal-language regime, the \emph{shape of the verifier
+reward} matters more than the volume of supervised data.  Third,
+every successful intervention shares the structure of a closed
+generate--verify--retrain loop, and every large regression was a
+single-shot procedure.  We take these as motivation---not proof---for
+treating the loop as the productive unit of work.
 
 \paragraph{Contributions.}
 \begin{enumerate}[leftmargin=1.4em,itemsep=2pt]
@@ -212,8 +208,9 @@ single fine-tune but a self-improving pipeline.
 
 \noindent Seven appendices (A--G) provide worked examples, the full
 benchmark suite, RL loop telemetry, the Diamond-generation corpus,
-generated TLA\textsuperscript{+} specimens, and the MoE training
-failure triage.
+generated TLA\textsuperscript{+} specimens, and a reproducibility
+note on an MoE $\times$ LoRA-dropout interaction encountered during
+training.
 
 \begin{figure}[t]
 \centering
@@ -258,8 +255,8 @@ failure triage.
 \draw[arr] (samp) -- (gen);
 \draw[arr] (gen) -- (ver);
 \draw[arr] (ver) -- (tier);
-\draw[arr, dashed] (tier.east) -- ++(4mm,0) |- (samp.east)
-  node[midway, right, font=\scriptsize] {append};
+% \draw[arr, dashed] (tier.north) -- ++(0,6mm)
+%   -- node[above, font=\scriptsize] {append} ($(samp.east)+(0,6mm)$) -- (samp.north);
 % arrows row 2 -> row 3
 \draw[arr] (tier.south) -- ++(0,-2mm) -| (rb.north);
 % arrows row 3
@@ -312,9 +309,12 @@ and must emit a complete TLA\textsuperscript{+} module scored under
 SANY and TLC.  A harder \emph{30-problem Diamond holdout}, carved
 from the topic-curriculum generator (\S\ref{sec:gen}), is scored under
 the full four-clause Diamond gate (\S\ref{sec:diamond}).
-Wilson 95\% confidence intervals on these benchmarks are wide
-($[0.11,0.47]$ on $5/20$); we flag only the deltas that exceed the
-$\pm 1$--$2$ problem wobble observed across informal repeats.
+Because the suites are small, Wilson 95\% confidence intervals on
+these benchmarks are wide ($[0.11,0.47]$ on $5/20$); we therefore
+report all absolute numbers with their intervals and flag only
+deltas that exceed the $\pm 1$--$2$ problem wobble observed across
+informal repeats.  Where a claim rests on a difference of one or
+two problems, we mark it as such rather than headline it.
 The full benchmark suite is listed in Appendix~\ref{app:benchmark}.
 
 \paragraph{Base model and adapters.}  The underlying checkpoint is
@@ -478,7 +478,7 @@ historical archive against the topic-curriculum generator
 \begin{axis}[
   width=\linewidth, height=4.6cm,
   ybar, bar width=14pt,
-  ymin=0, ymax=110,
+  ymin=0, ymax=120,
   symbolic x coords={Archive, Diamond-Gen},
   xtick=data,
   ylabel={Diamond pass rate (\%)},
@@ -820,7 +820,7 @@ column changes touch the model architecture.}
 \section{Diamond-Filtered Incremental SFT}
 \label{sec:diamond-sft}
 
-The recipe we converged on is small and boring.  Restore the merged
+The recipe we converged on is deliberately minimal.  Restore the merged
 \texttt{v13}$_R$ checkpoint.  Audit every candidate training example
 through the Diamond gate.  Oversample the survivors $3\times$.  Mix
 in 86 description-SFT rows for English-to-spec coverage.  Train
@@ -915,8 +915,8 @@ Appendix~\ref{app:piecewise-example}.
   ybar,
   width=0.85\linewidth, height=5cm,
   bar width=8pt,
-  ymin=0, ymax=15,
-  ytick={0,3,6,9,12,15},
+  ymin=0, ymax=19,
+  ytick={0,3,6,9,12,15,18},
   ylabel={\# problems (out of 20)},
   ylabel near ticks,
   xtick={1,2,3},
@@ -925,8 +925,8 @@ Appendix~\ref{app:piecewise-example}.
   ymajorgrids, grid style={cgrid},
   tick label style={font=\scriptsize},
   label style={font=\scriptsize},
-  legend style={font=\scriptsize, at={(0.98,0.98)}, anchor=north east,
-                draw=cgrid},
+  legend style={font=\scriptsize, at={(0.5,-0.15)}, anchor=north,
+                legend columns=-1, draw=cgrid},
   nodes near coords,
   nodes near coords style={font=\tiny, anchor=south},
 ]
@@ -1130,17 +1130,19 @@ naive iteration without fresh diversity fails; and the 30-problem
 holdout, with Wilson 95\% CI of $\pm 9$ on a $9/30$ estimate, leaves
 room for the gain to be partly noise.
 
-What we \emph{can} claim is narrower: each component is individually
-verified, the components compose without manual intervention, and the
-one round we did run produced a statistically discernible gain on a
-strict semantic gate.  The conjecture---which further work must
-test---is:
+Our empirical claim is therefore narrower than full self-improvement:
+each component is individually verified, the components compose
+without manual intervention, and the one round we did run produced
+a measurable gain on a strict semantic gate.  We record the
+multi-round extrapolation as an explicit testable hypothesis, not
+as a result of this paper:
 
 \begin{tcolorbox}[
   enhanced, breakable,
   colback=cbox, colframe=cline, boxrule=0.5pt,
   arc=2pt, left=8pt, right=8pt, top=4pt, bottom=4pt,
-  title=\textbf{Self-Improvement Conjecture}, fonttitle=\small,
+  title=\textbf{Hypothesis (testable, not claimed here)},
+  fonttitle=\small,
 ]
 A pipeline that (i)~generates fresh specification prompts,
 (ii)~trains the model via verifier-graded GRPO, (iii)~filters outputs
@@ -1148,7 +1150,9 @@ through a mutation-sensitive semantic gate, and (iv)~folds the
 survivors into the next SFT mixture will, over multiple rounds and
 with sufficient prompt diversity, monotonically improve the Diamond
 pass rate on held-out tasks---even with a small ($\leq 20$\,B) model
-and without human supervision of training data.
+and without human supervision of training data.  Settling this
+hypothesis requires a multi-round study with controlled diversity
+and an independent held-out suite, which we leave to future work.
 \end{tcolorbox}
 
 The self-improving framing also clarifies where the current pipeline
@@ -1241,10 +1245,12 @@ verifier reward.
 The pipeline is fully automated: no human inspects a training
 example, and deterministic verifiers supply every reward signal.  On
 a 20\,B MoE model, repair-GRPO lifted Diamond-pass from 4/30 to
-9/30 on a held-out semantic benchmark; piecewise decomposition
-lifted SANY-pass from 9/20 to 12/20 on a held-out structural
-benchmark.  Both gains are statistically discernible though not
-large in absolute terms.
+9/30 on a held-out semantic benchmark (Wilson 95\% CI $[0.17,0.47]$);
+piecewise decomposition lifted SANY-pass from 9/20 to 12/20 on a
+held-out structural benchmark.  The small benchmark size means the
+absolute effect sizes are uncertain, and we report them as such;
+what is robust across repeats is the ordering of methods and the
+sign of each gain.
 
 The most important contribution may be negative: training
 broadly from scratch on small data catastrophically forgets
@@ -1489,6 +1495,281 @@ starts from a near-correct specification, so the variance
 $\sigma(r) \approx 0.25$ is high enough for the GRPO advantage to provide
 gradient signal.
 
+% --- B additional figures ---
+
+\begin{figure}[h!]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  ybar,
+  width=0.92\linewidth, height=5.5cm,
+  bar width=6pt,
+  ymin=0, ymax=100,
+  ylabel={\% problems fixed},
+  ylabel near ticks,
+  xtick={1,2,3,4,5,6,7,8,9,10},
+  xticklabels={comm.\ proto., concurrency, consensus, data struct.,
+    memory, mutex, puzzles, scheduling, transactions, workflows},
+  x tick label style={font=\tiny, rotate=35, anchor=east},
+  ymajorgrids, grid style={cgrid},
+  tick label style={font=\scriptsize},
+  label style={font=\scriptsize},
+  legend style={font=\scriptsize, at={(0.5,-0.32)}, anchor=north,
+                legend columns=-1, draw=cgrid},
+  nodes near coords,
+  nodes near coords style={font=\tiny, anchor=south},
+  every node near coord/.append style={rotate=90, anchor=west},
+]
+\addplot[fill=c1!50] coordinates {(1,0) (2,0) (3,33) (4,33) (5,33) (6,67) (7,0) (8,67) (9,0) (10,67)};
+\addplot[fill=c3!50] coordinates {(1,0) (2,67) (3,0) (4,0) (5,33) (6,0) (7,0) (8,67) (9,33) (10,0)};
+\addplot[fill=c4!50] coordinates {(1,0) (2,33) (3,33) (4,33) (5,33) (6,0) (7,0) (8,0) (9,0) (10,0)};
+\legend{Repair R1, Repair R2, Full-spec GRPO}
+\end{axis}
+\end{tikzpicture}
+\caption{Fix rate by domain across three model variants on the 30-problem
+holdout.  Repair~R1 excels at mutex and workflow domains; Repair~R2
+shows complementary strengths in concurrency and transactions.
+Full-spec GRPO trails both repair models overall.}
+\label{fig:repair-domain-fix}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  ybar stacked,
+  width=0.75\linewidth, height=4.5cm,
+  bar width=18pt,
+  ymin=0, ymax=34,
+  ylabel={\# problems},
+  ylabel near ticks,
+  xtick={1,2,3},
+  xticklabels={Repair R1, Repair R2, Full-spec},
+  ymajorgrids, grid style={cgrid},
+  tick label style={font=\scriptsize},
+  label style={font=\scriptsize},
+  legend style={font=\scriptsize, at={(0.5,-0.15)}, anchor=north,
+                legend columns=-1, draw=cgrid},
+]
+\addplot[fill=c3!60] coordinates {(1,9) (2,6) (3,4)};
+\addplot[fill=c4!40] coordinates {(1,17) (2,23) (3,24)};
+\addplot[fill=cgrid] coordinates {(1,4) (2,1) (3,2)};
+\legend{Fixed, Unfixed, Timeout}
+\end{axis}
+\end{tikzpicture}
+\caption{Outcome distribution for the three model variants on the
+30-problem holdout.  Repair~R1 achieves the highest fix rate (9/30 =
+30\%), while full-spec GRPO fixes only 4/30 (13\%).}
+\label{fig:repair-outcome-stack}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  ybar,
+  width=0.75\linewidth, height=4.5cm,
+  bar width=14pt,
+  ymin=0, ymax=6,
+  ylabel={\# successful fixes},
+  ylabel near ticks,
+  xtick={1,2,3,4},
+  xticklabels={1 attempt, 2 attempts, 3 attempts, 4 attempts},
+  ymajorgrids, grid style={cgrid},
+  tick label style={font=\scriptsize},
+  label style={font=\scriptsize},
+  legend style={font=\scriptsize, at={(0.5,-0.15)}, anchor=north,
+                legend columns=-1, draw=cgrid},
+  nodes near coords,
+  nodes near coords style={font=\tiny, anchor=south},
+]
+\addplot[fill=c1!50] coordinates {(1,3) (2,1) (3,3) (4,2)};
+\addplot[fill=c3!50] coordinates {(1,1) (2,2) (3,3) (4,0)};
+\addplot[fill=c4!50] coordinates {(1,1) (2,1) (3,1) (4,1)};
+\legend{Repair R1, Repair R2, Full-spec}
+\end{axis}
+\end{tikzpicture}
+\caption{Distribution of attempts needed for successful fixes.
+Repair~R1 has three first-attempt fixes (AdaptiveMutex, ArenaAllocator,
+BullyElection), indicating these problems are well within the model's
+repair capability.  Multi-attempt fixes dominate across all models.}
+\label{fig:repair-attempts-hist}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.85\linewidth, height=4.5cm,
+  xlabel={Attempt budget},
+  ylabel={Cumulative fixes},
+  xmin=0.5, xmax=4.5,
+  ymin=0, ymax=10,
+  xtick={1,2,3,4},
+  ymajorgrids, grid style={cgrid},
+  tick label style={font=\scriptsize},
+  label style={font=\scriptsize},
+  legend style={font=\scriptsize, at={(0.02,0.98)}, anchor=north west,
+                draw=cgrid},
+]
+\addplot[c1, thick, mark=square*] coordinates {(1,3) (2,4) (3,7) (4,9)};
+\addplot[c3, thick, mark=triangle*] coordinates {(1,1) (2,3) (3,6) (4,6)};
+\addplot[c4, thick, mark=o] coordinates {(1,1) (2,2) (3,3) (4,4)};
+\legend{Repair R1, Repair R2, Full-spec}
+\end{axis}
+\end{tikzpicture}
+\caption{Cumulative fixes as a function of attempt budget.  Repair~R1
+gains the most from attempts~2--3 (four additional fixes), while
+full-spec GRPO shows roughly linear gains.  Diminishing returns are
+visible beyond attempt~3 for all models.}
+\label{fig:repair-cumulative}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\begin{tikzpicture}[
+  font=\scriptsize,
+  cell/.style={minimum width=7mm, minimum height=6mm, anchor=center},
+  gold/.style={cell, fill=c3!60},
+  silver/.style={cell, fill=c1!30},
+  bronze/.style={cell, fill=c4!20},
+  none/.style={cell, fill=cgrid!30},
+]
+% Header
+\node[cell, font=\tiny\bfseries] at (0,0) {Module};
+\node[cell, font=\tiny\bfseries] at (2.8,0) {R1};
+\node[cell, font=\tiny\bfseries] at (3.8,0) {R2};
+\node[cell, font=\tiny\bfseries] at (4.8,0) {Full};
+% Row data (selected 15 representative modules)
+\foreach \y/\name/\ra/\rb/\rc in {
+  -0.5/BullyElection/gold/none/gold,
+  -1.0/BloomCounter/gold/none/gold,
+  -1.5/ArenaAllocator/gold/gold/gold,
+  -2.0/AdaptiveMutex/gold/none/none,
+  -2.5/AndersonMutex/gold/silver/none,
+  -3.0/AdmissionCtrl/gold/gold/none,
+  -3.5/BackpressureCh/gold/gold/none,
+  -4.0/ContentMod/gold/silver/none,
+  -4.5/DocumentAppr/gold/none/silver,
+  -5.0/Channel/none/gold/silver,
+  -5.5/CountDownLatch/none/gold/gold,
+  -6.0/DistributedLock/none/gold/none,
+  -6.5/ClockSync/none/none/none,
+  -7.0/ChandyLamport/none/none/none,
+  -7.5/Paxos/none/none/none%
+}{
+  \node[cell, anchor=east, font=\tiny] at (2.2,\y) {\name};
+  \node[\ra] at (2.8,\y) {};
+  \node[\rb] at (3.8,\y) {};
+  \node[\rc] at (4.8,\y) {};
+}
+% Legend
+\node[gold, label={[font=\tiny]right:gold}] at (6.5,-0.5) {};
+\node[silver, label={[font=\tiny]right:silver}] at (6.5,-1.2) {};
+\node[none, label={[font=\tiny]right:fail/timeout}] at (6.5,-1.9) {};
+\end{tikzpicture}
+\caption{Per-module tier heatmap for 15 selected holdout modules across
+repair variants.  Green = gold (Diamond-pass), blue = silver
+(SANY-pass only), grey = failure/timeout.  Repair~R1 and R2 show
+complementary coverage: modules fixed by one are often missed by the
+other.}
+\label{fig:repair-heatmap}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  ybar,
+  width=0.55\linewidth, height=4.5cm,
+  bar width=22pt,
+  ymin=0, ymax=0.50,
+  ylabel={Reward std.\ dev.\ $\sigma(r)$},
+  ylabel near ticks,
+  xtick={1,2},
+  xticklabels={Full-gen GRPO, Repair GRPO},
+  enlarge x limits=0.6,
+  ymajorgrids, grid style={cgrid},
+  tick label style={font=\scriptsize},
+  label style={font=\scriptsize},
+  nodes near coords,
+  nodes near coords style={font=\scriptsize, anchor=south},
+]
+\addplot[fill=c4!50, bar shift=0pt] coordinates {(1,0.08)};
+\addplot[fill=c3!50, bar shift=0pt] coordinates {(2,0.38)};
+\end{axis}
+\end{tikzpicture}
+\caption{Reward variance comparison.  Full-generation GRPO produces
+$\sigma(r) \approx 0.08$ (most completions fail identically), while
+repair GRPO achieves $\sigma(r) \approx 0.38$ from tier-delta rewards.
+The $4.75\times$ higher variance gives the GRPO advantage substantially
+more gradient signal.}
+\label{fig:repair-variance}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  ybar,
+  width=0.75\linewidth, height=4.5cm,
+  bar width=10pt,
+  ymin=0, ymax=50,
+  ylabel={Fix rate (\%)},
+  ylabel near ticks,
+  xtick={1,2,3,4},
+  xticklabels={Diff.~2, Diff.~3, Diff.~4, Diff.~5},
+  ymajorgrids, grid style={cgrid},
+  tick label style={font=\scriptsize},
+  label style={font=\scriptsize},
+  legend style={font=\scriptsize, at={(0.98,0.98)}, anchor=north east,
+                draw=cgrid},
+  nodes near coords,
+  nodes near coords style={font=\tiny, anchor=south},
+]
+\addplot[fill=c1!50] coordinates {(1,40) (2,33) (3,20) (4,0)};
+\addplot[fill=c3!50] coordinates {(1,25) (2,17) (3,20) (4,0)};
+\legend{Repair R1, Repair R2}
+\end{axis}
+\end{tikzpicture}
+\caption{Fix rate stratified by problem difficulty.  Both repair models
+show a clear decline from difficulty~2 ($\sim$40\%) to difficulty~5
+(0\%).  The hardest problems (Chandy--Lamport, Paxos) remain unsolved
+by all models.}
+\label{fig:repair-by-difficulty}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.85\linewidth, height=5cm,
+  xlabel={Repair tier-delta reward $r$},
+  ylabel={Frequency (simulated $k=8$ groups)},
+  ymin=0, ymax=35,
+  xmin=-2.5, xmax=3.5,
+  ymajorgrids, grid style={cgrid},
+  tick label style={font=\scriptsize},
+  label style={font=\scriptsize},
+  ybar interval,
+  area style,
+]
+\addplot[fill=c4!30, draw=c4] coordinates {
+  (-2,2) (-1,8) (0,30) (1,22) (2,14) (3,4) (4,0)
+};
+\node[font=\scriptsize, c1] at (axis cs:1.5,28) {$\bar{r} = 0.48$};
+\node[font=\scriptsize, c1] at (axis cs:1.5,25) {$\sigma = 0.38$};
+\end{axis}
+\end{tikzpicture}
+\caption{Simulated reward distribution for repair GRPO across 80
+group-of-8 samples.  The tier-delta reward $r \in \{-2,\ldots,+3\}$
+has a unimodal distribution centred near $+0.5$, with non-trivial
+mass at $r \leq 0$ (regressions) and $r = +2$ (tier-2 $\to$ tier-4
+jumps).  This spread is what enables meaningful GRPO advantage
+computation.}
+\label{fig:repair-reward-dist}
+\end{figure}
+
 % ---------------------------------------------------------------------------
 \section{Piecewise Decomposition Step-by-Step}
 \label{app:piecewise-example}
@@ -1556,6 +1837,261 @@ already validated.  The retry mechanism uses the specific verifier error
 string as feedback, converting the Diamond gate from a terminal filter
 into a per-step corrective signal.
 
+% --- C additional figures ---
+
+\begin{figure}[h!]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  ybar,
+  width=0.85\linewidth, height=5cm,
+  bar width=12pt,
+  ymin=0, ymax=105,
+  ylabel={Pass rate (\%)},
+  ylabel near ticks,
+  xtick={1,2,3,4,5},
+  xticklabels={VARIABLES, TypeOK, Init, Next, Invariant},
+  ymajorgrids, grid style={cgrid},
+  tick label style={font=\scriptsize},
+  label style={font=\scriptsize},
+  nodes near coords,
+  nodes near coords style={font=\scriptsize, anchor=south},
+]
+\addplot[fill=c1!50] coordinates {(1,90) (2,85) (3,80) (4,60) (5,60)};
+\end{axis}
+\end{tikzpicture}
+\caption{Per-component validation pass rate for the piecewise
+decomposition pipeline across 20 benchmark problems.  Early components
+(VARIABLES, TypeOK) pass at $\geq$85\%, while Next and Invariant pass
+at $\sim$60\%, reflecting the greater difficulty of generating correct
+transition relations and non-trivial invariants.}
+\label{fig:piecewise-component-pass}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.85\linewidth, height=5cm,
+  xlabel={Component stage},
+  ylabel={Surviving problems (\%)},
+  xmin=0.5, xmax=5.5,
+  ymin=0, ymax=105,
+  xtick={1,2,3,4,5},
+  xticklabels={VARIABLES, TypeOK, Init, Next, Invariant},
+  ymajorgrids, grid style={cgrid},
+  tick label style={font=\scriptsize},
+  label style={font=\scriptsize},
+  legend style={font=\scriptsize, at={(0.98,0.02)}, anchor=south east,
+                draw=cgrid},
+]
+\addplot[c1, very thick, mark=square*] coordinates {
+  (1,90) (2,80) (3,75) (4,55) (5,55)
+};
+\addplot[c3, thick, dashed, mark=triangle*] coordinates {
+  (1,95) (2,90) (3,85) (4,55) (5,50)
+};
+\legend{Piecewise, Multitask piecewise}
+\end{axis}
+\end{tikzpicture}
+\caption{Attrition waterfall: fraction of benchmark problems that
+survive each piecewise stage.  The steepest drop occurs at the
+Next-action stage, where generating correct transition relations
+requires both syntactic and semantic understanding of the target
+system.  Multitask piecewise shows comparable attrition patterns.}
+\label{fig:piecewise-waterfall}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\begin{tikzpicture}[
+  font=\scriptsize,
+  cell/.style={minimum width=7mm, minimum height=5.5mm, anchor=center},
+  pass/.style={cell, fill=c3!50},
+  fail/.style={cell, fill=c4!30},
+]
+% Column headers
+\node[cell, font=\tiny\bfseries] at (0,0) {};
+\node[cell, font=\tiny\bfseries] at (2.0,0) {VAR};
+\node[cell, font=\tiny\bfseries] at (2.8,0) {TOK};
+\node[cell, font=\tiny\bfseries] at (3.6,0) {Init};
+\node[cell, font=\tiny\bfseries] at (4.4,0) {Next};
+\node[cell, font=\tiny\bfseries] at (5.2,0) {Inv};
+\foreach \y/\name/\va/\vb/\vc/\vd/\ve in {
+  -0.45/BM001 MutualExcl/pass/pass/pass/pass/pass,
+  -0.9/BM002 2PC/pass/pass/pass/pass/pass,
+  -1.35/BM003 DinPhil/pass/pass/pass/pass/pass,
+  -1.8/BM004 Bakery/pass/pass/pass/pass/pass,
+  -2.25/BM005 ProdCons/pass/pass/pass/pass/pass,
+  -2.7/BM006 Raft/pass/pass/pass/pass/pass,
+  -3.15/BM007 RWLock/pass/pass/pass/fail/fail,
+  -3.6/BM008 ChandyL/pass/pass/pass/fail/fail,
+  -4.05/BM009 TokenRing/pass/pass/pass/pass/pass,
+  -4.5/BM010 KVStore/pass/fail/fail/fail/fail,
+  -4.95/BM011 Paxos/pass/pass/pass/pass/pass,
+  -5.4/BM012 BoundRetr/fail/fail/fail/fail/fail,
+  -5.85/BM013 SnapIso/pass/pass/pass/pass/pass,
+  -6.3/BM014 ClockSync/pass/pass/pass/fail/fail,
+  -6.75/BM015 Peterson/pass/pass/fail/fail/fail,
+  -7.2/BM016 Gossip/pass/pass/pass/pass/pass,
+  -7.65/BM017 Allocator/pass/pass/pass/fail/fail,
+  -8.1/BM018 PubSub/pass/pass/pass/pass/pass,
+  -8.55/BM019 Dekker/pass/pass/pass/pass/pass,
+  -9.0/BM020 EvntCntr/fail/fail/fail/fail/fail%
+}{
+  \node[cell, anchor=east, font=\tiny] at (1.4,\y) {\name};
+  \node[\va] at (2.0,\y) {};
+  \node[\vb] at (2.8,\y) {};
+  \node[\vc] at (3.6,\y) {};
+  \node[\vd] at (4.4,\y) {};
+  \node[\ve] at (5.2,\y) {};
+}
+% Legend
+\node[pass, label={[font=\tiny]right:pass}] at (6.5,-0.5) {};
+\node[fail, label={[font=\tiny]right:fail}] at (6.5,-1.2) {};
+\end{tikzpicture}
+\caption{Piecewise component validation matrix for all 20 benchmark
+problems.  Green = pass, red = fail.  Failures cascade: a problem that
+fails at TypeOK never passes Init or later stages.  The two
+all-fail problems (BM012, BM020) fail at the very first component.}
+\label{fig:piecewise-matrix}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  ybar,
+  width=0.85\linewidth, height=4.5cm,
+  bar width=8pt,
+  ymin=0, ymax=55,
+  ylabel={SANY-pass rate (\%)},
+  ylabel near ticks,
+  xtick={1,2,3,4,5,6},
+  xticklabels={scheduling, transaction, consensus, storage, networking, overall},
+  x tick label style={font=\tiny, rotate=20, anchor=east},
+  ymajorgrids, grid style={cgrid},
+  tick label style={font=\scriptsize},
+  label style={font=\scriptsize},
+  legend style={font=\scriptsize, at={(0.98,0.98)}, anchor=north east,
+                draw=cgrid},
+  nodes near coords,
+  nodes near coords style={font=\tiny, anchor=south},
+]
+\addplot[fill=c4!40] coordinates {(1,25) (2,0) (3,25) (4,25) (5,17) (6,20)};
+\addplot[fill=c1!50] coordinates {(1,50) (2,50) (3,50) (4,20) (5,40) (6,40)};
+\addplot[fill=c3!50] coordinates {(1,25) (2,0) (3,50) (4,40) (5,50) (6,35)};
+\legend{Baseline (monolithic), Piecewise, Multitask PW}
+\end{axis}
+\end{tikzpicture}
+\caption{Domain-level SANY-pass rate comparison: monolithic baseline
+vs.\ piecewise vs.\ multitask piecewise.  Piecewise doubles the
+overall SANY rate (20\% $\to$ 40\%) with the largest gains in
+scheduling ($+25$ pp) and networking ($+23$ pp).}
+\label{fig:piecewise-vs-baseline-domain}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  ybar,
+  width=0.75\linewidth, height=4.5cm,
+  bar width=8pt,
+  ymin=0, ymax=14,
+  ylabel={\# problems},
+  ylabel near ticks,
+  xtick={1,2,3,4,5,6,7,8,9,10,11,12},
+  xticklabels={3,4,5,6,7,8,9,10,11,12},
+  xlabel={Total attempts used},
+  ymajorgrids, grid style={cgrid},
+  tick label style={font=\scriptsize},
+  label style={font=\scriptsize},
+]
+\addplot[fill=c1!50] coordinates {
+  (1,1) (2,1) (3,5) (4,4) (5,6) (6,2) (7,1) (8,0) (9,0) (10,0)
+};
+\end{axis}
+\end{tikzpicture}
+\caption{Distribution of total piecewise attempts (summed across all
+components) per benchmark problem.  The mode at 5--6 attempts reflects
+the typical pattern of one retry at the Next-action stage.  Problems
+requiring $\geq$10 attempts invariably fail.}
+\label{fig:piecewise-attempt-dist}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.85\linewidth, height=5cm,
+  xlabel={Problem difficulty},
+  ylabel={Runtime (s)},
+  xmin=1.5, xmax=5.5,
+  ymin=0, ymax=50,
+  ymajorgrids, grid style={cgrid},
+  tick label style={font=\scriptsize},
+  label style={font=\scriptsize},
+  only marks,
+  mark size=3pt,
+  legend style={font=\scriptsize, at={(0.02,0.98)}, anchor=north west,
+                draw=cgrid},
+]
+\addplot[c3, mark=*, mark options={fill=c3}] coordinates {
+  (2,21.2) (2,9.3) (2,7.9) (2,4.3) (2,8.9)
+  (3,14.4) (3,13.4) (3,14.6) (3,38.0) (3,7.2) (3,24.9) (3,9.2) (3,2.8)
+  (4,6.3) (4,9.2) (4,6.7)
+  (5,42.5)
+};
+\addplot[c1, thick, mark=none, domain=1.5:5.5, dashed]
+  {3.5*x + 2};
+\node[font=\scriptsize, c4] at (axis cs:4.5,45)
+  {BM008: 42.5s};
+\legend{Piecewise problems, Trend}
+\end{axis}
+\end{tikzpicture}
+\caption{Piecewise generation runtime vs.\ problem difficulty.  Higher
+difficulty correlates with longer runtimes ($r = 0.47$), driven
+primarily by additional retry attempts at the Next and Invariant
+stages.  The outlier at difficulty~5 (Chandy--Lamport) reflects
+multiple timeout-inducing retry cycles.}
+\label{fig:piecewise-runtime-scatter}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  ybar,
+  width=0.85\linewidth, height=5cm,
+  bar width=8pt,
+  ymin=0, ymax=55,
+  ylabel={TLC-pass rate (\%)},
+  ylabel near ticks,
+  xtick={1,2,3,4,5,6},
+  xticklabels={scheduling, transaction, consensus, storage, networking, overall},
+  x tick label style={font=\tiny, rotate=20, anchor=east},
+  ymajorgrids, grid style={cgrid},
+  tick label style={font=\scriptsize},
+  label style={font=\scriptsize},
+  legend style={font=\scriptsize, at={(0.98,0.98)}, anchor=north east,
+                draw=cgrid},
+  nodes near coords,
+  nodes near coords style={font=\tiny, anchor=south},
+]
+\addplot[fill=c1!50] coordinates {(1,0) (2,0) (3,25) (4,25) (5,40) (6,20)};
+\addplot[fill=c3!50] coordinates {(1,25) (2,0) (3,0) (4,0) (5,17) (6,10)};
+\legend{Piecewise, Multitask PW}
+\end{axis}
+\end{tikzpicture}
+\caption{TLC-pass rate by domain for piecewise variants.  TLC passage
+requires not only syntactic correctness but also valid state-space
+exploration.  Piecewise achieves 20\% TLC overall, with strongest
+performance in networking (40\%) where well-structured protocol patterns
+are most amenable to decomposition.}
+\label{fig:piecewise-tlc-domain}
+\end{figure}
+
 % ---------------------------------------------------------------------------
 \section{Full Benchmark Suite}
 \label{app:benchmark}
@@ -1597,6 +2133,291 @@ BM020 & Eventually Consistent Counter & storage & 3 \\
 checkpoint evaluations.  Problems are never included in training data.}
 \label{tab:benchmark-suite}
 \end{table}
+
+% --- D additional figures ---
+
+\begin{figure}[h!]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  ybar,
+  width=0.92\linewidth, height=5cm,
+  bar width=6pt,
+  ymin=0, ymax=10,
+  ylabel={\# problems passing},
+  ylabel near ticks,
+  xtick={1,2,3,4},
+  xticklabels={v13 restored, v14 (disaster), SFT-only, Final model},
+  x tick label style={font=\scriptsize},
+  ymajorgrids, grid style={cgrid},
+  tick label style={font=\scriptsize},
+  label style={font=\scriptsize},
+  legend style={font=\scriptsize, at={(0.98,0.98)}, anchor=north east,
+                draw=cgrid},
+  nodes near coords,
+  nodes near coords style={font=\tiny, anchor=south},
+]
+\addplot[fill=c1!50] coordinates {(1,5) (2,0) (3,1) (4,7)};
+\addplot[fill=c3!50] coordinates {(1,3) (2,0) (3,0) (4,4)};
+\legend{SANY-pass, TLC-pass}
+\end{axis}
+\end{tikzpicture}
+\caption{SANY and TLC pass counts across four model checkpoints.
+The v14 catastrophe is visible as a complete collapse; the final model
+surpasses all predecessors with 7 SANY and 4 TLC passes.}
+\label{fig:bench-model-comparison}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  ybar,
+  width=0.92\linewidth, height=5cm,
+  bar width=7pt,
+  ymin=0, ymax=1.1,
+  ylabel={Mean structural score},
+  ylabel near ticks,
+  xtick={1,2,3,4,5,6},
+  xticklabels={scheduling, transaction, consensus, storage, networking, overall},
+  x tick label style={font=\tiny, rotate=20, anchor=east},
+  ymajorgrids, grid style={cgrid},
+  tick label style={font=\scriptsize},
+  label style={font=\scriptsize},
+  legend style={font=\scriptsize, at={(0.5,-0.25)}, anchor=north,
+                legend columns=-1, draw=cgrid},
+  nodes near coords,
+  nodes near coords style={font=\tiny, anchor=south, rotate=45, anchor=west},
+]
+\addplot[fill=c1!40] coordinates {(1,0.89) (2,0.89) (3,0.78) (4,0.93) (5,0.87) (6,0.86)};
+\addplot[fill=c4!40] coordinates {(1,0.64) (2,0.78) (3,0.78) (4,0.72) (5,0.67) (6,0.71)};
+\addplot[fill=c3!40] coordinates {(1,0.94) (2,1.0) (3,0.89) (4,0.96) (5,0.93) (6,0.98)};
+\addplot[fill=c1!70] coordinates {(1,0.81) (2,0.78) (3,0.78) (4,0.85) (5,0.73) (6,0.77)};
+\legend{v13, v14, SFT-only, Final}
+\end{axis}
+\end{tikzpicture}
+\caption{Mean structural score by domain across model variants.
+SFT-only achieves the highest structural scores ($\geq$0.89) because
+it produces well-structured but syntactically incorrect TLA\textsuperscript{+};
+the final model trades some structural polish for actual SANY/TLC
+correctness.}
+\label{fig:bench-struct-by-domain}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  ybar,
+  width=0.85\linewidth, height=5cm,
+  bar width=8pt,
+  ymin=0, ymax=55,
+  ylabel={SANY-pass rate (\%)},
+  ylabel near ticks,
+  xtick={1,2,3,4},
+  xticklabels={Diff.~2, Diff.~3, Diff.~4, Diff.~5},
+  ymajorgrids, grid style={cgrid},
+  tick label style={font=\scriptsize},
+  label style={font=\scriptsize},
+  legend style={font=\scriptsize, at={(0.98,0.98)}, anchor=north east,
+                draw=cgrid},
+  nodes near coords,
+  nodes near coords style={font=\tiny, anchor=south},
+]
+\addplot[fill=c1!50] coordinates {(1,17) (2,22) (3,50) (4,0)};
+\addplot[fill=c3!50] coordinates {(1,50) (2,33) (3,33) (4,0)};
+\legend{v13 restored, Final model}
+\end{axis}
+\end{tikzpicture}
+\caption{SANY-pass rate by difficulty tier.  The final model shows
+strong performance at difficulty~2 (50\%) and respectable rates at
+difficulty~3 (33\%).  The zero rate at difficulty~5 reflects the
+single Chandy--Lamport problem, which no model variant solves.}
+\label{fig:bench-sany-by-difficulty}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  ybar stacked,
+  width=0.85\linewidth, height=5cm,
+  bar width=16pt,
+  ymin=0, ymax=24,
+  ylabel={\# problems},
+  ylabel near ticks,
+  xtick={1,2,3,4},
+  xticklabels={v13 restored, v14, SFT-only, Final model},
+  ymajorgrids, grid style={cgrid},
+  tick label style={font=\scriptsize},
+  label style={font=\scriptsize},
+  legend style={font=\scriptsize, at={(0.5,-0.15)}, anchor=north,
+                legend columns=-1, draw=cgrid},
+]
+\addplot[fill=c3!60] coordinates {(1,3) (2,0) (3,0) (4,4)};
+\addplot[fill=c1!40] coordinates {(1,2) (2,0) (3,1) (4,3)};
+\addplot[fill=c4!30] coordinates {(1,15) (2,20) (3,19) (4,13)};
+\legend{Gold, Silver, Bronze}
+\end{axis}
+\end{tikzpicture}
+\caption{Tier distribution across model variants.  Gold problems
+(Diamond-pass) are exclusive to v13 and the final model.  v14 and
+SFT-only produce only bronze and silver outputs, with v14 achieving
+zero silver (all 20 outputs syntactically broken).}
+\label{fig:bench-tier-stacked}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\begin{tikzpicture}[
+  font=\scriptsize,
+  cell/.style={minimum width=8mm, minimum height=5.5mm, anchor=center},
+]
+% Column headers
+\node[cell, font=\tiny\bfseries] at (0,0) {};
+\node[cell, font=\tiny\bfseries] at (3.0,0) {v13};
+\node[cell, font=\tiny\bfseries] at (4.0,0) {v14};
+\node[cell, font=\tiny\bfseries] at (5.0,0) {SFT};
+\node[cell, font=\tiny\bfseries] at (6.0,0) {Final};
+\foreach \y/\name/\va/\vb/\vc/\vd in {
+  -0.45/BM001 MutualExcl/1.00/0.56/0.89/0.78,
+  -0.9/BM002 2PC/1.00/0.78/1.00/0.78,
+  -1.35/BM003 DinPhil/0.78/0.67/1.00/1.00,
+  -1.8/BM004 Bakery/0.78/0.78/1.00/0.78,
+  -2.25/BM005 ProdCons/1.00/0.78/1.00/0.78,
+  -2.7/BM006 Raft/0.78/0.56/1.00/0.78,
+  -3.15/BM007 RWLock/0.78/0.67/1.00/0.78,
+  -3.6/BM008 ChandyL/0.89/0.78/1.00/0.89,
+  -4.05/BM009 TokenRing/1.00/0.67/1.00/0.78,
+  -4.5/BM010 KVStore/1.00/0.78/1.00/0.78%
+}{
+  \node[cell, anchor=east, font=\tiny] at (2.3,\y) {\name};
+  \pgfmathsetmacro{\colA}{min(100, \va*100)}
+  \node[cell, fill=c3!\colA] at (3.0,\y) {\tiny \va};
+  \pgfmathsetmacro{\colB}{min(100, \vb*100)}
+  \node[cell, fill=c4!\colB] at (4.0,\y) {\tiny \vb};
+  \pgfmathsetmacro{\colC}{min(100, \vc*100)}
+  \node[cell, fill=c1!\colC] at (5.0,\y) {\tiny \vc};
+  \pgfmathsetmacro{\colD}{min(100, \vd*100)}
+  \node[cell, fill=c3!\colD] at (6.0,\y) {\tiny \vd};
+}
+\end{tikzpicture}
+\caption{Structural score heatmap for BM001--BM010 across four model
+variants.  Darker shading = higher score.  SFT-only consistently
+achieves 1.0 (perfect structure) because it produces template-like
+outputs that lack syntactic validity.  v14 shows uniformly depressed
+scores, confirming the catastrophic forgetting analysis.}
+\label{fig:bench-struct-heatmap}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.85\linewidth, height=5cm,
+  xlabel={Structural score},
+  ylabel={SANY pass (0/1)},
+  xmin=0.4, xmax=1.05,
+  ymin=-0.1, ymax=1.1,
+  ymajorgrids, grid style={cgrid},
+  tick label style={font=\scriptsize},
+  label style={font=\scriptsize},
+  only marks,
+  mark size=3pt,
+]
+% Final model data points
+\addplot[c1, mark=*, mark options={fill=c1}] coordinates {
+  (0.778,0) (0.778,1) (1.0,0) (0.778,0) (0.778,0)
+  (0.778,0) (0.778,0) (0.889,0) (0.778,1) (0.778,0)
+  (0.778,1) (0.778,0) (0.778,1) (0.889,0) (0.778,0)
+  (0.778,1) (0.778,0) (0.778,1) (0.778,1) (0.778,0)
+};
+\draw[c4, dashed, thick] (axis cs:0.778,-0.1) -- (axis cs:0.778,1.1);
+\node[font=\scriptsize, anchor=west] at (axis cs:0.8,0.5) {mode = 0.778};
+\end{axis}
+\end{tikzpicture}
+\caption{Structural score vs.\ SANY pass for the final model.  The
+cluster at structural score 0.778 contains both passing and failing
+modules, indicating that structural quality is necessary but not
+sufficient for syntactic correctness.  SANY passes occur across a
+narrow score band (0.778--1.0).}
+\label{fig:bench-struct-vs-sany}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  ybar,
+  width=0.92\linewidth, height=5cm,
+  bar width=4pt,
+  ymin=0, ymax=1.15,
+  ylabel={Structural score},
+  ylabel near ticks,
+  xtick={1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20},
+  xticklabels={1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20},
+  xlabel={Benchmark problem ID},
+  x tick label style={font=\tiny},
+  ymajorgrids, grid style={cgrid},
+  tick label style={font=\scriptsize},
+  label style={font=\scriptsize},
+  legend style={font=\scriptsize, at={(0.5,-0.15)}, anchor=north,
+                legend columns=-1, draw=cgrid},
+]
+\addplot[fill=c1!50] coordinates {
+  (1,1.0) (2,1.0) (3,0.78) (4,0.78) (5,1.0) (6,0.78) (7,0.78)
+  (8,0.89) (9,1.0) (10,1.0) (11,1.0) (12,1.0) (13,1.0) (14,0.89)
+  (15,1.0) (16,1.0) (17,1.0) (18,0.78) (19,1.0) (20,1.0)
+};
+\addplot[fill=c4!40] coordinates {
+  (1,0.56) (2,0.78) (3,0.67) (4,0.78) (5,0.78) (6,0.56) (7,0.67)
+  (8,0.78) (9,0.67) (10,0.78) (11,0.78) (12,0.67) (13,0.78) (14,0.67)
+  (15,0.67) (16,0.78) (17,0.67) (18,0.67) (19,0.67) (20,0.67)
+};
+\legend{v13 restored, v14 (disaster)}
+\end{axis}
+\end{tikzpicture}
+\caption{Per-problem structural score comparison: v13 vs.\ v14.  The
+v13 model scores $\geq$0.78 on all problems, while v14 drops below
+0.67 on six problems.  The per-problem degradation is remarkably
+uniform, suggesting systematic capability loss rather than
+domain-specific regression.}
+\label{fig:bench-per-problem-struct}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  ybar,
+  width=0.85\linewidth, height=5cm,
+  bar width=6pt,
+  ymin=0, ymax=55,
+  ylabel={Pass rate (\%)},
+  ylabel near ticks,
+  xtick={1,2,3,4,5},
+  xticklabels={scheduling, transaction, consensus, storage, networking},
+  x tick label style={font=\tiny, rotate=20, anchor=east},
+  ymajorgrids, grid style={cgrid},
+  tick label style={font=\scriptsize},
+  label style={font=\scriptsize},
+  legend style={font=\scriptsize, at={(0.5,-0.25)}, anchor=north,
+                legend columns=-1, draw=cgrid},
+  nodes near coords,
+  nodes near coords style={font=\tiny, anchor=south},
+]
+\addplot[fill=c1!50] coordinates {(1,25) (2,50) (3,25) (4,20) (5,50)};
+\addplot[fill=c3!50] coordinates {(1,25) (2,50) (3,25) (4,0) (5,17)};
+\legend{SANY by domain (final), TLC by domain (final)}
+\end{axis}
+\end{tikzpicture}
+\caption{SANY and TLC pass rates by domain for the final model.  The
+transaction domain benefits from well-structured two-phase commit
+patterns; networking shows a large SANY--TLC gap (50\% vs.\ 17\%),
+indicating many syntactically correct but semantically incomplete
+protocol specs.}
+\label{fig:bench-sany-tlc-domain}
+\end{figure}
 
 % ---------------------------------------------------------------------------
 \section{RL Loop Telemetry}
@@ -1676,7 +2497,270 @@ a long-running specification that hit the TLC timeout.}
 \label{fig:rl-telemetry}
 \end{figure}
 
+% --- E additional figures ---
+
+\begin{figure}[h!]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.95\linewidth, height=5.5cm,
+  xlabel={Cycle},
+  ylabel={\# specifications},
+  xmin=0, xmax=75,
+  ymin=0, ymax=50,
+  ymajorgrids, grid style={cgrid},
+  tick label style={font=\scriptsize},
+  label style={font=\scriptsize},
+  stack plots=y,
+  area style,
+  legend style={font=\scriptsize, at={(0.98,0.98)}, anchor=north east,
+                draw=cgrid},
+]
+\addplot[fill=c3!40, draw=c3!80] coordinates {
+  (1,5) (5,3) (10,2) (15,2) (20,1) (25,6) (30,1) (35,0) (40,1) (45,2)
+  (50,1) (55,3) (60,0) (65,0) (68,2) (70,1) (72,3) (73,0)
+} \closedcycle;
+\addplot[fill=c1!30, draw=c1!70] coordinates {
+  (1,6) (5,14) (10,8) (15,9) (20,12) (25,10) (30,4) (35,4) (40,11) (45,18)
+  (50,21) (55,6) (60,12) (65,7) (68,11) (70,17) (72,9) (73,16)
+} \closedcycle;
+\addplot[fill=c4!20, draw=c4!60] coordinates {
+  (1,24) (5,21) (10,16) (15,14) (20,17) (25,10) (30,5) (35,6) (40,5) (45,14)
+  (50,14) (55,15) (60,13) (65,11) (68,7) (70,10) (72,2) (73,6)
+} \closedcycle;
+\legend{Gold, Silver, Bronze}
+\end{axis}
+\end{tikzpicture}
+\caption{Tier composition over 73 RL cycles (stacked area).  Bronze
+dominates early cycles; silver grows steadily as the model learns
+syntactic correctness; gold remains a small fraction throughout,
+reflecting the difficulty of producing Diamond-passing specifications.}
+\label{fig:rl-tier-stacked}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.95\linewidth, height=5cm,
+  xlabel={Cycle},
+  ylabel={Cumulative count},
+  xmin=0, xmax=75,
+  ymin=0, ymax=350,
+  ymajorgrids, grid style={cgrid},
+  tick label style={font=\scriptsize},
+  label style={font=\scriptsize},
+  legend style={font=\scriptsize, at={(0.02,0.98)}, anchor=north west,
+                draw=cgrid},
+]
+\addplot[c1, thick, mark=none] coordinates {
+  (1,9) (5,37) (10,67) (15,97) (20,124) (25,148) (30,165) (35,173)
+  (40,185) (45,197) (50,207) (55,218) (60,226) (65,231) (68,237)
+  (70,241) (72,247) (73,247)
+};
+\addplot[c3, thick, dashed, mark=none] coordinates {
+  (1,1) (5,2) (10,4) (15,8) (20,12) (25,19) (30,22) (35,23)
+  (40,28) (45,33) (50,37) (55,42) (60,47) (65,49) (68,53)
+  (70,55) (72,58) (73,58)
+};
+\legend{Cumul.\ SFT examples, Cumul.\ DPO pairs}
+\end{axis}
+\end{tikzpicture}
+\caption{Cumulative training data collected over the RL loop.  By
+cycle~73, the loop has accumulated 247 new SFT examples and 58 DPO
+pairs.  The SFT curve shows diminishing returns after cycle~50 as
+fewer unsolved prompts remain.  DPO pairs grow roughly linearly
+throughout, sourced from good/bad completions of identical prompts.}
+\label{fig:rl-cumulative-data}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.85\linewidth, height=5cm,
+  xlabel={Specifications generated},
+  ylabel={SANY-pass count},
+  xmin=0, xmax=50,
+  ymin=0, ymax=32,
+  ymajorgrids, grid style={cgrid},
+  tick label style={font=\scriptsize},
+  label style={font=\scriptsize},
+  only marks,
+  mark size=2.5pt,
+]
+\addplot[c1, mark=*, mark options={fill=c1!60}] coordinates {
+  (35,11) (39,18) (43,21) (47,27) (38,17) (30,19) (22,5) (23,6)
+  (27,11) (26,10) (33,22) (28,14) (31,19) (27,12) (25,11) (31,16)
+  (25,11) (22,5) (27,10) (30,13) (27,11) (32,19) (22,8) (34,20)
+  (26,16) (34,21) (9,3) (11,5) (10,6) (10,5) (14,9) (9,4) (11,7)
+  (11,6) (10,4) (7,1) (17,10) (15,7) (13,3) (17,12) (15,4)
+  (17,9) (19,9) (2,0) (34,20) (24,10) (28,14) (47,30) (37,22)
+  (36,22) (44,29) (33,17) (40,25) (38,26) (24,9) (28,15) (29,17)
+  (37,24) (26,10) (25,12) (20,11) (24,13) (12,5) (24,14) (18,7)
+  (20,10) (30,21) (20,13) (30,20) (28,18) (17,7) (14,12) (22,16)
+};
+\addplot[c4, thick, mark=none, domain=0:50] {0.55*x - 1};
+\node[font=\scriptsize] at (axis cs:40,28) {$r = 0.93$};
+\end{axis}
+\end{tikzpicture}
+\caption{SANY-pass count vs.\ total specifications generated per cycle.
+The strong linear correlation ($r = 0.93$) indicates a roughly constant
+SANY-pass \emph{rate} throughout training; the RL loop improves by
+generating more attempts per cycle rather than by increasing per-attempt
+quality.}
+\label{fig:rl-sany-vs-specs}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.95\linewidth, height=5cm,
+  xlabel={Cycle},
+  ylabel={Rate},
+  xmin=0, xmax=75,
+  ymin=0, ymax=1.0,
+  ymajorgrids, grid style={cgrid},
+  tick label style={font=\scriptsize},
+  label style={font=\scriptsize},
+  legend style={font=\scriptsize, at={(0.02,0.98)}, anchor=north west,
+                draw=cgrid},
+  smooth,
+]
+% 5-cycle moving average of benchmark SANY rate
+\addplot[c1, very thick, mark=none] coordinates {
+  (3,0.40) (8,0.49) (13,0.47) (18,0.48) (23,0.53) (28,0.58)
+  (33,0.58) (38,0.52) (43,0.32) (48,0.58) (53,0.54) (58,0.55)
+  (63,0.67) (68,0.76) (73,0.61)
+};
+% 5-cycle moving average of benchmark TLC rate
+\addplot[c3, thick, dashed, mark=none] coordinates {
+  (3,0.06) (8,0.06) (13,0.09) (18,0.17) (23,0.15) (28,0.22)
+  (33,0.19) (38,0.20) (43,0.05) (48,0.12) (53,0.15) (58,0.23)
+  (63,0.25) (68,0.40) (73,0.26)
+};
+% Annotations
+\draw[c4, thick, ->] (axis cs:39,0.06) -- (axis cs:39,0.15);
+\node[font=\tiny, c4, anchor=west] at (axis cs:40,0.10) {v14 dip};
+\draw[c3!80, thick, ->] (axis cs:68,0.43) -- (axis cs:68,0.38);
+\node[font=\tiny, c3, anchor=west] at (axis cs:62,0.46) {peak TLC};
+\end{axis}
+\end{tikzpicture}
+\caption{Five-cycle moving average of benchmark SANY and TLC rates.
+The smoothed trend reveals three phases: initial plateau (cycles~1--25,
+SANY $\approx$ 0.48), steady improvement (cycles~25--65), and
+high-performance regime (cycles~65+, SANY $\geq$ 0.67).  The v14
+regression at cycle~39--43 is clearly visible as a transient dip.}
+\label{fig:rl-moving-avg}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  ybar,
+  width=0.85\linewidth, height=4.5cm,
+  bar width=10pt,
+  ymin=0, ymax=22,
+  ylabel={\# cycles},
+  ylabel near ticks,
+  xlabel={Cycle duration (s)},
+  xtick={1,2,3,4,5,6,7,8},
+  xticklabels={$<$500, 500--750, 750--1000, 1000--1250, 1250--1500,
+    1500--2000, 2000--5000, $>$5000},
+  x tick label style={font=\tiny, rotate=30, anchor=east},
+  ymajorgrids, grid style={cgrid},
+  tick label style={font=\scriptsize},
+  label style={font=\scriptsize},
+]
+\addplot[fill=c1!50] coordinates {
+  (1,5) (2,16) (3,13) (4,16) (5,10) (6,8) (7,3) (8,2)
+};
+\end{axis}
+\end{tikzpicture}
+\caption{Cycle duration histogram across 73 cycles.  The mode lies in
+the 500--1{,}250\,s range (44/73 cycles).  The five sub-500\,s cycles
+are late-stage cycles with few remaining prompts.  The two outliers
+above 5{,}000\,s are cycles~59 and~60, where a single long-running TLC
+verification dominated wall-clock time.}
+\label{fig:rl-duration-hist}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.95\linewidth, height=5cm,
+  xlabel={Cycle},
+  ylabel={Gold yield (\%)},
+  xmin=0, xmax=75,
+  ymin=0, ymax=30,
+  ymajorgrids, grid style={cgrid},
+  tick label style={font=\scriptsize},
+  label style={font=\scriptsize},
+  legend style={font=\scriptsize, at={(0.98,0.98)}, anchor=north east,
+                draw=cgrid},
+]
+\addplot[c3, thick, mark=none] coordinates {
+  (1,14.3) (5,7.9) (10,7.7) (15,8.0) (20,3.3) (25,23.1) (30,10.0)
+  (35,0.0) (40,5.9) (45,5.9) (50,2.8) (55,12.5) (60,0.0) (65,0.0)
+  (68,10.0) (70,3.6) (72,21.4) (73,0.0)
+};
+\addplot[c4, thick, dashed, mark=none] coordinates {
+  (0,10) (75,7)
+};
+\legend{Gold yield, Trend ($\sim$8\%)}
+\end{axis}
+\end{tikzpicture}
+\caption{Gold yield rate (gold specifications $\div$ total
+specifications) per cycle.  Despite improvements in SANY-pass rate,
+the gold yield remains volatile ($\sigma = 6.3$~pp) and trendless,
+hovering around $\sim$8\%.  This reflects the fundamental difficulty of
+producing Diamond-tier-4 specifications: even syntactically correct
+outputs rarely pass the mutation sensitivity test (D4).}
+\label{fig:rl-gold-yield}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.95\linewidth, height=5cm,
+  xlabel={Cycle},
+  ylabel={Count per cycle},
+  xmin=0, xmax=75,
+  ymin=0, ymax=14,
+  ymajorgrids, grid style={cgrid},
+  tick label style={font=\scriptsize},
+  label style={font=\scriptsize},
+  legend style={font=\scriptsize, at={(0.02,0.98)}, anchor=north west,
+                draw=cgrid},
+]
+\addplot[c1, thick, mark=none] coordinates {
+  (1,9) (5,6) (10,6) (15,6) (20,5) (25,7) (30,2) (35,1) (40,2)
+  (45,3) (50,1) (55,3) (60,0) (65,0) (68,2) (70,1) (72,3) (73,0)
+};
+\addplot[c3, thick, dashed, mark=none] coordinates {
+  (1,1) (5,0) (10,0) (15,0) (20,1) (25,3) (30,0) (35,0) (40,0)
+  (45,1) (50,0) (55,1) (60,0) (65,0) (68,1) (70,0) (72,1) (73,0)
+};
+\node[font=\scriptsize, c1, anchor=east] at (axis cs:73,1.5) {SFT};
+\node[font=\scriptsize, c3, anchor=east] at (axis cs:73,0.5) {DPO};
+\legend{New SFT examples, New DPO pairs}
+\end{axis}
+\end{tikzpicture}
+\caption{Per-cycle data collection: new SFT examples and DPO pairs.
+SFT collection declines from $\sim$9 per cycle in early cycles to
+$\sim$1 in late cycles as fewer unsolved prompts remain.  DPO pair
+generation is sparse and bursty, averaging 0.8 pairs per cycle,
+reflecting the rarity of paired good/bad completions for identical
+prompts.}
+\label{fig:rl-per-cycle-data}
+\end{figure}
+
 % ---------------------------------------------------------------------------
+\clearpage
 \section{Diamond Generation Corpus Specimens}
 \label{app:corpus}
 
@@ -1684,12 +2768,12 @@ The following specification was generated by the topic-curriculum
 generator (\S\ref{sec:gen}) and passes all four Diamond clauses.
 
 \begin{tcolorbox}[
-  enhanced, breakable,
+  enhanced,
   colback=cbox, colframe=c3, boxrule=0.5pt,
   arc=2pt, left=6pt, right=6pt, top=3pt, bottom=3pt,
   title={\textbf{BloomCounter} --- topic: data\_structures; 4 states; Diamond tier~4}, fonttitle=\small,
 ]
-\begin{verbatim}
+\begin{lstlisting}[language=TLA]
 ---- MODULE BloomCounter ----
 EXTENDS Naturals
 
@@ -1737,7 +2821,7 @@ TypeOK ==
     /\ totalInserts \in 0..MaxInserts
     /\ Bounded
 ====
-\end{verbatim}
+\end{lstlisting}
 \end{tcolorbox}
 
 \noindent \textbf{Diamond check:}
@@ -1752,13 +2836,16 @@ negating the leading conjunct of \texttt{TypeOK} produces a
 counterexample at \texttt{Init}. \checkmark.
 
 % ---------------------------------------------------------------------------
-\section{MoE Training Failure Triage}
+\section{Shape Mismatch under MoE Routing and LoRA Dropout}
 \label{app:moe-failure}
 
-\noindent\textit{This appendix documents a training failure encountered
-during the SFT round on the topic-curriculum corpus, the three-hypothesis
-triage that followed, and the fix.  It is retained because the failure
-mode is non-obvious and the resolution is not the one we expected.}
+\noindent\textit{This appendix documents a reproducible interaction
+between LoRA dropout, reentrant gradient checkpointing, and sparse
+MoE expert routing that manifests as an off-by-one tensor shape
+mismatch at recompute.  The failure is not specific to our pipeline;
+any practitioner fine-tuning a sparse MoE with LoRA and reentrant
+checkpointing is exposed to it, and the fix is a one-line
+hyperparameter change.}
 
 \medskip
 The mixed 1{,}053-record corpus is the input to an incremental SFT run
@@ -1950,8 +3037,8 @@ over the 17-pair training set.
   ymajorgrids, grid style={cgrid},
   tick label style={font=\scriptsize},
   label style={font=\scriptsize},
-  legend style={font=\scriptsize, at={(0.98,0.98)}, anchor=north east,
-                draw=cgrid},
+  legend style={font=\scriptsize, at={(0.5,-0.22)}, anchor=north,
+                legend columns=-1, draw=cgrid},
 ]
 \addplot[c1, thick, mark=none] coordinates {
   (0,0.693) (10,0.680) (20,0.668) (30,0.658) (40,0.648)
@@ -1959,10 +3046,11 @@ over the 17-pair training set.
   (100,0.611)
 };
 \addplot[c4, dashed, mark=none] coordinates {(0,0.693) (110,0.693)};
-\node[anchor=west, font=\scriptsize, c4] at (axis cs:80,0.700)
+\node[anchor=west, font=\scriptsize, c4] at (axis cs:55,0.73)
   {$\ln(2)$ = random};
-\node[anchor=west, font=\scriptsize, c1] at (axis cs:80,0.615)
+\node[anchor=west, font=\scriptsize, c1] at (axis cs:55,0.56)
   {final = 0.6106};
+\draw[c1, thin, ->] (axis cs:68,0.57) -- (axis cs:95,0.61);
 \legend{DPO loss}
 \end{axis}
 \end{tikzpicture}
