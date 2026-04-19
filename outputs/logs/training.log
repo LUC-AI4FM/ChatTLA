@@ -1,14 +1,0 @@
-nohup: ignoring input
-2026/02/18 21:21:24 INFO alembic.runtime.plugins: setup plugin alembic.autogenerate.schemas
-2026/02/18 21:21:24 INFO alembic.runtime.plugins: setup plugin alembic.autogenerate.tables
-2026/02/18 21:21:24 INFO alembic.runtime.plugins: setup plugin alembic.autogenerate.types
-2026/02/18 21:21:24 INFO alembic.runtime.plugins: setup plugin alembic.autogenerate.constraints
-2026/02/18 21:21:24 INFO alembic.runtime.plugins: setup plugin alembic.autogenerate.defaults
-2026/02/18 21:21:24 INFO alembic.runtime.plugins: setup plugin alembic.autogenerate.comments
-2026/02/18 21:21:24 INFO alembic.runtime.migration: Context impl SQLiteImpl.
-2026/02/18 21:21:24 INFO alembic.runtime.migration: Will assume non-transactional DDL.
-`torch_dtype` is deprecated! Use `dtype` instead!
-[train] Loading model: openai/gpt-oss-20b
-[train] CUDA device: 1
-[train] VRAM available: 50.7 GB
-Fetching 3 files:   0%|          | 0/3 [00:00<?, ?it/s]
