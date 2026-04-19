@@ -133,7 +133,7 @@ def ensure_llama_cpp() -> Path:
     return convert_script
 
 
-def convert_to_gguf(quant: str = "Q8_0") -> Path:
+def convert_to_gguf(quant: str = "Q8_0", merged_model_dir: Path | None = None, gguf_name: str | None = None) -> Path:
     """
     Convert the merged HuggingFace model to GGUF.
 
@@ -147,15 +147,17 @@ def convert_to_gguf(quant: str = "Q8_0") -> Path:
     -------
     Path to the produced .gguf file.
     """
-    if not _MERGED_MODEL.exists():
-        print(f"[convert_gguf] ERROR: Merged model not found at {_MERGED_MODEL}")
+    merged = Path(merged_model_dir) if merged_model_dir else _MERGED_MODEL
+    if not merged.exists():
+        print(f"[convert_gguf] ERROR: Merged model not found at {merged}")
         print("[convert_gguf] Run `python -m src.training.merge_lora` first.")
         sys.exit(1)
 
     convert_script = ensure_llama_cpp()
     _GGUF_OUT_DIR.mkdir(parents=True, exist_ok=True)
 
-    gguf_path = _GGUF_OUT_DIR / f"chattla-20b-{quant}.gguf"
+    name = gguf_name or "chattla-20b"
+    gguf_path = _GGUF_OUT_DIR / f"{name}-{quant}.gguf"
 
     print(f"[convert_gguf] Converting to GGUF ({quant})...")
     # llama.cpp convert script expects a limited set of outtypes; map our
@@ -167,7 +169,7 @@ def convert_to_gguf(quant: str = "Q8_0") -> Path:
         outtype = "q4_0"
     cmd = [
         sys.executable, str(convert_script),
-        str(_MERGED_MODEL),
+        str(merged),
         "--outfile", str(gguf_path),
         "--outtype", outtype,
     ]
@@ -197,8 +199,9 @@ def register_with_ollama(gguf_path: Path, model_name: str = "chattla:20b") -> No
     print(f"[convert_gguf] Success! Test with: ollama run {model_name}")
 
 
-def main(quant: str = "Q8_0", register: bool = True, model_name: str = "chattla:20b") -> None:
-    gguf_path = convert_to_gguf(quant=quant)
+def main(quant: str = "Q8_0", register: bool = True, model_name: str = "chattla:20b",
+         merged_model_dir: Path | None = None, gguf_name: str | None = None) -> None:
+    gguf_path = convert_to_gguf(quant=quant, merged_model_dir=merged_model_dir, gguf_name=gguf_name)
 
     if register:
         register_with_ollama(gguf_path, model_name=model_name)
@@ -211,6 +214,18 @@ if __name__ == "__main__":
     parser.add_argument("--quant",             default="Q8_0", help="Quantisation level (default: Q8_0)")
     parser.add_argument("--no-ollama-register", action="store_true", help="Skip 'ollama create' step")
     parser.add_argument("--model-name",         default="chattla:20b", help="Ollama model tag")
+    parser.add_argument("--merged-model",       default=None,
+                        help="Path to merged model dir (default: outputs/merged_model/). "
+                             "Used for Fork A heads with non-default output locations.")
+    parser.add_argument("--gguf-name",          default=None,
+                        help="GGUF filename base (default: chattla-20b). "
+                             "Produces {gguf_name}-{quant}.gguf.")
     args = parser.parse_args()
 
-    main(quant=args.quant, register=not args.no_ollama_register, model_name=args.model_name)
+    main(
+        quant=args.quant,
+        register=not args.no_ollama_register,
+        model_name=args.model_name,
+        merged_model_dir=Path(args.merged_model) if args.merged_model else None,
+        gguf_name=args.gguf_name,
+    )
