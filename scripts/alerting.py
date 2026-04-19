@@ -30,10 +30,10 @@ log = logging.getLogger("rl_loop.alerting")
 # ─────────────────────────────────────────────────────────────────────────────
 # Config
 # ─────────────────────────────────────────────────────────────────────────────
-SMTP_HOST = "smtp.gmail.com"
-SMTP_PORT = 587
-SMTP_USER = "ericspencer1450@gmail.com"
-SMTP_TO = "ericspencer1450@gmail.com"
+SMTP_HOST = os.environ.get("CHATTLA_SMTP_HOST", "smtp.gmail.com")
+SMTP_PORT = int(os.environ.get("CHATTLA_SMTP_PORT", "587"))
+SMTP_USER = os.environ.get("CHATTLA_SMTP_USER", "")
+SMTP_TO = os.environ.get("CHATTLA_SMTP_TO", SMTP_USER)
 _PASSWORD_FILE = Path.home() / ".chattla_smtp_password"
 
 # Rate limiting: don't spam more than 1 email per category per this many seconds
@@ -66,6 +66,12 @@ def send_email(subject: str, body: str, category: str = "general") -> bool:
 
     Silently fails (logs warning) — alerting must never crash the RL loop.
     """
+    if not SMTP_USER:
+        log.debug(
+            "[alert] SMTP not configured (set CHATTLA_SMTP_USER); skipping."
+        )
+        return False
+
     if not _rate_ok(category):
         log.debug(f"[alert] Rate-limited: {category} (sent <{_RATE_LIMIT_S}s ago)")
         return False
