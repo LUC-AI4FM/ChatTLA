@@ -602,7 +602,7 @@ def main(
             print("  - use --max-length 2048 (or 1536) to reduce activation memory")
         raise
 
-    print(f"[train] Training complete. Checkpoints saved to {_CHECKPOINT_DIR}")
+    print(f"[train] Training complete. Checkpoints saved to {output_dir}")
 
     if run_dpo_after:
         try:
