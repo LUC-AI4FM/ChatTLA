@@ -56,11 +56,15 @@ Two independent LoRA runs from the v14 merged checkpoint:
 
 Hyperparams (starting point, same as v14 that worked):
 
-- base = outputs/merged_model_v14
-- LoRA r=16, α=32, dropout=0.05, target="all-linear"
+- base = `/data/sdb/espencer2/chattla/merged_model_repair` (current deployed,
+  v14 SFT + repair-GRPO r1 merged); no clean merged-v14 dir on disk
+- LoRA r=8, α=16, dropout=0.0, target="all-linear" (per `src/training/lora_config.yaml`;
+  gpt-oss-20b MoE experts are 3-D packed and can't be LoRA-adapted — only
+  attention/FFN get gradients)
 - lr=2e-5, 1 epoch, max_length=2048
-- per_device_bs=2, grad_accum=4, BF16
+- per_device_bs=1, grad_accum=8, BF16
 - eval every 50 steps, load_best_model_at_end on eval_loss
+- expected ~433 steps (3463 rows / 8 effective batch)
 
 ### Phase 3 — Eval
 
