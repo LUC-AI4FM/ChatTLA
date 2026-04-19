@@ -340,16 +340,27 @@ def main(
     learning_rate: float | None = None,
     base_model: str | None = None,
     prover: bool = False,
+    train_file: str | None = None,
+    output_dir_override: str | None = None,
+    experiment_name: str | None = None,
 ) -> None:
-    if prover:
+    if experiment_name:
+        mlflow.set_experiment(experiment_name)
+    elif prover:
         mlflow.set_experiment("ChatTLA-Prover-gpt-oss-20b")
     else:
         mlflow.set_experiment("ChatTLA-gpt-oss-20b")
 
     # --- Data ---------------------------------------------------------------
-    train_path = _PROVER_TRAIN_JSONL if prover else _TRAIN_JSONL
+    if train_file:
+        train_path = Path(train_file)
+    else:
+        train_path = _PROVER_TRAIN_JSONL if prover else _TRAIN_JSONL
     eval_path = _PROVER_EVAL_JSONL if prover else _EVAL_JSONL
-    output_dir = _PROVER_CHECKPOINT_DIR if prover else _CHECKPOINT_DIR
+    if output_dir_override:
+        output_dir = Path(output_dir_override)
+    else:
+        output_dir = _PROVER_CHECKPOINT_DIR if prover else _CHECKPOINT_DIR
     if not train_path.exists():
         print(f"[train] ERROR: {train_path} not found.")
         sys.exit(1)
@@ -643,6 +654,13 @@ if __name__ == "__main__":
     parser.add_argument("--prover", action="store_true",
                         help="Train the prover model: read prover_train.jsonl/prover_eval.jsonl, "
                              "use TLAPSEvalCallback, save to outputs/checkpoints_prover/")
+    parser.add_argument("--train-file", default=None,
+                        help="Path to a custom training JSONL (overrides the hardcoded default). "
+                             "Used for Fork A validator-segregated corpora.")
+    parser.add_argument("--output-dir", default=None,
+                        help="Override checkpoint output directory (default: outputs/checkpoints/)")
+    parser.add_argument("--experiment-name", default=None,
+                        help="Override MLflow experiment name (default: ChatTLA-gpt-oss-20b)")
     args = parser.parse_args()
 
     # parse lora_layers override
@@ -666,4 +684,7 @@ if __name__ == "__main__":
         learning_rate=args.lr,
         base_model=args.base_model,
         prover=args.prover,
+        train_file=args.train_file,
+        output_dir_override=args.output_dir,
+        experiment_name=args.experiment_name,
     )
