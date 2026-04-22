@@ -1,0 +1,553 @@
+2026-04-21 17:40:18 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:40:27 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:40:37 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:40:42 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:40:45 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:40:48 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:40:54 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:41:07 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:41:19 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:41:32 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:41:35 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:41:45 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:42:29 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:42:44 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:43:00 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:43:06 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:43:21 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:43:31 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:43:42 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:43:50 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:44:30 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:44:33 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:44:47 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:45:06 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:45:17 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:45:23 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:45:27 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:45:36 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:45:43 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:45:47 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:45:49 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:45:51 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:45:52 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:46:01 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:46:03 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:46:09 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:46:10 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:46:12 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:46:17 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:46:27 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:46:32 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:46:38 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:46:39 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:46:41 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:46:45 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:46:54 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:46:56 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:47:00 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:47:02 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:47:03 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:47:04 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:47:04 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:47:06 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:47:06 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:47:08 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:47:10 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:47:11 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:47:15 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:47:16 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:47:17 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:47:19 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:47:20 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:47:25 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:47:26 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:47:27 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:47:29 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:47:30 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:47:35 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:47:36 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:47:37 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:47:40 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:47:42 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:47:47 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:47:48 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:47:49 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:47:51 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:47:52 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:47:53 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:47:57 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:47:58 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:47:59 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:48:16 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:48:19 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:48:22 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:48:23 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:48:24 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:48:29 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:48:30 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:48:31 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:48:35 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:48:44 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:48:49 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:48:50 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:48:51 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:48:53 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:48:55 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:49:01 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:49:02 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:49:03 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:49:04 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:49:05 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:49:10 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:49:11 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:49:12 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:49:21 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:49:27 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:49:35 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:49:38 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:49:46 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:49:48 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:49:50 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:49:56 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:50:05 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:50:07 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:50:11 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:50:12 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:50:13 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:50:17 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:50:26 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:50:32 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:50:34 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:50:36 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:50:37 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:50:42 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:50:51 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:51:00 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:51:05 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:51:06 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:51:07 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:51:10 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:51:11 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:51:16 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:51:17 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:51:18 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:51:22 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:51:23 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:51:28 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:51:29 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:51:30 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:51:31 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:51:32 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:51:33 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:51:34 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:51:36 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:51:37 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:51:42 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:51:43 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:51:44 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:51:46 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:51:46 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:51:53 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:51:55 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:51:55 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:51:58 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:51:59 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:52:05 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:52:07 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:52:10 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:52:13 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:52:16 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:52:18 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:52:20 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:52:22 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:52:26 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:52:30 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:52:37 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:52:38 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:52:40 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:52:41 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:52:42 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:52:44 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:52:49 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:52:50 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:52:51 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:52:53 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:52:55 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:52:57 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:52:58 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:52:59 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:53:00 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:53:01 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:53:03 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:53:07 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:53:08 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:53:09 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:53:11 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:53:12 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:53:16 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:53:18 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:53:18 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:53:21 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:53:26 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:53:31 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:53:32 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:53:33 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:53:35 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:53:37 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:53:39 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:53:43 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:53:44 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:53:45 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:53:48 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:53:52 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:53:53 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:55:42 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:56:31 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:56:43 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:56:49 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:56:53 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:56:55 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:57:05 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:57:25 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:57:34 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:58:13 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:58:15 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:58:28 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:58:30 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:59:22 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:59:30 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:59:41 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 17:59:59 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:00:07 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:00:26 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:00:34 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:01:24 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:01:27 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:01:39 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:01:59 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:02:10 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:02:17 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:02:26 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:02:37 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:02:52 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:02:58 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:03:00 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:03:03 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:03:05 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:03:13 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:03:16 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:03:17 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:03:22 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:03:24 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:03:25 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:03:29 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:03:32 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:03:38 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:03:41 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:03:43 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:03:46 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:03:46 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:03:48 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:03:49 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:03:50 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:03:51 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:03:52 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:03:53 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:03:56 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:03:57 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:04:02 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:04:03 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:04:04 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:04:07 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:04:08 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:04:18 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:04:23 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:04:24 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:04:25 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:04:43 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:04:46 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:04:47 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:04:52 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:04:53 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:04:54 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:05:12 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:05:30 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:05:33 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:05:35 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:05:39 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:05:41 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:05:42 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:05:45 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:05:47 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:05:49 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:05:54 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:05:55 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:05:56 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:05:57 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:06:00 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:06:04 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:06:14 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:06:16 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:06:20 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:06:22 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:06:23 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:06:26 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:06:36 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:06:41 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:06:42 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:06:43 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:06:46 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:06:48 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:06:54 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:06:56 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:06:57 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:06:58 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:07:00 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:07:04 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:07:06 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:07:07 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:07:14 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:07:18 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:07:24 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:07:27 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:07:29 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:07:36 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:07:39 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:07:44 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:07:45 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:07:46 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:07:51 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:07:56 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:08:02 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:08:04 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:08:06 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:08:14 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:08:24 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:08:29 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:08:31 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:08:33 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:08:35 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:08:37 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:08:47 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:08:57 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:09:02 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:09:03 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:09:04 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:09:07 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:09:10 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:09:15 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:09:16 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:09:17 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:09:22 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:09:25 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:09:29 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:09:31 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:09:33 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:09:34 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:09:36 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:09:46 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:09:56 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:10:01 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:10:02 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:10:03 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:10:06 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:10:08 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:10:12 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:10:13 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:10:15 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:10:17 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:10:18 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:10:21 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:10:27 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:10:29 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:10:32 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:10:34 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:10:37 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:10:38 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:10:39 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:10:40 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:10:42 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:10:44 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:10:50 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:10:52 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:10:53 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:10:59 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:11:02 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:11:07 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:11:09 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:11:12 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:11:14 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:11:16 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:11:17 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:11:18 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:11:19 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:11:20 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:11:21 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:11:31 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:11:38 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:11:39 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:11:40 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:11:43 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:11:46 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:11:48 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:11:49 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:11:51 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:11:52 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:11:53 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:11:55 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:12:00 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:12:01 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:12:02 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:12:04 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:12:05 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:12:10 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:12:11 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:12:12 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:12:15 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:12:17 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:12:22 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:12:23 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:12:24 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:12:26 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:12:27 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:12:34 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:12:35 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:12:36 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:12:37 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:12:40 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:12:42 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:12:44 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:12:45 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:12:46 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:12:47 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:12:55 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+2026-04-21 18:12:59 INFO HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
+[warn] model not available in Ollama, skipping: llama3.1:70b
+[warn] model not available in Ollama, skipping: qwen2.5:72b
+[info] holdout: /home/espencer2/ChatTLA/data/processed/diamond_eval_holdout.jsonl (30 problems)
+[info] output:  /home/espencer2/ChatTLA/outputs/diamond_multimodel/results.csv
+[info] models:  ['chattla:20b', 'gpt-oss:20b']
+[info] regimes: ['single_shot', 'piecewise']
+[info] resume:  0 completed triples already in CSV
+[chattla:20b/single_shot] AlternatingBit ... tier=1 (10.08s)
+[chattla:20b/single_shot] Arp ... tier=0 (8.35s)
+[chattla:20b/single_shot] AtomicRegister ... tier=0 (10.43s)
+[chattla:20b/single_shot] BinarySemaphore ... tier=0 (4.72s)
+[chattla:20b/single_shot] Channel ... tier=0 (2.42s)
+[chattla:20b/single_shot] CountDownLatch ... tier=0 (3.75s)
+[chattla:20b/single_shot] AtomicCommit ... tier=1 (7.89s)
+[chattla:20b/single_shot] BullyElection ... tier=1 (12.90s)
+[chattla:20b/single_shot] ByzantineQuorum ... tier=0 (9.63s)
+[chattla:20b/single_shot] BinaryHeap ... tier=0 (13.68s)
+[chattla:20b/single_shot] BloomCounter ... tier=1 (3.01s)
+[chattla:20b/single_shot] BloomFilter ... tier=0 (9.52s)
+[chattla:20b/single_shot] ArenaAllocator ... tier=1 (45.60s)
+[chattla:20b/single_shot] BuddyAllocator ... tier=0 (13.51s)
+[chattla:20b/single_shot] CopyingGc ... tier=0 (16.34s)
+[chattla:20b/single_shot] AdaptiveMutex ... tier=0 (6.02s)
+[chattla:20b/single_shot] AndersonMutex ... tier=4 (18.10s)
+[chattla:20b/single_shot] AravindMutex ... tier=1 (8.14s)
+[chattla:20b/single_shot] BlocksWorld ... tier=0 (8.78s)
+[chattla:20b/single_shot] ChessKingMoves ... tier=0 (8.02s)
+[chattla:20b/single_shot] ColoredHats ... tier=0 (40.88s)
+[chattla:20b/single_shot] AdmissionControl ... tier=4 (5.04s)
+[chattla:20b/single_shot] BackpressureChannel ... tier=1 (13.10s)
+[chattla:20b/single_shot] Bankers ... tier=0 (17.61s)
+[chattla:20b/single_shot] ChainReplication ... tier=0 (10.48s)
+[chattla:20b/single_shot] DistributedLock ... tier=0 (6.31s)
+[chattla:20b/single_shot] FencingToken ... tier=0 (4.52s)
+[chattla:20b/single_shot] ContentModeration ... tier=0 (8.82s)
+[chattla:20b/single_shot] DocumentApproval ... tier=0 (6.37s)
+[chattla:20b/single_shot] EmailVerification ... tier=0 (4.16s)
+[chattla:20b/piecewise] AlternatingBit ... tier=1 (19.73s)
+[chattla:20b/piecewise] Arp ... tier=1 (29.05s)
+[chattla:20b/piecewise] AtomicRegister ... tier=1 (23.97s)
+[chattla:20b/piecewise] BinarySemaphore ... tier=0 (3.92s)
+[chattla:20b/piecewise] Channel ... tier=1 (11.18s)
+[chattla:20b/piecewise] CountDownLatch ... tier=1 (9.19s)
+[chattla:20b/piecewise] AtomicCommit ... tier=1 (10.28s)
+[chattla:20b/piecewise] BullyElection ... tier=1 (11.65s)
+[chattla:20b/piecewise] ByzantineQuorum ... tier=1 (10.51s)
+[chattla:20b/piecewise] BinaryHeap ... tier=1 (31.75s)
+[chattla:20b/piecewise] BloomCounter ... tier=1 (19.97s)
+[chattla:20b/piecewise] BloomFilter ... tier=4 (12.13s)
+[chattla:20b/piecewise] ArenaAllocator ... tier=1 (8.63s)
+[chattla:20b/piecewise] BuddyAllocator ... tier=4 (35.32s)
+[chattla:20b/piecewise] CopyingGc ... tier=1 (26.34s)
+[chattla:20b/piecewise] AdaptiveMutex ... tier=1 (19.35s)
+[chattla:20b/piecewise] AndersonMutex ... tier=1 (34.52s)
+[chattla:20b/piecewise] AravindMutex ... tier=1 (10.63s)
+[chattla:20b/piecewise] BlocksWorld ... tier=1 (11.75s)
+[chattla:20b/piecewise] ChessKingMoves ... tier=0 (4.22s)
+[chattla:20b/piecewise] ColoredHats ... tier=1 (10.15s)
+[chattla:20b/piecewise] AdmissionControl ... tier=1 (11.49s)
+[chattla:20b/piecewise] BackpressureChannel ... tier=1 (10.06s)
+[chattla:20b/piecewise] Bankers ... tier=0 (13.57s)
+[chattla:20b/piecewise] ChainReplication ... tier=1 (31.90s)
+[chattla:20b/piecewise] DistributedLock ... tier=1 (18.30s)
+[chattla:20b/piecewise] FencingToken ... tier=1 (9.20s)
+[chattla:20b/piecewise] ContentModeration ... tier=1 (14.63s)
+[chattla:20b/piecewise] DocumentApproval ... tier=1 (12.11s)
+[chattla:20b/piecewise] EmailVerification ... tier=1 (14.47s)
+[gpt-oss:20b/single_shot] AlternatingBit ... tier=1 (105.29s)
+[gpt-oss:20b/single_shot] Arp ... tier=1 (49.99s)
+[gpt-oss:20b/single_shot] AtomicRegister ... tier=0 (11.14s)
+[gpt-oss:20b/single_shot] BinarySemaphore ... tier=1 (6.53s)
+[gpt-oss:20b/single_shot] Channel ... tier=0 (2.86s)
+[gpt-oss:20b/single_shot] CountDownLatch ... tier=4 (5.31s)
+[gpt-oss:20b/single_shot] AtomicCommit ... tier=0 (6.90s)
+[gpt-oss:20b/single_shot] BullyElection ... tier=1 (21.83s)
+[gpt-oss:20b/single_shot] ByzantineQuorum ... tier=0 (7.57s)
+[gpt-oss:20b/single_shot] BinaryHeap ... tier=0 (38.15s)
+[gpt-oss:20b/single_shot] BloomCounter ... tier=0 (2.83s)
+[gpt-oss:20b/single_shot] BloomFilter ... tier=0 (12.40s)
+[gpt-oss:20b/single_shot] ArenaAllocator ... tier=4 (4.98s)
+[gpt-oss:20b/single_shot] BuddyAllocator ... tier=0 (49.64s)
+[gpt-oss:20b/single_shot] CopyingGc ... tier=1 (10.03s)
+[gpt-oss:20b/single_shot] AdaptiveMutex ... tier=4 (11.27s)
+[gpt-oss:20b/single_shot] AndersonMutex ... tier=4 (18.09s)
+[gpt-oss:20b/single_shot] AravindMutex ... tier=0 (5.43s)
+[gpt-oss:20b/single_shot] BlocksWorld ... tier=0 (18.18s)
+[gpt-oss:20b/single_shot] ChessKingMoves ... tier=0 (8.76s)
+[gpt-oss:20b/single_shot] ColoredHats ... tier=0 (49.88s)
+[gpt-oss:20b/single_shot] AdmissionControl ... tier=0 (2.51s)
+[gpt-oss:20b/single_shot] BackpressureChannel ... tier=0 (11.86s)
+[gpt-oss:20b/single_shot] Bankers ... tier=0 (20.27s)
+[gpt-oss:20b/single_shot] ChainReplication ... tier=0 (10.87s)
+[gpt-oss:20b/single_shot] DistributedLock ... tier=3 (10.25s)
+[gpt-oss:20b/single_shot] FencingToken ... tier=1 (7.57s)
+[gpt-oss:20b/single_shot] ContentModeration ... tier=0 (9.49s)
+[gpt-oss:20b/single_shot] DocumentApproval ... tier=0 (14.87s)
+[gpt-oss:20b/single_shot] EmailVerification ... tier=0 (6.43s)
+[gpt-oss:20b/piecewise] AlternatingBit ... tier=1 (23.00s)
+[gpt-oss:20b/piecewise] Arp ... tier=1 (14.58s)
+[gpt-oss:20b/piecewise] AtomicRegister ... tier=0 (9.63s)
+[gpt-oss:20b/piecewise] BinarySemaphore ... tier=0 (4.25s)
+[gpt-oss:20b/piecewise] Channel ... tier=1 (11.58s)
+[gpt-oss:20b/piecewise] CountDownLatch ... tier=1 (20.42s)
+[gpt-oss:20b/piecewise] AtomicCommit ... tier=1 (29.27s)
+[gpt-oss:20b/piecewise] BullyElection ... tier=1 (47.61s)
+[gpt-oss:20b/piecewise] ByzantineQuorum ... tier=1 (14.27s)
+[gpt-oss:20b/piecewise] BinaryHeap ... tier=1 (26.55s)
+[gpt-oss:20b/piecewise] BloomCounter ... tier=1 (20.62s)
+[gpt-oss:20b/piecewise] BloomFilter ... tier=4 (13.52s)
+[gpt-oss:20b/piecewise] ArenaAllocator ... tier=1 (9.75s)
+[gpt-oss:20b/piecewise] BuddyAllocator ... tier=1 (18.67s)
+[gpt-oss:20b/piecewise] CopyingGc ... tier=1 (20.71s)
+[gpt-oss:20b/piecewise] AdaptiveMutex ... tier=1 (16.73s)
+[gpt-oss:20b/piecewise] AndersonMutex ... tier=1 (61.63s)
+[gpt-oss:20b/piecewise] AravindMutex ... tier=1 (13.03s)
+[gpt-oss:20b/piecewise] BlocksWorld ... tier=1 (45.74s)
+[gpt-oss:20b/piecewise] ChessKingMoves ... tier=1 (24.98s)
+[gpt-oss:20b/piecewise] ColoredHats ... tier=0 (12.36s)
+[gpt-oss:20b/piecewise] AdmissionControl ... tier=1 (10.57s)
+[gpt-oss:20b/piecewise] BackpressureChannel ... tier=1 (18.54s)
+[gpt-oss:20b/piecewise] Bankers ... tier=0 (9.49s)
+[gpt-oss:20b/piecewise] ChainReplication ... tier=4 (21.71s)
+[gpt-oss:20b/piecewise] DistributedLock ... tier=1 (21.48s)
+[gpt-oss:20b/piecewise] FencingToken ... tier=1 (9.82s)
+[gpt-oss:20b/piecewise] ContentModeration ... tier=1 (11.99s)
+[gpt-oss:20b/piecewise] DocumentApproval ... tier=4 (12.04s)
+[gpt-oss:20b/piecewise] EmailVerification ... tier=1 (29.63s)
+[done] wrote 120 new rows, skipped 0 existing rows, total completed triples now 120

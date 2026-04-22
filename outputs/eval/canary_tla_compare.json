@@ -1,0 +1,500 @@
+[
+  {
+    "label": "base",
+    "n": 30,
+    "tlc_pass": 1,
+    "sany_pass": 4,
+    "mean_reward": 0.08333333333333333,
+    "per_example": [
+      {
+        "tlc_pass": false,
+        "sany_pass": false,
+        "reward": 0.0,
+        "tier": "bronze",
+        "prompt_id": "gold_all_benchmarks/gold_all_benchmarks_18",
+        "elapsed_s": 11.8
+      },
+      {
+        "tlc_pass": false,
+        "sany_pass": false,
+        "reward": 0.0,
+        "tier": "bronze",
+        "prompt_id": "gold_all_benchmarks/gold_all_benchmarks_27",
+        "elapsed_s": 2.7
+      },
+      {
+        "tlc_pass": false,
+        "sany_pass": false,
+        "reward": 0.0,
+        "tier": "bronze",
+        "prompt_id": "gold_all_benchmarks/gold_all_benchmarks_28",
+        "elapsed_s": 1.8
+      },
+      {
+        "tlc_pass": false,
+        "sany_pass": false,
+        "reward": 0.0,
+        "tier": "bronze",
+        "prompt_id": "gold_all_benchmarks/gold_all_benchmarks_32",
+        "elapsed_s": 2.0
+      },
+      {
+        "tlc_pass": false,
+        "sany_pass": false,
+        "reward": 0.0,
+        "tier": "bronze",
+        "prompt_id": "gold_benchmark/BM001",
+        "elapsed_s": 4.4
+      },
+      {
+        "tlc_pass": false,
+        "sany_pass": false,
+        "reward": 0.0,
+        "tier": "bronze",
+        "prompt_id": "gold_benchmark/BM002",
+        "elapsed_s": 2.1
+      },
+      {
+        "tlc_pass": false,
+        "sany_pass": false,
+        "reward": 0.0,
+        "tier": "bronze",
+        "prompt_id": "gold_benchmark/BM004",
+        "elapsed_s": 4.4
+      },
+      {
+        "tlc_pass": false,
+        "sany_pass": false,
+        "reward": 0.0,
+        "tier": "bronze",
+        "prompt_id": "gold_benchmark/BM010",
+        "elapsed_s": 9.1
+      },
+      {
+        "tlc_pass": false,
+        "sany_pass": false,
+        "reward": 0.0,
+        "tier": "bronze",
+        "prompt_id": "gold_benchmark/BM011",
+        "elapsed_s": 3.9
+      },
+      {
+        "tlc_pass": true,
+        "sany_pass": true,
+        "reward": 1.0,
+        "tier": "tlc",
+        "prompt_id": "gold_benchmark/BM012",
+        "elapsed_s": 4.2
+      },
+      {
+        "tlc_pass": false,
+        "sany_pass": false,
+        "reward": 0.0,
+        "tier": "bronze",
+        "prompt_id": "gold_benchmark/BM013",
+        "elapsed_s": 4.7
+      },
+      {
+        "tlc_pass": false,
+        "sany_pass": false,
+        "reward": 0.0,
+        "tier": "bronze",
+        "prompt_id": "gold_benchmark/BM014",
+        "elapsed_s": 2.4
+      },
+      {
+        "tlc_pass": false,
+        "sany_pass": true,
+        "reward": 0.5,
+        "tier": "sany",
+        "prompt_id": "gold_benchmark/BM017",
+        "elapsed_s": 4.9
+      },
+      {
+        "tlc_pass": false,
+        "sany_pass": true,
+        "reward": 0.5,
+        "tier": "sany",
+        "prompt_id": "gold_benchmark/BM018",
+        "elapsed_s": 3.9
+      },
+      {
+        "tlc_pass": false,
+        "sany_pass": true,
+        "reward": 0.5,
+        "tier": "sany",
+        "prompt_id": "gold_benchmark/BM019",
+        "elapsed_s": 3.4
+      },
+      {
+        "tlc_pass": false,
+        "sany_pass": false,
+        "reward": 0.0,
+        "tier": "bronze",
+        "prompt_id": "train/train_6",
+        "elapsed_s": 5.8
+      },
+      {
+        "tlc_pass": false,
+        "sany_pass": false,
+        "reward": 0.0,
+        "tier": "bronze",
+        "prompt_id": "train/train_7",
+        "elapsed_s": 1.5
+      },
+      {
+        "tlc_pass": false,
+        "sany_pass": false,
+        "reward": 0.0,
+        "tier": "bronze",
+        "prompt_id": "train/train_22",
+        "elapsed_s": 1.8
+      },
+      {
+        "tlc_pass": false,
+        "sany_pass": false,
+        "reward": 0.0,
+        "tier": "bronze",
+        "prompt_id": "train/train_23",
+        "elapsed_s": 1.8
+      },
+      {
+        "tlc_pass": false,
+        "sany_pass": false,
+        "reward": 0.0,
+        "tier": "bronze",
+        "prompt_id": "train/train_40",
+        "elapsed_s": 2.2
+      },
+      {
+        "tlc_pass": false,
+        "sany_pass": false,
+        "reward": 0.0,
+        "tier": "bronze",
+        "prompt_id": "train/train_41",
+        "elapsed_s": 2.1
+      },
+      {
+        "tlc_pass": false,
+        "sany_pass": false,
+        "reward": 0.0,
+        "tier": "bronze",
+        "prompt_id": "train/train_42",
+        "elapsed_s": 2.5
+      },
+      {
+        "tlc_pass": false,
+        "sany_pass": false,
+        "reward": 0.0,
+        "tier": "bronze",
+        "prompt_id": "train/train_47",
+        "elapsed_s": 2.1
+      },
+      {
+        "tlc_pass": false,
+        "sany_pass": false,
+        "reward": 0.0,
+        "tier": "bronze",
+        "prompt_id": "train/train_63",
+        "elapsed_s": 2.6
+      },
+      {
+        "tlc_pass": false,
+        "sany_pass": false,
+        "reward": 0.0,
+        "tier": "bronze",
+        "prompt_id": "train/train_66",
+        "elapsed_s": 1.8
+      },
+      {
+        "tlc_pass": false,
+        "sany_pass": false,
+        "reward": 0.0,
+        "tier": "bronze",
+        "prompt_id": "train/train_159",
+        "elapsed_s": 2.1
+      },
+      {
+        "tlc_pass": false,
+        "sany_pass": false,
+        "reward": 0.0,
+        "tier": "bronze",
+        "prompt_id": "train/train_170",
+        "elapsed_s": 2.0
+      },
+      {
+        "tlc_pass": false,
+        "sany_pass": false,
+        "reward": 0.0,
+        "tier": "bronze",
+        "prompt_id": "train/train_178",
+        "elapsed_s": 1.4
+      },
+      {
+        "tlc_pass": false,
+        "sany_pass": false,
+        "reward": 0.0,
+        "tier": "bronze",
+        "prompt_id": "train/train_179",
+        "elapsed_s": 9.3
+      },
+      {
+        "tlc_pass": false,
+        "sany_pass": false,
+        "reward": 0.0,
+        "tier": "bronze",
+        "prompt_id": "train/train_197",
+        "elapsed_s": 3.3
+      }
+    ]
+  },
+  {
+    "label": "fine-tuned",
+    "n": 30,
+    "tlc_pass": 2,
+    "sany_pass": 2,
+    "mean_reward": 0.06666666666666667,
+    "per_example": [
+      {
+        "tlc_pass": false,
+        "sany_pass": false,
+        "reward": 0.0,
+        "tier": "bronze",
+        "prompt_id": "gold_all_benchmarks/gold_all_benchmarks_18",
+        "elapsed_s": 1.4
+      },
+      {
+        "tlc_pass": false,
+        "sany_pass": false,
+        "reward": 0.0,
+        "tier": "bronze",
+        "prompt_id": "gold_all_benchmarks/gold_all_benchmarks_27",
+        "elapsed_s": 1.5
+      },
+      {
+        "tlc_pass": false,
+        "sany_pass": false,
+        "reward": 0.0,
+        "tier": "bronze",
+        "prompt_id": "gold_all_benchmarks/gold_all_benchmarks_28",
+        "elapsed_s": 9.3
+      },
+      {
+        "tlc_pass": false,
+        "sany_pass": false,
+        "reward": 0.0,
+        "tier": "bronze",
+        "prompt_id": "gold_all_benchmarks/gold_all_benchmarks_32",
+        "elapsed_s": 2.0
+      },
+      {
+        "tlc_pass": false,
+        "sany_pass": false,
+        "reward": 0.0,
+        "tier": "bronze",
+        "prompt_id": "gold_benchmark/BM001",
+        "elapsed_s": 2.8
+      },
+      {
+        "tlc_pass": false,
+        "sany_pass": false,
+        "reward": 0.0,
+        "tier": "bronze",
+        "prompt_id": "gold_benchmark/BM002",
+        "elapsed_s": 1.7
+      },
+      {
+        "tlc_pass": false,
+        "sany_pass": false,
+        "reward": 0.0,
+        "tier": "bronze",
+        "prompt_id": "gold_benchmark/BM004",
+        "elapsed_s": 9.2
+      },
+      {
+        "tlc_pass": false,
+        "sany_pass": false,
+        "reward": 0.0,
+        "tier": "bronze",
+        "prompt_id": "gold_benchmark/BM010",
+        "elapsed_s": 2.4
+      },
+      {
+        "tlc_pass": false,
+        "sany_pass": false,
+        "reward": 0.0,
+        "tier": "bronze",
+        "prompt_id": "gold_benchmark/BM011",
+        "elapsed_s": 5.0
+      },
+      {
+        "tlc_pass": true,
+        "sany_pass": true,
+        "reward": 1.0,
+        "tier": "tlc",
+        "prompt_id": "gold_benchmark/BM012",
+        "elapsed_s": 4.1
+      },
+      {
+        "tlc_pass": false,
+        "sany_pass": false,
+        "reward": 0.0,
+        "tier": "bronze",
+        "prompt_id": "gold_benchmark/BM013",
+        "elapsed_s": 9.4
+      },
+      {
+        "tlc_pass": false,
+        "sany_pass": false,
+        "reward": 0.0,
+        "tier": "bronze",
+        "prompt_id": "gold_benchmark/BM014",
+        "elapsed_s": 2.4
+      },
+      {
+        "tlc_pass": false,
+        "sany_pass": false,
+        "reward": 0.0,
+        "tier": "bronze",
+        "prompt_id": "gold_benchmark/BM017",
+        "elapsed_s": 9.5
+      },
+      {
+        "tlc_pass": false,
+        "sany_pass": false,
+        "reward": 0.0,
+        "tier": "bronze",
+        "prompt_id": "gold_benchmark/BM018",
+        "elapsed_s": 3.6
+      },
+      {
+        "tlc_pass": false,
+        "sany_pass": false,
+        "reward": 0.0,
+        "tier": "bronze",
+        "prompt_id": "gold_benchmark/BM019",
+        "elapsed_s": 9.3
+      },
+      {
+        "tlc_pass": false,
+        "sany_pass": false,
+        "reward": 0.0,
+        "tier": "bronze",
+        "prompt_id": "train/train_6",
+        "elapsed_s": 6.1
+      },
+      {
+        "tlc_pass": false,
+        "sany_pass": false,
+        "reward": 0.0,
+        "tier": "bronze",
+        "prompt_id": "train/train_7",
+        "elapsed_s": 1.8
+      },
+      {
+        "tlc_pass": false,
+        "sany_pass": false,
+        "reward": 0.0,
+        "tier": "bronze",
+        "prompt_id": "train/train_22",
+        "elapsed_s": 1.8
+      },
+      {
+        "tlc_pass": false,
+        "sany_pass": false,
+        "reward": 0.0,
+        "tier": "bronze",
+        "prompt_id": "train/train_23",
+        "elapsed_s": 1.8
+      },
+      {
+        "tlc_pass": false,
+        "sany_pass": false,
+        "reward": 0.0,
+        "tier": "bronze",
+        "prompt_id": "train/train_40",
+        "elapsed_s": 2.2
+      },
+      {
+        "tlc_pass": true,
+        "sany_pass": true,
+        "reward": 1.0,
+        "tier": "tlc",
+        "prompt_id": "train/train_41",
+        "elapsed_s": 4.7
+      },
+      {
+        "tlc_pass": false,
+        "sany_pass": false,
+        "reward": 0.0,
+        "tier": "bronze",
+        "prompt_id": "train/train_42",
+        "elapsed_s": 2.6
+      },
+      {
+        "tlc_pass": false,
+        "sany_pass": false,
+        "reward": 0.0,
+        "tier": "bronze",
+        "prompt_id": "train/train_47",
+        "elapsed_s": 2.6
+      },
+      {
+        "tlc_pass": false,
+        "sany_pass": false,
+        "reward": 0.0,
+        "tier": "bronze",
+        "prompt_id": "train/train_63",
+        "elapsed_s": 2.7
+      },
+      {
+        "tlc_pass": false,
+        "sany_pass": false,
+        "reward": 0.0,
+        "tier": "bronze",
+        "prompt_id": "train/train_66",
+        "elapsed_s": 1.8
+      },
+      {
+        "tlc_pass": false,
+        "sany_pass": false,
+        "reward": 0.0,
+        "tier": "bronze",
+        "prompt_id": "train/train_159",
+        "elapsed_s": 2.4
+      },
+      {
+        "tlc_pass": false,
+        "sany_pass": false,
+        "reward": 0.0,
+        "tier": "bronze",
+        "prompt_id": "train/train_170",
+        "elapsed_s": 2.9
+      },
+      {
+        "tlc_pass": false,
+        "sany_pass": false,
+        "reward": 0.0,
+        "tier": "bronze",
+        "prompt_id": "train/train_178",
+        "elapsed_s": 2.6
+      },
+      {
+        "tlc_pass": false,
+        "sany_pass": false,
+        "reward": 0.0,
+        "tier": "bronze",
+        "prompt_id": "train/train_179",
+        "elapsed_s": 2.5
+      },
+      {
+        "tlc_pass": false,
+        "sany_pass": false,
+        "reward": 0.0,
+        "tier": "bronze",
+        "prompt_id": "train/train_197",
+        "elapsed_s": 4.5
+      }
+    ]
+  }
+]

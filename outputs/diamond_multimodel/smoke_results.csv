@@ -1,0 +1,2 @@
+model,regime,problem_id,problem_name,d1_sany,d2_reach,d3_nonvac,d4_mutate,tier,error_msg,elapsed_s
+chattla:20b,single_shot,AlternatingBit,AlternatingBit,1,0,0,0,1,,30.42
