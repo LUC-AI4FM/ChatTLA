@@ -141,6 +141,7 @@ def main() -> None:
         logging_steps=args.logging_steps,
         save_steps=args.save_steps,
         bf16=True,
+        gradient_checkpointing=True,
         report_to=["none"],
         remove_unused_columns=False,  # keep `answer` column for the reward fn
         seed=20260407,
