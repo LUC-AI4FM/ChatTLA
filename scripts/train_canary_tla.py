@@ -129,6 +129,7 @@ def main() -> None:
         logging_steps=args.logging_steps,
         save_steps=args.save_steps,
         bf16=True,
+        gradient_checkpointing=True,
         report_to=["none"],
         remove_unused_columns=False,
         seed=20260407,
