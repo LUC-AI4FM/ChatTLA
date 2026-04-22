@@ -1,0 +1,22 @@
+Input: outputs/diamond_multimodel/smoke_results.csv
+Rows: 1
+
+Tier Distribution (by model/regime)
+model       | regime      | n | t0 | t1 | t2 | t3 | t4 | diamond% | wilson95     
+------------+-------------+---+----+----+----+----+----+----------+--------------
+chattla:20b | single_shot | 1 | 0  | 1  | 0  | 0  | 0  | 0.0%     | [0.0%, 79.3%]
+
+Failure Modes (non-Diamond only)
+model       | regime      | non_diamond_n | %fail_D1 | %fail_D2 | %fail_D3 | %fail_D4
+------------+-------------+---------------+----------+----------+----------+---------
+chattla:20b | single_shot | 1             | 0.0%     | 100.0%   | 0.0%     | 0.0%    
+
+Piecewise Delta (Diamond pass rate)
+model       | single_shot | piecewise | delta | noise_floor | delta_exceeds_noise
+------------+-------------+-----------+-------+-------------+--------------------
+chattla:20b | NA          | NA        | NA    | NA          | NA                 
+
+Cross-Model Ranking (single_shot)
+rank | model       | class      | n | diamond% | wilson95     
+-----+-------------+------------+---+----------+--------------
+1    | chattla:20b | fine-tuned | 1 | 0.0%     | [0.0%, 79.3%]

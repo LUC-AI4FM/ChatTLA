@@ -1,0 +1,121 @@
+model,regime,problem_id,problem_name,d1_sany,d2_reach,d3_nonvac,d4_mutate,tier,error_msg,elapsed_s
+chattla:20b,single_shot,AlternatingBit,AlternatingBit,1,0,0,0,1,,10.08
+chattla:20b,single_shot,Arp,Arp,0,0,0,0,0,sany_fail: *** Errors: 9,8.35
+chattla:20b,single_shot,AtomicRegister,AtomicRegister,0,0,0,0,0,sany_fail: *** Errors: 1,10.43
+chattla:20b,single_shot,BinarySemaphore,BinarySemaphore,0,0,0,0,0,sany_fail: *** Errors: 1,4.72
+chattla:20b,single_shot,Channel,Channel,0,0,0,0,0,sany_fail: *** Errors: 2,2.42
+chattla:20b,single_shot,CountDownLatch,CountDownLatch,0,0,0,0,0,sany_fail: *** Errors: 1,3.75
+chattla:20b,single_shot,AtomicCommit,AtomicCommit,1,0,0,0,1,,7.89
+chattla:20b,single_shot,BullyElection,BullyElection,1,0,0,0,1,,12.9
+chattla:20b,single_shot,ByzantineQuorum,ByzantineQuorum,0,0,0,0,0,sany_fail: *** Errors: 3,9.63
+chattla:20b,single_shot,BinaryHeap,BinaryHeap,0,0,0,0,0,sany_fail: ***Parse Error***; *** Errors: 1,13.68
+chattla:20b,single_shot,BloomCounter,BloomCounter,1,0,0,0,1,,3.01
+chattla:20b,single_shot,BloomFilter,BloomFilter,0,0,0,0,0,sany_fail: *** Errors: 11,9.52
+chattla:20b,single_shot,ArenaAllocator,ArenaAllocator,1,0,0,0,1,,45.6
+chattla:20b,single_shot,BuddyAllocator,BuddyAllocator,0,0,0,0,0,sany_fail: ***Parse Error***; *** Errors: 1,13.51
+chattla:20b,single_shot,CopyingGc,CopyingGc,0,0,0,0,0,sany_fail: ***Parse Error***; *** Errors: 1,16.34
+chattla:20b,single_shot,AdaptiveMutex,AdaptiveMutex,0,0,0,0,0,sany_fail: *** Errors: 1,6.02
+chattla:20b,single_shot,AndersonMutex,AndersonMutex,1,1,1,1,4,,18.1
+chattla:20b,single_shot,AravindMutex,AravindMutex,1,0,0,0,1,,8.14
+chattla:20b,single_shot,BlocksWorld,BlocksWorld,0,0,0,0,0,sany_fail: ***Parse Error***; *** Errors: 1,8.78
+chattla:20b,single_shot,ChessKingMoves,ChessKingMoves,0,0,0,0,0,sany_fail: ***Parse Error***; *** Errors: 1,8.02
+chattla:20b,single_shot,ColoredHats,ColoredHats,0,0,0,0,0,sany_fail: *** Errors: 10,40.88
+chattla:20b,single_shot,AdmissionControl,AdmissionControl,1,1,1,1,4,,5.04
+chattla:20b,single_shot,BackpressureChannel,BackpressureChannel,1,0,0,0,1,,13.1
+chattla:20b,single_shot,Bankers,Bankers,0,0,0,0,0,sany_fail: *** Errors: 2,17.61
+chattla:20b,single_shot,ChainReplication,ChainReplication,0,0,0,0,0,sany_fail: ***Parse Error***; *** Errors: 1,10.48
+chattla:20b,single_shot,DistributedLock,DistributedLock,0,0,0,0,0,sany_fail: ***Parse Error***; *** Errors: 1,6.31
+chattla:20b,single_shot,FencingToken,FencingToken,0,0,0,0,0,sany_fail: *** Errors: 3,4.52
+chattla:20b,single_shot,ContentModeration,ContentModeration,0,0,0,0,0,sany_fail: ***Parse Error***; *** Errors: 1,8.82
+chattla:20b,single_shot,DocumentApproval,DocumentApproval,0,0,0,0,0,sany_fail: ***Parse Error***; *** Errors: 1,6.37
+chattla:20b,single_shot,EmailVerification,EmailVerification,0,0,0,0,0,sany_fail: ***Parse Error***; *** Errors: 1,4.16
+chattla:20b,piecewise,AlternatingBit,AlternatingBit,1,0,0,0,1,,19.73
+chattla:20b,piecewise,Arp,Arp,1,0,0,0,1,,29.05
+chattla:20b,piecewise,AtomicRegister,AtomicRegister,1,0,0,0,1,,23.97
+chattla:20b,piecewise,BinarySemaphore,BinarySemaphore,0,0,0,0,0,no MODULE found,3.92
+chattla:20b,piecewise,Channel,Channel,1,0,0,0,1,,11.18
+chattla:20b,piecewise,CountDownLatch,CountDownLatch,1,0,0,0,1,,9.19
+chattla:20b,piecewise,AtomicCommit,AtomicCommit,1,0,0,0,1,,10.28
+chattla:20b,piecewise,BullyElection,BullyElection,1,0,0,0,1,,11.65
+chattla:20b,piecewise,ByzantineQuorum,ByzantineQuorum,1,0,0,0,1,,10.51
+chattla:20b,piecewise,BinaryHeap,BinaryHeap,1,0,0,0,1,,31.75
+chattla:20b,piecewise,BloomCounter,BloomCounter,1,0,0,0,1,,19.97
+chattla:20b,piecewise,BloomFilter,BloomFilter,1,1,1,1,4,,12.13
+chattla:20b,piecewise,ArenaAllocator,ArenaAllocator,1,0,0,0,1,,8.63
+chattla:20b,piecewise,BuddyAllocator,BuddyAllocator,1,1,1,1,4,,35.32
+chattla:20b,piecewise,CopyingGc,CopyingGc,1,0,0,0,1,,26.34
+chattla:20b,piecewise,AdaptiveMutex,AdaptiveMutex,1,0,0,0,1,,19.35
+chattla:20b,piecewise,AndersonMutex,AndersonMutex,1,0,0,0,1,,34.52
+chattla:20b,piecewise,AravindMutex,AravindMutex,1,0,0,0,1,,10.63
+chattla:20b,piecewise,BlocksWorld,BlocksWorld,1,0,0,0,1,,11.75
+chattla:20b,piecewise,ChessKingMoves,ChessKingMoves,0,0,0,0,0,no MODULE found,4.22
+chattla:20b,piecewise,ColoredHats,ColoredHats,1,0,0,0,1,,10.15
+chattla:20b,piecewise,AdmissionControl,AdmissionControl,1,0,0,0,1,,11.49
+chattla:20b,piecewise,BackpressureChannel,BackpressureChannel,1,0,0,0,1,,10.06
+chattla:20b,piecewise,Bankers,Bankers,0,0,0,0,0,no MODULE found,13.57
+chattla:20b,piecewise,ChainReplication,ChainReplication,1,0,0,0,1,,31.9
+chattla:20b,piecewise,DistributedLock,DistributedLock,1,0,0,0,1,,18.3
+chattla:20b,piecewise,FencingToken,FencingToken,1,0,0,0,1,,9.2
+chattla:20b,piecewise,ContentModeration,ContentModeration,1,0,0,0,1,,14.63
+chattla:20b,piecewise,DocumentApproval,DocumentApproval,1,0,0,0,1,,12.11
+chattla:20b,piecewise,EmailVerification,EmailVerification,1,0,0,0,1,,14.47
+gpt-oss:20b,single_shot,AlternatingBit,AlternatingBit,1,0,0,0,1,,105.29
+gpt-oss:20b,single_shot,Arp,Arp,1,0,0,0,1,,49.99
+gpt-oss:20b,single_shot,AtomicRegister,AtomicRegister,0,0,0,0,0,sany_fail: ***Parse Error***; *** Errors: 1,11.14
+gpt-oss:20b,single_shot,BinarySemaphore,BinarySemaphore,1,0,0,0,1,,6.53
+gpt-oss:20b,single_shot,Channel,Channel,0,0,0,0,0,sany_fail: ***Parse Error***; *** Errors: 1,2.86
+gpt-oss:20b,single_shot,CountDownLatch,CountDownLatch,1,1,1,1,4,,5.31
+gpt-oss:20b,single_shot,AtomicCommit,AtomicCommit,0,0,0,0,0,sany_fail: ***Parse Error***; *** Errors: 1,6.9
+gpt-oss:20b,single_shot,BullyElection,BullyElection,1,0,0,0,1,,21.83
+gpt-oss:20b,single_shot,ByzantineQuorum,ByzantineQuorum,0,0,0,0,0,sany_fail: ***Parse Error***; *** Errors: 1,7.57
+gpt-oss:20b,single_shot,BinaryHeap,BinaryHeap,0,0,0,0,0,sany_fail: *** Errors: 10,38.15
+gpt-oss:20b,single_shot,BloomCounter,BloomCounter,0,0,0,0,0,sany_fail: ***Parse Error***; *** Errors: 1,2.83
+gpt-oss:20b,single_shot,BloomFilter,BloomFilter,0,0,0,0,0,sany_fail: *** Errors: 4,12.4
+gpt-oss:20b,single_shot,ArenaAllocator,ArenaAllocator,1,1,1,1,4,,4.98
+gpt-oss:20b,single_shot,BuddyAllocator,BuddyAllocator,0,0,0,0,0,sany_fail: *** Errors: 5,49.64
+gpt-oss:20b,single_shot,CopyingGc,CopyingGc,1,0,0,0,1,,10.03
+gpt-oss:20b,single_shot,AdaptiveMutex,AdaptiveMutex,1,1,1,1,4,,11.27
+gpt-oss:20b,single_shot,AndersonMutex,AndersonMutex,1,1,1,1,4,,18.09
+gpt-oss:20b,single_shot,AravindMutex,AravindMutex,0,0,0,0,0,sany_fail: *** Errors: 1,5.43
+gpt-oss:20b,single_shot,BlocksWorld,BlocksWorld,0,0,0,0,0,sany_fail: ***Parse Error***; *** Errors: 1,18.18
+gpt-oss:20b,single_shot,ChessKingMoves,ChessKingMoves,0,0,0,0,0,sany_fail: ***Parse Error***; *** Errors: 1,8.76
+gpt-oss:20b,single_shot,ColoredHats,ColoredHats,0,0,0,0,0,sany_fail: *** Errors: 8,49.88
+gpt-oss:20b,single_shot,AdmissionControl,AdmissionControl,0,0,0,0,0,sany_fail: *** Errors: 1,2.51
+gpt-oss:20b,single_shot,BackpressureChannel,BackpressureChannel,0,0,0,0,0,sany_fail: ***Parse Error***; *** Errors: 1,11.86
+gpt-oss:20b,single_shot,Bankers,Bankers,0,0,0,0,0,sany_fail: *** Errors: 4,20.27
+gpt-oss:20b,single_shot,ChainReplication,ChainReplication,0,0,0,0,0,sany_fail: *** Errors: 2,10.87
+gpt-oss:20b,single_shot,DistributedLock,DistributedLock,1,1,1,0,3,,10.25
+gpt-oss:20b,single_shot,FencingToken,FencingToken,1,0,0,0,1,,7.57
+gpt-oss:20b,single_shot,ContentModeration,ContentModeration,0,0,0,0,0,sany_fail: ***Parse Error***; *** Errors: 1,9.49
+gpt-oss:20b,single_shot,DocumentApproval,DocumentApproval,0,0,0,0,0,sany_fail: *** Errors: 2,14.87
+gpt-oss:20b,single_shot,EmailVerification,EmailVerification,0,0,0,0,0,sany_fail: ***Parse Error***; *** Errors: 1,6.43
+gpt-oss:20b,piecewise,AlternatingBit,AlternatingBit,1,0,0,0,1,,23.0
+gpt-oss:20b,piecewise,Arp,Arp,1,0,0,0,1,,14.58
+gpt-oss:20b,piecewise,AtomicRegister,AtomicRegister,0,0,0,0,0,no MODULE found,9.63
+gpt-oss:20b,piecewise,BinarySemaphore,BinarySemaphore,0,0,0,0,0,no MODULE found,4.25
+gpt-oss:20b,piecewise,Channel,Channel,1,0,0,0,1,,11.58
+gpt-oss:20b,piecewise,CountDownLatch,CountDownLatch,1,0,0,0,1,,20.42
+gpt-oss:20b,piecewise,AtomicCommit,AtomicCommit,1,0,0,0,1,,29.27
+gpt-oss:20b,piecewise,BullyElection,BullyElection,1,0,0,0,1,,47.61
+gpt-oss:20b,piecewise,ByzantineQuorum,ByzantineQuorum,1,0,0,0,1,,14.27
+gpt-oss:20b,piecewise,BinaryHeap,BinaryHeap,1,0,0,0,1,,26.55
+gpt-oss:20b,piecewise,BloomCounter,BloomCounter,1,0,0,0,1,,20.62
+gpt-oss:20b,piecewise,BloomFilter,BloomFilter,1,1,1,1,4,,13.52
+gpt-oss:20b,piecewise,ArenaAllocator,ArenaAllocator,1,0,0,0,1,,9.75
+gpt-oss:20b,piecewise,BuddyAllocator,BuddyAllocator,1,0,0,0,1,,18.67
+gpt-oss:20b,piecewise,CopyingGc,CopyingGc,1,0,0,0,1,,20.71
+gpt-oss:20b,piecewise,AdaptiveMutex,AdaptiveMutex,1,0,0,0,1,,16.73
+gpt-oss:20b,piecewise,AndersonMutex,AndersonMutex,1,0,0,0,1,,61.63
+gpt-oss:20b,piecewise,AravindMutex,AravindMutex,1,0,0,0,1,,13.03
+gpt-oss:20b,piecewise,BlocksWorld,BlocksWorld,1,0,0,0,1,,45.74
+gpt-oss:20b,piecewise,ChessKingMoves,ChessKingMoves,1,0,0,0,1,,24.98
+gpt-oss:20b,piecewise,ColoredHats,ColoredHats,0,0,0,0,0,no MODULE found,12.36
+gpt-oss:20b,piecewise,AdmissionControl,AdmissionControl,1,0,0,0,1,,10.57
+gpt-oss:20b,piecewise,BackpressureChannel,BackpressureChannel,1,0,0,0,1,,18.54
+gpt-oss:20b,piecewise,Bankers,Bankers,0,0,0,0,0,no MODULE found,9.49
+gpt-oss:20b,piecewise,ChainReplication,ChainReplication,1,1,1,1,4,,21.71
+gpt-oss:20b,piecewise,DistributedLock,DistributedLock,1,0,0,0,1,,21.48
+gpt-oss:20b,piecewise,FencingToken,FencingToken,1,0,0,0,1,,9.82
+gpt-oss:20b,piecewise,ContentModeration,ContentModeration,1,0,0,0,1,,11.99
+gpt-oss:20b,piecewise,DocumentApproval,DocumentApproval,1,1,1,1,4,,12.04
+gpt-oss:20b,piecewise,EmailVerification,EmailVerification,1,0,0,0,1,,29.63
