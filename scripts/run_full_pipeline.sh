@@ -6,9 +6,10 @@
 #
 # Usage:
 #   tmux new-session -d -s ralph "./scripts/run_full_pipeline.sh" 2>&1 | tee outputs/logs/pipeline_master.log
+REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 set -euo pipefail
 
-cd /home/espencer2/ChatTLA
+cd "$REPO"
 PY=".venv/bin/python -u"  # unbuffered stdout/stderr
 LOG=outputs/logs/pipeline_master.log
 mkdir -p outputs/logs outputs/eval
@@ -21,7 +22,7 @@ abort() {
 }
 
 echo "[$(ts)] === FULL PIPELINE START ===" | tee -a "$LOG"
-echo "[$(ts)] Disk: $(df -h /home/espencer2 | tail -1)" | tee -a "$LOG"
+echo "[$(ts)] Disk: $(df -h "$REPO" | tail -1)" | tee -a "$LOG"
 echo "[$(ts)] GPUs: $(nvidia-smi --query-gpu=memory.used,memory.total --format=csv,noheader 2>/dev/null)" | tee -a "$LOG"
 
 # ── Phase 0: Smoke tests ────────────────────────────────────────────────
@@ -89,7 +90,7 @@ fi
 echo ""
 echo "[$(ts)] ===== PHASE 2: FULL-SPEC GRPO (200 steps) =====" | tee -a "$LOG"
 echo "[$(ts)] This will take ~12-16 hours" | tee -a "$LOG"
-echo "[$(ts)] Disk before GRPO: $(df -h /home/espencer2 | tail -1)" | tee -a "$LOG"
+echo "[$(ts)] Disk before GRPO: $(df -h "$REPO" | tail -1)" | tee -a "$LOG"
 
 $PY -m scripts.train_rl_fullspec \
     --max-steps 200 \
@@ -127,7 +128,7 @@ echo "[$(ts)] Phase 3 complete" | tee -a "$LOG"
 # ── Final Summary ────────────────────────────────────────────────────────
 echo ""
 echo "[$(ts)] ===== PIPELINE COMPLETE =====" | tee -a "$LOG"
-echo "[$(ts)] Disk: $(df -h /home/espencer2 | tail -1)" | tee -a "$LOG"
+echo "[$(ts)] Disk: $(df -h "$REPO" | tail -1)" | tee -a "$LOG"
 
 # Print final metrics if available
 if [ -f outputs/logs/flywheel_metrics.jsonl ]; then

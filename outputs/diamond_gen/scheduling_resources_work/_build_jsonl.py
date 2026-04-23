@@ -3,7 +3,7 @@
 import json, subprocess, sys
 from pathlib import Path
 
-REPO = Path("/home/espencer2/ChatTLA")
+REPO = Path(__file__).resolve().parents[3]
 WORK = REPO / "outputs/diamond_gen/scheduling_resources_work"
 OUT  = REPO / "outputs/diamond_gen/scheduling_resources.jsonl"
 TOPICS = REPO / "data/diamond_gen_topics.json"

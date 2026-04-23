@@ -33,7 +33,7 @@
   "manifests_loaded": 79,
   "modules_indexed": 266,
   "how_to_refresh": [
-    "cd /home/espencer2/ChatTLA/data/external/tlaplus-examples && git pull && cd /home/espencer2/ChatTLA/data/external/tlapm && git pull",
+    "cd data/external/tlaplus-examples && git pull && cd data/external/tlapm && git pull",
     "python3 scripts/tla_description_sources/harvest_descriptions.py --update-repo"
   ],
   "notes": [

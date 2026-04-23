@@ -6,7 +6,7 @@
     "user_id": "U1",
     "gen_time_s": 64.48,
     "error": null,
-    "tla_path": "/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/MutualExclusion.tla",
+    "tla_path": "outputs/prompt_sweep/tla/MutualExclusion.tla",
     "module_name": "MutualExclusion"
   },
   {
@@ -16,7 +16,7 @@
     "user_id": "U2",
     "gen_time_s": 24.98,
     "error": null,
-    "tla_path": "/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/MutualExclusion_D1U2.tla",
+    "tla_path": "outputs/prompt_sweep/tla/MutualExclusion_D1U2.tla",
     "module_name": "MutualExclusion_D1U2"
   },
   {
@@ -26,7 +26,7 @@
     "user_id": "U3",
     "gen_time_s": 58.11,
     "error": null,
-    "tla_path": "/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/MutualExclusion_D1U3.tla",
+    "tla_path": "outputs/prompt_sweep/tla/MutualExclusion_D1U3.tla",
     "module_name": "MutualExclusion_D1U3"
   },
   {
@@ -36,7 +36,7 @@
     "user_id": "U1",
     "gen_time_s": 8.64,
     "error": null,
-    "tla_path": "/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/MutualExclusion_D2U1.tla",
+    "tla_path": "outputs/prompt_sweep/tla/MutualExclusion_D2U1.tla",
     "module_name": "MutualExclusion_D2U1"
   },
   {
@@ -46,7 +46,7 @@
     "user_id": "U2",
     "gen_time_s": 8.48,
     "error": null,
-    "tla_path": "/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/MutualExclusion_D2U2.tla",
+    "tla_path": "outputs/prompt_sweep/tla/MutualExclusion_D2U2.tla",
     "module_name": "MutualExclusion_D2U2"
   },
   {
@@ -56,7 +56,7 @@
     "user_id": "U3",
     "gen_time_s": 6.12,
     "error": null,
-    "tla_path": "/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/MutualExclusion_D2U3.tla",
+    "tla_path": "outputs/prompt_sweep/tla/MutualExclusion_D2U3.tla",
     "module_name": "MutualExclusion_D2U3"
   },
   {
@@ -66,7 +66,7 @@
     "user_id": "U1",
     "gen_time_s": 12.08,
     "error": null,
-    "tla_path": "/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/MutualExclusion_D3U1.tla",
+    "tla_path": "outputs/prompt_sweep/tla/MutualExclusion_D3U1.tla",
     "module_name": "MutualExclusion_D3U1"
   },
   {
@@ -76,7 +76,7 @@
     "user_id": "U2",
     "gen_time_s": 11.47,
     "error": null,
-    "tla_path": "/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/MutualExclusion_D3U2.tla",
+    "tla_path": "outputs/prompt_sweep/tla/MutualExclusion_D3U2.tla",
     "module_name": "MutualExclusion_D3U2"
   },
   {
@@ -86,7 +86,7 @@
     "user_id": "U3",
     "gen_time_s": 8.48,
     "error": null,
-    "tla_path": "/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/MutualExclusion_D3U3.tla",
+    "tla_path": "outputs/prompt_sweep/tla/MutualExclusion_D3U3.tla",
     "module_name": "MutualExclusion_D3U3"
   },
   {
@@ -96,7 +96,7 @@
     "user_id": "U1",
     "gen_time_s": 31.89,
     "error": null,
-    "tla_path": "/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/2PC.tla",
+    "tla_path": "outputs/prompt_sweep/tla/2PC.tla",
     "module_name": "2PC"
   },
   {
@@ -106,7 +106,7 @@
     "user_id": "U2",
     "gen_time_s": 21.46,
     "error": null,
-    "tla_path": "/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/2PC_D1U2.tla",
+    "tla_path": "outputs/prompt_sweep/tla/2PC_D1U2.tla",
     "module_name": "2PC_D1U2"
   },
   {
@@ -116,7 +116,7 @@
     "user_id": "U3",
     "gen_time_s": 23.71,
     "error": null,
-    "tla_path": "/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/2PC_D1U3.tla",
+    "tla_path": "outputs/prompt_sweep/tla/2PC_D1U3.tla",
     "module_name": "2PC_D1U3"
   },
   {
@@ -126,7 +126,7 @@
     "user_id": "U1",
     "gen_time_s": 10.21,
     "error": null,
-    "tla_path": "/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/2PC_D2U1.tla",
+    "tla_path": "outputs/prompt_sweep/tla/2PC_D2U1.tla",
     "module_name": "2PC_D2U1"
   },
   {
@@ -136,7 +136,7 @@
     "user_id": "U2",
     "gen_time_s": 13.61,
     "error": null,
-    "tla_path": "/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/2PC_D2U2.tla",
+    "tla_path": "outputs/prompt_sweep/tla/2PC_D2U2.tla",
     "module_name": "2PC_D2U2"
   },
   {
@@ -146,7 +146,7 @@
     "user_id": "U3",
     "gen_time_s": 15.55,
     "error": null,
-    "tla_path": "/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/2PC_D2U3.tla",
+    "tla_path": "outputs/prompt_sweep/tla/2PC_D2U3.tla",
     "module_name": "2PC_D2U3"
   },
   {
@@ -156,7 +156,7 @@
     "user_id": "U1",
     "gen_time_s": 19.93,
     "error": null,
-    "tla_path": "/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/2PC_D3U1.tla",
+    "tla_path": "outputs/prompt_sweep/tla/2PC_D3U1.tla",
     "module_name": "2PC_D3U1"
   },
   {
@@ -166,7 +166,7 @@
     "user_id": "U2",
     "gen_time_s": 10.69,
     "error": null,
-    "tla_path": "/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/2PC_D3U2.tla",
+    "tla_path": "outputs/prompt_sweep/tla/2PC_D3U2.tla",
     "module_name": "2PC_D3U2"
   },
   {
@@ -176,7 +176,7 @@
     "user_id": "U3",
     "gen_time_s": 12.41,
     "error": null,
-    "tla_path": "/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/2PC_D3U3.tla",
+    "tla_path": "outputs/prompt_sweep/tla/2PC_D3U3.tla",
     "module_name": "2PC_D3U3"
   },
   {
@@ -186,7 +186,7 @@
     "user_id": "U1",
     "gen_time_s": 57.23,
     "error": null,
-    "tla_path": "/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/Bakery.tla",
+    "tla_path": "outputs/prompt_sweep/tla/Bakery.tla",
     "module_name": "Bakery"
   },
   {
@@ -196,7 +196,7 @@
     "user_id": "U2",
     "gen_time_s": 61.31,
     "error": null,
-    "tla_path": "/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/Bakery_D1U2.tla",
+    "tla_path": "outputs/prompt_sweep/tla/Bakery_D1U2.tla",
     "module_name": "Bakery_D1U2"
   },
   {
@@ -206,7 +206,7 @@
     "user_id": "U3",
     "gen_time_s": 11.53,
     "error": null,
-    "tla_path": "/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/Bakery_D1U3.tla",
+    "tla_path": "outputs/prompt_sweep/tla/Bakery_D1U3.tla",
     "module_name": "Bakery_D1U3"
   },
   {
@@ -216,7 +216,7 @@
     "user_id": "U1",
     "gen_time_s": 12.07,
     "error": null,
-    "tla_path": "/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/Bakery_D2U1.tla",
+    "tla_path": "outputs/prompt_sweep/tla/Bakery_D2U1.tla",
     "module_name": "Bakery_D2U1"
   },
   {
@@ -226,7 +226,7 @@
     "user_id": "U2",
     "gen_time_s": 10.28,
     "error": null,
-    "tla_path": "/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/Bakery_D2U2.tla",
+    "tla_path": "outputs/prompt_sweep/tla/Bakery_D2U2.tla",
     "module_name": "Bakery_D2U2"
   },
   {
@@ -236,7 +236,7 @@
     "user_id": "U3",
     "gen_time_s": 18.69,
     "error": null,
-    "tla_path": "/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/Bakery_D2U3.tla",
+    "tla_path": "outputs/prompt_sweep/tla/Bakery_D2U3.tla",
     "module_name": "Bakery_D2U3"
   },
   {
@@ -246,7 +246,7 @@
     "user_id": "U1",
     "gen_time_s": 13.21,
     "error": null,
-    "tla_path": "/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/Bakery_D3U1.tla",
+    "tla_path": "outputs/prompt_sweep/tla/Bakery_D3U1.tla",
     "module_name": "Bakery_D3U1"
   },
   {
@@ -256,7 +256,7 @@
     "user_id": "U2",
     "gen_time_s": 13.9,
     "error": null,
-    "tla_path": "/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/Bakery_D3U2.tla",
+    "tla_path": "outputs/prompt_sweep/tla/Bakery_D3U2.tla",
     "module_name": "Bakery_D3U2"
   },
   {
@@ -266,7 +266,7 @@
     "user_id": "U3",
     "gen_time_s": 12.34,
     "error": null,
-    "tla_path": "/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/Bakery_D3U3.tla",
+    "tla_path": "outputs/prompt_sweep/tla/Bakery_D3U3.tla",
     "module_name": "Bakery_D3U3"
   },
   {
@@ -276,7 +276,7 @@
     "user_id": "U1",
     "gen_time_s": 33.53,
     "error": null,
-    "tla_path": "/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/RaftElection.tla",
+    "tla_path": "outputs/prompt_sweep/tla/RaftElection.tla",
     "module_name": "RaftElection"
   },
   {
@@ -286,7 +286,7 @@
     "user_id": "U2",
     "gen_time_s": 16.03,
     "error": null,
-    "tla_path": "/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/RaftElection_D1U2.tla",
+    "tla_path": "outputs/prompt_sweep/tla/RaftElection_D1U2.tla",
     "module_name": "RaftElection_D1U2"
   },
   {
@@ -296,7 +296,7 @@
     "user_id": "U3",
     "gen_time_s": 39.23,
     "error": null,
-    "tla_path": "/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/RaftLeaderElection.tla",
+    "tla_path": "outputs/prompt_sweep/tla/RaftLeaderElection.tla",
     "module_name": "RaftLeaderElection"
   },
   {
@@ -306,7 +306,7 @@
     "user_id": "U1",
     "gen_time_s": 12.25,
     "error": null,
-    "tla_path": "/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/RaftLeaderElection_D2U1.tla",
+    "tla_path": "outputs/prompt_sweep/tla/RaftLeaderElection_D2U1.tla",
     "module_name": "RaftLeaderElection_D2U1"
   },
   {
@@ -316,7 +316,7 @@
     "user_id": "U2",
     "gen_time_s": 18.25,
     "error": null,
-    "tla_path": "/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/RaftLeaderElection_D2U2.tla",
+    "tla_path": "outputs/prompt_sweep/tla/RaftLeaderElection_D2U2.tla",
     "module_name": "RaftLeaderElection_D2U2"
   },
   {
@@ -326,7 +326,7 @@
     "user_id": "U3",
     "gen_time_s": 15.5,
     "error": null,
-    "tla_path": "/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/RaftLeaderElection_D2U3.tla",
+    "tla_path": "outputs/prompt_sweep/tla/RaftLeaderElection_D2U3.tla",
     "module_name": "RaftLeaderElection_D2U3"
   },
   {
@@ -336,7 +336,7 @@
     "user_id": "U1",
     "gen_time_s": 13.72,
     "error": null,
-    "tla_path": "/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/RaftLeaderElection_D3U1.tla",
+    "tla_path": "outputs/prompt_sweep/tla/RaftLeaderElection_D3U1.tla",
     "module_name": "RaftLeaderElection_D3U1"
   },
   {
@@ -346,7 +346,7 @@
     "user_id": "U2",
     "gen_time_s": 11.08,
     "error": null,
-    "tla_path": "/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/RaftLeaderElection_D3U2.tla",
+    "tla_path": "outputs/prompt_sweep/tla/RaftLeaderElection_D3U2.tla",
     "module_name": "RaftLeaderElection_D3U2"
   },
   {
@@ -356,7 +356,7 @@
     "user_id": "U3",
     "gen_time_s": 14.23,
     "error": null,
-    "tla_path": "/home/espencer2/ChatTLA/outputs/prompt_sweep/tla/RaftLeaderElection_D3U3.tla",
+    "tla_path": "outputs/prompt_sweep/tla/RaftLeaderElection_D3U3.tla",
     "module_name": "RaftLeaderElection_D3U3"
   }
 ]

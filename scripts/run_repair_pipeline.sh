@@ -1,6 +1,7 @@
 #!/bin/bash
+REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 set -euo pipefail
-cd /home/espencer2/ChatTLA
+cd "$REPO"
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 LOG=outputs/logs/repair_pipeline.log
 ts() { date '+%Y-%m-%d %H:%M:%S'; }
@@ -106,8 +107,8 @@ fi
 echo "[$(ts)] Using checkpoint: $CKPT" | tee -a "$LOG"
 
 # Merge output goes to /data/sdb (root disk is 99% full)
-MERGE_OUT=/data/sdb/espencer2/chattla/merged_model_repair
-mkdir -p /data/sdb/espencer2/chattla
+MERGE_OUT=${CHATTLA_MODEL_DIR:-$REPO/outputs}/merged_model_repair
+mkdir -p "${CHATTLA_MODEL_DIR:-$REPO/outputs}"
 .venv/bin/python -m src.training.merge_lora \
     --checkpoint "$CKPT" \
     --output "$MERGE_OUT" \
@@ -136,7 +137,7 @@ for PROMPT in \
     "A bounded FIFO queue with enqueue and dequeue operations"; do
     echo "" | tee -a "$LOG"
     echo "[$(ts)] Ralph eval: $PROMPT" | tee -a "$LOG"
-    python /home/espencer2/ralph-tla/ralph_tla.py \
+    python ${RALPH_TLA_PATH:-$HOME/ralph-tla}/ralph_tla.py \
         --model chattla:20b-repair \
         --iters 6 \
         --out outputs/eval/ralph_repair \

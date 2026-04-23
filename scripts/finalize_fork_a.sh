@@ -25,8 +25,8 @@ export CUDA_VISIBLE_DEVICES=0,1
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
 CHECKPOINT_DIR="outputs/checkpoints_fork_a_${TARGET}"
-MERGED_OUT="/data/sdb/espencer2/chattla/merged_model_fork_a_${TARGET}"
-BASE_MODEL="/data/sdb/espencer2/chattla/merged_model_repair"
+MERGED_OUT="${CHATTLA_MODEL_DIR:-$REPO/outputs}/merged_model_fork_a_${TARGET}"
+BASE_MODEL="${CHATTLA_MODEL_DIR:-$REPO/outputs}/merged_model_repair"
 OLLAMA_TAG="chattla:20b-fork-a-${TARGET}"
 GGUF_NAME="chattla-20b-fork-a-${TARGET}"
 EVAL_OUT="outputs/eval/fork_a_${TARGET}.json"

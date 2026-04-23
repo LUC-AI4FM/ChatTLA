@@ -1,6 +1,7 @@
 #!/bin/bash
+REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 set -euo pipefail
-cd /home/espencer2/ChatTLA
+cd "$REPO"
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 LOG=outputs/logs/pipeline_master.log
 ts() { date '+%Y-%m-%d %H:%M:%S'; }

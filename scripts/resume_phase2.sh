@@ -3,9 +3,10 @@
 # Phase 1A: 189 DPO pairs ✓
 # Phase 1B: DPO training ✓ (adapter at checkpoints_dpo_piecewise/)
 # Now: merge DPO adapter → run GRPO → flywheel
+REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 set -euo pipefail
 
-cd /home/espencer2/ChatTLA
+cd "$REPO"
 PY=".venv/bin/python -u"
 LOG=outputs/logs/pipeline_master.log
 mkdir -p outputs/logs outputs/eval
@@ -63,7 +64,7 @@ echo "[$(ts)] Merged model: $(du -sh $MERGED_OUT | cut -f1)" | tee -a "$LOG"
 # ── Phase 2: Full-Spec GRPO ─────────────────────────────────────────────
 echo "" | tee -a "$LOG"
 echo "[$(ts)] ===== PHASE 2: FULL-SPEC GRPO (200 steps) =====" | tee -a "$LOG"
-echo "[$(ts)] Disk: $(df -h /home/espencer2 | tail -1)" | tee -a "$LOG"
+echo "[$(ts)] Disk: $(df -h "$REPO" | tail -1)" | tee -a "$LOG"
 
 # Free GPU memory from the merge
 $PY -c "import torch; torch.cuda.empty_cache(); print('GPU cache cleared')" 2>&1 | tee -a "$LOG"
@@ -114,7 +115,7 @@ $PY -m scripts.flywheel \
 # ── Final ────────────────────────────────────────────────────────────────
 echo "" | tee -a "$LOG"
 echo "[$(ts)] ===== PIPELINE COMPLETE =====" | tee -a "$LOG"
-echo "[$(ts)] Disk: $(df -h /home/espencer2 | tail -1)" | tee -a "$LOG"
+echo "[$(ts)] Disk: $(df -h "$REPO" | tail -1)" | tee -a "$LOG"
 if [ -f outputs/logs/flywheel_metrics.jsonl ]; then
     echo "[$(ts)] Flywheel metrics:" | tee -a "$LOG"
     tail -5 outputs/logs/flywheel_metrics.jsonl | tee -a "$LOG"

@@ -1,9 +1,10 @@
 #!/bin/bash
 # resume_pipeline.sh — Resume from Phase 1B (DPO training) after OOM fix.
 # Phase 1A already completed: 189 DPO pairs in piecewise_dpo_pairs.jsonl
+REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 set -euo pipefail
 
-cd /home/espencer2/ChatTLA
+cd "$REPO"
 PY=".venv/bin/python -u"
 LOG=outputs/logs/pipeline_master.log
 mkdir -p outputs/logs outputs/eval
@@ -16,7 +17,7 @@ abort() {
 
 echo "" | tee -a "$LOG"
 echo "[$(ts)] === PIPELINE RESUME (from Phase 1B) ===" | tee -a "$LOG"
-echo "[$(ts)] Disk: $(df -h /home/espencer2 | tail -1)" | tee -a "$LOG"
+echo "[$(ts)] Disk: $(df -h "$REPO" | tail -1)" | tee -a "$LOG"
 echo "[$(ts)] GPUs: $(nvidia-smi --query-gpu=memory.used,memory.total --format=csv,noheader 2>/dev/null)" | tee -a "$LOG"
 
 DPO_COUNT=$(wc -l < data/processed/piecewise_dpo_pairs.jsonl 2>/dev/null || echo 0)
@@ -51,7 +52,7 @@ fi
 # ── Phase 2: Full-Spec GRPO ─────────────────────────────────────────────
 echo "" | tee -a "$LOG"
 echo "[$(ts)] ===== PHASE 2: FULL-SPEC GRPO (200 steps) =====" | tee -a "$LOG"
-echo "[$(ts)] Disk before GRPO: $(df -h /home/espencer2 | tail -1)" | tee -a "$LOG"
+echo "[$(ts)] Disk before GRPO: $(df -h "$REPO" | tail -1)" | tee -a "$LOG"
 
 # Unload Ollama again (DPO may have loaded things)
 for m in chattla:20b chattla:20b-v17 chattla:20b-v16 chattla:20b-v14; do
@@ -98,7 +99,7 @@ $PY -m scripts.flywheel \
 # ── Final ────────────────────────────────────────────────────────────────
 echo "" | tee -a "$LOG"
 echo "[$(ts)] ===== PIPELINE COMPLETE =====" | tee -a "$LOG"
-echo "[$(ts)] Disk: $(df -h /home/espencer2 | tail -1)" | tee -a "$LOG"
+echo "[$(ts)] Disk: $(df -h "$REPO" | tail -1)" | tee -a "$LOG"
 if [ -f outputs/logs/flywheel_metrics.jsonl ]; then
     echo "[$(ts)] Flywheel metrics:" | tee -a "$LOG"
     tail -5 outputs/logs/flywheel_metrics.jsonl | tee -a "$LOG"

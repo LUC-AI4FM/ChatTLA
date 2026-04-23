@@ -3,7 +3,7 @@
   "n": 30,
   "timeout_s": 30,
   "max_retries": 3,
-  "holdout": "/home/espencer2/ChatTLA/data/processed/diamond_eval_holdout.jsonl",
+  "holdout": "data/processed/diamond_eval_holdout.jsonl",
   "results": [
     {
       "module": "AlternatingBit",

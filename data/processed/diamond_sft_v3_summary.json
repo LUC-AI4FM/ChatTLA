@@ -1,5 +1,5 @@
 {
-  "out": "/home/espencer2/ChatTLA/data/processed/diamond_sft_v3.jsonl",
+  "out": "data/processed/diamond_sft_v3.jsonl",
   "base_kept": 713,
   "base_dropped_for_holdout": 0,
   "new_unique": 170,

@@ -9,8 +9,9 @@
 #   5. Checkpoint picker: closest to step 150 (reward peak observed in R1)
 #   6. Abort guard: require >=300 pairs in [0.02, 0.80] after dedup
 # Everything else (lr, beta, temp, num_generations, completion_length) matches R1/R2.
+REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 set -euo pipefail
-cd /home/espencer2/ChatTLA
+cd "$REPO"
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 LOG=outputs/logs/repair_flywheel_r3.log
 ts() { date '+%Y-%m-%d %H:%M:%S'; }
@@ -106,7 +107,7 @@ sleep 5
 # ─── Phase 4: Repair GRPO round 3 ───────────────────────────────────────
 echo "[$(ts)] Phase 4: Repair GRPO round 3 (continue from R1, 175 steps)..." | tee -a "$LOG"
 .venv/bin/python -u -m scripts.train_rl_repair \
-    --model /data/sdb/espencer2/chattla/merged_model_repair \
+    --model ${CHATTLA_MODEL_DIR:-$REPO/outputs}/merged_model_repair \
     --output-dir outputs/checkpoints_rl_repair_r3 \
     --max-steps 175 \
     --num-generations 4 \
@@ -119,7 +120,7 @@ echo "[$(ts)] Phase 4: Repair GRPO round 3 (continue from R1, 175 steps)..." | t
     2>&1 | tee -a "$LOG" || {
         echo "[$(ts)] Repair GRPO r3 failed at 4x384 — retrying at 2x384" | tee -a "$LOG"
         .venv/bin/python -u -m scripts.train_rl_repair \
-            --model /data/sdb/espencer2/chattla/merged_model_repair \
+            --model ${CHATTLA_MODEL_DIR:-$REPO/outputs}/merged_model_repair \
             --output-dir outputs/checkpoints_rl_repair_r3 \
             --max-steps 175 \
             --num-generations 2 \
@@ -158,8 +159,8 @@ done
 CKPT="${BEST_CKPT:-outputs/checkpoints_rl_repair_r3/final}"
 echo "[$(ts)] Using checkpoint: $CKPT" | tee -a "$LOG"
 
-MERGE_OUT=/data/sdb/espencer2/chattla/merged_model_repair_r3
-mkdir -p /data/sdb/espencer2/chattla
+MERGE_OUT=${CHATTLA_MODEL_DIR:-$REPO/outputs}/merged_model_repair_r3
+mkdir -p "${CHATTLA_MODEL_DIR:-$REPO/outputs}"
 .venv/bin/python -m src.training.merge_lora \
     --checkpoint "$CKPT" \
     --output "$MERGE_OUT" \

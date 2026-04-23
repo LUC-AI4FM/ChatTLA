@@ -47,5 +47,5 @@
     "gold": 200
   },
   "elapsed_seconds": 68.4,
-  "out_path": "/home/espencer2/ChatTLA/outputs/diamond_gen/diamond_generated.jsonl"
+  "out_path": "outputs/diamond_gen/diamond_generated.jsonl"
 }

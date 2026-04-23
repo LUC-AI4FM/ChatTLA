@@ -12,7 +12,7 @@ Sends email alerts via scripts/alerting.py when problems are detected.
 
 Install as cron job (every 15 minutes):
     crontab -e
-    */15 * * * * cd /home/espencer2/ChatTLA && .venv/bin/python scripts/watchdog.py >> outputs/logs/watchdog.log 2>&1
+    */15 * * * * cd /path/to/ChatTLA && .venv/bin/python scripts/watchdog.py >> outputs/logs/watchdog.log 2>&1
 
 Or install automatically:
     python scripts/watchdog.py --install-cron

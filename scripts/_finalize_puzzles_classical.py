@@ -3,7 +3,7 @@
 import json, sys
 from pathlib import Path
 
-REPO = Path("/home/espencer2/ChatTLA")
+REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO))
 from scripts.diamond_sft_gen import validate_diamond  # noqa: E402
 

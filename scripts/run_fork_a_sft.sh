@@ -6,7 +6,7 @@
 #   scripts/run_fork_a_sft.sh tlaps
 #
 # Trains incrementally on top of the current best merged model
-# (/data/sdb/espencer2/chattla/merged_model_repair) so we keep the v14 SFT +
+# (${CHATTLA_MODEL_DIR:-$REPO/outputs}/merged_model_repair) so we keep the v14 SFT +
 # repair-GRPO r1 capability and ADD the validator-segregated tlaplus/examples
 # data. Checkpoints land in outputs/checkpoints_fork_a_<target>/.
 set -euo pipefail
@@ -23,7 +23,7 @@ cd "$REPO"
 TRAIN_FILE="data/processed/fork_a_${TARGET}_sft.jsonl"
 OUT_DIR="outputs/checkpoints_fork_a_${TARGET}"
 EXPERIMENT="ChatTLA-ForkA-${TARGET^^}"
-BASE_MODEL="/data/sdb/espencer2/chattla/merged_model_repair"
+BASE_MODEL="${CHATTLA_MODEL_DIR:-$REPO/outputs}/merged_model_repair"
 LOG="outputs/logs/fork_a_${TARGET}_sft.log"
 SESSION="fork_a_${TARGET}"
 

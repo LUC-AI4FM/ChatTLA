@@ -1,6 +1,7 @@
 #!/bin/bash
+REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 set -euo pipefail
-cd /home/espencer2/ChatTLA
+cd "$REPO"
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 LOG=outputs/logs/repair_flywheel_r2.log
 ts() { date '+%Y-%m-%d %H:%M:%S'; }
@@ -106,7 +107,7 @@ sleep 5
 #   - 300 steps again (reward peaked ~140-160 in r1, 300 provides safety margin)
 echo "[$(ts)] Phase 4: Repair GRPO round 2 (from repair checkpoint)..." | tee -a "$LOG"
 .venv/bin/python -u -m scripts.train_rl_repair \
-    --model /data/sdb/espencer2/chattla/merged_model_repair \
+    --model ${CHATTLA_MODEL_DIR:-$REPO/outputs}/merged_model_repair \
     --output-dir outputs/checkpoints_rl_repair_r2 \
     --max-steps 300 \
     --num-generations 4 \
@@ -119,7 +120,7 @@ echo "[$(ts)] Phase 4: Repair GRPO round 2 (from repair checkpoint)..." | tee -a
     2>&1 | tee -a "$LOG" || {
         echo "[$(ts)] Repair GRPO r2 failed at 4x384 — retrying at 2x384" | tee -a "$LOG"
         .venv/bin/python -u -m scripts.train_rl_repair \
-            --model /data/sdb/espencer2/chattla/merged_model_repair \
+            --model ${CHATTLA_MODEL_DIR:-$REPO/outputs}/merged_model_repair \
             --output-dir outputs/checkpoints_rl_repair_r2 \
             --max-steps 300 \
             --num-generations 2 \
@@ -152,8 +153,8 @@ if [ -z "$CKPT" ]; then
 fi
 echo "[$(ts)] Using checkpoint: $CKPT" | tee -a "$LOG"
 
-MERGE_OUT=/data/sdb/espencer2/chattla/merged_model_repair_r2
-mkdir -p /data/sdb/espencer2/chattla
+MERGE_OUT=${CHATTLA_MODEL_DIR:-$REPO/outputs}/merged_model_repair_r2
+mkdir -p "${CHATTLA_MODEL_DIR:-$REPO/outputs}"
 .venv/bin/python -m src.training.merge_lora \
     --checkpoint "$CKPT" \
     --output "$MERGE_OUT" \

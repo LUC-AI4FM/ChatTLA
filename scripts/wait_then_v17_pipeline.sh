@@ -11,15 +11,15 @@
 #   stage 4: cleanup + ollama unload
 #   stage 5: RL canary smoke (--no-vllm)
 #   stage 6: RL canary full 100-step (--no-vllm)
+REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 set -u
-cd /home/espencer2/ChatTLA
+cd "$REPO"
 
 PIPELINE_LOG=outputs/logs/v17_pipeline.log
 RL_LOG=outputs/logs/rl_canary_tla_v3.log
 RL_SMOKE_LOG=outputs/logs/rl_canary_tla_v3_smoke.log
 
 PY=.venv/bin/python
-export PYTHONPATH=/home/espencer2/.local/lib/python3.10/site-packages
 export TOKENIZERS_PARALLELISM=false
 
 ts() { date '+%Y-%m-%d %H:%M:%S'; }
