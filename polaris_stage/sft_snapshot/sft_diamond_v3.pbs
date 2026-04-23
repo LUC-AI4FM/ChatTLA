@@ -1,0 +1,94 @@
+#!/bin/bash
+#PBS -N sft_diamond_v3
+#PBS -A <YOUR_PROJECT>           # <-- fill in your ALCF project
+#PBS -q debug                    # start with debug (<=1hr); switch to prod after a clean smoke run
+#PBS -l select=1:system=polaris
+#PBS -l place=scatter
+#PBS -l walltime=01:00:00
+#PBS -l filesystems=home:grand
+#PBS -j oe
+
+# ---------------------------------------------------------------------------
+# Diamond SFT v3 — teaches the model 170 novel curated specs
+# 1053 total rows, ~326 unique topics, all "diamond_curated" tier (best)
+# ---------------------------------------------------------------------------
+# INPUT:  data/processed/diamond_sft_v3.jsonl  (shipped in bootstrap tarball)
+# BASE:   $BASE_MODEL (env var — set below; pick one path)
+# OUTPUT: outputs/checkpoints_sft_diamond_v3/
+# ---------------------------------------------------------------------------
+
+set -euo pipefail
+
+cd "$PBS_O_WORKDIR"
+
+# ---- Environment ----
+module use /soft/modulefiles
+module load conda
+conda activate chattla             # the env you used for the DPO job
+module load java || true           # for SANY/TLC if any inline validation
+
+# ---- Proxy so HF hub + pip work on compute nodes ----
+export HTTPS_PROXY=http://proxy.alcf.anl.gov:3128
+export HTTP_PROXY=$HTTPS_PROXY
+export http_proxy=$HTTPS_PROXY
+export https_proxy=$HTTPS_PROXY
+
+# ---- Pick base model (edit one of these two paths) ----
+# Option A (fastest, no 41 GB rsync): continue from chattla-20b (your pre-RL SFT base)
+#   Pros: already on Polaris; small download or local.
+#   Cons: does not retain RL progress. RL loop will need to restart from this result.
+BASE_MODEL="${CHATTLA_SFT_BASE:-$PBS_O_WORKDIR/outputs/models/chattla-20b}"
+#
+# Option B (preserves RL progress): use the chattla-20b-rl-merged base
+#   Requires shipping the 41 GB merged base to Polaris first.
+# BASE_MODEL="$PBS_O_WORKDIR/outputs/models/chattla-20b-rl-merged"
+
+# ---- HF cache pinned to /grand so the model loads fast on reruns ----
+export HF_HOME="${HF_HOME:-/grand/$USER/hf-cache}"
+mkdir -p "$HF_HOME"
+
+# ---- Training config ----
+# 1053 rows × 3 epochs = 3159 steps @ batch ~4 per device × 4 GPUs = ~200 grad updates
+# LoRA r=64 gives enough capacity to learn 170 new topic patterns
+TRAIN_FILE="$PBS_O_WORKDIR/data/processed/diamond_sft_v3.jsonl"
+OUTPUT_DIR="$PBS_O_WORKDIR/outputs/checkpoints_sft_diamond_v3"
+
+echo "=== Job $PBS_JOBID starting $(date -Is) ==="
+echo "Node: $(hostname)"
+nvidia-smi --query-gpu=index,name,memory.free --format=csv || true
+echo "Base model: $BASE_MODEL"
+echo "Train file: $TRAIN_FILE ($(wc -l < "$TRAIN_FILE") rows)"
+echo "Output: $OUTPUT_DIR"
+
+# ---- Run SFT using the repo's existing train.py ----
+python -u src/training/train.py \
+    --base-model "$BASE_MODEL" \
+    --train-file "$TRAIN_FILE" \
+    --output-dir "$OUTPUT_DIR" \
+    --epochs 3 \
+    --per-device-batch-size 4 \
+    --gradient-accumulation-steps 2 \
+    --lr 1e-4 \
+    --max-length 2048 \
+    --lora-top-k 64 \
+    2>&1 | tee "$PBS_O_WORKDIR/outputs/logs/sft_diamond_v3_${PBS_JOBID}.log"
+
+echo "=== Job $PBS_JOBID finished $(date -Is) ==="
+
+# ---- Push adapter to HuggingFace Hub (no rsync needed) ----
+HF_REPO="${HF_REPO:-LUC-AI4FM/chattla-sft-diamond-v3}"
+FINAL_CKPT=$(ls -d "$OUTPUT_DIR"/checkpoint-* 2>/dev/null | sort -V | tail -1)
+if [ -n "$FINAL_CKPT" ]; then
+    echo "Pushing $FINAL_CKPT → hf://$HF_REPO"
+    huggingface-cli upload "$HF_REPO" "$FINAL_CKPT" \
+        --repo-type model \
+        --commit-message "SFT diamond_v3 job $PBS_JOBID" \
+        || echo "[warn] HF upload failed — adapter still at $FINAL_CKPT"
+else
+    echo "[warn] No checkpoint found in $OUTPUT_DIR"
+fi
+
+ls -la "$OUTPUT_DIR" || true
+echo
+echo "Adapter at: hf://$HF_REPO  (pull with huggingface-cli download)"
+echo "Eval: python src/eval/eval_holdout.py --adapter $HF_REPO"
