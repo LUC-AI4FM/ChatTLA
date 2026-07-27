@@ -55,7 +55,8 @@ from pathlib import Path
 
 # Use both GPUs by default. Override with CUDA_VISIBLE_DEVICES env var if needed.
 # Previous single-GPU pinning was unnecessarily limiting VRAM to 48GB.
-os.environ.setdefault("CUDA_VISIBLE_DEVICES", "0,1")
+# (removed) CUDA_VISIBLE_DEVICES default "0,1" was a 2-GPU-era hardcode;
+# the scheduler / caller owns GPU visibility now.
 
 # Optimize CUDA memory allocation to avoid fragmentation
 os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
@@ -70,6 +71,7 @@ from transformers import (
     AutoTokenizer,
     TrainingArguments,
     TrainerCallback,
+    Mxfp4Config,
 )
 from trl import SFTTrainer, SFTConfig
 
@@ -215,18 +217,35 @@ def load_model_and_tokenizer(device_map: str = "auto", max_gpu_memory_mb: int | 
             max_memory = None
 
     try:
+        # gpt-oss needs two things no other family does: use_cache as a
+        # from_pretrained kwarg, and MXFP4 dequantization. Passing use_cache to
+        # Qwen3_5ForCausalLM.__init__ is a TypeError, and MXFP4 is meaningless
+        # for a bf16 checkpoint -- so both are gated on the model being gpt-oss.
+        is_gpt_oss = "gpt-oss" in str(model_id).lower()
         from_pretrained_kwargs = dict(
             attn_implementation="eager",
-            use_cache=False,           # required for gradient checkpointing
             device_map=device_map,
             max_memory=max_memory,
             low_cpu_mem_usage=True,    # stream weights to devices to reduce peak memory
             trust_remote_code=True,    # gpt-oss requires special modeling code
         )
+        if is_gpt_oss:
+            from_pretrained_kwargs["use_cache"] = False  # gradient checkpointing
         if fsdp_mode:
             # Force BF16 on CPU load so we don't expand to FP32 (~80 GB).
             from_pretrained_kwargs["torch_dtype"] = torch.bfloat16
+            # Dequantize the MXFP4 MoE experts to plain bf16 params so LoRA
+            # `target_parameters` can attach to mlp.experts.gate_up_proj/down_proj
+            # (experts-reaching fine-tune; confirmed 2026-07-09 grad-norm probe,
+            # job 7243501). CPU-side dequant on the FSDP load path is crash-free;
+            # device_map="auto" GPU dequant illegal-mem-accesses on A100+tf5.6.2,
+            # so dequantize is gated to fsdp_mode (CPU load) only.
+            if is_gpt_oss:
+                from_pretrained_kwargs["quantization_config"] = Mxfp4Config(dequantize=True)
         model = AutoModelForCausalLM.from_pretrained(model_id, **from_pretrained_kwargs)
+        # What gradient checkpointing actually requires, for every family.
+        if getattr(model, "config", None) is not None:
+            model.config.use_cache = False
     except Exception as exc:
         print("[train] ERROR loading model:", exc)
         raise
@@ -417,6 +436,18 @@ def main(
 
     lora_config = load_lora_config()
 
+    # Architecture-aware FFN coverage (see lora_resolver.py). A stale yaml
+    # must not decide expert coverage: MoE gets target_parameters, dense gets
+    # none -- the silent no-op selector is what invalidated the Qwen arm.
+    from src.training.lora_resolver import is_moe, MOE_EXPERT_TARGET_PARAMETERS
+    if is_moe(model.config):
+        if not lora_config.target_parameters:
+            lora_config.target_parameters = list(MOE_EXPERT_TARGET_PARAMETERS)
+            print("[train] MoE detected; forcing expert target_parameters")
+    elif lora_config.target_parameters:
+        print("[train] dense model; dropping MoE target_parameters", lora_config.target_parameters)
+        lora_config.target_parameters = None
+
     # Allow explicit overrides from the CLI.  Precedence (highest→lowest):
     # 1) --lora-layers  2) --lora-top-k  3) GPU-resident layers detected earlier
     if lora_layers_override:
@@ -507,6 +538,9 @@ def main(
         print(f"[train] Moved {moved} trainable LoRA params to {cuda_dev}; base model kept on CPU")
 
     model.print_trainable_parameters()
+    from src.training.lora_resolver import assert_trainable_floor
+    assert_trainable_floor(model)  # aborts: a frozen model must never exit 0
+
 
     # DEBUG: list all parameter names that have `requires_grad=True` so we can
     # confirm only the adapter/LoRA parameters (and not experts/FFN) are trainable.

@@ -6,16 +6,17 @@
 # --------------------
 # gpt-oss-20b is a Mixture-of-Experts (MoE) transformer:
 #   - 21B total parameters, ~3.6B active per forward pass
-#   - MXFP4-quantized MoE weights (loaded via Mxfp4Config(dequantize=True))
-#   - MoE expert layers at transformer blocks 7, 15, 23
+#   - MXFP4-quantized MoE weights (must be loaded via Mxfp4Config(dequantize=True))
+#   - MoE experts in EVERY transformer block (each block: 32 experts, top-4 routed)
 #
 # LoRA strategy
 # -------------
 # Two-part target:
-#   1. target_modules="all-linear" — standard attention + FFN projection layers
-#   2. target_parameters — the MoE expert projection layers that "all-linear"
-#      would otherwise miss because they are accessed via dynamic routing.
-#      Without this, fine-tuning has no gradient signal through the experts.
+#   1. target_modules — attention q/k/v/o projections (standard nn.Linear).
+#   2. target_parameters — the MoE expert projections (gate_up_proj / down_proj).
+#      "all-linear" alone MISSES these (they are 3D packed params, not nn.Linear),
+#      which leaves the experts frozen with no gradient signal — that was the
+#      chattla-20b failure (it trained attention-only and never learned TLA+).
 #
 # Rank choice: r=8 is the official cookbook recommendation for the 20b model.
 # Higher rank (16, 32) marginally improves fit but doubles adapter size.
@@ -32,12 +33,23 @@ lora_dropout: 0.0              # H2 fix (paper appendix A 2026-04-07): dropout u
                                # use_reentrant=False in train.py.
 bias: none
 
-# Target all nn.Linear layers (attention q/k/v/o projections).
-# NOTE: gpt-oss-20b MoE expert weights are 3D packed tensors [32, 2880, D]
-# stored in a custom GptOssExperts module — standard LoRA cannot decompose
-# 3D tensors.  The router (GptOssTopKRouter) is also non-Linear.
-# Therefore only attention layers are LoRA-trainable on this architecture.
-target_modules: "all-linear"
+# --- Experts-reaching target (CONFIRMED 2026-07-09 on Polaris) --------------
+# Grad-norm probe on gpt-oss-20b (moe_expert_probe.py, job 7243501):
+#   - all-linear only            -> EXPERT grad = 0 (reproduces chattla-20b bug)
+#   - attn + target_parameters   -> EXPERT LoRA tensors get nonzero grad (norm 7.5)
+# The expert weights are 3D packed [32, 2880, D] params in GptOssExperts. Under
+# MXFP4 they are stored as gate_up_proj_blocks/_scales and CANNOT be matched by
+# name; they MUST first be dequantized to plain bf16 `mlp.experts.gate_up_proj`/
+# `down_proj` params via Mxfp4Config(dequantize=True) at load. Only then does
+# target_parameters attach LoRA and the experts receive gradient.
+#
+# ===> REQUIRES train.py to load with quantization_config=Mxfp4Config(dequantize=True)
+#      on the CPU->FSDP path. Do NOT use device_map="auto": GPU-side multi-GPU
+#      dequant illegal-memory-accesses on the A100 + transformers-5.6.2 stack.
+#      (Until train.py sets dequantize=True, experts stay packed and PEFT warns
+#      "target_parameters ... no parameter matched" -> attention-only, no crash.)
+target_modules: ["q_proj", "k_proj", "v_proj", "o_proj"]
+target_parameters: ["mlp.experts.gate_up_proj", "mlp.experts.down_proj"]
 
 # --- Inference / merge settings -------------------------------------------
 # Use the adapter during inference without merging into base weights
