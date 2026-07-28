@@ -304,7 +304,12 @@ def build_training_args(
         warmup_steps=5 if smoke_test else 5,
         # --- Precision & memory --------------------------------------------
         bf16=bf16_enabled,
-        gradient_checkpointing=True,
+        gradient_checkpointing=(
+            os.environ.get("CHATTLA_NO_GC") != "1"
+            # transformers raises if FSDP activation checkpointing is also on;
+            # accelerate exports FSDP_ACTIVATION_CHECKPOINTING to every rank.
+            and os.environ.get("FSDP_ACTIVATION_CHECKPOINTING", "false").lower() != "true"
+        ),
         # H2 fix (paper appendix A 2026-04-07): we keep reentrant gradient
         # checkpointing (lower activation memory) and instead set
         # lora_dropout=0.0 in lora_config.yaml. With no dropout, there is no
