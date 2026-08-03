@@ -61,6 +61,18 @@ from pathlib import Path
 # Optimize CUDA memory allocation to avoid fragmentation
 os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
 
+# MLflow >= the version in the Sophia `frs` env raises on a file:// tracking
+# store ("maintenance mode") instead of warning, which killed job 170803 at
+# set_experiment() before a single GPU was touched. Every prior run's metrics
+# live in a file store (MLFLOW_TRACKING_URI=file:///.../w4train/mlruns), so opt
+# out rather than migrate: an unwritable tracking backend must not silently cost
+# us the metrics, and a deprecation must not cost us the run.
+os.environ.setdefault("MLFLOW_ALLOW_FILE_STORE", "true")
+
+# numexpr caps nthreads at 64 and prints a bare "Error." per rank on the
+# 128-core Sophia nodes. Harmless, but it buries the real traceback.
+os.environ.setdefault("NUMEXPR_MAX_THREADS", "64")
+
 import torch
 import yaml
 import mlflow
