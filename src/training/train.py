@@ -490,6 +490,13 @@ def main(
 
     model = get_peft_model(model, lora_config)
 
+    # Report + enforce coverage HERE, on the line after attach, before anything
+    # that can die first. Job 170811 resolved correctly, attached correctly, then
+    # hit "libgomp: Thread creation failed" in the device-alignment loop below --
+    # so the trainable-% the run existed to measure was never printed.
+    from src.training.lora_resolver import report_coverage
+    report_coverage(model)  # aborts: a frozen model must never exit 0
+
     # Restore hf_device_map on the PeftModel so the HF Trainer recognises it
     # as a model-parallel model and skips DataParallel wrapping.
     if base_device_map and not getattr(model, "hf_device_map", None):
@@ -550,10 +557,9 @@ def main(
         model.hf_device_map = {"base_cpu": "cpu", "lora_cuda": "cuda:0"}
         print(f"[train] Moved {moved} trainable LoRA params to {cuda_dev}; base model kept on CPU")
 
+    # PEFT's own formatting, for continuity with older logs. The floor was
+    # already enforced at attach time, above.
     model.print_trainable_parameters()
-    from src.training.lora_resolver import assert_trainable_floor
-    assert_trainable_floor(model)  # aborts: a frozen model must never exit 0
-
 
     # DEBUG: list all parameter names that have `requires_grad=True` so we can
     # confirm only the adapter/LoRA parameters (and not experts/FFN) are trainable.

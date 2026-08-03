@@ -166,6 +166,24 @@ def trainable_pct(model) -> float:
     return 100.0 * trainable / max(total, 1)
 
 
+def report_coverage(model, floor_pct: float = TRAINABLE_FLOOR_PCT) -> float:
+    """Print what the adapter actually attached to, then enforce the floor.
+
+    Call this on the line after get_peft_model. Job 170811 attached correctly and
+    then died in the device-alignment loop before printing anything, so the one
+    number the run existed to produce was the one it lost. Everything here is
+    derivable from parameter metadata alone -- it works on meta/sharded params
+    and cannot itself fail on a device mismatch.
+    """
+    trainable = [n for n, p in model.named_parameters() if p.requires_grad]
+    experts = [n for n in trainable if "expert" in n]
+    print(f"[lora_resolver] adapter attached: {len(trainable)} trainable tensors, "
+          f"{len(experts)} of them expert tensors")
+    if experts:
+        print(f"[lora_resolver] example expert tensor: {experts[0]}")
+    return assert_trainable_floor(model, floor_pct)
+
+
 def assert_trainable_floor(model, floor_pct: float = TRAINABLE_FLOOR_PCT) -> float:
     """Abort the process (exit 3) if the adapter barely attached.
 
