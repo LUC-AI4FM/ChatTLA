@@ -19,6 +19,7 @@ from lora_resolver import (  # noqa: E402
     apply_target_coverage,
     assert_trainable_floor,
     is_attention_only,
+    report_coverage,
     is_moe,
     resolve_lora_config,
     resolve_target_coverage,
@@ -185,6 +186,40 @@ def test_floor_aborts_on_frozen_model():
 def test_floor_passes_on_healthy_model():
     m = TinyModel(0.44)  # gpt-oss-20b's healthy fraction
     assert assert_trainable_floor(m) > 0.1
+
+
+def test_report_coverage_returns_pct_and_enforces_floor():
+    assert report_coverage(TinyModel(0.44)) > 0.1
+    with pytest.raises(SystemExit):
+        report_coverage(TinyModel(0.0195))
+
+
+def test_report_coverage_works_on_meta_params(capsys):
+    """It must not touch parameter *values* -- 170811's params were mid-move.
+
+    Anything that reads data (.item(), .to(), .sum()) would raise on meta or
+    sharded params, which is exactly the situation this print exists to survive.
+    """
+    with torch.device("meta"):
+        m = TinyModel(0.44)
+    pct = report_coverage(m)
+    assert pct > 0.1
+    assert "adapter attached:" in capsys.readouterr().out
+
+
+def test_report_coverage_counts_expert_tensors(capsys):
+    class WithExperts(nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.frozen = nn.Linear(1000, 1000)
+            self.frozen.requires_grad_(False)
+            self.lora_A = nn.Parameter(torch.zeros(4000))
+            # PEFT names packed-expert adapters with "experts" in the path
+            self.base_model_layers_0_mlp_experts_gate_up_proj = nn.Parameter(torch.zeros(4000))
+
+    report_coverage(WithExperts())
+    out = capsys.readouterr().out
+    assert "2 trainable tensors, 1 of them expert tensors" in out
 
 
 def test_trainable_pct_zero_safe():
