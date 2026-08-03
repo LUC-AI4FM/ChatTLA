@@ -48,6 +48,54 @@ def test_is_moe_rejects_degenerate_one_expert():
     assert not is_moe(SimpleNamespace(num_experts=1))
 
 
+class NestedConfig:
+    """Qwen3.5/3.6 shape: expert count lives only on the nested text config."""
+
+    def __init__(self, text_config):
+        self.hidden_size = 4096  # outer object answers nothing about experts
+        self._text_config = text_config
+
+    def get_text_config(self):
+        return self._text_config
+
+
+def test_is_moe_sees_nested_text_config():
+    # Qwen3.5-35B-A3B: 256 routed experts, invisible at the top level
+    assert is_moe(NestedConfig(SimpleNamespace(num_experts=256, vocab_size=248320)))
+
+
+def test_is_moe_nested_dense_stays_dense():
+    # Qwen3.6-27B: nested, but genuinely dense
+    assert not is_moe(NestedConfig(SimpleNamespace(vocab_size=248320)))
+
+
+def test_is_moe_tolerates_get_text_config_raising():
+    class Broken:
+        def get_text_config(self):
+            raise RuntimeError("no text config")
+
+    assert not is_moe(Broken())
+
+
+def test_is_moe_reads_plain_text_config_attribute():
+    cfg = SimpleNamespace(text_config=SimpleNamespace(num_local_experts=128))
+    assert is_moe(cfg)
+
+
+def test_nested_moe_gets_expert_target_parameters():
+    """The regression this closes: a nested MoE resolved as dense would get
+    all-linear, which reaches mlp.shared_expert but not the packed routed
+    experts -- and still clears the trainable floor, so nothing would catch it.
+    """
+    modules, params = resolve_target_coverage(
+        NestedConfig(SimpleNamespace(num_experts=256)),
+        ["q_proj", "k_proj", "v_proj", "o_proj"],
+        None,
+    )
+    assert params == ["mlp.experts.gate_up_proj", "mlp.experts.down_proj"]
+    assert modules != "all-linear"
+
+
 def test_is_attention_only_flags_the_qwen_arm_list():
     assert is_attention_only(["q_proj", "k_proj", "v_proj", "o_proj"])
 
