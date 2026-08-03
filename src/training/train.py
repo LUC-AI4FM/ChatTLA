@@ -445,17 +445,13 @@ def main(
 
     lora_config = load_lora_config()
 
-    # Architecture-aware FFN coverage (see lora_resolver.py). A stale yaml
-    # must not decide expert coverage: MoE gets target_parameters, dense gets
-    # none -- the silent no-op selector is what invalidated the Qwen arm.
-    from src.training.lora_resolver import is_moe, MOE_EXPERT_TARGET_PARAMETERS
-    if is_moe(model.config):
-        if not lora_config.target_parameters:
-            lora_config.target_parameters = list(MOE_EXPERT_TARGET_PARAMETERS)
-            print("[train] MoE detected; forcing expert target_parameters")
-    elif lora_config.target_parameters:
-        print("[train] dense model; dropping MoE target_parameters", lora_config.target_parameters)
-        lora_config.target_parameters = None
+    # Architecture-aware coverage (see lora_resolver.py). A stale yaml must not
+    # decide FFN coverage: MoE gets target_parameters for its packed experts,
+    # dense gets all-linear and no target_parameters. The silent no-op selector
+    # -- MoE attention list + unmatched target_parameters on a dense model -- is
+    # what invalidated the Qwen3.6-27B arm at 0.0195% trainable.
+    from src.training.lora_resolver import apply_target_coverage
+    apply_target_coverage(lora_config, model.config)
 
     # Allow explicit overrides from the CLI.  Precedence (highest→lowest):
     # 1) --lora-layers  2) --lora-top-k  3) GPU-resident layers detected earlier
