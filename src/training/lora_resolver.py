@@ -20,6 +20,10 @@ from __future__ import annotations
 # trains 0.4401%; the broken dense run trained 0.0195%. 0.1% cleanly separates.
 TRAINABLE_FLOOR_PCT = 0.1
 
+# Packed 3D expert tensors. Verified identical in gpt-oss (32 experts) and
+# Qwen3.5-MoE (256 routed experts, shape (256, 1024, 2048)) -- both families
+# name them the same and both are invisible to "all-linear", which only sees
+# nn.Linear. This list is why target_parameters is not gpt-oss-specific.
 MOE_EXPERT_TARGET_PARAMETERS = [
     "mlp.experts.gate_up_proj",
     "mlp.experts.down_proj",
@@ -42,12 +46,40 @@ _FFN_NAME_HINTS = (
 )
 
 
+def _config_and_text_config(model_config):
+    """Yield the config, then its nested text config when that is distinct.
+
+    Qwen3.5/3.6 use a wrapper config (``Qwen3_5MoeConfig``) that carries the
+    expert count only on the nested text config -- the outer object answers
+    None for every expert attribute. Probing the top level alone reads
+    Qwen3.5-35B-A3B (256 routed experts) as dense, which routes it to
+    "all-linear": that covers attention and ``mlp.shared_expert`` (nn.Linear)
+    but NOT the packed 3D ``mlp.experts.*`` params, so all 256 routed experts
+    train no gradient. The trainable floor does not catch it either, because
+    attention + shared_expert alone clears 0.1%.
+    """
+    yield model_config
+    text = None
+    get_text_config = getattr(model_config, "get_text_config", None)
+    if callable(get_text_config):
+        try:
+            text = get_text_config()
+        except Exception:
+            text = None
+    if text is None:
+        text = getattr(model_config, "text_config", None)
+    if text is not None and text is not model_config:
+        yield text
+
+
 def is_moe(model_config) -> bool:
-    """A model is MoE iff its config declares a positive expert count."""
-    for attr in ("num_local_experts", "num_experts", "n_routed_experts"):
-        n = getattr(model_config, attr, None)
-        if isinstance(n, int) and n > 1:
-            return True
+    """A model is MoE iff its config -- or its nested text config -- declares a
+    positive expert count."""
+    for cfg in _config_and_text_config(model_config):
+        for attr in ("num_local_experts", "num_experts", "n_routed_experts"):
+            n = getattr(cfg, attr, None)
+            if isinstance(n, int) and n > 1:
+                return True
     return False
 
 
